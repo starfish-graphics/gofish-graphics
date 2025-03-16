@@ -8,14 +8,10 @@ export const stack = (
     direction,
     spacing = 0,
     alignment = "middle",
-    w,
-    h,
   }: {
     direction: FancyDirection;
     spacing?: number;
     alignment?: "start" | "middle" | "end";
-    w?: number;
-    h?: number;
   },
   children: GoFishNode[]
 ) => {

@@ -43,3 +43,14 @@ export const elaborateDirection = (direction: FancyDirection): Direction => {
       return direction;
   }
 };
+
+export type Position = [number | undefined, number | undefined];
+
+export type FancyPosition = { x?: number; y?: number } | Position;
+
+export const elaboratePosition = (position: FancyPosition): Position => {
+  if (Array.isArray(position)) {
+    return position;
+  }
+  return [position.x, position.y];
+};
