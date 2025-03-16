@@ -1,5 +1,5 @@
-import { JSX } from "solid-js/jsx-runtime";
-import { GoFishNode } from "./_node";
+import type { JSX } from "solid-js";
+import type { GoFishNode } from "./_node";
 
 /* global pass handler */
 export const gofish = (

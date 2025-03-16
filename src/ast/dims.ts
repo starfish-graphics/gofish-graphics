@@ -29,3 +29,17 @@ export const elaborateDims = <T>(dims: FancyDims<T>): Dimensions<T> => {
     { min: dims.y, center: dims.cy, max: dims.y2, size: dims.h },
   ];
 };
+
+export type Direction = 0 | 1;
+export type FancyDirection = "x" | "y" | Direction;
+
+export const elaborateDirection = (direction: FancyDirection): Direction => {
+  switch (direction) {
+    case "x":
+      return 0;
+    case "y":
+      return 1;
+    default:
+      return direction;
+  }
+};

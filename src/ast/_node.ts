@@ -1,4 +1,4 @@
-import { JSX } from "solid-js/jsx-runtime";
+import type { JSX } from "solid-js";
 
 export class GoFishNode {
   private inferDomain() {}

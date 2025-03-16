@@ -5,6 +5,8 @@ import { d as $d } from "../components/data"; */
 
 import { value } from "../ast/data";
 import { gofish } from "../ast/gofish";
+import { rect } from "../ast/rect";
+import { stack } from "../ast/stack";
 
 const data = [
   { a: "A", b: 28 },
@@ -21,10 +23,8 @@ const data = [
 export const testBar = (size: { width: number; height: number }) =>
   gofish(
     { width: size.width, height: size.height },
-    []
-    // stack(
-    //   { direction: 0, spacing: 4, alignment: "end" },
-    //   // TODO: I could probably make the width be uniform flexible basically
-    //   data.map((d) => rect({ w: 30, h: value(d.b), fill: "darkgreen" }))
-    // )
+    stack(
+      { direction: 0, spacing: 4, alignment: "end" },
+      data.map((d, i) => rect({ x: i * 35, w: 30, h: /* value(d.b) */ d.b, fill: "darkgreen" }))
+    )
   );
