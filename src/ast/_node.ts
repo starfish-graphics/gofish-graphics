@@ -1,16 +1,29 @@
 import type { JSX } from "solid-js";
-import { Dimensions, elaboratePosition, FancyPosition } from "./dims";
+import {
+  Dimensions,
+  elaborateDims,
+  elaboratePosition,
+  elaborateTransform,
+  FancyDims,
+  FancyPosition,
+  FancySize,
+  FancyTransform,
+  Position,
+  Transform,
+} from "./dims";
 
-export type Transform = { translate?: [number, number] };
 export type Placeable = { dims: Dimensions; place: (pos: FancyPosition) => void };
 
 export class GoFishNode {
   private _name: string;
   private inferDomain() {}
   private sizeThatFits() {}
-  private _layout: (children: { layout: () => Placeable }[]) => {
-    intrinsicDims: Dimensions;
-    transform: Transform;
+  private _layout: (
+    size: FancySize,
+    children: { layout: (size: FancySize) => Placeable }[]
+  ) => {
+    intrinsicDims: FancyDims;
+    transform: FancyTransform;
   };
   private _render: (
     { intrinsicDims, transform }: { intrinsicDims?: Dimensions; transform?: Transform },
@@ -31,12 +44,15 @@ export class GoFishNode {
       name: string;
       inferDomain: () => void;
       sizeThatFits: () => void;
-      layout: (children: { layout: () => Placeable }[]) => {
-        intrinsicDims: Dimensions;
-        transform: Transform;
+      layout: (
+        size: FancySize,
+        children: { layout: (size: FancySize) => Placeable }[]
+      ) => {
+        intrinsicDims: FancyDims;
+        transform: FancyTransform;
       };
       render: (
-        { intrinsicDims, transform }: { intrinsicDims?: Dimensions; transform?: { translate?: [number, number] } },
+        { intrinsicDims, transform }: { intrinsicDims?: Dimensions; transform?: Transform },
         children: JSX.Element[]
       ) => JSX.Element;
     },
@@ -50,11 +66,11 @@ export class GoFishNode {
     this._name = name;
   }
 
-  public layout(): Placeable {
-    const { intrinsicDims, transform } = this._layout(this.children);
+  public layout(size: FancySize): Placeable {
+    const { intrinsicDims, transform } = this._layout(size, this.children);
 
-    this.intrinsicDims = intrinsicDims;
-    this.transform = transform;
+    this.intrinsicDims = elaborateDims(intrinsicDims);
+    this.transform = elaborateTransform(transform);
 
     return this;
   }
@@ -78,14 +94,15 @@ export class GoFishNode {
   }
 
   public place(pos: FancyPosition): void {
-    pos = elaboratePosition(pos);
+    const elabPos = elaboratePosition(pos);
     /* for each dimension, if intrinsic dim is not defined, assign pos to that. otherwise assign it
     to corresponding translation */
-    for (let i = 0; i < pos.length; i++) {
+    for (let i = 0; i < elabPos.length; i++) {
+      if (elabPos[i] === undefined) continue;
       if (this.intrinsicDims?.[i]?.min === undefined) {
-        this.intrinsicDims![i].min = pos[i]!;
+        this.intrinsicDims![i].min = elabPos[i]!;
       } else {
-        this.transform!.translate![i] = pos[i]!;
+        this.transform!.translate![i] = elabPos[i]! - (this.intrinsicDims![i].min ?? 0);
       }
     }
   }

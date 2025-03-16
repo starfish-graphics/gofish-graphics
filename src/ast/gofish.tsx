@@ -10,7 +10,8 @@ export const gofish = (
   // const sizeThatFitsAST = domainAST.sizeThatFits();
   // const layoutAST = sizeThatFitsAST.layout();
   // return render({ width, height, transform }, layoutAST);
-  child.layout();
+  child.layout({ w: width, h: height });
+  child.place({ x: 0, y: 0 });
   return render({ width, height, transform }, child);
 };
 

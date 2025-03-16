@@ -18,11 +18,21 @@ export type FancyDims<T = number> =
       w?: T;
       h?: T;
     }
+  | {
+      0?: Interval<T>;
+      1?: Interval<T>;
+    }
   | { dims: Dimensions<T> };
 
 export const elaborateDims = <T>(dims: FancyDims<T>): Dimensions<T> => {
   if ("dims" in dims) {
     return dims.dims;
+  }
+  if ("0" in dims || "1" in dims) {
+    return [
+      { min: dims[0]?.min, center: dims[0]?.center, max: dims[0]?.max, size: dims[0]?.size },
+      { min: dims[1]?.min, center: dims[1]?.center, max: dims[1]?.max, size: dims[1]?.size },
+    ];
   }
   return [
     { min: dims.x, center: dims.cx, max: dims.x2, size: dims.w },
@@ -46,11 +56,36 @@ export const elaborateDirection = (direction: FancyDirection): Direction => {
 
 export type Position = [number | undefined, number | undefined];
 
-export type FancyPosition = { x?: number; y?: number } | Position;
+export type FancyPosition = { x?: number; y?: number } | { 0?: number; 1?: number } | Position;
 
 export const elaboratePosition = (position: FancyPosition): Position => {
   if (Array.isArray(position)) {
     return position;
   }
-  return [position.x, position.y];
+  if ("x" in position || "y" in position) {
+    return [position.x, position.y];
+  }
+  if ("0" in position || "1" in position) {
+    return [position[0], position[1]];
+  }
+};
+
+export type Size = [number, number];
+
+export type FancySize = { w: number; h: number } | Size;
+
+export const elaborateSize = (size: FancySize): Size => {
+  if (Array.isArray(size)) {
+    return size;
+  }
+  return [size.w, size.h];
+};
+
+export type Transform = { translate: Position };
+export type FancyTransform = { translate?: FancyPosition };
+
+export const elaborateTransform = (transform: FancyTransform): Transform => {
+  return {
+    translate: elaboratePosition(transform?.translate ?? {}),
+  };
 };
