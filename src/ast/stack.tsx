@@ -22,17 +22,36 @@ export const stack = (
   const dir = elaborateDirection(direction);
   return new GoFishNode(
     {
+      name: "stack",
       inferDomain: () => {},
       sizeThatFits: () => {},
-      layout: () => {},
-      render: () => {
-        return (
-          <g>
-            <For each={children}>{(child) => child.render()}</For>
-          </g>
-        );
+      layout: (children) => {
+        const childDims = children.map((child) => child.layout());
+        /* TODO */
+        return {
+          intrinsicDims: [
+            {
+              min: 0,
+              size: 0,
+              center: 0,
+              max: 0,
+            },
+            {
+              min: 0,
+              size: 0,
+              center: 0,
+              max: 0,
+            },
+          ],
+          transform: {
+            translate: [0, 0],
+          },
+        };
+      },
+      render: ({ intrinsicDims, transform }, children) => {
+        return <g>{children}</g>;
       },
     },
-    []
+    children
   );
 };

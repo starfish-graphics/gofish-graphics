@@ -25,6 +25,6 @@ export const testBar = (size: { width: number; height: number }) =>
     { width: size.width, height: size.height },
     stack(
       { direction: 0, spacing: 4, alignment: "end" },
-      data.map((d, i) => rect({ x: i * 35, w: 30, h: /* value(d.b) */ d.b, fill: "darkgreen" }))
+      data.map((d, i) => rect({ x: i * 35, y: 0, w: 30, h: /* value(d.b) */ d.b, fill: "darkgreen" }))
     )
   );

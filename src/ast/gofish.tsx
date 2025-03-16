@@ -1,4 +1,4 @@
-import type { JSX } from "solid-js";
+import { Show, type JSX } from "solid-js";
 import type { GoFishNode } from "./_node";
 
 /* global pass handler */
@@ -10,6 +10,7 @@ export const gofish = (
   // const sizeThatFitsAST = domainAST.sizeThatFits();
   // const layoutAST = sizeThatFitsAST.layout();
   // return render({ width, height, transform }, layoutAST);
+  child.layout();
   return render({ width, height, transform }, child);
 };
 
@@ -18,6 +19,8 @@ export const render = (
   child: GoFishNode
 ): JSX.Element => (
   <svg width={width} height={height}>
-    <g transform={transform ?? ""}>{child.render()}</g>
+    <Show when={transform} keyed fallback={child.render()}>
+      <g transform={transform ?? ""}>{child.render()}</g>
+    </Show>
   </svg>
 );
