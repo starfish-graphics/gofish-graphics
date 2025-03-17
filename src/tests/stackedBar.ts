@@ -1,10 +1,8 @@
-/* import { layout } from "../components/layout";
-import { rect } from "../components/rect";
-import { stack } from "../components/stack";
-import { d as $d } from "../components/data"; */
 import _ from "lodash";
 import { gofish } from "../ast/gofish";
 import { value } from "../ast/data";
+import { stack } from "../ast/stack";
+import { rect } from "../ast/rect";
 
 const data = [
   { category: "A", group: "x", value: 0.1 },
@@ -30,7 +28,7 @@ export const testStackedBar = (size: { width: number; height: number }) =>
           items.toReversed().map((d) =>
             rect({
               w: 30,
-              h: /* d.value * 100 */ value(d.value, "value"),
+              h: d.value * 100 /* value(d.value, "value") */,
               fill: d.group === "x" ? "red" : d.group === "y" ? "blue" : "green",
             })
           )

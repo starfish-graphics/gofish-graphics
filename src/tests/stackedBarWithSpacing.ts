@@ -5,6 +5,8 @@ import { d as $d } from "../components/data"; */
 import _ from "lodash";
 import { gofish } from "../ast/gofish";
 import { value } from "../ast/data";
+import { stack } from "../ast/stack";
+import { rect } from "../ast/rect";
 const data = [
   { category: "A", group: "x", value: 0.1 },
   { category: "A", group: "y", value: 0.6 },
@@ -17,7 +19,7 @@ const data = [
   { category: "C", group: "z", value: 0.2 },
 ];
 
-export const testStackedBar = (size: { width: number; height: number }) =>
+export const testStackedBarWithSpacing = (size: { width: number; height: number }) =>
   gofish(
     { width: size.width, height: size.height },
     stack(
@@ -29,7 +31,7 @@ export const testStackedBar = (size: { width: number; height: number }) =>
           items.toReversed().map((d) =>
             rect({
               w: 30,
-              h: /* d.value * 100 */ value(d.value, "value"),
+              h: d.value * 100 /* value(d.value, "value") */,
               fill: d.group === "x" ? "red" : d.group === "y" ? "blue" : "green",
             })
           )

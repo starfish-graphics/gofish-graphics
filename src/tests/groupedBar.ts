@@ -1,10 +1,8 @@
-/* import { layout } from "../components/layout";
-import { rect } from "../components/rect";
-import { stack } from "../components/stack";
-import { d as $d } from "../components/data"; */
 import _ from "lodash";
 import { gofish } from "../ast/gofish";
 import { value } from "../ast/data";
+import { stack } from "../ast/stack";
+import { rect } from "../ast/rect";
 const data = [
   { category: "A", group: "x", value: 0.1 },
   { category: "A", group: "y", value: 0.6 },
@@ -22,7 +20,7 @@ export const testGroupedBar = (size: { width: number; height: number }) => {
   return gofish(
     { width: size.width, height: size.height },
     stack(
-      { direction: 0, spacing: 20, alignment: "end" },
+      { direction: 0, spacing: 20, alignment: "end", sharedScale: true },
       Object.entries(_.groupBy(data, "category")).map(([category, items]) =>
         stack(
           { direction: 0, spacing: 2, alignment: "end" },
@@ -30,7 +28,6 @@ export const testGroupedBar = (size: { width: number; height: number }) => {
             rect({
               w: 30,
               h: value(d.value, "value"),
-              // h: d.value * 100,
               fill: d.group === "x" ? "red" : d.group === "y" ? "blue" : "green",
             })
           )

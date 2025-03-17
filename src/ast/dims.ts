@@ -70,13 +70,16 @@ export const elaboratePosition = (position: FancyPosition): Position => {
   }
 };
 
-export type Size = [number, number];
+export type Size<T = number> = [T, T];
 
-export type FancySize = { w: number; h: number } | Size;
+export type FancySize<T = number> = { w: T; h: T } | { [K in Direction]: T } | Size<T>;
 
-export const elaborateSize = (size: FancySize): Size => {
+export const elaborateSize = <T>(size: FancySize<T>): Size<T> => {
   if (Array.isArray(size)) {
     return size;
+  }
+  if ("0" in size || "1" in size) {
+    return [size[0], size[1]];
   }
   return [size.w, size.h];
 };

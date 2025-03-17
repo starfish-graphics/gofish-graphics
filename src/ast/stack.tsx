@@ -1,31 +1,96 @@
 import { For } from "solid-js";
 import { GoFishNode } from "./_node";
 import { Value } from "./data";
-import { Direction, elaborateDims, elaborateDirection, FancyDims, FancyDirection } from "./dims";
+import { Direction, elaborateDims, elaborateDirection, FancyDims, FancyDirection, FancySize, Size } from "./dims";
+import _, { size } from "lodash";
+import { canUnifyDomains, ContinuousDomain, Domain, unifyContinuousDomains } from "./domain";
+import { findTargetMonotonic } from "../util";
 
 export const stack = (
   {
     direction,
     spacing = 0,
     alignment = "middle",
+    sharedScale = false,
   }: {
     direction: FancyDirection;
     spacing?: number;
     alignment?: "start" | "middle" | "end";
+    sharedScale?: boolean;
   },
   children: GoFishNode[]
 ) => {
-  const dir = elaborateDirection(direction);
+  const stackDir = elaborateDirection(direction);
+  const alignDir = (1 - stackDir) as Direction;
+
   return new GoFishNode(
     {
       name: "stack",
-      inferDomain: () => {},
-      sizeThatFits: () => {},
-      layout: (size, children) => {
-        const childPlaceables = children.map((child) => child.layout(size));
+      shared: [false, sharedScale],
+      /* TODO: I need to write to the children!!!!!!!!!! */
+      // inferDomains: (childDomains: Size<Domain>[]) => {
+      //   return {
+      //     [stackDir]: canUnifyDomains(childDomains.map((childDomain) => childDomain[stackDir]))
+      //       ? unifyContinuousDomains(childDomains.map((childDomain) => childDomain[stackDir]) as ContinuousDomain[])
+      //       : undefined,
+      //     [alignDir]: canUnifyDomains(childDomains.map((childDomain) => childDomain[alignDir]))
+      //       ? unifyContinuousDomains(childDomains.map((childDomain) => childDomain[alignDir]) as ContinuousDomain[])
+      //       : undefined,
+      //   };
+      // },
+      /* TODO: I need to search for the right scale factor in a way that accounts for all layout
+modes!!!
 
-        const stackDir = dir;
-        const alignDir = (1 - stackDir) as Direction;
+      Nodes are either:
+      - fixed size
+      - scaled (b/c data-driven) (eg bar chart bar heights). equal scale? shared scale?
+      - (uniform) flexed? or maybe grow to whatever size the parent gives them? (eg bar chart
+        bar widths) equal size? shared size?
+
+      child.size[0].mode = "fixed" | "scaled" | "grow"
+*/
+      measure: (shared, size, children) => {
+        // if (shared[stackDir]) {
+        //   /* TODO: this is not a very good upper bound guess! */
+        //   const stackScaleFactor = findTargetMonotonic(size[stackDir], stackSize, { upperBoundGuess: size[stackDir] });
+        // }
+
+        return (scaleFactors: Size): FancySize => {
+          return {
+            [stackDir]:
+              _.sum(children.map((child) => child.measure(size)(scaleFactors))) * scaleFactors[stackDir] +
+              spacing * (children.length - 1),
+            [alignDir]: Math.max(...children.map((child) => child.measure(size)(scaleFactors)[alignDir])),
+          };
+        };
+      },
+      layout: (shared, size, scaleFactors, children, measurement) => {
+        // TODO: alignDir...
+        if (shared[stackDir]) {
+          const stackScaleFactor = findTargetMonotonic(
+            size[stackDir],
+            (stackScaleFactor) =>
+              measurement({
+                [stackDir]: stackScaleFactor,
+                [alignDir]: 1,
+              })[stackDir],
+            {
+              upperBoundGuess: size[stackDir],
+            }
+          );
+          scaleFactors[stackDir] = stackScaleFactor;
+        }
+
+        if (shared[alignDir]) {
+          const alignScaleFactor = findTargetMonotonic(
+            size[alignDir],
+            (alignScaleFactor) => measurement({ [stackDir]: 1, [alignDir]: alignScaleFactor })[alignDir],
+            { upperBoundGuess: size[alignDir] }
+          );
+          scaleFactors[alignDir] = alignScaleFactor;
+        }
+
+        const childPlaceables = children.map((child) => child.layout(size, scaleFactors));
 
         /* align */
         if (alignment === "start") {

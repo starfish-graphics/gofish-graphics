@@ -3,28 +3,42 @@ import {
   Dimensions,
   elaborateDims,
   elaboratePosition,
+  elaborateSize,
   elaborateTransform,
   FancyDims,
   FancyPosition,
   FancySize,
   FancyTransform,
   Position,
+  Size,
   Transform,
 } from "./dims";
+import { Domain } from "./domain";
+
+/* TODO: resolveMeasures and layout feel pretty similar... */
 
 export type Placeable = { dims: Dimensions; place: (pos: FancyPosition) => void };
 
+export type Measure = (
+  shared: Size<boolean>,
+  // scaleFactors: Size<number | undefined>,
+  size: Size,
+  children: GoFishNode[]
+) => (scaleFactors: Size) => FancySize;
+
+export type Layout = (
+  shared: Size<boolean>,
+  size: Size,
+  scaleFactors: Size<number | undefined>,
+  children: { layout: (size: Size, scaleFactors: Size<number | undefined>) => Placeable }[],
+  measurement: (scaleFactors: Size) => Size
+) => { intrinsicDims: FancyDims; transform: FancyTransform };
+
 export class GoFishNode {
   private _name: string;
-  private inferDomain() {}
-  private sizeThatFits() {}
-  private _layout: (
-    size: FancySize,
-    children: { layout: (size: FancySize) => Placeable }[]
-  ) => {
-    intrinsicDims: FancyDims;
-    transform: FancyTransform;
-  };
+  // private inferDomains: (childDomains: Size<Domain>[]) => FancySize<Domain | undefined>;
+  private _measure: Measure;
+  private _layout: Layout;
   private _render: (
     { intrinsicDims, transform }: { intrinsicDims?: Dimensions; transform?: Transform },
     children: JSX.Element[]
@@ -32,42 +46,49 @@ export class GoFishNode {
   private children: GoFishNode[];
   private intrinsicDims?: Dimensions;
   private transform?: Transform;
+  public shared: Size<boolean>;
+  private measurement: (scaleFactors: Size) => Size;
 
   constructor(
     {
       name,
-      inferDomain,
-      sizeThatFits,
+      // inferDomains,
+      measure,
       layout,
       render,
+      shared = [false, false],
     }: {
       name: string;
-      inferDomain: () => void;
-      sizeThatFits: () => void;
-      layout: (
-        size: FancySize,
-        children: { layout: (size: FancySize) => Placeable }[]
-      ) => {
-        intrinsicDims: FancyDims;
-        transform: FancyTransform;
-      };
+      // inferDomains: (childDomains: Size<Domain>[]) => FancySize<Domain | undefined>;
+      /* TODO: I'm not sure whether scale inference and sizeThatFits should be separate or the same pass*/
+      measure: Measure;
+      layout: Layout;
       render: (
         { intrinsicDims, transform }: { intrinsicDims?: Dimensions; transform?: Transform },
         children: JSX.Element[]
       ) => JSX.Element;
+      shared?: Size<boolean>;
     },
     children: GoFishNode[]
   ) {
-    this.inferDomain = inferDomain;
-    this.sizeThatFits = sizeThatFits;
+    // this.inferDomains = inferDomains;
+    this._measure = measure;
     this._layout = layout;
     this._render = render;
     this.children = children;
     this._name = name;
+    this.shared = shared;
   }
 
-  public layout(size: FancySize): Placeable {
-    const { intrinsicDims, transform } = this._layout(size, this.children);
+  public measure(size: Size): (scaleFactors: Size) => Size {
+    const measurement = (scaleFactors: Size) =>
+      elaborateSize(this._measure(this.shared, size, this.children)(scaleFactors));
+    this.measurement = measurement;
+    return measurement;
+  }
+
+  public layout(size: Size, scaleFactors: Size<number | undefined>): Placeable {
+    const { intrinsicDims, transform } = this._layout(this.shared, size, scaleFactors, this.children, this.measurement);
 
     this.intrinsicDims = elaborateDims(intrinsicDims);
     this.transform = elaborateTransform(transform);

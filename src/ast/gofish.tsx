@@ -3,16 +3,17 @@ import type { GoFishNode } from "./_node";
 
 /* global pass handler */
 export const gofish = (
-  { width, height, transform }: { width: number; height: number; transform?: string },
+  { width, height, transform }: { width: number; height: number; transform?: { x?: number; y?: number } },
   child: GoFishNode
 ) => {
   // const domainAST = child.inferDomain();
   // const sizeThatFitsAST = domainAST.sizeThatFits();
   // const layoutAST = sizeThatFitsAST.layout();
   // return render({ width, height, transform }, layoutAST);
-  child.layout({ w: width, h: height });
-  child.place({ x: 0, y: 0 });
-  return render({ width, height, transform }, child);
+  child.measure([width, height]);
+  child.layout([width, height], [undefined, undefined]);
+  child.place({ x: transform?.x ?? 0, y: transform?.y ?? 0 });
+  return render({ width, height }, child);
 };
 
 export const render = (
