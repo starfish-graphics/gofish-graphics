@@ -1,8 +1,4 @@
-/* import { layout } from "../components/layout";
-import { rect } from "../components/rect";
-import { stack } from "../components/stack";
-import { d as $d } from "../components/data"; */
-
+import { color } from "../color";
 import { value } from "../ast/data";
 import { gofish } from "../ast/gofish";
 import { rect } from "../ast/rect";
@@ -20,4 +16,4 @@ const data = [
 ];
 
 export const testRect = (size: { width: number; height: number }) =>
-  gofish({ width: size.width, height: size.height }, rect({ x: 10, y: 10, w: 30, h: 50, fill: "darkgreen" }));
+  gofish({ width: size.width, height: size.height }, rect({ x: 10, y: 10, w: 30, h: 50, fill: color.green[5] }));

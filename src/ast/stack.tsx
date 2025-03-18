@@ -57,7 +57,7 @@ modes!!!
 
         return (scaleFactors: Size): FancySize => {
           const stackSize =
-            _.sum(children.map((child) => child.measure(size)(scaleFactors)[stackDir])) * scaleFactors[stackDir] +
+            _.sum(children.map((child) => child.measure(size)(scaleFactors)[stackDir])) +
             spacing * (children.length - 1);
           const alignSize = Math.max(...children.map((child) => child.measure(size)(scaleFactors)[alignDir]));
           return {
@@ -67,7 +67,6 @@ modes!!!
         };
       },
       layout: (shared, size, scaleFactors, children, measurement) => {
-        console.log("layout", shared, size, scaleFactors, children, measurement);
         // TODO: alignDir...
         if (shared[stackDir]) {
           const stackScaleFactor = findTargetMonotonic(
@@ -90,7 +89,6 @@ modes!!!
             (alignScaleFactor) => measurement({ [stackDir]: 1, [alignDir]: alignScaleFactor })[alignDir],
             { upperBoundGuess: size[alignDir] }
           );
-          console.log("alignScaleFactor", alignScaleFactor);
           scaleFactors[alignDir] = alignScaleFactor;
         }
 

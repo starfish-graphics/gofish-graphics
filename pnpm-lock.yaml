@@ -11,9 +11,15 @@ importers:
       lodash:
         specifier: ^4.17.21
         version: 4.17.21
+      rybitten:
+        specifier: ^0.22.0
+        version: 0.22.0
       solid-js:
         specifier: ^1.9.5
         version: 1.9.5
+      spectral.js:
+        specifier: ^2.0.2
+        version: 2.0.2
     devDependencies:
       '@types/lodash':
         specifier: ^4.17.16
@@ -499,6 +505,9 @@ packages:
     engines: {node: '>=18.0.0', npm: '>=8.0.0'}
     hasBin: true
 
+  rybitten@0.22.0:
+    resolution: {integrity: sha512-w9aWDjaIo3YWLTBFiPDLzWWbdiKDkghLKzCeXDsXTqs64Ai0Dw8mHn9d/nnMvnds93GVpRwqjVM5VH+SDJsIsQ==}
+
   semver@6.3.1:
     resolution: {integrity: sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==}
     hasBin: true
@@ -524,6 +533,9 @@ packages:
   source-map-js@1.2.1:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
     engines: {node: '>=0.10.0'}
+
+  spectral.js@2.0.2:
+    resolution: {integrity: sha512-g7NA/GMc2C50ez/foALJW8DcwvwbMgW5WF0/1fmAib5AN8NkJwMVyWgkPeSGAm4D6XAFXdtz9KM4AreuV+hJsg==}
 
   typescript@5.7.2:
     resolution: {integrity: sha512-i5t66RHxDvVN40HfDd1PsEThGNnlMCMT3jMUuoh9/0TaqWevNontacunWyN02LA9/fIbEWlcHZcgTKb9QoaLfg==}
@@ -1018,6 +1030,8 @@ snapshots:
       '@rollup/rollup-win32-x64-msvc': 4.27.4
       fsevents: 2.3.3
 
+  rybitten@0.22.0: {}
+
   semver@6.3.1: {}
 
   seroval-plugins@1.1.1(seroval@1.1.1):
@@ -1042,6 +1056,8 @@ snapshots:
       - supports-color
 
   source-map-js@1.2.1: {}
+
+  spectral.js@2.0.2: {}
 
   typescript@5.7.2: {}
 

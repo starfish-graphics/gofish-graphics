@@ -3,6 +3,7 @@ import { gofish } from "../ast/gofish";
 import { value } from "../ast/data";
 import { stack } from "../ast/stack";
 import { rect } from "../ast/rect";
+import { color } from "../color";
 
 const data = [
   { category: "A", group: "x", value: 0.1 },
@@ -29,7 +30,7 @@ export const testStackedBar = (size: { width: number; height: number }) =>
             rect({
               w: 30,
               h: value(d.value, "value"),
-              fill: d.group === "x" ? "red" : d.group === "y" ? "blue" : "green",
+              fill: d.group === "x" ? color.red[5] : d.group === "y" ? color.blue[5] : color.green[5],
             })
           )
         )

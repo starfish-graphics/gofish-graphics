@@ -30,22 +30,6 @@ export const rect = ({ fill = "black", ...fancyDims }: { fill?: string } & Fancy
       // },
       measure: (shared, size, children) => {
         return (scaleFactors: Size): FancySize => {
-          console.log(
-            "rect measure",
-            scaleFactors,
-            isValue(dims[0].size),
-            getValue(dims[0].size),
-            dims[0].size,
-            size[0]
-          );
-          console.log(
-            "rect w",
-            isValue(dims[0].size) ? getValue(dims[0].size!) * scaleFactors[0] : dims[0].size ?? size[0]
-          );
-          console.log(
-            "rect h",
-            isValue(dims[1].size) ? getValue(dims[1].size!) * scaleFactors[1] : dims[1].size ?? size[1]
-          );
           return {
             w: isValue(dims[0].size) ? getValue(dims[0].size!) * scaleFactors[0] : dims[0].size ?? size[0],
             h: isValue(dims[1].size) ? getValue(dims[1].size!) * scaleFactors[1] : dims[1].size ?? size[1],
@@ -85,6 +69,7 @@ export const rect = ({ fill = "black", ...fancyDims }: { fill?: string } & Fancy
             width={intrinsicDims?.[0]?.size ?? 0}
             height={intrinsicDims?.[1]?.size ?? 0}
             fill={fill}
+            shape-rendering="crispEdges"
           />
         );
       },

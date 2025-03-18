@@ -18,6 +18,8 @@
   },
   "dependencies": {
     "lodash": "^4.17.21",
-    "solid-js": "^1.9.5"
+    "rybitten": "^0.22.0",
+    "solid-js": "^1.9.5",
+    "spectral.js": "^2.0.2"
   }
 }
