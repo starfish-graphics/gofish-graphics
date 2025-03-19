@@ -60,6 +60,8 @@ const createPalette = (color: string, white: string = baseWhite, black: string =
 };
 
 export const color = {
+  white: baseWhite,
+  black: baseBlack,
   red: createPalette(baseColors.red),
   orange: createPalette(baseColors.orange),
   amber: createPalette(baseColors.amber),

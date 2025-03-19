@@ -17,26 +17,26 @@ const data = [
   { category: "C", group: "z", value: 0.2 },
 ];
 
-console.log(Object.entries(color).map(([color, range]) => range[5]));
-
 export const testColorPalette = (size: { width: number; height: number }) =>
   gofish(
     { width: size.width, height: size.height },
     stack(
       { direction: 0, spacing: 8, alignment: "end" },
       // TODO: I could probably make the width be uniform flexible basically
-      Object.entries(color).map(([color, range]) =>
-        stack(
-          { direction: 1, spacing: 8, alignment: "middle" },
-          range.map((d, i) =>
-            rect({
-              w: 30,
-              h: 30,
-              fill: d,
-              // fill: range[5],
-            })
+      Object.entries(color)
+        .filter(([color]) => color !== "white" && color !== "black")
+        .map(([color, range]) =>
+          stack(
+            { direction: 1, spacing: 8, alignment: "middle" },
+            range.map((d, i) =>
+              rect({
+                w: 30,
+                h: 30,
+                fill: d,
+                // fill: range[5],
+              })
+            )
           )
         )
-      )
     )
   );
