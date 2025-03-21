@@ -15,8 +15,7 @@ import {
 } from "./dims";
 import { Domain } from "./domain";
 import { getScopeContext } from "./gofish";
-import { GoFishRef } from "./_ref";
-import { GoFishAST } from "./_ast";
+import { GoFishNode } from "./_node";
 
 /* TODO: resolveMeasures and layout feel pretty similar... */
 
@@ -35,30 +34,30 @@ export type Layout = (
   scaleFactors: Size<number | undefined>,
   children: { layout: (size: Size, scaleFactors: Size<number | undefined>) => Placeable }[],
   measurement: (scaleFactors: Size) => Size
-) => { intrinsicDims: FancyDims; transform: FancyTransform; renderData?: any };
+) => { intrinsicDims: FancyDims; transform: FancyTransform };
 
-export class GoFishNode {
-  public type: string;
+export class GoFishRef {
+  public type: string = "ref";
   public name?: string;
   public parent?: GoFishNode;
   // private inferDomains: (childDomains: Size<Domain>[]) => FancySize<Domain | undefined>;
   private _measure: Measure;
   private _layout: Layout;
   private _render: (
-    { intrinsicDims, transform, renderData }: { intrinsicDims?: Dimensions; transform?: Transform; renderData?: any },
+    { intrinsicDims, transform }: { intrinsicDims?: Dimensions; transform?: Transform },
     children: JSX.Element[]
   ) => JSX.Element;
-  private children: GoFishAST[];
   private intrinsicDims?: Dimensions;
   private transform?: Transform;
   public shared: Size<boolean>;
   private measurement: (scaleFactors: Size) => Size;
-  private renderData?: any;
-
+  private selection: string;
+  private selectedNode?: GoFishNode;
+  private children: GoFishNode[] = [];
   constructor(
     {
       name,
-      type,
+      selection,
       // inferDomains,
       measure,
       layout,
@@ -66,7 +65,7 @@ export class GoFishNode {
       shared = [false, false],
     }: {
       name?: string;
-      type: string;
+      selection: string;
       // inferDomains: (childDomains: Size<Domain>[]) => FancySize<Domain | undefined>;
       /* TODO: I'm not sure whether scale inference and sizeThatFits should be separate or the same pass*/
       measure: Measure;
@@ -77,28 +76,20 @@ export class GoFishNode {
       ) => JSX.Element;
       shared?: Size<boolean>;
     },
-    children: GoFishAST[]
+    children: GoFishNode[]
   ) {
     // this.inferDomains = inferDomains;
     this._measure = measure;
     this._layout = layout;
     this._render = render;
-    this.children = children;
-    children.forEach((child) => {
-      child.parent = this;
-    });
     this.name = name;
-    this.type = type;
     this.shared = shared;
+    this.selection = selection;
   }
 
   public resolveNames(): void {
-    if (this.name !== undefined) {
-      getScopeContext().set(this.name, this);
-    }
-    this.children.forEach((child) => {
-      child.resolveNames();
-    });
+    this.selectedNode = getScopeContext().get(this.selection);
+    console.log("selectedNode", this.selectedNode);
   }
 
   public measure(size: Size): (scaleFactors: Size) => Size {
@@ -109,17 +100,11 @@ export class GoFishNode {
   }
 
   public layout(size: Size, scaleFactors: Size<number | undefined>): Placeable {
-    const { intrinsicDims, transform, renderData } = this._layout(
-      this.shared,
-      size,
-      scaleFactors,
-      this.children,
-      this.measurement
-    );
+    const { intrinsicDims, transform } = this._layout(this.shared, size, scaleFactors, this.children, this.measurement);
 
     this.intrinsicDims = elaborateDims(intrinsicDims);
     this.transform = elaborateTransform(transform);
-    this.renderData = renderData;
+
     return this;
   }
 
@@ -157,7 +142,7 @@ export class GoFishNode {
 
   public render(): JSX.Element {
     return this._render(
-      { intrinsicDims: this.intrinsicDims, transform: this.transform, renderData: this.renderData },
+      { intrinsicDims: this.intrinsicDims, transform: this.transform },
       this.children.map((child) => child.render())
     );
   }

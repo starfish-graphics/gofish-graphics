@@ -3,11 +3,16 @@ import { getDataType, getValue, isValue, MaybeValue, Value } from "./data";
 import { Dimensions, elaborateDims, FancyDims, FancySize, Size, Transform } from "./dims";
 import { aesthetic, continuous } from "./domain";
 
-export const rect = ({ fill = "black", ...fancyDims }: { fill?: string } & FancyDims<MaybeValue<number>>) => {
+export const rect = ({
+  name,
+  fill = "black",
+  ...fancyDims
+}: { name?: string; fill?: string } & FancyDims<MaybeValue<number>>) => {
   const dims = elaborateDims(fancyDims);
   return new GoFishNode(
     {
-      name: "rect",
+      name,
+      type: "rect",
       // inferDomains: () => {
       //   return [
       //     isValue(dims[0].size)
@@ -64,6 +69,7 @@ export const rect = ({ fill = "black", ...fancyDims }: { fill?: string } & Fancy
       render: ({ intrinsicDims, transform }: { intrinsicDims?: Dimensions; transform?: Transform }) => {
         return (
           <rect
+            filter="url(#crumpled-paper)"
             x={(transform?.translate?.[0] ?? 0) + (intrinsicDims?.[0]?.min ?? 0)}
             y={(transform?.translate?.[1] ?? 0) + (intrinsicDims?.[1]?.min ?? 0)}
             width={intrinsicDims?.[0]?.size ?? 0}

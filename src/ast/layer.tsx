@@ -4,7 +4,7 @@ import { Size } from "./dims";
 export const layer = (children: GoFishNode[]) => {
   return new GoFishNode(
     {
-      name: "layer",
+      type: "layer",
       shared: [false, false],
       measure: (shared, size, children) => {
         const childMeasures = children.map((child) => child.measure(size));

@@ -1,5 +1,5 @@
 import { lerp, rybHsl2rgb } from "rybitten";
-import { ColorCoords } from "rybitten/cubes";
+import { ColorCoords, cubes } from "rybitten/cubes";
 import { palette } from "spectral.js";
 export const rgbToString = (rgb: ColorCoords) => `rgb(${rgb.map((x) => Math.round(x * 255)).join(", ")})`;
 
@@ -74,4 +74,23 @@ export const color = {
   indigo: createPalette(baseColors.indigo),
   purple: createPalette(baseColors.purple),
   fuschia: createPalette(baseColors.fuschia),
+};
+
+const apple90s = cubes.get("apple90s")!.cube;
+const appleColorGenerator = (hue: number) => {
+  const rgb = rybHsl2rgb([hue, 1, 0.5], { cube: apple90s });
+  const toHex = (val: number) =>
+    Math.round(val * 255)
+      .toString(16)
+      .padStart(2, "0");
+  return `#${toHex(rgb[0])}${toHex(rgb[1])}${toHex(rgb[2])}`;
+};
+
+export const appleColor = {
+  red: appleColorGenerator((0 / 6) * 360),
+  orange: appleColorGenerator((1 / 6) * 360),
+  yellow: appleColorGenerator((2 / 6) * 360),
+  green: appleColorGenerator((3 / 6) * 360),
+  blue: appleColorGenerator((4 / 6) * 360),
+  purple: appleColorGenerator((5 / 6) * 360),
 };

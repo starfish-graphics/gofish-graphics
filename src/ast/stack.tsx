@@ -25,7 +25,7 @@ export const stack = (
 
   return new GoFishNode(
     {
-      name: "stack",
+      type: "stack",
       shared: [false, sharedScale],
       /* TODO: I need to write to the children!!!!!!!!!! */
       // inferDomains: (childDomains: Size<Domain>[]) => {

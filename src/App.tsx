@@ -6,6 +6,7 @@ import { testStackedBar } from "./tests/stackedBar";
 import { testStackedBarWithSpacing } from "./tests/stackedBarWithSpacing";
 import { testColorPalette } from "./tests/colorPalette";
 import { testRibbonChart } from "./tests/ribbonChart";
+import { testColor10 } from "./tests/color10";
 const App: Component = () => {
   return (
     <div>
@@ -21,8 +22,10 @@ const App: Component = () => {
       {testStackedBarWithSpacing({ width: 500, height: 200 })}
       <h2>Ribbon Chart</h2>
       {testRibbonChart({ width: 500, height: 300 })}
-      {/* <h2>Color Palette</h2>
-      {testColorPalette({ width: 1000, height: 1000 })} */}
+      <h2>Color Palette</h2>
+      {testColorPalette({ width: 1000, height: 500 })}
+      <h2>Color 10</h2>
+      {testColor10({ width: 1000, height: 1000 })}
     </div>
   );
 };
