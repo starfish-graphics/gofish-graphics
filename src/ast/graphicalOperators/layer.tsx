@@ -1,5 +1,5 @@
-import { GoFishNode } from "./_node";
-import { Size } from "./dims";
+import { GoFishNode } from "../_node";
+import { Size } from "../dims";
 
 export const layer = (children: GoFishNode[]) => {
   return new GoFishNode(
@@ -16,10 +16,12 @@ export const layer = (children: GoFishNode[]) => {
         };
       },
       layout: (shared, size, scaleFactors, children) => {
-        const childPlaceables = children.map((child) => child.layout(size, scaleFactors));
+        const childPlaceables = [];
 
-        for (const childPlaceable of childPlaceables) {
+        for (const child of children) {
+          const childPlaceable = child.layout(size, scaleFactors);
           childPlaceable.place({ x: 0, y: 0 });
+          childPlaceables.push(childPlaceable);
         }
 
         const maxWidth = Math.max(...childPlaceables.map((childPlaceable) => childPlaceable.dims[0].max!));

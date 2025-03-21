@@ -48,9 +48,9 @@ export class GoFishNode {
     { intrinsicDims, transform, renderData }: { intrinsicDims?: Dimensions; transform?: Transform; renderData?: any },
     children: JSX.Element[]
   ) => JSX.Element;
-  private children: GoFishAST[];
-  private intrinsicDims?: Dimensions;
-  private transform?: Transform;
+  public children: GoFishAST[];
+  public intrinsicDims?: Dimensions;
+  public transform?: Transform;
   public shared: Size<boolean>;
   private measurement: (scaleFactors: Size) => Size;
   private renderData?: any;
@@ -72,7 +72,11 @@ export class GoFishNode {
       measure: Measure;
       layout: Layout;
       render: (
-        { intrinsicDims, transform }: { intrinsicDims?: Dimensions; transform?: Transform },
+        {
+          intrinsicDims,
+          transform,
+          renderData,
+        }: { intrinsicDims?: Dimensions; transform?: Transform; renderData?: any },
         children: JSX.Element[]
       ) => JSX.Element;
       shared?: Size<boolean>;
@@ -149,9 +153,11 @@ export class GoFishNode {
       if (elabPos[i] === undefined) continue;
       if (this.intrinsicDims?.[i]?.min === undefined) {
         this.intrinsicDims![i].min = elabPos[i]!;
-      } else {
+      } /* if (this.transform?.translate?.[i] === undefined)  */ else {
         this.transform!.translate![i] = elabPos[i]! - (this.intrinsicDims![i].min ?? 0);
-      }
+      } /*  else {
+        console.warn("placing node with both intrinsic and transform defined");
+      } */
     }
   }
 
@@ -184,4 +190,63 @@ export const findLeastCommonAncestor = (node1: GoFishNode, node2: GoFishNode): G
     j--;
   }
   return path1[i + 1];
+};
+
+const isGoFishNode = (node: GoFishNode | GoFishAST): node is GoFishNode => {
+  return "intrinsicDims" in node && "transform" in node && "dims" in node;
+};
+
+export const debugNodeTree = (node: GoFishNode | GoFishAST, indent: string = ""): void => {
+  // Create a group for this node
+  console.group(`${indent}Node: ${node.type}${node.name ? ` (${node.name})` : ""}`);
+
+  // Only print GoFishNode specific properties
+  if (isGoFishNode(node)) {
+    // Print intrinsic dimensions
+    if (node.intrinsicDims) {
+      console.group(`${indent}Intrinsic Dimensions`);
+      node.intrinsicDims.forEach((dim: { min?: number; center?: number; max?: number; size?: number }, i: number) => {
+        console.log(
+          `${i === 0 ? "Width" : "Height"}: ${JSON.stringify(
+            {
+              min: dim.min,
+              center: dim.center,
+              max: dim.max,
+              size: dim.size,
+            },
+            null,
+            2
+          )}`
+        );
+      });
+      console.groupEnd();
+    }
+
+    // Print transform
+    if (node.transform) {
+      console.log(
+        `${indent}Transform: ${JSON.stringify(
+          {
+            translate: node.transform.translate,
+          },
+          null,
+          2
+        )}`
+      );
+    }
+
+    // Print combined dimensions
+    console.log(`${indent}Combined Dimensions: ${JSON.stringify(node.dims, null, 2)}`);
+  }
+
+  // Print children
+  if ("children" in node && node.children && node.children.length > 0) {
+    console.group(`${indent}Children`);
+    node.children.forEach((child) => {
+      debugNodeTree(child, indent + "    ");
+    });
+    console.groupEnd();
+  }
+
+  console.groupEnd();
 };

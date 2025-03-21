@@ -16,6 +16,7 @@ import {
 import { Domain } from "./domain";
 import { getScopeContext } from "./gofish";
 import { GoFishNode } from "./_node";
+import { GoFishAST } from "./_ast";
 
 /* TODO: resolveMeasures and layout feel pretty similar... */
 
@@ -40,48 +41,22 @@ export class GoFishRef {
   public type: string = "ref";
   public name?: string;
   public parent?: GoFishNode;
-  // private inferDomains: (childDomains: Size<Domain>[]) => FancySize<Domain | undefined>;
-  private _measure: Measure;
-  private _layout: Layout;
-  private _render: (
-    { intrinsicDims, transform }: { intrinsicDims?: Dimensions; transform?: Transform },
-    children: JSX.Element[]
-  ) => JSX.Element;
+
   private intrinsicDims?: Dimensions;
   private transform?: Transform;
   public shared: Size<boolean>;
   private measurement: (scaleFactors: Size) => Size;
   private selection: string;
   private selectedNode?: GoFishNode;
-  private children: GoFishNode[] = [];
-  constructor(
-    {
-      name,
-      selection,
-      // inferDomains,
-      measure,
-      layout,
-      render,
-      shared = [false, false],
-    }: {
-      name?: string;
-      selection: string;
-      // inferDomains: (childDomains: Size<Domain>[]) => FancySize<Domain | undefined>;
-      /* TODO: I'm not sure whether scale inference and sizeThatFits should be separate or the same pass*/
-      measure: Measure;
-      layout: Layout;
-      render: (
-        { intrinsicDims, transform }: { intrinsicDims?: Dimensions; transform?: Transform },
-        children: JSX.Element[]
-      ) => JSX.Element;
-      shared?: Size<boolean>;
-    },
-    children: GoFishNode[]
-  ) {
-    // this.inferDomains = inferDomains;
-    this._measure = measure;
-    this._layout = layout;
-    this._render = render;
+  constructor({
+    name,
+    selection,
+    shared = [false, false],
+  }: {
+    name?: string;
+    selection: string;
+    shared?: Size<boolean>;
+  }) {
     this.name = name;
     this.shared = shared;
     this.selection = selection;
@@ -92,18 +67,83 @@ export class GoFishRef {
     console.log("selectedNode", this.selectedNode);
   }
 
+  /* TODO: I'm not really sure what this should do */
   public measure(size: Size): (scaleFactors: Size) => Size {
     const measurement = (scaleFactors: Size) =>
-      elaborateSize(this._measure(this.shared, size, this.children)(scaleFactors));
+      // elaborateSize(this._measure(this.shared, size, this.children)(scaleFactors));
+      size;
     this.measurement = measurement;
     return measurement;
   }
 
   public layout(size: Size, scaleFactors: Size<number | undefined>): Placeable {
-    const { intrinsicDims, transform } = this._layout(this.shared, size, scaleFactors, this.children, this.measurement);
+    if (!this.selectedNode) {
+      throw new Error("Selected node not found");
+    }
 
-    this.intrinsicDims = elaborateDims(intrinsicDims);
-    this.transform = elaborateTransform(transform);
+    // Find the least common ancestor between this ref and the selected node
+    const lca = findLeastCommonAncestor(this, this.selectedNode);
+    console.log("lca", lca);
+
+    // Compute transform from selected node up to LCA
+    let upwardTransform: Transform = { translate: [0, 0] };
+    let current = this.selectedNode;
+    while (current && current !== lca) {
+      if (current.transform) {
+        console.log(
+          "Upward transform for",
+          current.type,
+          JSON.stringify(
+            {
+              current: current.transform,
+              accumulated: upwardTransform,
+            },
+            null,
+            2
+          )
+        );
+        upwardTransform.translate![0] += current.transform.translate?.[0] ?? 0;
+        upwardTransform.translate![1] += current.transform.translate?.[1] ?? 0;
+      }
+      current = current.parent!;
+    }
+
+    console.log("Final upward transform:", JSON.stringify(upwardTransform, null, 2));
+
+    // Compute transform from LCA down to this ref
+    let downwardTransform: Transform = { translate: [0, 0] };
+    current = this;
+    while (current && current !== lca) {
+      if (current.transform) {
+        console.log(
+          "Downward transform for",
+          current.type,
+          JSON.stringify(
+            {
+              current: current.transform,
+              accumulated: downwardTransform,
+            },
+            null,
+            2
+          )
+        );
+        downwardTransform.translate![0] += current.transform.translate?.[0] ?? 0;
+        downwardTransform.translate![1] += current.transform.translate?.[1] ?? 0;
+      }
+      current = current.parent!;
+    }
+
+    console.log("Final downward transform:", JSON.stringify(downwardTransform, null, 2));
+
+    // Combine transforms
+    this.transform = {
+      translate: [
+        upwardTransform.translate![0] - downwardTransform.translate![0],
+        upwardTransform.translate![1] - downwardTransform.translate![1],
+      ],
+    };
+
+    this.intrinsicDims = this.selectedNode.intrinsicDims;
 
     return this;
   }
@@ -141,14 +181,11 @@ export class GoFishRef {
   }
 
   public render(): JSX.Element {
-    return this._render(
-      { intrinsicDims: this.intrinsicDims, transform: this.transform },
-      this.children.map((child) => child.render())
-    );
+    return <></>;
   }
 }
 
-export const findPathToRoot = (node: GoFishNode): GoFishNode[] => {
+export const findPathToRoot = (node: GoFishAST): GoFishNode[] => {
   const path: GoFishNode[] = [];
   let current = node;
   while (current) {
@@ -158,7 +195,7 @@ export const findPathToRoot = (node: GoFishNode): GoFishNode[] => {
   return path;
 };
 
-export const findLeastCommonAncestor = (node1: GoFishNode, node2: GoFishNode): GoFishNode => {
+export const findLeastCommonAncestor = (node1: GoFishAST, node2: GoFishAST): GoFishNode => {
   const path1 = findPathToRoot(node1);
   const path2 = findPathToRoot(node2);
 

@@ -1,10 +1,10 @@
 import { For } from "solid-js";
-import { GoFishNode } from "./_node";
-import { Value } from "./data";
-import { Direction, elaborateDims, elaborateDirection, FancyDims, FancyDirection, FancySize, Size } from "./dims";
+import { GoFishNode } from "../_node";
+import { Value } from "../data";
+import { Direction, elaborateDims, elaborateDirection, FancyDims, FancyDirection, FancySize, Size } from "../dims";
 import _, { size } from "lodash";
-import { canUnifyDomains, ContinuousDomain, Domain, unifyContinuousDomains } from "./domain";
-import { findTargetMonotonic } from "../util";
+import { canUnifyDomains, ContinuousDomain, Domain, unifyContinuousDomains } from "../domain";
+import { findTargetMonotonic } from "../../util";
 
 export const stack = (
   {
@@ -139,7 +139,7 @@ modes!!!
             },
           },
           transform: {
-            translate: [undefined, undefined],
+            translate: [0, 0],
           },
         };
       },

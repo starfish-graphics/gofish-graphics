@@ -50,3 +50,11 @@ export const findTargetMonotonic = (
 
   return (low + high) / 2;
 };
+
+export const pairs = <T>(xs: T[]): [T, T][] => {
+  const result: [T, T][] = [];
+  for (let i = 0; i < xs.length - 1; i++) {
+    result.push([xs[i], xs[i + 1]]);
+  }
+  return result;
+};

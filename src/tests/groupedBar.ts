@@ -1,8 +1,8 @@
 import _ from "lodash";
 import { gofish } from "../ast/gofish";
 import { value } from "../ast/data";
-import { stack } from "../ast/stack";
-import { rect } from "../ast/rect";
+import { stack } from "../ast/graphicalOperators/stack";
+import { rect } from "../ast/marks/rect";
 import { color } from "../color";
 
 const data = [

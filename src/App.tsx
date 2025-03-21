@@ -10,7 +10,7 @@ import { testColor10 } from "./tests/color10";
 const App: Component = () => {
   return (
     <div>
-      <h2>Rect</h2>
+      {/* <h2>Rect</h2>
       {testRect({ width: 100, height: 100 })}
       <h2>Bar</h2>
       {testBar({ width: 500, height: 100 })}
@@ -19,13 +19,13 @@ const App: Component = () => {
       <h2>Stacked Bar</h2>
       {testStackedBar({ width: 500, height: 200 })}
       <h2>Stacked Bar With Spacing</h2>
-      {testStackedBarWithSpacing({ width: 500, height: 200 })}
+      {testStackedBarWithSpacing({ width: 500, height: 200 })} */}
       <h2>Ribbon Chart</h2>
       {testRibbonChart({ width: 500, height: 300 })}
-      <h2>Color Palette</h2>
+      {/* <h2>Color Palette</h2>
       {testColorPalette({ width: 1000, height: 500 })}
       <h2>Color 10</h2>
-      {testColor10({ width: 1000, height: 1000 })}
+      {testColor10({ width: 1000, height: 1000 })} */}
     </div>
   );
 };

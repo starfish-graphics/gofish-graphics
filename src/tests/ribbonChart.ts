@@ -1,12 +1,12 @@
 import _ from "lodash";
 import { gofish } from "../ast/gofish";
 import { value } from "../ast/data";
-import { stack } from "../ast/stack";
-import { rect } from "../ast/rect";
+import { stack } from "../ast/graphicalOperators/stack";
+import { rect } from "../ast/marks/rect";
 import { color } from "../color";
-import { layer } from "../ast/layer";
-import { connect } from "../ast/connect";
-import { ref } from "../ast/ref";
+import { layer } from "../ast/graphicalOperators/layer";
+import { connect } from "../ast/graphicalOperators/connect";
+import { ref } from "../ast/marks/ref";
 import { color10Order } from "./color10";
 import { mix } from "spectral.js";
 import { cubes } from "rybitten/cubes";
@@ -19,22 +19,23 @@ const data = [
   { category: "A", group: "w", value: 0.3 },
   { category: "A", group: "v", value: 0.2 },
   { category: "A", group: "u", value: 0.1 },
-  // { category: "A", group: "t", value: 0.1 },
+  { category: "A", group: "t", value: 0.1 },
   { category: "B", group: "x", value: 0.7 },
   { category: "B", group: "y", value: 0.2 },
   { category: "B", group: "z", value: 1.1 },
   { category: "B", group: "w", value: 0.4 },
   { category: "B", group: "v", value: 0.5 },
   { category: "B", group: "u", value: 0.4 },
-  // { category: "B", group: "t", value: 0.4 },
+  { category: "B", group: "t", value: 0.4 },
   { category: "C", group: "x", value: 0.6 },
   { category: "C", group: "y", value: 0.1 },
   { category: "C", group: "z", value: 0.2 },
   { category: "C", group: "w", value: 0.5 },
   { category: "C", group: "v", value: 0.4 },
   { category: "C", group: "u", value: 0.3 },
-  // { category: "C", group: "t", value: 0.2 },
-];
+  { category: "C", group: "t", value: 0.2 },
+].filter((d) => d.group !== "t");
+// .filter((d) => (d.group === "x" || d.group === "y") && d.category !== "C");
 
 const color6_20250320 = [
   color[color10Order[0]][5],
@@ -88,12 +89,21 @@ const color6 = [
 ];
 console.log(color6);
 
+const colorScale = {
+  x: color6[0],
+  y: color6[1],
+  z: color6[2],
+  w: color6[3],
+  v: color6[4],
+  u: color6[5],
+};
+
 export const testRibbonChart = (size: { width: number; height: number }) =>
   gofish(
     { width: size.width, height: size.height },
     layer([
       stack(
-        { direction: 0, spacing: 16, alignment: "end", sharedScale: true },
+        { direction: 0, spacing: 64, alignment: "end", sharedScale: true },
         // TODO: I could probably make the width be uniform flexible basically
         Object.entries(_.groupBy(data, "category")).map(([category, items]) =>
           stack(
@@ -103,35 +113,22 @@ export const testRibbonChart = (size: { width: number; height: number }) =>
                 name: `${d.category}-${d.group}`,
                 w: 32,
                 h: value(d.value, "value"),
-                fill:
-                  d.group === "x"
-                    ? color6[0]
-                    : d.group === "y"
-                    ? color6[1]
-                    : d.group === "z"
-                    ? color6[2]
-                    : d.group === "w"
-                    ? color6[3]
-                    : d.group === "v"
-                    ? color6[4]
-                    : // : d.group === "u"
-                      // ? color6[5]
-                      // : color6[6],
-                      color6[5],
+                fill: colorScale[d.group as keyof typeof colorScale],
               })
             )
           )
         )
       ),
-      /* ...Object.entries(_.groupBy(data, "group")).map(([group, items]) =>
+      ...Object.entries(_.groupBy(data, "group")).map(([group, items]) =>
         connect(
           {
             direction: "x",
-            fill: group === "x" ? color.red[5] : group === "y" ? color.blue[5] : color.green[5],
+            fill: colorScale[group as keyof typeof colorScale],
             interpolation: "bezier",
+            // opacity: 0.8,
           },
           items.map((d) => ref(`${d.category}-${d.group}`))
         )
-      ), */
+      ),
     ])
   );

@@ -1,7 +1,7 @@
-import { GoFishNode } from "./_node";
-import { getDataType, getValue, isValue, MaybeValue, Value } from "./data";
-import { Dimensions, elaborateDims, FancyDims, FancySize, Size, Transform } from "./dims";
-import { aesthetic, continuous } from "./domain";
+import { GoFishNode } from "../_node";
+import { getDataType, getValue, isValue, MaybeValue, Value } from "../data";
+import { Dimensions, elaborateDims, FancyDims, FancySize, Size, Transform } from "../dims";
+import { aesthetic, continuous } from "../domain";
 
 export const rect = ({
   name,
@@ -69,7 +69,7 @@ export const rect = ({
       render: ({ intrinsicDims, transform }: { intrinsicDims?: Dimensions; transform?: Transform }) => {
         return (
           <rect
-            filter="url(#crumpled-paper)"
+            // filter="url(#crumpled-paper)"
             x={(transform?.translate?.[0] ?? 0) + (intrinsicDims?.[0]?.min ?? 0)}
             y={(transform?.translate?.[1] ?? 0) + (intrinsicDims?.[1]?.min ?? 0)}
             width={intrinsicDims?.[0]?.size ?? 0}

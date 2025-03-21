@@ -1,5 +1,5 @@
 import { Show, type JSX } from "solid-js";
-import type { GoFishNode } from "./_node";
+import { debugNodeTree, type GoFishNode } from "./_node";
 import { ScopeContext } from "./scopeContext";
 
 let scopeContext: ScopeContext | null = null;
@@ -13,7 +13,12 @@ export const getScopeContext = (): ScopeContext => {
 
 /* global pass handler */
 export const gofish = (
-  { width, height, transform }: { width: number; height: number; transform?: { x?: number; y?: number } },
+  {
+    width,
+    height,
+    transform,
+    debug = false,
+  }: { width: number; height: number; transform?: { x?: number; y?: number }; debug?: boolean },
   child: GoFishNode
 ) => {
   scopeContext = new Map();
@@ -27,6 +32,9 @@ export const gofish = (
     child.measure([width, height])([undefined, undefined]);
     child.layout([width, height], [undefined, undefined]);
     child.place({ x: transform?.x ?? 0, y: transform?.y ?? 0 });
+    if (debug) {
+      debugNodeTree(child);
+    }
     return render({ width, height }, child);
   } finally {
     console.log("scopeContext", scopeContext);

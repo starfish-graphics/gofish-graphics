@@ -5,8 +5,8 @@ import { d as $d } from "../components/data"; */
 
 import { value } from "../ast/data";
 import { gofish } from "../ast/gofish";
-import { rect } from "../ast/rect";
-import { stack } from "../ast/stack";
+import { rect } from "../ast/marks/rect";
+import { stack } from "../ast/graphicalOperators/stack";
 import { color } from "../color";
 const data = [
   { a: "A", b: 28 },
