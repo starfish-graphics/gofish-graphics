@@ -11,15 +11,32 @@ export type CoordinateTransform = {
   isLinear: boolean;
 };
 
-/* TODO: implement this. I don't actually ned it until I have more complex examples tho */
-const flattenLayout = (node: GoFishNode): GoFishNode[] => {
+/* TODO: implement this. I don't actually need it until I have more complex examples tho */
+const flattenLayout = (node: GoFishAST, transform: [number, number] = [0, 0]): GoFishAST[] => {
   // recursive function
   // as we go down the tree we accumulate transforms
   // we apply the cumulative transform to all nodes we hit and remove their children
   //   this includes operators and marks
   // for now we return GoFishNodes, but we could return DisplayObjects
   // DisplayObjects are probably more principled b/c of how rendering them works... idk yet
-  const result: GoFishNode[] = [];
+
+  /* current implementation: just flatten to all the child marks */
+  if (!("children" in node) || !node.children || node.children.length === 0) {
+    node.transform = {
+      translate: [
+        (node.transform?.translate?.[0] ?? 0) + transform[0]!,
+        (node.transform?.translate?.[1] ?? 0) + transform[1]!,
+      ],
+    };
+    return [node];
+  }
+
+  const newTransform: [number, number] = [
+    transform[0]! + (node.transform?.translate?.[0] ?? 0),
+    transform[1]! + (node.transform?.translate?.[1] ?? 0),
+  ];
+
+  return node.children.flatMap((child) => flattenLayout(child, newTransform));
 };
 
 /* takes in a GoFishNode and converts it to some set of DisplayObjects
@@ -128,9 +145,12 @@ export const coord = (coordTransform: CoordinateTransform, children: GoFishNode[
             </g>
           );
         };
+
+        const flattenedChildren = children.flatMap((child) => flattenLayout(child));
+
         return (
           <g transform={`translate(${transform?.translate?.[0] ?? 0}, ${transform?.translate?.[1] ?? 0})`}>
-            {children.map((child) => child.render(coordTransform))}
+            {flattenedChildren.map((child) => child.render(coordTransform))}
             <Show when={grid}>{gridLines()}</Show>
           </g>
         );

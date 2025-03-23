@@ -12,6 +12,9 @@ import { testPolarRect } from "./tests/polarRect";
 import { testPolarRectLineY } from "./tests/polarRectLineY";
 import { testPolarRectLineX } from "./tests/polarRectLineX";
 import { testPolarRectAreaXY } from "./tests/polarRectAreaXY";
+import { testPolarBar } from "./tests/polarBar";
+import { testPolarGroupedBar } from "./tests/polarGroupedBar";
+import { testPolarRadialGroupedBar } from "./tests/polarRadialGroupedBar";
 
 const App: Component = () => {
   return (
@@ -38,6 +41,12 @@ const App: Component = () => {
       {testPolarRectLineX({ width: 500, height: 300 })}
       <h2>Polar Rect Area XY</h2>
       {testPolarRectAreaXY({ width: 500, height: 300 })}
+      <h2>Polar Bar</h2>
+      {testPolarBar({ width: 500, height: 300 })}
+      <h2>Polar Grouped Bar</h2>
+      {testPolarGroupedBar({ width: 500, height: 300 })}
+      <h2>Polar Radial Grouped Bar</h2>
+      {testPolarRadialGroupedBar({ width: 500, height: 300 })}
       {/* <h2>Color Palette</h2>
       {testColorPalette({ width: 1000, height: 500 })}
       <h2>Color 10</h2>
