@@ -9,7 +9,8 @@ import { testRibbonChart } from "./tests/ribbonChart";
 import { testColor10 } from "./tests/color10";
 import { testPolarRibbon } from "./tests/polarRibbon";
 import { testPolarRect } from "./tests/polarRect";
-import { testPolarRectLine } from "./tests/polarRectLine";
+import { testPolarRectLineY } from "./tests/polarRectLineY";
+import { testPolarRectLineX } from "./tests/polarRectLineX";
 
 const App: Component = () => {
   return (
@@ -30,8 +31,10 @@ const App: Component = () => {
       {testPolarRibbon({ width: 500, height: 300 })} */}
       <h2>Polar Rect</h2>
       {testPolarRect({ width: 500, height: 300 })}
-      <h2>Polar Rect Line</h2>
-      {testPolarRectLine({ width: 500, height: 300 })}
+      <h2>Polar Rect Line Y</h2>
+      {testPolarRectLineY({ width: 500, height: 300 })}
+      <h2>Polar Rect Line X</h2>
+      {testPolarRectLineX({ width: 500, height: 300 })}
       {/* <h2>Color Palette</h2>
       {testColorPalette({ width: 1000, height: 500 })}
       <h2>Color 10</h2>

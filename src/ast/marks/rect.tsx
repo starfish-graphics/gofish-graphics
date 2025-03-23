@@ -6,6 +6,7 @@ import { getDataType, getValue, isValue, MaybeValue, Value } from "../data";
 import { Dimensions, elaborateDims, FancyDims, FancySize, Size, Transform } from "../dims";
 import { aesthetic, continuous } from "../domain";
 
+/* TODO: what should default embedding behavior be when all values are aesthetic? */
 export const rect = ({
   name,
   fill = "black",
@@ -146,10 +147,8 @@ export const rect = ({
               [isDataX ? displayDims[0].min ?? 0 : aestheticMid, isDataX ? aestheticMid : displayDims[1].min ?? 0],
               [isDataX ? displayDims[0].max ?? 0 : aestheticMid, isDataX ? aestheticMid : displayDims[1].max ?? 0],
             ],
-            {}
-            // { subdivision: 1000 }
+            { subdivision: 1000 }
           );
-          console.log("linePath", linePath, displayDims[0], displayDims[1], intrinsicDims, transform);
 
           // Subdivide and transform path
           const transformed = transformPath(linePath, space);

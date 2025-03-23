@@ -17,7 +17,7 @@ const data = [
   { a: "I", b: 52 },
 ];
 
-export const testPolarRectLine = (size: { width: number; height: number }) =>
+export const testPolarRectLineY = (size: { width: number; height: number }) =>
   gofish(
     { width: size.width, height: size.height, transform: { x: 100, y: 100 } },
     coord(
@@ -26,12 +26,12 @@ export const testPolarRectLine = (size: { width: number; height: number }) =>
         rect({
           dims: [
             {
-              min: 0,
-              size: 100,
+              min: 20,
+              size: 50,
             },
             {
-              min: 0,
-              size: value(25, "test"),
+              min: value(0, "test"),
+              size: value(Math.PI / 2, "test"),
             },
           ],
           fill: color6[0],
@@ -44,7 +44,7 @@ export const testPolarRectLine = (size: { width: number; height: number }) =>
             },
             {
               min: 0,
-              size: value(8, "test"),
+              size: value(Math.PI / 3, "test"),
             },
           ],
           fill: color6[1],
@@ -55,7 +55,7 @@ export const testPolarRectLine = (size: { width: number; height: number }) =>
               min: 0,
               size: 10,
             },
-            { min: 0, size: value(40, "test") },
+            { min: 0, size: value(Math.PI / 4, "test") },
           ],
           fill: color6[2],
         }),

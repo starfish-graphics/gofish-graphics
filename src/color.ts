@@ -108,3 +108,32 @@ export const color6 = [
   mix(appleColorGenerator((10 / 12) * 360), white, 0),
   mix(appleColorGenerator((2 / 12) * 360), white, 0.2),
 ];
+
+export const color10Order = ["blue", "yellow", "fuschia", "lime", "purple"];
+
+export const color6_20250320 = [
+  color[color10Order[0]][5],
+  color[color10Order[1]][4],
+  color[color10Order[4]][5],
+  color.red[4],
+  color[color10Order[3]][4],
+  color[color10Order[2]][4],
+];
+
+/* OH NO!!!! I WANT TO START WITH A GREEN!!!!! NOT BLUE!!!! */
+
+// color-blind friendly green
+export const color6_20250320v2 = [
+  // color[color10Order[0]][5],
+  // mix(color.blue[5], color.white, 0.1),
+  color.blue[5],
+  // color[color10Order[1]][4], // this yellow may be too bright
+  mix(color.yellow[5], color.white, 0.45),
+  // color[color10Order[4]][5], // this purple may be too dark for scatterplots...
+  mix(color.purple[5], color.white, 0.5),
+  color.red[4],
+  color.green[3],
+  // color[color10Order[2]][4],
+  mix(color.fuschia[5], color.white, 0.35),
+  // mix(color.teal[4], color.blue[4], 0.8),
+];
