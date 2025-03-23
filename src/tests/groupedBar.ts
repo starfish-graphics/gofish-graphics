@@ -3,7 +3,7 @@ import { gofish } from "../ast/gofish";
 import { value } from "../ast/data";
 import { stack } from "../ast/graphicalOperators/stack";
 import { rect } from "../ast/marks/rect";
-import { color } from "../color";
+import { color, /* color6 */ color6_20250323 as color6 } from "../color";
 
 const data = [
   { category: "A", group: "x", value: 0.1 },
@@ -30,7 +30,7 @@ export const testGroupedBar = (size: { width: number; height: number }) => {
             rect({
               w: 30,
               h: value(d.value, "value"),
-              fill: d.group === "x" ? color.red[5] : d.group === "y" ? color.blue[5] : color.green[5],
+              fill: d.group === "x" ? color6[0] : d.group === "y" ? color6[1] : color6[2],
             })
           )
         )

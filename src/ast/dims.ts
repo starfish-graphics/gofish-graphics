@@ -3,6 +3,7 @@ export type Interval<T = number> = {
   center?: T;
   max?: T;
   size?: T;
+  embedded?: boolean;
 };
 
 export type Dimensions<T = number> = Interval<T>[];
@@ -10,13 +11,15 @@ export type Dimensions<T = number> = Interval<T>[];
 export type FancyDims<T = number> =
   | {
       x?: T;
-      y?: T;
       cx?: T;
-      cy?: T;
       x2?: T;
-      y2?: T;
       w?: T;
+      emX?: boolean;
+      y?: T;
+      cy?: T;
+      y2?: T;
       h?: T;
+      emY?: boolean;
     }
   | {
       0?: Interval<T>;
@@ -30,13 +33,25 @@ export const elaborateDims = <T>(dims: FancyDims<T>): Dimensions<T> => {
   }
   if ("0" in dims || "1" in dims) {
     return [
-      { min: dims[0]?.min, center: dims[0]?.center, max: dims[0]?.max, size: dims[0]?.size },
-      { min: dims[1]?.min, center: dims[1]?.center, max: dims[1]?.max, size: dims[1]?.size },
+      {
+        min: dims[0]?.min,
+        center: dims[0]?.center,
+        max: dims[0]?.max,
+        size: dims[0]?.size,
+        embedded: dims[0]?.embedded,
+      },
+      {
+        min: dims[1]?.min,
+        center: dims[1]?.center,
+        max: dims[1]?.max,
+        size: dims[1]?.size,
+        embedded: dims[1]?.embedded,
+      },
     ];
   }
   return [
-    { min: dims.x, center: dims.cx, max: dims.x2, size: dims.w },
-    { min: dims.y, center: dims.cy, max: dims.y2, size: dims.h },
+    { min: dims.x, center: dims.cx, max: dims.x2, size: dims.w, embedded: dims.emX },
+    { min: dims.y, center: dims.cy, max: dims.y2, size: dims.h, embedded: dims.emY },
   ];
 };
 

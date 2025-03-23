@@ -46,7 +46,7 @@ export const segmentToSVG = (segment: PathSegment): string => {
 export const pathToSVGPath = (path: Path): string => {
   const firstSegment = path[0];
   const startPoint = firstSegment.type === "line" ? firstSegment.points[0] : firstSegment.start;
-  return `M${startPoint[0]},${startPoint[1]} ${path.map(segmentToSVG).join(" ")} Z`;
+  return `M${startPoint[0]},${startPoint[1]} ${path.map(segmentToSVG).join(" ")}`;
 };
 
 export const transformPath = (path: Path, space: CoordinateTransform): Path => {

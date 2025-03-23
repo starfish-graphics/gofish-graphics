@@ -2,7 +2,7 @@ import { path, Path, pathToSVGPath, segment, subdividePath, transformPath } from
 import { GoFishNode } from "../_node";
 import { CoordinateTransform } from "../coordinateTransforms/coord";
 import { linear } from "../coordinateTransforms/linear";
-import { getDataType, getValue, isValue, MaybeValue, Value } from "../data";
+import { getDataType, getValue, inferEmbedded, isValue, MaybeValue, Value } from "../data";
 import { Dimensions, elaborateDims, FancyDims, FancySize, Size, Transform } from "../dims";
 import { aesthetic, continuous } from "../domain";
 
@@ -14,7 +14,7 @@ export const rect = ({
   strokeWidth = 0,
   ...fancyDims
 }: { name?: string; fill?: string; stroke?: string; strokeWidth?: number } & FancyDims<MaybeValue<number>>) => {
-  const dims = elaborateDims(fancyDims);
+  const dims = elaborateDims(fancyDims).map(inferEmbedded);
   return new GoFishNode(
     {
       name,
@@ -83,8 +83,10 @@ export const rect = ({
       }) => {
         const space = coordinateTransform ?? linear();
 
-        const isDataX = isValue(dims[0].size);
-        const isDataY = isValue(dims[1].size);
+        // const isDataX = isValue(dims[0].size);
+        // const isDataY = isValue(dims[1].size);
+        const isXEmbedded = dims[0].embedded;
+        const isYEmbedded = dims[1].embedded;
 
         // combine intrinsicDims with transform
         const displayDims = [
@@ -103,7 +105,7 @@ export const rect = ({
         ];
 
         // Both dimensions are aesthetic - render as transformed point
-        if (!isDataX && !isDataY) {
+        if (!isXEmbedded && !isYEmbedded) {
           const center: [number, number] = [
             (displayDims[0].min ?? 0) + (displayDims[0].size ?? 0) / 2,
             (displayDims[1].min ?? 0) + (displayDims[1].size ?? 0) / 2,
@@ -124,9 +126,9 @@ export const rect = ({
         }
 
         // One dimension is data - render as line
-        if (isDataX !== isDataY) {
-          const dataAxis = isDataX ? 0 : 1;
-          const aestheticAxis = isDataX ? 1 : 0;
+        if (isXEmbedded !== isYEmbedded) {
+          const dataAxis = isXEmbedded ? 0 : 1;
+          const aestheticAxis = isXEmbedded ? 1 : 0;
           const thickness = displayDims[aestheticAxis].size ?? 0;
 
           // Calculate midpoint of aesthetic axis
@@ -134,18 +136,24 @@ export const rect = ({
 
           // For linear spaces, we can render a simple line
           if (space.isLinear) {
-            const x = isDataX ? displayDims[0].min ?? 0 : aestheticMid - thickness / 2;
-            const y = isDataX ? aestheticMid - thickness / 2 : displayDims[1].min ?? 0;
-            const width = isDataX ? (displayDims[0].max ?? 0) - (displayDims[0].min ?? 0) : thickness;
-            const height = isDataX ? thickness : (displayDims[1].max ?? 0) - (displayDims[1].min ?? 0);
+            const x = isXEmbedded ? displayDims[0].min ?? 0 : aestheticMid - thickness / 2;
+            const y = isXEmbedded ? aestheticMid - thickness / 2 : displayDims[1].min ?? 0;
+            const width = isXEmbedded ? (displayDims[0].max ?? 0) - (displayDims[0].min ?? 0) : thickness;
+            const height = isXEmbedded ? thickness : (displayDims[1].max ?? 0) - (displayDims[1].min ?? 0);
             return <rect x={x} y={y} width={width} height={height} fill={fill} />;
           }
 
           // Create path along midline
           const linePath = path(
             [
-              [isDataX ? displayDims[0].min ?? 0 : aestheticMid, isDataX ? aestheticMid : displayDims[1].min ?? 0],
-              [isDataX ? displayDims[0].max ?? 0 : aestheticMid, isDataX ? aestheticMid : displayDims[1].max ?? 0],
+              [
+                isXEmbedded ? displayDims[0].min ?? 0 : aestheticMid,
+                isXEmbedded ? aestheticMid : displayDims[1].min ?? 0,
+              ],
+              [
+                isXEmbedded ? displayDims[0].max ?? 0 : aestheticMid,
+                isXEmbedded ? aestheticMid : displayDims[1].max ?? 0,
+              ],
             ],
             { subdivision: 1000 }
           );

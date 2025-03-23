@@ -11,6 +11,7 @@ import { testPolarRibbon } from "./tests/polarRibbon";
 import { testPolarRect } from "./tests/polarRect";
 import { testPolarRectLineY } from "./tests/polarRectLineY";
 import { testPolarRectLineX } from "./tests/polarRectLineX";
+import { testPolarRectAreaXY } from "./tests/polarRectAreaXY";
 
 const App: Component = () => {
   return (
@@ -24,8 +25,8 @@ const App: Component = () => {
       <h2>Stacked Bar</h2>
       {testStackedBar({ width: 500, height: 200 })}
       <h2>Stacked Bar With Spacing</h2>
-      {testStackedBarWithSpacing({ width: 500, height: 200 })} */}
-      {/* <h2>Ribbon Chart</h2>
+      {testStackedBarWithSpacing({ width: 500, height: 200 })}
+      <h2>Ribbon Chart</h2>
       {testRibbonChart({ width: 500, height: 300 })} */}
       {/* <h2>Polar Ribbon Chart</h2>
       {testPolarRibbon({ width: 500, height: 300 })} */}
@@ -35,6 +36,8 @@ const App: Component = () => {
       {testPolarRectLineY({ width: 500, height: 300 })}
       <h2>Polar Rect Line X</h2>
       {testPolarRectLineX({ width: 500, height: 300 })}
+      <h2>Polar Rect Area XY</h2>
+      {testPolarRectAreaXY({ width: 500, height: 300 })}
       {/* <h2>Color Palette</h2>
       {testColorPalette({ width: 1000, height: 500 })}
       <h2>Color 10</h2>

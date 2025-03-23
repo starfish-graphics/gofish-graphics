@@ -137,3 +137,18 @@ export const color6_20250320v2 = [
   mix(color.fuschia[5], color.white, 0.35),
   // mix(color.teal[4], color.blue[4], 0.8),
 ];
+
+export const color6_20250323 = [
+  // color[color10Order[0]][5],
+  // mix(color.blue[5], color.white, 0.1),
+  color.blue[5],
+  // color[color10Order[1]][4], // this yellow may be too bright
+  mix(color.yellow[5], color.white, 0.45),
+  // color[color10Order[4]][5], // this purple may be too dark for scatterplots...
+  color.red[4],
+  mix(color.purple[5], color.white, 0.5),
+  color.green[3],
+  // color[color10Order[2]][4],
+  mix(color.fuschia[5], color.white, 0.35),
+  // mix(color.teal[4], color.blue[4], 0.8),
+];

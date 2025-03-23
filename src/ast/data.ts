@@ -1,3 +1,5 @@
+import { Interval } from "./dims";
+
 export type Value<T> = T | { type: "datum"; datum: any; dataType: string | undefined };
 export type MaybeValue<T> = T | Value<T>;
 
@@ -19,4 +21,15 @@ export const getDataType = <T>(value: MaybeValue<T>): string => {
     return value.dataType ?? "unknown";
   }
   return "unknown";
+};
+
+export const inferEmbedded = <T>(interval: Interval<T>): Interval<T> => {
+  // size must be a value && min must be undefined, aesthetic, or a value of the same type as size
+  if (
+    isValue(interval.size) &&
+    (interval.min === undefined || !isValue(interval.min) || getDataType(interval.min) === getDataType(interval.size))
+  ) {
+    return { ...interval, embedded: true };
+  }
+  return interval;
 };
