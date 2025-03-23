@@ -1,4 +1,4 @@
-import { color } from "../color";
+import { color, color6 } from "../color";
 import { value } from "../ast/data";
 import { gofish } from "../ast/gofish";
 import { rect } from "../ast/marks/rect";
@@ -19,42 +19,49 @@ const data = [
 
 export const testPolarRect = (size: { width: number; height: number }) =>
   gofish(
-    { width: size.width, height: size.height },
+    { width: size.width, height: size.height, transform: { x: 100, y: 100 } },
     coord(polar(), [
       rect({
         dims: [
           { min: 10, size: 30 },
           { min: 0, size: 50 },
         ],
-        fill: color.green[5],
+        fill: color6[0],
       }),
       rect({
         dims: [
           { min: 50, size: 30 },
           { min: 0, size: 50 },
         ],
-        fill: color.green[5],
+        fill: color6[1],
       }),
       rect({
         dims: [
           { min: 50, size: 30 },
           { min: Math.PI / 2, size: 50 },
         ],
-        fill: color.green[5],
+        fill: color6[2],
       }),
       rect({
         dims: [
           { min: 50, size: 30 },
           { min: Math.PI / 3, size: 50 },
         ],
-        fill: color.green[5],
+        fill: color6[3],
       }),
       rect({
         dims: [
           { min: 50, size: 5 },
           { min: Math.PI / 4, size: 5 },
         ],
-        fill: color.green[5],
+        fill: color6[4],
+      }),
+      rect({
+        dims: [
+          { min: 50, size: 5 },
+          { min: (3 * Math.PI) / 2, size: 5 },
+        ],
+        fill: color6[5],
       }),
     ])
   );

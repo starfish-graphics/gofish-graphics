@@ -64,7 +64,6 @@ export class GoFishRef {
 
   public resolveNames(): void {
     this.selectedNode = getScopeContext().get(this.selection);
-    console.log("selectedNode", this.selectedNode);
   }
 
   /* TODO: I'm not really sure what this should do */

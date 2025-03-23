@@ -1,6 +1,9 @@
+import { Show } from "solid-js";
+import { path, pathToSVGPath, transformPath } from "../../path";
 import { GoFishAST } from "../_ast";
 import { GoFishNode } from "../_node";
 import { Size } from "../dims";
+import { black } from "../../color";
 
 export type CoordinateTransform = {
   transform: (point: [number, number]) => [number, number];
@@ -32,7 +35,7 @@ const flattenLayout = (node: GoFishNode): GoFishNode[] => {
   For now we'll just assume that it's a GoFishNode tho... maybe it's a GoFishNode that contains DisplayObjects
   inside it?
 */
-export const coord = (coordTransform: CoordinateTransform, children: GoFishNode[]): GoFishNode => {
+export const coord = (coordTransform: CoordinateTransform, children: GoFishNode[], grid?: boolean): GoFishNode => {
   return new GoFishNode(
     {
       type: "coord",
@@ -46,20 +49,91 @@ export const coord = (coordTransform: CoordinateTransform, children: GoFishNode[
         };
       },
       layout: (shared, size, scaleFactors, children, measurement) => {
-        const childPlaceables = children.map((child) => child.layout(size, scaleFactors));
+        /* TODO: need correct scale factors */
+        const childPlaceables = children.map((child) => child.layout(size, [1, 1]));
 
         /* TODO: maybe have to be smarter about this... */
-        const maxWidth = Math.max(...childPlaceables.map((childPlaceable) => childPlaceable.dims[0].max!));
-        const maxHeight = Math.max(...childPlaceables.map((childPlaceable) => childPlaceable.dims[1].max!));
+        const minX = Math.min(...childPlaceables.map((childPlaceable) => childPlaceable.dims[0].min!));
+        const maxX = Math.max(...childPlaceables.map((childPlaceable) => childPlaceable.dims[0].max!));
+        const minY = Math.min(...childPlaceables.map((childPlaceable) => childPlaceable.dims[1].min!));
+        const maxY = Math.max(...childPlaceables.map((childPlaceable) => childPlaceable.dims[1].max!));
+
         return {
-          intrinsicDims: { w: maxWidth, h: maxHeight },
+          intrinsicDims: {
+            x: minX,
+            y: minY,
+            w: maxX - minX,
+            h: maxY - minY,
+          },
           transform: {
-            translate: [0, 0],
+            translate: [undefined, undefined],
           },
         };
       },
-      render: (intrinsicDims, transform) => {
-        return children.map((child) => child.render(coordTransform));
+      render: ({ transform }) => {
+        const gridLines = () => {
+          /* take an evenly space net of lines covering the space, map them through the space, and
+          render the paths */
+          // const domain = space.inferDomain({ width, height });
+          const lines = [];
+          const ticks = [];
+
+          const domain = [
+            { min: 0, max: 100, size: 100 },
+            { min: 0, max: 2 * Math.PI, size: 2 * Math.PI },
+          ];
+
+          for (let i = domain[0].min!; i <= domain[0].max!; i += domain[0].size! / 10) {
+            const line = transformPath(
+              path(
+                [
+                  [i, domain[1].min!],
+                  [i, domain[1].max!],
+                ],
+                { subdivision: 100 }
+              ),
+              coordTransform
+            );
+            lines.push(<path d={pathToSVGPath(line)} stroke={black} fill="none" />);
+            const [x, y] = coordTransform.transform([i, domain[1].max!]);
+            ticks.push(
+              <text x={x} y={y} /* dy="-1em" */ font-size="8pt" fill={black}>
+                {i.toFixed(0)}
+              </text>
+            );
+          }
+          for (let i = domain[1].min!; i <= domain[1].max!; i += domain[1].size! / 10) {
+            const line = transformPath(
+              path(
+                [
+                  [domain[0].min!, i],
+                  [domain[0].max!, i],
+                ],
+                { subdivision: 100 }
+              ),
+              coordTransform
+            );
+            lines.push(<path d={pathToSVGPath(line)} stroke={black} fill="none" />);
+            const [x, y] = coordTransform.transform([domain[0].max! + domain[0].size! / 20, i]);
+            ticks.push(
+              <text x={x} y={y} /* dy="-1em" */ font-size="8pt" fill={black}>
+                {i.toFixed(0)}
+              </text>
+            );
+          }
+          return (
+            <g>
+              {lines}
+              {ticks}
+            </g>
+          );
+        };
+        return (
+          <g transform={`translate(${transform?.translate?.[0] ?? 0}, ${transform?.translate?.[1] ?? 0})`}>
+            {children.map((child) => child.render(coordTransform))}
+            <Show when={grid}>{gridLines()}</Show>
+          </g>
+        );
       },
     },
     children

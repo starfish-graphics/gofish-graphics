@@ -37,7 +37,6 @@ export const gofish = (
     }
     return render({ width, height }, child);
   } finally {
-    console.log("scopeContext", scopeContext);
     scopeContext = null;
   }
 };

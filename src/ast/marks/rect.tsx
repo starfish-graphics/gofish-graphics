@@ -81,7 +81,6 @@ export const rect = ({
         coordinateTransform?: CoordinateTransform;
       }) => {
         const space = coordinateTransform ?? linear();
-        console.log("space", space);
 
         const isDataX = isValue(dims[0].size);
         const isDataY = isValue(dims[1].size);
@@ -147,8 +146,10 @@ export const rect = ({
               [isDataX ? displayDims[0].min ?? 0 : aestheticMid, isDataX ? aestheticMid : displayDims[1].min ?? 0],
               [isDataX ? displayDims[0].max ?? 0 : aestheticMid, isDataX ? aestheticMid : displayDims[1].max ?? 0],
             ],
-            { subdivision: 1000 }
+            {}
+            // { subdivision: 1000 }
           );
+          console.log("linePath", linePath, displayDims[0], displayDims[1], intrinsicDims, transform);
 
           // Subdivide and transform path
           const transformed = transformPath(linePath, space);

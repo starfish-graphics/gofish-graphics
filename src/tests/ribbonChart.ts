@@ -87,7 +87,6 @@ const color6 = [
   mix(appleColor((10 / 12) * 360), white, 0),
   mix(appleColor((2 / 12) * 360), white, 0.2),
 ];
-console.log(color6);
 
 const colorScale = {
   x: color6[0],

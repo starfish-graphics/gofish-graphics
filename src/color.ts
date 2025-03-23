@@ -1,6 +1,6 @@
 import { lerp, rybHsl2rgb } from "rybitten";
 import { ColorCoords, cubes } from "rybitten/cubes";
-import { palette } from "spectral.js";
+import { mix, palette } from "spectral.js";
 export const rgbToString = (rgb: ColorCoords) => `rgb(${rgb.map((x) => Math.round(x * 255)).join(", ")})`;
 
 export const createColorRange = (hue: number) =>
@@ -94,3 +94,17 @@ export const appleColor = {
   blue: appleColorGenerator((4 / 6) * 360),
   purple: appleColorGenerator((5 / 6) * 360),
 };
+
+export const white = "rgb(255, 244, 216)";
+export const black = mix("rgb(20, 20, 20)", white, 0.3);
+
+export const color6 = [
+  mix(appleColorGenerator((6 / 12) * 360), white, 0),
+  // "  #ff77bc",
+  // mix(appleColor((11 / 12) * 360), "#ffffff", 0.3),
+  mix("#F49AC2", black, 0),
+  mix(appleColorGenerator((4 / 12) * 360), white, 0),
+  mix(appleColorGenerator((8 / 12) * 360), white, 0),
+  mix(appleColorGenerator((10 / 12) * 360), white, 0),
+  mix(appleColorGenerator((2 / 12) * 360), white, 0.2),
+];

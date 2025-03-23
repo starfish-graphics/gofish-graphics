@@ -165,14 +165,13 @@ export const path = (
     for (let i = 0; i < points.length - 1; i++) {
       segments.push(segment(points[i], points[i + 1]));
     }
-    return segments;
   } else {
     for (let i = 0; i < points.length - 1; i++) {
-      const control1 =
+      const control1: Point =
         interpolation === "bezierX"
           ? [(points[i][0] + points[i + 1][0]) / 2, points[i][1]]
           : [points[i][0], (points[i][1] + points[i + 1][1]) / 2];
-      const control2 =
+      const control2: Point =
         interpolation === "bezierX"
           ? [(points[i][0] + points[i + 1][0]) / 2, points[i + 1][1]]
           : [points[i + 1][0], (points[i][1] + points[i + 1][1]) / 2];
