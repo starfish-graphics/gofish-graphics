@@ -39,7 +39,6 @@ export const connect = (
         const segments: Path[] = [];
 
         const childPlaceables = children.map((child) => child.layout(size, scaleFactors));
-        console.log("childPlaceables", childPlaceables);
         const bboxPairs = pairs(childPlaceables.map((child) => child.dims));
 
         if (dir === 0) {
@@ -185,7 +184,7 @@ export const connect = (
                     // filter="url(#crumpled-paper)"
                     d={d}
                     fill={fill ?? "none"}
-                    stroke={stroke ?? "black"}
+                    stroke={stroke ?? fill ?? "black"}
                     stroke-width={strokeWidth ?? 0}
                     opacity={opacity ?? 1}
                   />

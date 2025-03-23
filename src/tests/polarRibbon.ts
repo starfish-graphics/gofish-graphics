@@ -11,6 +11,8 @@ import { color10Order } from "./color10";
 import { mix } from "spectral.js";
 import { cubes } from "rybitten/cubes";
 import { rybHsl2rgb } from "rybitten";
+import { coord } from "../ast/coordinateTransforms/coord";
+import { polar } from "../ast/coordinateTransforms/polar";
 
 const data = [
   { category: "A", group: "x", value: 0.1 },
@@ -98,37 +100,49 @@ const colorScale = {
   u: color6[5],
 };
 
-export const testRibbonChart = (size: { width: number; height: number }) =>
+/* 
+Plan of attack:
+coords work like this:
+- layout: during layout, they flatten their child hierarchy completely, so it's easy to transform them (and
+  also because coord doesn't care about graphical operators, only positions)
+- rendering: then, during rendering, each mark applies its coordinate transform context. its behavior is
+  influenced by its mark embedding "mode"
+*/
+
+export const testPolarRibbon = (size: { width: number; height: number }) =>
   gofish(
     { width: size.width, height: size.height },
-    layer([
-      stack(
-        { direction: 0, spacing: 64, alignment: "end", sharedScale: true },
-        // TODO: I could probably make the width be uniform flexible basically
-        Object.entries(_.groupBy(data, "category")).map(([category, items]) =>
-          stack(
-            { direction: 1, spacing: 0, alignment: "middle" },
-            items.toReversed().map((d) =>
-              rect({
-                name: `${d.category}-${d.group}`,
-                w: 32,
-                h: value(d.value, "value"),
-                fill: colorScale[d.group as keyof typeof colorScale],
-              })
+    coord(
+      polar(),
+      layer([
+        stack(
+          { direction: 0, spacing: 64, alignment: "end", sharedScale: true },
+          // TODO: I could probably make the width be uniform flexible basically
+          Object.entries(_.groupBy(data, "category")).map(([category, items]) =>
+            stack(
+              { direction: 1, spacing: 0, alignment: "middle" },
+              items.toReversed().map((d) =>
+                rect({
+                  name: `${d.category}-${d.group}`,
+                  w: 32,
+                  h: value(d.value, "value"),
+                  fill: colorScale[d.group as keyof typeof colorScale],
+                })
+              )
             )
           )
-        )
-      ),
-      ...Object.entries(_.groupBy(data, "group")).map(([group, items]) =>
-        connect(
-          {
-            direction: "x",
-            fill: colorScale[group as keyof typeof colorScale],
-            interpolation: "bezier",
-            // opacity: 0.8,
-          },
-          items.map((d) => ref(`${d.category}-${d.group}`))
-        )
-      ),
-    ])
+        ),
+        ...Object.entries(_.groupBy(data, "group")).map(([group, items]) =>
+          connect(
+            {
+              direction: "x",
+              fill: colorScale[group as keyof typeof colorScale],
+              interpolation: "bezier",
+              // opacity: 0.8,
+            },
+            items.map((d) => ref(`${d.category}-${d.group}`))
+          )
+        ),
+      ])
+    )
   );

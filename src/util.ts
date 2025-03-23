@@ -1,3 +1,7 @@
+export const lerp = (a: number, b: number, t: number): number => {
+  return a + t * (b - a);
+};
+
 // assumes function is monotonically increasing
 // lowerBound must be less than the target
 export const findTargetMonotonic = (

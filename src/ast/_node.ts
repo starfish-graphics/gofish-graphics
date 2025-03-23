@@ -17,6 +17,7 @@ import { Domain } from "./domain";
 import { getScopeContext } from "./gofish";
 import { GoFishRef } from "./_ref";
 import { GoFishAST } from "./_ast";
+import { CoordinateTransform } from "./coordinateTransforms/coord";
 
 /* TODO: resolveMeasures and layout feel pretty similar... */
 
@@ -37,6 +38,16 @@ export type Layout = (
   measurement: (scaleFactors: Size) => Size
 ) => { intrinsicDims: FancyDims; transform: FancyTransform; renderData?: any };
 
+export type Render = (
+  {
+    intrinsicDims,
+    transform,
+    renderData,
+    coordinateTransform,
+  }: { intrinsicDims?: Dimensions; transform?: Transform; renderData?: any; coordinateTransform?: CoordinateTransform },
+  children: JSX.Element[]
+) => JSX.Element;
+
 export class GoFishNode {
   public type: string;
   public name?: string;
@@ -44,17 +55,14 @@ export class GoFishNode {
   // private inferDomains: (childDomains: Size<Domain>[]) => FancySize<Domain | undefined>;
   private _measure: Measure;
   private _layout: Layout;
-  private _render: (
-    { intrinsicDims, transform, renderData }: { intrinsicDims?: Dimensions; transform?: Transform; renderData?: any },
-    children: JSX.Element[]
-  ) => JSX.Element;
+  private _render: Render;
   public children: GoFishAST[];
   public intrinsicDims?: Dimensions;
   public transform?: Transform;
   public shared: Size<boolean>;
   private measurement: (scaleFactors: Size) => Size;
   private renderData?: any;
-
+  public coordinateTransform?: CoordinateTransform;
   constructor(
     {
       name,
@@ -71,14 +79,7 @@ export class GoFishNode {
       /* TODO: I'm not sure whether scale inference and sizeThatFits should be separate or the same pass*/
       measure: Measure;
       layout: Layout;
-      render: (
-        {
-          intrinsicDims,
-          transform,
-          renderData,
-        }: { intrinsicDims?: Dimensions; transform?: Transform; renderData?: any },
-        children: JSX.Element[]
-      ) => JSX.Element;
+      render: Render;
       shared?: Size<boolean>;
     },
     children: GoFishAST[]
@@ -161,10 +162,16 @@ export class GoFishNode {
     }
   }
 
-  public render(): JSX.Element {
+  public render(coordinateTransform?: CoordinateTransform): JSX.Element {
     return this._render(
-      { intrinsicDims: this.intrinsicDims, transform: this.transform, renderData: this.renderData },
-      this.children.map((child) => child.render())
+      {
+        intrinsicDims: this.intrinsicDims,
+        transform: this.transform,
+        renderData: this.renderData,
+        /* TODO: do we want to add this as an object property? */
+        coordinateTransform: coordinateTransform,
+      },
+      this.children.map((child) => child.render(coordinateTransform))
     );
   }
 }

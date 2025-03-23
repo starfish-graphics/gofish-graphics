@@ -1,4 +1,7 @@
+import { path, Path, pathToSVGPath, segment, subdividePath, transformPath } from "../../path";
 import { GoFishNode } from "../_node";
+import { CoordinateTransform } from "../coordinateTransforms/coord";
+import { linear } from "../coordinateTransforms/linear";
 import { getDataType, getValue, isValue, MaybeValue, Value } from "../data";
 import { Dimensions, elaborateDims, FancyDims, FancySize, Size, Transform } from "../dims";
 import { aesthetic, continuous } from "../domain";
@@ -6,8 +9,10 @@ import { aesthetic, continuous } from "../domain";
 export const rect = ({
   name,
   fill = "black",
+  stroke = fill,
+  strokeWidth = 0,
   ...fancyDims
-}: { name?: string; fill?: string } & FancyDims<MaybeValue<number>>) => {
+}: { name?: string; fill?: string; stroke?: string; strokeWidth?: number } & FancyDims<MaybeValue<number>>) => {
   const dims = elaborateDims(fancyDims);
   return new GoFishNode(
     {
@@ -66,7 +71,115 @@ export const rect = ({
           },
         };
       },
-      render: ({ intrinsicDims, transform }: { intrinsicDims?: Dimensions; transform?: Transform }) => {
+      render: ({
+        intrinsicDims,
+        transform,
+        coordinateTransform,
+      }: {
+        intrinsicDims?: Dimensions;
+        transform?: Transform;
+        coordinateTransform?: CoordinateTransform;
+      }) => {
+        const space = coordinateTransform ?? linear();
+        console.log("space", space);
+
+        const isDataX = isValue(dims[0].size);
+        const isDataY = isValue(dims[1].size);
+
+        // combine intrinsicDims with transform
+        const displayDims = [
+          {
+            min: (transform?.translate?.[0] ?? 0) + (intrinsicDims?.[0]?.min ?? 0),
+            size: intrinsicDims?.[0]?.size ?? 0,
+            center: (transform?.translate?.[0] ?? 0) + (intrinsicDims?.[0]?.center ?? 0),
+            max: (transform?.translate?.[0] ?? 0) + (intrinsicDims?.[0]?.max ?? 0),
+          },
+          {
+            min: (transform?.translate?.[1] ?? 0) + (intrinsicDims?.[1]?.min ?? 0),
+            size: intrinsicDims?.[1]?.size ?? 0,
+            center: (transform?.translate?.[1] ?? 0) + (intrinsicDims?.[1]?.center ?? 0),
+            max: (transform?.translate?.[1] ?? 0) + (intrinsicDims?.[1]?.max ?? 0),
+          },
+        ];
+
+        // Both dimensions are aesthetic - render as transformed point
+        if (!isDataX && !isDataY) {
+          const center: [number, number] = [
+            (displayDims[0].min ?? 0) + (displayDims[0].size ?? 0) / 2,
+            (displayDims[1].min ?? 0) + (displayDims[1].size ?? 0) / 2,
+          ];
+          const [transformedX, transformedY] = space.transform(center);
+          const width = displayDims[0].size ?? 0;
+          const height = displayDims[1].size ?? 0;
+
+          return (
+            <rect
+              x={transformedX - width / 2}
+              y={transformedY - height / 2}
+              width={width}
+              height={height}
+              fill={fill}
+            />
+          );
+        }
+
+        // One dimension is data - render as line
+        if (isDataX !== isDataY) {
+          const dataAxis = isDataX ? 0 : 1;
+          const aestheticAxis = isDataX ? 1 : 0;
+          const thickness = displayDims[aestheticAxis].size ?? 0;
+
+          // Calculate midpoint of aesthetic axis
+          const aestheticMid = (displayDims[aestheticAxis].min ?? 0) + (displayDims[aestheticAxis].size ?? 0) / 2;
+
+          // For linear spaces, we can render a simple line
+          if (space.isLinear) {
+            const x = isDataX ? displayDims[0].min ?? 0 : aestheticMid - thickness / 2;
+            const y = isDataX ? aestheticMid - thickness / 2 : displayDims[1].min ?? 0;
+            const width = isDataX ? (displayDims[0].max ?? 0) - (displayDims[0].min ?? 0) : thickness;
+            const height = isDataX ? thickness : (displayDims[1].max ?? 0) - (displayDims[1].min ?? 0);
+            return <rect x={x} y={y} width={width} height={height} fill={fill} />;
+          }
+
+          // Create path along midline
+          const linePath = path(
+            [
+              [isDataX ? displayDims[0].min ?? 0 : aestheticMid, isDataX ? aestheticMid : displayDims[1].min ?? 0],
+              [isDataX ? displayDims[0].max ?? 0 : aestheticMid, isDataX ? aestheticMid : displayDims[1].max ?? 0],
+            ],
+            { subdivision: 1000 }
+          );
+
+          // Subdivide and transform path
+          const transformed = transformPath(linePath, space);
+
+          return <path d={pathToSVGPath(transformed)} stroke={fill} stroke-width={thickness} fill="none" />;
+        }
+
+        // Both dimensions are data - render as area
+
+        // If we're in a linear space, render as a rect element
+        if (space.isLinear) {
+          const x = displayDims[0].min ?? 0;
+          const y = displayDims[1].min ?? 0;
+          const width = (displayDims[0].max ?? 0) - x;
+          const height = (displayDims[1].max ?? 0) - y;
+          return <rect x={x} y={y} width={width} height={height} fill={fill} />;
+        }
+
+        const corners = path(
+          [
+            [displayDims[0].min ?? 0, displayDims[1].min ?? 0],
+            [displayDims[0].max ?? 0, displayDims[1].min ?? 0],
+            [displayDims[0].max ?? 0, displayDims[1].max ?? 0],
+            [displayDims[0].min ?? 0, displayDims[1].max ?? 0],
+          ],
+          { closed: true, subdivision: 1000 }
+        );
+
+        const transformed = transformPath(corners, space);
+
+        return <path d={pathToSVGPath(transformed)} fill={fill} />;
         return (
           <rect
             // filter="url(#crumpled-paper)"
@@ -75,6 +188,8 @@ export const rect = ({
             width={intrinsicDims?.[0]?.size ?? 0}
             height={intrinsicDims?.[1]?.size ?? 0}
             fill={fill}
+            stroke={stroke ?? fill ?? "black"}
+            stroke-width={strokeWidth ?? 0}
             shape-rendering="crispEdges"
           />
         );

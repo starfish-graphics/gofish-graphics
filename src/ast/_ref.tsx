@@ -83,57 +83,28 @@ export class GoFishRef {
 
     // Find the least common ancestor between this ref and the selected node
     const lca = findLeastCommonAncestor(this, this.selectedNode);
-    console.log("lca", lca);
 
     // Compute transform from selected node up to LCA
     let upwardTransform: Transform = { translate: [0, 0] };
     let current = this.selectedNode;
     while (current && current !== lca) {
       if (current.transform) {
-        console.log(
-          "Upward transform for",
-          current.type,
-          JSON.stringify(
-            {
-              current: current.transform,
-              accumulated: upwardTransform,
-            },
-            null,
-            2
-          )
-        );
         upwardTransform.translate![0] += current.transform.translate?.[0] ?? 0;
         upwardTransform.translate![1] += current.transform.translate?.[1] ?? 0;
       }
       current = current.parent!;
     }
 
-    console.log("Final upward transform:", JSON.stringify(upwardTransform, null, 2));
-
     // Compute transform from LCA down to this ref
     let downwardTransform: Transform = { translate: [0, 0] };
     current = this;
     while (current && current !== lca) {
       if (current.transform) {
-        console.log(
-          "Downward transform for",
-          current.type,
-          JSON.stringify(
-            {
-              current: current.transform,
-              accumulated: downwardTransform,
-            },
-            null,
-            2
-          )
-        );
         downwardTransform.translate![0] += current.transform.translate?.[0] ?? 0;
         downwardTransform.translate![1] += current.transform.translate?.[1] ?? 0;
       }
       current = current.parent!;
     }
-
-    console.log("Final downward transform:", JSON.stringify(downwardTransform, null, 2));
 
     // Combine transforms
     this.transform = {
