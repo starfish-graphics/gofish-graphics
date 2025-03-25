@@ -1,9 +1,10 @@
 import { CoordinateTransform } from "./coord";
 
-export const polar = (): CoordinateTransform => {
+export const arcLengthPolar = (): CoordinateTransform => {
   return {
-    transform: ([r, theta]: [number, number]) => [r * Math.cos(theta), r * Math.sin(theta)],
+    transform: ([r, s]: [number, number]) => [r * Math.cos(s / r), r * Math.sin(s / r)],
     isLinear: false,
+    /* TODO: double check these domains */
     domain: [
       { min: 0, max: 100, size: 100 },
       { min: 0, max: 2 * Math.PI, size: 2 * Math.PI },

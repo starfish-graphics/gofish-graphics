@@ -12,16 +12,18 @@ export const stack = (
     spacing = 0,
     alignment = "middle",
     sharedScale = false,
+    ...fancyDims
   }: {
     direction: FancyDirection;
     spacing?: number;
     alignment?: "start" | "middle" | "end";
     sharedScale?: boolean;
-  },
+  } & FancyDims,
   children: GoFishNode[]
 ) => {
   const stackDir = elaborateDirection(direction);
   const alignDir = (1 - stackDir) as Direction;
+  const dims = elaborateDims(fancyDims);
 
   return new GoFishNode(
     {
@@ -55,6 +57,11 @@ modes!!!
         //   const stackScaleFactor = findTargetMonotonic(size[stackDir], stackSize, { upperBoundGuess: size[stackDir] });
         // }
 
+        size = {
+          [stackDir]: dims[stackDir].size ?? size[stackDir],
+          [alignDir]: dims[alignDir].size ?? size[alignDir],
+        };
+
         return (scaleFactors: Size): FancySize => {
           const stackSize =
             _.sum(children.map((child) => child.measure(size)(scaleFactors)[stackDir])) +
@@ -67,6 +74,11 @@ modes!!!
         };
       },
       layout: (shared, size, scaleFactors, children, measurement) => {
+        size = {
+          [stackDir]: dims[stackDir].size ?? size[stackDir],
+          [alignDir]: dims[alignDir].size ?? size[alignDir],
+        };
+
         // TODO: alignDir...
         if (shared[stackDir]) {
           const stackScaleFactor = findTargetMonotonic(
@@ -139,7 +151,10 @@ modes!!!
             },
           },
           transform: {
-            translate: [0, 0],
+            translate: {
+              [alignDir]: dims[alignDir].min !== undefined ? dims[alignDir].min - alignMin : undefined,
+              [stackDir]: dims[stackDir].min !== undefined ? dims[stackDir].min : undefined,
+            },
           },
         };
       },

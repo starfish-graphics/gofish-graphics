@@ -154,11 +154,16 @@ export class GoFishNode {
       if (elabPos[i] === undefined) continue;
       if (this.intrinsicDims?.[i]?.min === undefined) {
         this.intrinsicDims![i].min = elabPos[i]!;
-      } /* if (this.transform?.translate?.[i] === undefined)  */ else {
+      } else if (this.transform?.translate?.[i] === undefined) {
         this.transform!.translate![i] = elabPos[i]! - (this.intrinsicDims![i].min ?? 0);
-      } /*  else {
-        console.warn("placing node with both intrinsic and transform defined");
-      } */
+      } else {
+        console.warn(
+          "placing node with both intrinsic and transform defined:",
+          this.type,
+          this.transform!.translate![i]
+        );
+        // this.transform!.translate![i] = elabPos[i]! - (this.intrinsicDims![i].min ?? 0);
+      }
     }
   }
 

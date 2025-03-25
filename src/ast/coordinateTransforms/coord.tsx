@@ -2,13 +2,14 @@ import { Show } from "solid-js";
 import { path, pathToSVGPath, transformPath } from "../../path";
 import { GoFishAST } from "../_ast";
 import { GoFishNode } from "../_node";
-import { Size } from "../dims";
+import { Interval, Size } from "../dims";
 import { black } from "../../color";
 
 export type CoordinateTransform = {
   transform: (point: [number, number]) => [number, number];
   // inferDomain: ({ width, height }: { width: number; height: number }) => Interval[];
   isLinear: boolean;
+  domain: [Interval, Interval];
 };
 
 /* TODO: implement this. I don't actually need it until I have more complex examples tho */
@@ -20,8 +21,10 @@ const flattenLayout = (node: GoFishAST, transform: [number, number] = [0, 0]): G
   // for now we return GoFishNodes, but we could return DisplayObjects
   // DisplayObjects are probably more principled b/c of how rendering them works... idk yet
 
-  /* current implementation: just flatten to all the child marks */
-  if (!("children" in node) || !node.children || node.children.length === 0) {
+  /* TODO: `connect` is a hack to get the operator to render in coordinate spaces
+       A more principled way to do this would be to have "connect" produce a child path mark.  
+  */
+  if (!("children" in node) || !node.children || node.children.length === 0 || node.type === "connect") {
     node.transform = {
       translate: [
         (node.transform?.translate?.[0] ?? 0) + transform[0]!,
@@ -95,10 +98,7 @@ export const coord = (coordTransform: CoordinateTransform, children: GoFishNode[
           const lines = [];
           const ticks = [];
 
-          const domain = [
-            { min: 0, max: 100, size: 100 },
-            { min: 0, max: 2 * Math.PI, size: 2 * Math.PI },
-          ];
+          const domain = coordTransform.domain;
 
           for (let i = domain[0].min!; i <= domain[0].max!; i += domain[0].size! / 10) {
             const line = transformPath(

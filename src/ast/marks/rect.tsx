@@ -121,6 +121,8 @@ export const rect = ({
               width={width}
               height={height}
               fill={fill}
+              stroke={stroke ?? fill ?? "black"}
+              stroke-width={strokeWidth ?? 0}
             />
           );
         }
@@ -140,7 +142,17 @@ export const rect = ({
             const y = isXEmbedded ? aestheticMid - thickness / 2 : displayDims[1].min ?? 0;
             const width = isXEmbedded ? (displayDims[0].max ?? 0) - (displayDims[0].min ?? 0) : thickness;
             const height = isXEmbedded ? thickness : (displayDims[1].max ?? 0) - (displayDims[1].min ?? 0);
-            return <rect x={x} y={y} width={width} height={height} fill={fill} />;
+            return (
+              <rect
+                x={x}
+                y={y}
+                width={width}
+                height={height}
+                fill={fill}
+                stroke={stroke ?? fill ?? "black"}
+                stroke-width={strokeWidth ?? 0}
+              />
+            );
           }
 
           // Create path along midline
@@ -161,7 +173,8 @@ export const rect = ({
           // Subdivide and transform path
           const transformed = transformPath(linePath, space);
 
-          return <path d={pathToSVGPath(transformed)} stroke={fill} stroke-width={thickness} fill="none" />;
+          // 0.5 removes weird white space at least for some charts
+          return <path d={pathToSVGPath(transformed)} stroke={fill} stroke-width={thickness + 0.5} fill="none" />;
         }
 
         // Both dimensions are data - render as area
@@ -187,7 +200,14 @@ export const rect = ({
 
         const transformed = transformPath(corners, space);
 
-        return <path d={pathToSVGPath(transformed)} fill={fill} />;
+        return (
+          <path
+            d={pathToSVGPath(transformed)}
+            fill={fill}
+            stroke={stroke ?? fill ?? "black"}
+            stroke-width={strokeWidth ?? 0}
+          />
+        );
         return (
           <rect
             // filter="url(#crumpled-paper)"

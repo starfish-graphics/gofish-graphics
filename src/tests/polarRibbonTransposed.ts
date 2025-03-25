@@ -3,7 +3,7 @@ import { gofish } from "../ast/gofish";
 import { value } from "../ast/data";
 import { stack } from "../ast/graphicalOperators/stack";
 import { rect } from "../ast/marks/rect";
-import { color } from "../color";
+import { color, color6 } from "../color";
 import { layer } from "../ast/graphicalOperators/layer";
 import { connect } from "../ast/graphicalOperators/connect";
 import { ref } from "../ast/marks/ref";
@@ -11,6 +11,10 @@ import { color10Order } from "./color10";
 import { mix } from "spectral.js";
 import { cubes } from "rybitten/cubes";
 import { rybHsl2rgb } from "rybitten";
+import { coord } from "../ast/coordinateTransforms/coord";
+import { polar } from "../ast/coordinateTransforms/polar";
+import { linear } from "../ast/coordinateTransforms/linear";
+import { polarTransposed } from "../ast/coordinateTransforms/polarTransposed";
 
 const data = [
   { category: "A", group: "x", value: 0.1 },
@@ -37,57 +41,6 @@ const data = [
 ].filter((d) => d.group !== "t");
 // .filter((d) => (d.group === "x" || d.group === "y") && d.category !== "C");
 
-const color6_20250320 = [
-  color[color10Order[0]][5],
-  color[color10Order[1]][4],
-  color[color10Order[4]][5],
-  color.red[4],
-  color[color10Order[3]][4],
-  color[color10Order[2]][4],
-];
-
-/* OH NO!!!! I WANT TO START WITH A GREEN!!!!! NOT BLUE!!!! */
-
-// color-blind friendly green
-const color6_20250320v2 = [
-  // color[color10Order[0]][5],
-  // mix(color.blue[5], color.white, 0.1),
-  color.blue[5],
-  // color[color10Order[1]][4], // this yellow may be too bright
-  mix(color.yellow[5], color.white, 0.45),
-  // color[color10Order[4]][5], // this purple may be too dark for scatterplots...
-  mix(color.purple[5], color.white, 0.5),
-  color.red[4],
-  color.green[3],
-  // color[color10Order[2]][4],
-  mix(color.fuschia[5], color.white, 0.35),
-  // mix(color.teal[4], color.blue[4], 0.8),
-];
-
-const apple90s = cubes.get("apple90s")!.cube;
-const appleColor = (hue: number) => {
-  const rgb = rybHsl2rgb([hue, 1, 0.5], { cube: apple90s });
-  const toHex = (val: number) =>
-    Math.round(val * 255)
-      .toString(16)
-      .padStart(2, "0");
-  return `#${toHex(rgb[0])}${toHex(rgb[1])}${toHex(rgb[2])}`;
-};
-
-const white = "rgb(255, 244, 216)";
-const black = "rgb(10, 10, 10)";
-
-const color6 = [
-  mix(appleColor((6 / 12) * 360), white, 0),
-  // "  #ff77bc",
-  // mix(appleColor((11 / 12) * 360), "#ffffff", 0.3),
-  mix("#F49AC2", black, 0),
-  mix(appleColor((4 / 12) * 360), white, 0),
-  mix(appleColor((8 / 12) * 360), white, 0),
-  mix(appleColor((10 / 12) * 360), white, 0),
-  mix(appleColor((2 / 12) * 360), white, 0.2),
-];
-
 const colorScale = {
   x: color6[0],
   y: color6[1],
@@ -97,42 +50,53 @@ const colorScale = {
   u: color6[5],
 };
 
-export const testRibbonChart = (size: { width: number; height: number }) =>
+/* 
+Plan of attack:
+coords work like this:
+- layout: during layout, they flatten their child hierarchy completely, so it's easy to transform them (and
+  also because coord doesn't care about graphical operators, only positions)
+- rendering: then, during rendering, each mark applies its coordinate transform context. its behavior is
+  influenced by its mark embedding "mode"
+*/
+
+export const testPolarRibbonTransposed = (size: { width: number; height: number }) =>
   gofish(
-    { width: size.width, height: size.height },
-    layer([
-      stack(
-        { direction: 0, spacing: 64, alignment: "end", sharedScale: true },
-        _(data)
-          .groupBy("category")
-          .map((items, category) =>
+    { width: size.width, height: size.height, transform: { x: 400, y: 400 } },
+    coord(polarTransposed(), [
+      layer([
+        stack(
+          { y: 100, direction: 0, spacing: 0, alignment: "start", sharedScale: true },
+          // TODO: I could probably make the width be uniform flexible basically
+          Object.entries(_.groupBy(data, "category")).map(([category, items]) =>
             stack(
               { direction: 1, spacing: 0, alignment: "middle" },
               items.toReversed().map((d) =>
                 rect({
                   name: `${d.category}-${d.group}`,
                   w: 32,
-                  h: value(d.value, "value"),
+                  // h: value(d.value, "value"),
+                  h: d.value * 100,
+                  emY: true,
                   fill: colorScale[d.group as keyof typeof colorScale],
                 })
               )
             )
           )
-          .value()
-      ),
-      ..._(data)
-        .groupBy("group")
-        .map((items, group) =>
+        ),
+        ...Object.entries(_.groupBy(data, "group")).map(([group, items], i) =>
           connect(
             {
               direction: "x",
               fill: colorScale[group as keyof typeof colorScale],
+              // fill: "black",
+              // fill: "none",
+              // stroke: i == 3 ? "black" : "none",
               interpolation: "bezier",
-              // opacity: 0.8,
+              opacity: 0.7,
             },
             items.map((d) => ref(`${d.category}-${d.group}`))
           )
-        )
-        .value(),
+        ),
+      ]),
     ])
   );

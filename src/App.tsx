@@ -15,11 +15,15 @@ import { testPolarRectAreaXY } from "./tests/polarRectAreaXY";
 import { testPolarBar } from "./tests/polarBar";
 import { testPolarGroupedBar } from "./tests/polarGroupedBar";
 import { testPolarRadialGroupedBar } from "./tests/polarRadialGroupedBar";
-
+import { testSankey } from "./tests/sankey";
+import { testPolarRibbonOther } from "./tests/polarRibbonOther";
+import { testPolarRibbonTransposed } from "./tests/polarRibbonTransposed";
+import { testBipolarGroupedBar } from "./tests/bipolarGroupedBar";
+import { testMosaic } from "./tests/mosaic";
 const App: Component = () => {
   return (
     <div>
-      {/* <h2>Rect</h2>
+      <h2>Rect</h2>
       {testRect({ width: 100, height: 100 })}
       <h2>Bar</h2>
       {testBar({ width: 500, height: 100 })}
@@ -29,10 +33,18 @@ const App: Component = () => {
       {testStackedBar({ width: 500, height: 200 })}
       <h2>Stacked Bar With Spacing</h2>
       {testStackedBarWithSpacing({ width: 500, height: 200 })}
+      <h2>Mosaic</h2>
+      {testMosaic({ width: 500, height: 200 })}
       <h2>Ribbon Chart</h2>
-      {testRibbonChart({ width: 500, height: 300 })} */}
-      {/* <h2>Polar Ribbon Chart</h2>
-      {testPolarRibbon({ width: 500, height: 300 })} */}
+      {testRibbonChart({ width: 500, height: 300 })}
+      {/* <h2>Sankey</h2>
+      {testSankey({ width: 500, height: 300 })} */}
+      <h2>Polar Ribbon Chart</h2>
+      {testPolarRibbon({ width: 500, height: 500 })}
+      <h2>Polar Ribbon Transposed</h2>
+      {testPolarRibbonTransposed({ width: 500, height: 500 })}
+      <h2>Polar Ribbon Other</h2>
+      {testPolarRibbonOther({ width: 500, height: 300 })}
       <h2>Polar Rect</h2>
       {testPolarRect({ width: 500, height: 300 })}
       <h2>Polar Rect Line Y</h2>
@@ -45,6 +57,8 @@ const App: Component = () => {
       {testPolarBar({ width: 500, height: 300 })}
       <h2>Polar Grouped Bar</h2>
       {testPolarGroupedBar({ width: 500, height: 300 })}
+      <h2>Bipolar Grouped Bar</h2>
+      {testBipolarGroupedBar({ width: 500, height: 300 })}
       <h2>Polar Radial Grouped Bar</h2>
       {testPolarRadialGroupedBar({ width: 500, height: 300 })}
       {/* <h2>Color Palette</h2>

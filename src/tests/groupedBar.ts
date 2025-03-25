@@ -22,7 +22,7 @@ export const testGroupedBar = (size: { width: number; height: number }) => {
   return gofish(
     { width: size.width, height: size.height },
     stack(
-      { direction: 0, spacing: 20, alignment: "end", sharedScale: true },
+      { x: 0, y: 0, direction: 0, spacing: 20, alignment: "end", sharedScale: true },
       Object.entries(_.groupBy(data, "category")).map(([category, items]) =>
         stack(
           { direction: 0, spacing: 2, alignment: "end" },
@@ -30,7 +30,10 @@ export const testGroupedBar = (size: { width: number; height: number }) => {
             rect({
               w: 30,
               h: value(d.value, "value"),
-              fill: d.group === "x" ? color6[0] : d.group === "y" ? color6[1] : color6[2],
+              stroke: "black",
+              strokeWidth: 1,
+              fill: "none",
+              // fill: d.group === "x" ? color6[0] : d.group === "y" ? color6[1] : color6[2],
             })
           )
         )

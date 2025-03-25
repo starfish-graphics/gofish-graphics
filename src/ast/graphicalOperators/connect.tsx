@@ -1,9 +1,10 @@
 import { For } from "solid-js";
-import { Path, PathSegment, pathToSVGPath } from "../../path";
+import { Path, PathSegment, pathToSVGPath, transformPath, subdividePath } from "../../path";
 import { GoFishAST } from "../_ast";
 import { GoFishNode } from "../_node";
 import { elaborateDirection, FancyDirection, Size } from "../dims";
 import { pairs } from "../../util";
+import { linear } from "../coordinateTransforms/linear";
 
 export const connect = (
   {
@@ -36,7 +37,7 @@ export const connect = (
         };
       },
       layout: (shared, size, scaleFactors, children) => {
-        const segments: Path[] = [];
+        const paths: Path[] = [];
 
         const childPlaceables = children.map((child) => child.layout(size, scaleFactors));
         const bboxPairs = pairs(childPlaceables.map((child) => child.dims));
@@ -44,7 +45,7 @@ export const connect = (
         if (dir === 0) {
           if (interpolation === "linear") {
             for (const [b0, b1] of bboxPairs) {
-              segments.push([
+              paths.push([
                 {
                   type: "line",
                   points: [
@@ -62,8 +63,15 @@ export const connect = (
                 {
                   type: "line",
                   points: [
-                    [b0[0].min!, b0[1].max!],
+                    [b1[0].min!, b1[1].max!],
                     [b0[0].max!, b0[1].max!],
+                  ],
+                },
+                {
+                  type: "line",
+                  points: [
+                    [b0[0].max!, b0[1].max!],
+                    [b0[0].max!, b0[1].min!],
                   ],
                 },
               ]);
@@ -71,7 +79,7 @@ export const connect = (
           } else if (interpolation === "bezier") {
             for (const [b0, b1] of bboxPairs) {
               const midX = (b0[0].max! + b1[0].min!) / 2;
-              segments.push([
+              paths.push([
                 {
                   type: "bezier",
                   start: [b0[0].max!, b0[1].min!],
@@ -106,7 +114,7 @@ export const connect = (
         } else {
           if (interpolation === "linear") {
             for (const [b0, b1] of bboxPairs) {
-              segments.push([
+              paths.push([
                 {
                   type: "line",
                   points: [
@@ -128,12 +136,19 @@ export const connect = (
                     [b0[0].max!, b0[1].max!],
                   ],
                 },
+                {
+                  type: "line",
+                  points: [
+                    [b0[0].max!, b0[1].max!],
+                    [b0[0].min!, b0[1].max!],
+                  ],
+                },
               ]);
             }
           } else if (interpolation === "bezier") {
             for (const [b0, b1] of bboxPairs) {
               const midY = (b0[1].max! + b1[1].min!) / 2;
-              segments.push([
+              paths.push([
                 {
                   type: "bezier",
                   start: [b0[0].min!, b0[1].max!],
@@ -170,15 +185,21 @@ export const connect = (
         return {
           intrinsicDims: { w: size[0], h: size[1] },
           transform: { translate: [0, 0] },
-          renderData: { segments },
+          renderData: { paths },
         };
       },
-      render: ({ intrinsicDims, transform, renderData }, children) => {
+      render: ({ intrinsicDims, transform, renderData, coordinateTransform }, children) => {
         return (
           <g transform={`translate(${transform?.translate?.[0] ?? 0}, ${transform?.translate?.[1]! ?? 0})`}>
-            <For each={renderData.segments}>
-              {(pathSegments) => {
-                const d = pathToSVGPath(pathSegments);
+            <For each={renderData.paths}>
+              {(path) => {
+                if (stroke === "black") {
+                  console.log(path);
+                }
+                const transformedPath = coordinateTransform
+                  ? transformPath(subdividePath(path, 1000), coordinateTransform)
+                  : path;
+                const d = pathToSVGPath(transformedPath);
                 return (
                   <path
                     // filter="url(#crumpled-paper)"

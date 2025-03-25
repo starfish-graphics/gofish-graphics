@@ -38,7 +38,7 @@ const data = [
   { category: "C", group: "u", value: 0.3 },
   { category: "C", group: "t", value: 0.2 },
 ].filter((d) => d.group !== "t");
-// .filter((d) => (d.group === "x" || d.group === "y") && d.category !== "C");
+/* .filter((d) => (d.group === "x" || d.group === "y") && d.category !== "C"); */
 
 const colorScale = {
   x: color6[0],
@@ -58,40 +58,43 @@ coords work like this:
   influenced by its mark embedding "mode"
 */
 
-export const testPolarRibbon = (size: { width: number; height: number }) =>
+export const testPolarRibbonOther = (size: { width: number; height: number }) =>
   gofish(
-    { width: size.width, height: size.height, transform: { x: 250 } },
+    { width: size.width, height: size.height, transform: { x: 275, y: 300 } },
     coord(polar(), [
       layer([
         stack(
-          { x: 100, direction: 0, spacing: 64, alignment: "end", sharedScale: true },
+          { x: 100, y: Math.PI, direction: 1, spacing: Math.PI / 6, alignment: "middle", sharedScale: true },
           // TODO: I could probably make the width be uniform flexible basically
           Object.entries(_.groupBy(data, "category")).map(([category, items]) =>
             stack(
-              { direction: 1, spacing: 0.02, alignment: "middle" },
-              items.toReversed().map((d) =>
-                rect({
-                  name: `${d.category}-${d.group}`,
-                  w: 32,
-                  // h: value(d.value, "value"),
-                  h: d.value / 1.5,
-                  emY: true,
-                  fill: colorScale[d.group as keyof typeof colorScale],
-                })
-              )
+              { direction: 0, spacing: 0, alignment: "middle" },
+              items
+                .sort((a, b) => a.value - b.value)
+                .map((d) =>
+                  rect({
+                    name: `${d.category}-${d.group}`,
+                    h: 16,
+                    // h: value(d.value, "value"),
+                    w: d.value * 50,
+                    emX: true,
+                    // emY: true,
+                    fill: colorScale[d.group as keyof typeof colorScale],
+                  })
+                )
             )
           )
         ),
         ...Object.entries(_.groupBy(data, "group")).map(([group, items], i) =>
           connect(
             {
-              direction: "x",
+              direction: "y",
               fill: colorScale[group as keyof typeof colorScale],
               // fill: "black",
               // fill: "none",
-              // stroke: i == 3 ? "black" : "none",
-              interpolation: "linear",
-              opacity: 0.7,
+              stroke: i == 0 ? "black" : "none",
+              interpolation: "bezier",
+              opacity: 1,
             },
             items.map((d) => ref(`${d.category}-${d.group}`))
           )

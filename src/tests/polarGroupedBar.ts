@@ -6,6 +6,7 @@ import { rect } from "../ast/marks/rect";
 import { color, /* color6 */ color6_20250323 as color6 } from "../color";
 import { polar } from "../ast/coordinateTransforms/polar";
 import { coord } from "../ast/coordinateTransforms/coord";
+import { arcLengthPolar } from "../ast/coordinateTransforms/arcLengthPolar";
 
 const data = [
   { category: "A", group: "x", value: 0.1 },
