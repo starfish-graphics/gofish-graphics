@@ -20,14 +20,10 @@ const data = [
 export const testPolarRectAreaXY = (size: { width: number; height: number }) =>
   gofish(
     { width: size.width, height: size.height, transform: { x: 100, y: 100 } },
-    coord(
-      polar(),
-      [
-        rect({ x: 0, y: 0, w: value(10), h: value(15), fill: color6[0] }),
-        rect({ x: 0, y: 0, w: value(10), h: value(40), fill: color6[1] }),
-        rect({ x: 0, y: 0, w: value(10), h: value(40), fill: color6[2] }),
-        rect({ x: 0, y: 0, w: value(10), h: value(15), fill: color6[3] }),
-      ],
-      true
-    )
+    coord({ transform: polar(), grid: true }, [
+      rect({ x: 0, y: 0, w: value(10), h: value(15), fill: color6[0] }),
+      rect({ x: 0, y: 0, w: value(10), h: value(40), fill: color6[1] }),
+      rect({ x: 0, y: 0, w: value(10), h: value(40), fill: color6[2] }),
+      rect({ x: 0, y: 0, w: value(10), h: value(15), fill: color6[3] }),
+    ])
   );

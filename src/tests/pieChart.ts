@@ -11,25 +11,28 @@ import { color, color6 } from "../color";
 import { coord } from "../ast/coordinateTransforms/coord";
 import { polar } from "../ast/coordinateTransforms/polar";
 const data = [
-  { a: "A", b: 28 },
-  { a: "B", b: 55 },
-  { a: "C", b: 43 },
-  { a: "D", b: 91 },
-  { a: "E", b: 81 },
-  { a: "F", b: 53 },
-  { a: "G", b: 19 },
-  { a: "H", b: 87 },
-  { a: "I", b: 52 },
+  { category: 1, value: 4 },
+  { category: 2, value: 6 },
+  { category: 3, value: 10 },
+  { category: 4, value: 3 },
+  { category: 5, value: 7 },
+  { category: 6, value: 8 },
 ];
 
-/* TODO: stack translation is actually just increasing the size of all the bars??? */
-export const testPolarBar = (size: { width: number; height: number }) =>
+export const testPieChart = (size: { width: number; height: number }) =>
   gofish(
-    { width: size.width, height: size.height, transform: { x: 50, y: 150 } },
+    { width: size.width, height: size.height, transform: { x: 100, y: 150 } },
     coord({ transform: polar() }, [
       stack(
-        { x: 10, direction: 0, spacing: 4, alignment: "end", sharedScale: true },
-        data.map((d) => rect({ w: 20, h: /* value(d.b, "value") */ d.b / 100, emY: true, fill: color6[0] }))
+        { x: 20, direction: 1, spacing: 0, alignment: "start" },
+        data.map((d, i) =>
+          rect({
+            w: 20 + Math.random() * 50,
+            h: /* value(d.b, "value") */ d.value / 6.05,
+            emY: true,
+            fill: color6[i % 6],
+          })
+        )
       ),
     ])
   );

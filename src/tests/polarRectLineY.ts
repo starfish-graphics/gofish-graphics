@@ -20,46 +20,42 @@ const data = [
 export const testPolarRectLineY = (size: { width: number; height: number }) =>
   gofish(
     { width: size.width, height: size.height, transform: { x: 100, y: 100 } },
-    coord(
-      polar(),
-      [
-        rect({
-          dims: [
-            {
-              min: 20,
-              size: 50,
-            },
-            {
-              min: value(0, "test"),
-              size: value(Math.PI / 2, "test"),
-            },
-          ],
-          fill: color6[0],
-        }),
-        rect({
-          dims: [
-            {
-              min: 0,
-              size: 20,
-            },
-            {
-              min: 0,
-              size: value(Math.PI / 3, "test"),
-            },
-          ],
-          fill: color6[1],
-        }),
-        rect({
-          dims: [
-            {
-              min: 0,
-              size: 10,
-            },
-            { min: 0, size: value(Math.PI / 4, "test") },
-          ],
-          fill: color6[2],
-        }),
-      ],
-      true
-    )
+    coord({ transform: polar(), grid: true }, [
+      rect({
+        dims: [
+          {
+            min: 20,
+            size: 50,
+          },
+          {
+            min: value(0, "test"),
+            size: value(Math.PI / 2, "test"),
+          },
+        ],
+        fill: color6[0],
+      }),
+      rect({
+        dims: [
+          {
+            min: 0,
+            size: 20,
+          },
+          {
+            min: 0,
+            size: value(Math.PI / 3, "test"),
+          },
+        ],
+        fill: color6[1],
+      }),
+      rect({
+        dims: [
+          {
+            min: 0,
+            size: 10,
+          },
+          { min: 0, size: value(Math.PI / 4, "test") },
+        ],
+        fill: color6[2],
+      }),
+    ])
   );

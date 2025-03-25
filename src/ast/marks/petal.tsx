@@ -1,3 +1,5 @@
+import { mix } from "spectral.js";
+import { black, white } from "../../color";
 import { path, Path, pathToSVGPath, segment, subdividePath, transformPath } from "../../path";
 import { GoFishNode } from "../_node";
 import { CoordinateTransform } from "../coordinateTransforms/coord";
@@ -6,8 +8,9 @@ import { getDataType, getValue, inferEmbedded, isValue, MaybeValue, Value } from
 import { Dimensions, elaborateDims, FancyDims, FancySize, Size, Transform } from "../dims";
 import { aesthetic, continuous } from "../domain";
 
+/* Implementation inspired by https://web.archive.org/web/20220808041640/http://bl.ocks.org/herrstucki/6199768 */
 /* TODO: what should default embedding behavior be when all values are aesthetic? */
-export const rect = ({
+export const petal = ({
   name,
   fill = "black",
   stroke = fill,
@@ -18,7 +21,7 @@ export const rect = ({
   return new GoFishNode(
     {
       name,
-      type: "rect",
+      type: "petal",
       // inferDomains: () => {
       //   return [
       //     isValue(dims[0].size)
@@ -81,7 +84,14 @@ export const rect = ({
         transform?: Transform;
         coordinateTransform?: CoordinateTransform;
       }) => {
-        const space = coordinateTransform ?? linear();
+        if (coordinateTransform === undefined) {
+          return <></>;
+        }
+        if (coordinateTransform?.type !== "polar") {
+          throw new Error("Petal mark must be used in a polar coordinate transform");
+        }
+
+        const space = coordinateTransform;
 
         // const isDataX = isValue(dims[0].size);
         // const isDataY = isValue(dims[1].size);
@@ -136,25 +146,6 @@ export const rect = ({
           // Calculate midpoint of aesthetic axis
           const aestheticMid = (displayDims[aestheticAxis].min ?? 0) + (displayDims[aestheticAxis].size ?? 0) / 2;
 
-          // For linear spaces, we can render a simple line
-          if (space.type === "linear") {
-            const x = isXEmbedded ? displayDims[0].min ?? 0 : aestheticMid - thickness / 2;
-            const y = isXEmbedded ? aestheticMid - thickness / 2 : displayDims[1].min ?? 0;
-            const width = isXEmbedded ? (displayDims[0].max ?? 0) - (displayDims[0].min ?? 0) : thickness;
-            const height = isXEmbedded ? thickness : (displayDims[1].max ?? 0) - (displayDims[1].min ?? 0);
-            return (
-              <rect
-                x={x}
-                y={y}
-                width={width}
-                height={height}
-                fill={fill}
-                stroke={stroke ?? fill ?? "black"}
-                stroke-width={strokeWidth ?? 0}
-              />
-            );
-          }
-
           // Create path along midline
           const linePath = path(
             [
@@ -173,20 +164,48 @@ export const rect = ({
           // Subdivide and transform path
           const transformed = transformPath(linePath, space);
 
+          const halfRadius = (displayDims[0].size ?? 0) / 2;
+          console.log(displayDims[0].size, displayDims[1].min, displayDims[1].max);
+          const s = space.transform([halfRadius, -displayDims[1].size / 2]);
+          const e = space.transform([halfRadius, displayDims[1].size / 2]);
+          const r = displayDims[0].size ?? 0;
+          const m = [halfRadius + r / 2, 0];
+          const c1 = [halfRadius + r / 4, s[1]];
+          const c2 = [halfRadius + r / 4, e[1]];
+          const svgPath =
+            "M0,0L" +
+            s[0] +
+            "," +
+            s[1] +
+            "Q" +
+            c1[0] +
+            "," +
+            c1[1] +
+            " " +
+            m[0] +
+            "," +
+            m[1] +
+            "L" +
+            m[0] +
+            "," +
+            m[1] +
+            "Q" +
+            c2[0] +
+            "," +
+            c2[1] +
+            " " +
+            e[0] +
+            "," +
+            e[1] +
+            "Z";
+
           // 0.5 removes weird white space at least for some charts
-          return <path d={pathToSVGPath(transformed)} stroke={fill} stroke-width={thickness + 0.5} fill="none" />;
+          return (
+            <path transform={`rotate(${((displayDims[1].center ?? 0) / Math.PI) * 180})`} d={svgPath} fill={fill} />
+          );
         }
 
         // Both dimensions are data - render as area
-
-        // If we're in a linear space, render as a rect element
-        if (space.type === "linear") {
-          const x = displayDims[0].min ?? 0;
-          const y = displayDims[1].min ?? 0;
-          const width = (displayDims[0].max ?? 0) - x;
-          const height = (displayDims[1].max ?? 0) - y;
-          return <rect x={x} y={y} width={width} height={height} fill={fill} />;
-        }
 
         const corners = path(
           [

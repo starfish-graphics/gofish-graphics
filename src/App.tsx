@@ -20,9 +20,17 @@ import { testPolarRibbonOther } from "./tests/polarRibbonOther";
 import { testPolarRibbonTransposed } from "./tests/polarRibbonTransposed";
 import { testBipolarGroupedBar } from "./tests/bipolarGroupedBar";
 import { testMosaic } from "./tests/mosaic";
+import { testPieChart } from "./tests/pieChart";
+import { testScatterPie } from "./tests/scatterPie";
+import { testPetalChart } from "./tests/petalChart";
+
 const App: Component = () => {
   return (
     <div>
+      <h2>Petal Chart</h2>
+      {testPetalChart({ width: 500, height: 300 })}
+      <h2>Pie Chart</h2>
+      {testPieChart({ width: 500, height: 300 })}
       <h2>Rect</h2>
       {testRect({ width: 100, height: 100 })}
       <h2>Bar</h2>
@@ -61,6 +69,9 @@ const App: Component = () => {
       {testBipolarGroupedBar({ width: 500, height: 300 })}
       <h2>Polar Radial Grouped Bar</h2>
       {testPolarRadialGroupedBar({ width: 500, height: 300 })}
+
+      <h2>Scatter Pie</h2>
+      {testScatterPie({ width: 500, height: 300 })}
       {/* <h2>Color Palette</h2>
       {testColorPalette({ width: 1000, height: 500 })}
       <h2>Color 10</h2>

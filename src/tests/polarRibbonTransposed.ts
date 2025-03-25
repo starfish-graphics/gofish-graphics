@@ -62,7 +62,7 @@ coords work like this:
 export const testPolarRibbonTransposed = (size: { width: number; height: number }) =>
   gofish(
     { width: size.width, height: size.height, transform: { x: 400, y: 400 } },
-    coord(polarTransposed(), [
+    coord({ transform: polarTransposed() }, [
       layer([
         stack(
           { y: 100, direction: 0, spacing: 0, alignment: "start", sharedScale: true },

@@ -24,7 +24,7 @@ export const testBipolarGroupedBar = (size: { width: number; height: number }) =
   return gofish(
     { width: size.width, height: size.height, transform: { x: 200, y: 200 } },
     coord(
-      bipolar(),
+      { transform: bipolar() },
       [
         stack(
           { direction: 0, spacing: 0, alignment: "end", sharedScale: true },

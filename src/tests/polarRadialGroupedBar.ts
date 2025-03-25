@@ -23,7 +23,7 @@ export const testPolarRadialGroupedBar = (size: { width: number; height: number 
   // Create the visualization structure first
   return gofish(
     { width: size.width, height: size.height, transform: { x: 50, y: 200 } },
-    coord(polar(), [
+    coord({ transform: polar() }, [
       stack(
         { direction: 1, spacing: 20, alignment: "end", sharedScale: true },
         Object.entries(_.groupBy(data, "category")).map(([category, items]) =>

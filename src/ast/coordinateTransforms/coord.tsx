@@ -2,13 +2,13 @@ import { Show } from "solid-js";
 import { path, pathToSVGPath, transformPath } from "../../path";
 import { GoFishAST } from "../_ast";
 import { GoFishNode } from "../_node";
-import { Interval, Size } from "../dims";
+import { elaborateDims, FancyDims, Interval, Size } from "../dims";
 import { black } from "../../color";
 
 export type CoordinateTransform = {
+  type: string;
   transform: (point: [number, number]) => [number, number];
   // inferDomain: ({ width, height }: { width: number; height: number }) => Interval[];
-  isLinear: boolean;
   domain: [Interval, Interval];
 };
 
@@ -55,7 +55,19 @@ const flattenLayout = (node: GoFishAST, transform: [number, number] = [0, 0]): G
   For now we'll just assume that it's a GoFishNode tho... maybe it's a GoFishNode that contains DisplayObjects
   inside it?
 */
-export const coord = (coordTransform: CoordinateTransform, children: GoFishNode[], grid?: boolean): GoFishNode => {
+export const coord = (
+  {
+    transform: coordTransform,
+    grid = false,
+    ...fancyDims
+  }: {
+    transform: CoordinateTransform;
+    grid?: boolean;
+  } & FancyDims,
+  children: GoFishNode[]
+) => {
+  const dims = elaborateDims(fancyDims);
+
   return new GoFishNode(
     {
       type: "coord",
@@ -86,7 +98,7 @@ export const coord = (coordTransform: CoordinateTransform, children: GoFishNode[
             h: maxY - minY,
           },
           transform: {
-            translate: [undefined, undefined],
+            translate: [dims[0].min !== undefined ? dims[0].min - minX : undefined],
           },
         };
       },
