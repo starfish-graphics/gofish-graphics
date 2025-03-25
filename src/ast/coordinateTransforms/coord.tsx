@@ -98,7 +98,10 @@ export const coord = (
             h: maxY - minY,
           },
           transform: {
-            translate: [dims[0].min !== undefined ? dims[0].min - minX : undefined],
+            translate: [
+              dims[0].min !== undefined ? dims[0].min - minX : undefined,
+              dims[1].min !== undefined ? dims[1].min - minY : undefined,
+            ],
           },
         };
       },

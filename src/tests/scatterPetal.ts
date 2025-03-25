@@ -11,6 +11,7 @@ import { color, color6 } from "../color";
 import { coord } from "../ast/coordinateTransforms/coord";
 import { polar } from "../ast/coordinateTransforms/polar";
 import { layer } from "../ast/graphicalOperators/layer";
+import { petal } from "../ast/marks/petal";
 const data = [
   { category: 1, value: 4 },
   { category: 2, value: 6 },
@@ -20,7 +21,7 @@ const data = [
   { category: 6, value: 8 },
 ];
 
-export const testScatterPie = (size: { width: number; height: number }) =>
+export const testScatterPetal = (size: { width: number; height: number }) =>
   gofish(
     { width: size.width, height: size.height, transform: { x: 200, y: 600 } },
     layer(
@@ -33,9 +34,9 @@ export const testScatterPie = (size: { width: number; height: number }) =>
           },
           [
             stack(
-              { x: Math.random() * 5 + 2, w: Math.random() * 10 + 5, direction: 1, spacing: 0, alignment: "start" },
+              { w: Math.random() * 10 + 5, direction: 1, spacing: 0, alignment: "start" },
               data.map((d, i) =>
-                rect({
+                petal({
                   h: /* value(d.b, "value") */ d.value / 6.05,
                   emY: true,
                   fill: color6[i % 6],
