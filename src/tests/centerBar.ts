@@ -20,7 +20,7 @@ const data = [
   { a: "I", b: 52 },
 ];
 
-export const testCenterStackedBars = (size: { width: number; height: number }) =>
+export const testCenterBar = (size: { width: number; height: number }) =>
   gofish(
     { width: size.width, height: size.height },
     stack(

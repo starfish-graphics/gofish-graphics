@@ -11,16 +11,18 @@ import { color, color6 } from "../color";
 import { coord } from "../ast/coordinateTransforms/coord";
 import { polar } from "../ast/coordinateTransforms/polar";
 import { linear } from "../ast/coordinateTransforms/linear";
+import _ from "lodash";
+
 const data = [
-  { a: "A", b: 28 },
-  { a: "B", b: 55 },
-  { a: "C", b: 43 },
-  { a: "D", b: 91 },
-  { a: "E", b: 81 },
-  { a: "F", b: 53 },
-  // { a: "G", b: 19 },
-  // { a: "H", b: 87 },
-  // { a: "I", b: 52 },
+  { category: "A", group: "x", value: 0.1 },
+  { category: "A", group: "y", value: 0.6 },
+  { category: "A", group: "z", value: 0.9 },
+  { category: "B", group: "x", value: 0.7 },
+  { category: "B", group: "y", value: 0.2 },
+  { category: "B", group: "z", value: 1.1 },
+  { category: "C", group: "x", value: 0.6 },
+  { category: "C", group: "y", value: 0.1 },
+  { category: "C", group: "z", value: 0.2 },
 ];
 
 export const testPolarCenterStackedBar = (size: { width: number; height: number }) =>
@@ -31,12 +33,31 @@ export const testPolarCenterStackedBar = (size: { width: number; height: number 
         {
           x: 20,
           direction: 1,
-          spacing: (2 * Math.PI) / 6,
+          spacing: (2 * Math.PI) / 3,
           alignment: "start",
           sharedScale: true,
           mode: "center-to-center",
         },
-        data.map((d, i) => rect({ h: Math.random() * 15 + 5, w: value(d.b, "value"), fill: color6[i % 6] }))
+        Object.entries(_.groupBy(data, "category")).map(([category, items]) =>
+          stack(
+            {
+              direction: 0,
+              spacing: 2,
+              alignment: "middle",
+            },
+            items.toReversed().map((d) =>
+              rect({
+                h: 15,
+                // h: 0.4,
+                // emY: true,
+                // w: value(d.value, "value"),
+                w: d.value * 50,
+                emX: true,
+                fill: d.group === "x" ? color.red[5] : d.group === "y" ? color.blue[5] : color.green[5],
+              })
+            )
+          )
+        )
       ),
     ])
   );

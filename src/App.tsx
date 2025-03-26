@@ -25,16 +25,21 @@ import { testScatterPie } from "./tests/scatterPie";
 import { testScatterPetal } from "./tests/scatterPetal";
 import { testPetalChart } from "./tests/petalChart";
 import { testWrap } from "./tests/testWrap";
-import { testCenterStackedBars } from "./tests/centerStackedBars";
+import { testCenterBar } from "./tests/centerBar";
+import { testPolarCenterBar } from "./tests/polarCenterBar";
 import { testPolarCenterStackedBar } from "./tests/polarCenterStackedBar";
-
+import { testPolarCenterRibbon } from "./tests/polarCenterRibbon";
 const App: Component = () => {
   return (
     <div>
-      <h2>Center Stacked Bars</h2>
-      {testCenterStackedBars({ width: 500, height: 300 })}
+      <h2>Polar Center Ribbon</h2>
+      {testPolarCenterRibbon({ width: 500, height: 300 })}
       <h2>Polar Center Stacked Bar</h2>
       {testPolarCenterStackedBar({ width: 500, height: 300 })}
+      <h2>Polar Center Bar</h2>
+      {testPolarCenterBar({ width: 500, height: 300 })}
+      <h2>Center Bar</h2>
+      {testCenterBar({ width: 500, height: 300 })}
       <h2>Polar Radial Grouped Bar</h2>
       {testPolarRadialGroupedBar({ width: 500, height: 300 })}
       <h2>Wrap</h2>

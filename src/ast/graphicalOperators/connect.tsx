@@ -203,6 +203,7 @@ export const connect = (
                 return (
                   <path
                     // filter="url(#crumpled-paper)"
+                    style={{ "mix-blend-mode": "multiply" }}
                     d={d}
                     fill={fill ?? "none"}
                     stroke={stroke ?? fill ?? "black"}
