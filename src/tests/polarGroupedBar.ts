@@ -33,6 +33,7 @@ export const testPolarGroupedBar = (size: { width: number; height: number }) => 
             items.map((d) =>
               rect({
                 w: 30,
+                // emX: true,
                 // h: value(d.value, "value"),
                 h: d.value,
                 emY: true,

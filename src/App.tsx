@@ -25,10 +25,18 @@ import { testScatterPie } from "./tests/scatterPie";
 import { testScatterPetal } from "./tests/scatterPetal";
 import { testPetalChart } from "./tests/petalChart";
 import { testWrap } from "./tests/testWrap";
+import { testCenterStackedBars } from "./tests/centerStackedBars";
+import { testPolarCenterStackedBar } from "./tests/polarCenterStackedBar";
 
 const App: Component = () => {
   return (
     <div>
+      <h2>Center Stacked Bars</h2>
+      {testCenterStackedBars({ width: 500, height: 300 })}
+      <h2>Polar Center Stacked Bar</h2>
+      {testPolarCenterStackedBar({ width: 500, height: 300 })}
+      <h2>Polar Radial Grouped Bar</h2>
+      {testPolarRadialGroupedBar({ width: 500, height: 300 })}
       <h2>Wrap</h2>
       {testWrap({ width: 500, height: 300 })}
       <h2>Scatter Pie</h2>
@@ -75,8 +83,6 @@ const App: Component = () => {
       {testPolarGroupedBar({ width: 500, height: 300 })}
       <h2>Bipolar Grouped Bar</h2>
       {testBipolarGroupedBar({ width: 500, height: 300 })}
-      <h2>Polar Radial Grouped Bar</h2>
-      {testPolarRadialGroupedBar({ width: 500, height: 300 })}
       {/* <h2>Color Palette</h2>
       {testColorPalette({ width: 1000, height: 500 })}
       <h2>Color 10</h2>

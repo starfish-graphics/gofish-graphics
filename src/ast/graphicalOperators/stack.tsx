@@ -12,12 +12,14 @@ export const stack = (
     spacing = 0,
     alignment = "middle",
     sharedScale = false,
+    mode = "edge-to-edge",
     ...fancyDims
   }: {
     direction: FancyDirection;
     spacing?: number;
     alignment?: "start" | "middle" | "end";
     sharedScale?: boolean;
+    mode?: "edge-to-edge" | "center-to-center";
   } & FancyDims,
   children: GoFishNode[]
 ) => {
@@ -64,8 +66,12 @@ modes!!!
 
         return (scaleFactors: Size): FancySize => {
           const stackSize =
-            _.sum(children.map((child) => child.measure(size)(scaleFactors)[stackDir])) +
-            spacing * (children.length - 1);
+            mode === "edge-to-edge"
+              ? _.sum(children.map((child) => child.measure(size)(scaleFactors)[stackDir])) +
+                spacing * (children.length - 1)
+              : children[0].measure(size)(scaleFactors)[stackDir] / 2 +
+                spacing * (children.length - 1) +
+                children[children.length - 1].measure(size)(scaleFactors)[stackDir] / 2;
           const alignSize = Math.max(...children.map((child) => child.measure(size)(scaleFactors)[alignDir]));
           return {
             [stackDir]: stackSize,
@@ -132,9 +138,16 @@ modes!!!
 
         /* distribute */
         let pos = 0;
-        for (const child of childPlaceables) {
-          child.place({ [stackDir]: pos });
-          pos += child.dims[stackDir].size! + spacing;
+        if (mode === "edge-to-edge") {
+          for (const child of childPlaceables) {
+            child.place({ [stackDir]: pos });
+            pos += child.dims[stackDir].size! + spacing;
+          }
+        } else if (mode === "center-to-center") {
+          for (const child of childPlaceables) {
+            child.place({ [stackDir]: pos - child.dims[stackDir].size! / 2 });
+            pos += spacing;
+          }
         }
 
         return {

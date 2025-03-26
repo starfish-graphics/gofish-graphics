@@ -6,6 +6,7 @@ import { rect } from "../ast/marks/rect";
 import { color, /* color6 */ color6_20250323 as color6 } from "../color";
 import { polar } from "../ast/coordinateTransforms/polar";
 import { coord } from "../ast/coordinateTransforms/coord";
+import { linear } from "../ast/coordinateTransforms/linear";
 
 const data = [
   { category: "A", group: "x", value: 0.1 },
@@ -25,10 +26,10 @@ export const testPolarRadialGroupedBar = (size: { width: number; height: number 
     { width: size.width, height: size.height, transform: { x: 50, y: 200 } },
     coord({ transform: polar() }, [
       stack(
-        { direction: 1, spacing: 20, alignment: "end", sharedScale: true },
+        { direction: 1, spacing: Math.PI / 4, alignment: "end", sharedScale: true, mode: "center-to-center" },
         Object.entries(_.groupBy(data, "category")).map(([category, items]) =>
           stack(
-            { direction: 1, spacing: 2, alignment: "end" },
+            { direction: 1, spacing: Math.PI / 8, alignment: "end", mode: "center-to-center" },
             items.map((d) =>
               rect({
                 h: 5,
