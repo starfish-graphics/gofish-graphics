@@ -25,11 +25,13 @@ const data = [
 /* TODO: stack translation is actually just increasing the size of all the bars??? */
 export const testPolarBar = (size: { width: number; height: number }) =>
   gofish(
-    { width: size.width, height: size.height, transform: { x: 50, y: 150 } },
+    { width: size.width, height: size.height, transform: { x: 50, y: 250 } },
     coord({ transform: polar() }, [
       stack(
-        { x: 10, direction: 0, spacing: 4, alignment: "end", sharedScale: true },
-        data.map((d) => rect({ w: 20, h: /* value(d.b, "value") */ d.b / 100, emY: true, fill: color6[0] }))
+        { x: 10, y: -Math.PI / 2, direction: 0, spacing: 4, alignment: "start", sharedScale: true },
+        data.map((d, i) =>
+          rect({ w: 20, h: /* value(d.b, "value") */ d.b / 40, emY: true, fill: i < 3 ? "none" : color6[i % 6] })
+        )
       ),
     ])
   );

@@ -165,7 +165,6 @@ export const petal = ({
           const transformed = transformPath(linePath, space);
 
           const halfRadius = (displayDims[0].size ?? 0) / 2;
-          console.log(displayDims[0].size, displayDims[1].min, displayDims[1].max);
           const s = space.transform([halfRadius, -displayDims[1].size / 2]);
           const e = space.transform([halfRadius, displayDims[1].size / 2]);
           const r = displayDims[0].size ?? 0;

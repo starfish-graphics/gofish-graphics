@@ -24,10 +24,13 @@ import { testPieChart } from "./tests/pieChart";
 import { testScatterPie } from "./tests/scatterPie";
 import { testScatterPetal } from "./tests/scatterPetal";
 import { testPetalChart } from "./tests/petalChart";
+import { testWrap } from "./tests/testWrap";
 
 const App: Component = () => {
   return (
     <div>
+      <h2>Wrap</h2>
+      {testWrap({ width: 500, height: 300 })}
       <h2>Scatter Pie</h2>
       {testScatterPie({ width: 500, height: 300 })}
       <h2>Scatter Petal</h2>

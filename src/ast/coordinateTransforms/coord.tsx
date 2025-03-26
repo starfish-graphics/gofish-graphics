@@ -57,10 +57,12 @@ const flattenLayout = (node: GoFishAST, transform: [number, number] = [0, 0]): G
 */
 export const coord = (
   {
+    name,
     transform: coordTransform,
     grid = false,
     ...fancyDims
   }: {
+    name?: string;
     transform: CoordinateTransform;
     grid?: boolean;
   } & FancyDims,
@@ -71,6 +73,7 @@ export const coord = (
   return new GoFishNode(
     {
       type: "coord",
+      name,
       measure: (shared, size, children) => {
         const childMeasures = children.map((child) => child.measure(size));
         return (scaleFactors: Size) => {
