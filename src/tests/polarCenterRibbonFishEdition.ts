@@ -15,6 +15,7 @@ import _ from "lodash";
 import { layer } from "../ast/graphicalOperators/layer";
 import { ref } from "../ast/marks/ref";
 import { connect } from "../ast/graphicalOperators/connect";
+import { fishData } from "../data/fish";
 const data = [
   { category: "A", group: "x", value: 0.1 },
   { category: "A", group: "y", value: 0.6 },
@@ -41,63 +42,64 @@ const data = [
 // .filter((d) => (d.group === "x" || d.group === "y") && d.category !== "C");
 
 const colorScale = {
-  x: color6[0],
-  y: color6[1],
-  z: color6[2],
-  w: color6[3],
-  v: color6[4],
-  u: color6[5],
+  Bass: color6[0],
+  Trout: color6[1],
+  Catfish: color6[2],
+  Perch: color6[3],
+  Salmon: color6[4],
 };
 
-export const testPolarCenterRibbon = (size: { width: number; height: number }) =>
+export const testPolarCenterRibbonFishEdition = (size: { width: number; height: number }) =>
   gofish(
-    { width: size.width, height: size.height, transform: { x: 200, y: 100 } },
+    { width: size.width, height: size.height, transform: { x: 200, y: 145 } },
     coord({ transform: polar() }, [
       layer([
         stack(
           {
             x: 50,
+            y: (-2 * Math.PI) / 6,
             direction: 1,
-            spacing: (2 * Math.PI) / 8,
+            spacing: (2 * Math.PI) / 6,
             alignment: "start",
             sharedScale: true,
             mode: "center-to-center",
           },
-          Object.entries(_.groupBy(data, "category")).map(([category, items]) =>
+          Object.entries(_.groupBy(fishData, "Lake")).map(([Lake, items]) =>
             stack(
               {
                 direction: 0,
-                spacing: 0,
+                spacing: 2,
                 alignment: "middle",
+                h: _(items).sumBy("Count") / 500,
               },
               items
-                .sort((a, b) => a.value - b.value)
+                .sort((a, b) => a.Count - b.Count)
                 // .toReversed()
                 .map((d) =>
                   rect({
-                    name: `${d.category}-${d.group}`,
-                    h: 0.1,
+                    name: `${d.Lake}-${d["Fish Type"]}`,
+                    // h: 0.1,
                     emY: true,
                     // w: value(d.value, "value"),
-                    w: d.value * 20,
+                    w: d.Count,
                     emX: true,
-                    fill: colorScale[d.group as keyof typeof colorScale],
+                    fill: colorScale[d["Fish Type"] as keyof typeof colorScale],
                   })
                 )
             )
           )
         ),
-        ..._(data)
-          .groupBy("group")
-          .map((items, group) =>
+        ..._(fishData)
+          .groupBy("Fish Type")
+          .map((items, FishType) =>
             connect(
               {
                 direction: "y",
-                fill: colorScale[group as keyof typeof colorScale],
+                fill: colorScale[FishType as keyof typeof colorScale],
                 interpolation: "bezier",
-                opacity: 0.5,
+                opacity: 0.8,
               },
-              items.map((d) => ref(`${d.category}-${d.group}`))
+              items.map((d) => ref(`${d.Lake}-${d["Fish Type"]}`))
             )
           )
           .value(),

@@ -8,6 +8,7 @@ import { findTargetMonotonic } from "../../util";
 
 export const stack = (
   {
+    name,
     direction,
     spacing = 0,
     alignment = "middle",
@@ -15,6 +16,7 @@ export const stack = (
     mode = "edge-to-edge",
     ...fancyDims
   }: {
+    name?: string;
     direction: FancyDirection;
     spacing?: number;
     alignment?: "start" | "middle" | "end";
@@ -30,6 +32,7 @@ export const stack = (
   return new GoFishNode(
     {
       type: "stack",
+      name,
       shared: [false, sharedScale],
       /* TODO: I need to write to the children!!!!!!!!!! */
       // inferDomains: (childDomains: Size<Domain>[]) => {

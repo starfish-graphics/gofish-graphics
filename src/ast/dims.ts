@@ -49,6 +49,10 @@ export const elaborateDims = <T>(dims: FancyDims<T>): Dimensions<T> => {
       },
     ];
   }
+
+  if (!("x" in dims)) dims.x = dims.cx !== undefined && dims.w !== undefined ? dims.cx - dims.w / 2 : undefined;
+  if (!("y" in dims)) dims.y = dims.cy !== undefined && dims.h !== undefined ? dims.cy - dims.h / 2 : undefined;
+
   return [
     { min: dims.x, center: dims.cx, max: dims.x2, size: dims.w, embedded: dims.emX },
     { min: dims.y, center: dims.cy, max: dims.y2, size: dims.h, embedded: dims.emY },

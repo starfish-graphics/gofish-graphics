@@ -29,9 +29,61 @@ import { testCenterBar } from "./tests/centerBar";
 import { testPolarCenterBar } from "./tests/polarCenterBar";
 import { testPolarCenterStackedBar } from "./tests/polarCenterStackedBar";
 import { testPolarCenterRibbon } from "./tests/polarCenterRibbon";
+import { testPolarCenterRibbonFishEdition } from "./tests/polarCenterRibbonFishEdition";
+import { testBipolarBar } from "./tests/bipolarBar";
+import { testNestedMosaic } from "./tests/nestedMosaic";
+import { testIcicle } from "./tests/icicle";
+import { testScatterFlower } from "./tests/scatterFlower";
+import { testFishBar } from "./tests/fishBar";
+import { testFishStackedBar } from "./tests/fishStackedBar";
+import { testFishGroupedBar } from "./tests/fishGroupedBar";
+import { testFishWaffle } from "./tests/fishWaffle";
+import { testFishWaffleRefactor } from "./tests/fishWaffleRefactor";
+import { testFishRibbonChart } from "./tests/fishRibbonChart";
+import { testFishPolarRibbonChart } from "./tests/fishPolarRibbonChart";
+import { testBalloon } from "./tests/balloon";
+import { testSankeyIcicle } from "./tests/sankeyIcicle";
+import { testLineChart } from "./tests/lineChart";
+
 const App: Component = () => {
   return (
-    <div>
+    <div style={{ "margin-left": "20px" }}>
+      <h2>Line Chart</h2>
+      {testLineChart({ width: 500, height: 100 })}
+      <h2>Sankey Icicle</h2>
+      {testSankeyIcicle({ width: 500, height: 1000 })}
+      <h2>Balloon</h2>
+      {testBalloon({ width: 300, height: 400 })}
+      <h2>Fish Polar Ribbon Chart</h2>
+      {testFishPolarRibbonChart({ width: 500, height: 500 })}
+      <h2>Fish Ribbon Chart</h2>
+      {testFishRibbonChart({ width: 500, height: 300 })}
+      <h2>Fish Waffle Refactor</h2>
+      {testFishWaffleRefactor({ width: 500, height: 400 })}
+      <h2>Fish Bar</h2>
+      {testFishBar({ width: 500, height: 200 })}
+      <h2>Fish Stacked Bar</h2>
+      {testFishStackedBar({ width: 500, height: 200 })}
+      <h2>Fish Grouped Bar</h2>
+      {testFishGroupedBar({ width: 500, height: 200 })}
+      <h2>Fish Waffle</h2>
+      {testFishWaffle({ width: 500, height: 400 })}
+      <h2>Scatter Flower</h2>
+      {testScatterFlower({ width: 500, height: 300 })}
+      <h2>Scatter Petal</h2>
+      {testScatterPetal({ width: 500, height: 300 })}
+      <h2>Icicle</h2>
+      {testIcicle({ width: 500, height: 300 })}
+      <h2>Nested Mosaic</h2>
+      {testNestedMosaic({ width: 500, height: 300 })}
+      <h2>Mosaic</h2>
+      {testMosaic({ width: 500, height: 200 })}
+      <h2>Bipolar Bar</h2>
+      {testBipolarBar({ width: 500, height: 300 })}
+      <h2>Bipolar Grouped Bar</h2>
+      {testBipolarGroupedBar({ width: 500, height: 300 })}
+      <h2>Polar Center Ribbon Fish Edition</h2>
+      {testPolarCenterRibbonFishEdition({ width: 500, height: 400 })}
       <h2>Polar Center Ribbon</h2>
       {testPolarCenterRibbon({ width: 500, height: 300 })}
       <h2>Polar Center Stacked Bar</h2>
@@ -46,8 +98,6 @@ const App: Component = () => {
       {testWrap({ width: 500, height: 300 })}
       <h2>Scatter Pie</h2>
       {testScatterPie({ width: 500, height: 300 })}
-      <h2>Scatter Petal</h2>
-      {testScatterPetal({ width: 500, height: 300 })}
       <h2>Petal Chart</h2>
       {testPetalChart({ width: 500, height: 300 })}
       <h2>Pie Chart</h2>
@@ -62,8 +112,6 @@ const App: Component = () => {
       {testStackedBar({ width: 500, height: 200 })}
       <h2>Stacked Bar With Spacing</h2>
       {testStackedBarWithSpacing({ width: 500, height: 200 })}
-      <h2>Mosaic</h2>
-      {testMosaic({ width: 500, height: 200 })}
       <h2>Ribbon Chart</h2>
       {testRibbonChart({ width: 500, height: 300 })}
       {/* <h2>Sankey</h2>
@@ -86,8 +134,6 @@ const App: Component = () => {
       {testPolarBar({ width: 500, height: 300 })}
       <h2>Polar Grouped Bar</h2>
       {testPolarGroupedBar({ width: 500, height: 300 })}
-      <h2>Bipolar Grouped Bar</h2>
-      {testBipolarGroupedBar({ width: 500, height: 300 })}
       {/* <h2>Color Palette</h2>
       {testColorPalette({ width: 1000, height: 500 })}
       <h2>Color 10</h2>

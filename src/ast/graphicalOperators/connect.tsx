@@ -14,6 +14,7 @@ export const connect = (
     stroke,
     strokeWidth,
     opacity,
+    mode = "edge-to-edge",
   }: {
     direction: FancyDirection;
     fill: string;
@@ -21,6 +22,7 @@ export const connect = (
     stroke?: string;
     strokeWidth?: number;
     opacity?: number;
+    mode?: "edge-to-edge" | "center-to-center";
   },
   children: GoFishAST[]
 ) => {
@@ -41,40 +43,58 @@ export const connect = (
 
         const childPlaceables = children.map((child) => child.layout(size, scaleFactors));
         const bboxPairs = pairs(childPlaceables.map((child) => child.dims));
+        // If in center-to-center mode, adjust bounding boxes to have zero width/height
+        // with min and max equal to the center point
 
         if (dir === 0) {
           if (interpolation === "linear") {
-            for (const [b0, b1] of bboxPairs) {
-              paths.push([
-                {
-                  type: "line",
-                  points: [
-                    [b0[0].max!, b0[1].min!],
-                    [b1[0].min!, b1[1].min!],
-                  ],
-                },
-                {
-                  type: "line",
-                  points: [
-                    [b1[0].min!, b1[1].min!],
-                    [b1[0].min!, b1[1].max!],
-                  ],
-                },
-                {
-                  type: "line",
-                  points: [
-                    [b1[0].min!, b1[1].max!],
-                    [b0[0].max!, b0[1].max!],
-                  ],
-                },
-                {
-                  type: "line",
-                  points: [
-                    [b0[0].max!, b0[1].max!],
-                    [b0[0].max!, b0[1].min!],
-                  ],
-                },
-              ]);
+            if (mode === "center-to-center") {
+              for (const [b0, b1] of bboxPairs) {
+                const midX = (b0[0].max! + b1[0].min!) / 2;
+                const midY = (b0[1].max! + b1[1].min!) / 2;
+                paths.push([
+                  {
+                    type: "line",
+                    points: [
+                      [(b0[0].min! + b0[0].max!) / 2, (b0[1].min! + b0[1].max!) / 2],
+                      [(b1[0].min! + b1[0].max!) / 2, (b1[1].min! + b1[1].max!) / 2],
+                    ],
+                  },
+                ]);
+              }
+            } else {
+              for (const [b0, b1] of bboxPairs) {
+                paths.push([
+                  {
+                    type: "line",
+                    points: [
+                      [b0[0].max!, b0[1].min!],
+                      [b1[0].min!, b1[1].min!],
+                    ],
+                  },
+                  {
+                    type: "line",
+                    points: [
+                      [b1[0].min!, b1[1].min!],
+                      [b1[0].min!, b1[1].max!],
+                    ],
+                  },
+                  {
+                    type: "line",
+                    points: [
+                      [b1[0].min!, b1[1].max!],
+                      [b0[0].max!, b0[1].max!],
+                    ],
+                  },
+                  {
+                    type: "line",
+                    points: [
+                      [b0[0].max!, b0[1].max!],
+                      [b0[0].max!, b0[1].min!],
+                    ],
+                  },
+                ]);
+              }
             }
           } else if (interpolation === "bezier") {
             for (const [b0, b1] of bboxPairs) {
@@ -203,7 +223,7 @@ export const connect = (
                 return (
                   <path
                     // filter="url(#crumpled-paper)"
-                    style={{ "mix-blend-mode": "multiply" }}
+                    style={{ "mix-blend-mode": mode === "center-to-center" ? "normal" : "multiply" }}
                     d={d}
                     fill={fill ?? "none"}
                     stroke={stroke ?? fill ?? "black"}

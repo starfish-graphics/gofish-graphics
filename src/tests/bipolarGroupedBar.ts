@@ -23,28 +23,24 @@ export const testBipolarGroupedBar = (size: { width: number; height: number }) =
   // Create the visualization structure first
   return gofish(
     { width: size.width, height: size.height, transform: { x: 200, y: 200 } },
-    coord(
-      { transform: bipolar() },
-      [
-        stack(
-          { direction: 0, spacing: 0, alignment: "end", sharedScale: true },
-          Object.entries(_.groupBy(data, "category")).map(([category, items]) =>
-            stack(
-              { direction: 0, spacing: 0, alignment: "end" },
-              items.map((d) =>
-                rect({
-                  w: 0.5,
-                  // h: value(d.value, "value"),
-                  h: d.value * 3,
-                  emY: true,
-                  fill: d.group === "x" ? color6[0] : d.group === "y" ? color6[1] : color6[2],
-                })
-              )
+    coord({ transform: bipolar(), grid: true }, [
+      stack(
+        { direction: 0, spacing: 0, alignment: "end", sharedScale: true },
+        Object.entries(_.groupBy(data, "category")).map(([category, items]) =>
+          stack(
+            { direction: 0, spacing: 0, alignment: "end" },
+            items.map((d) =>
+              rect({
+                w: 0.5,
+                // h: value(d.value, "value"),
+                h: d.value * 3,
+                emY: true,
+                fill: d.group === "x" ? color6[0] : d.group === "y" ? color6[1] : color6[2],
+              })
             )
           )
-        ),
-      ],
-      true
-    )
+        )
+      ),
+    ])
   );
 };

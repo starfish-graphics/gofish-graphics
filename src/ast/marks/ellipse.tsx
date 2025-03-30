@@ -8,13 +8,11 @@ import { Dimensions, elaborateDims, FancyDims, FancySize, Size, Transform } from
 import { aesthetic, continuous } from "../domain";
 
 /* TODO: what should default embedding behavior be when all values are aesthetic? */
-export const rect = ({
+export const ellipse = ({
   name,
   fill = color6[0],
   stroke = fill,
   strokeWidth = 0,
-  rx = 0,
-  ry = 0,
   ...fancyDims
 }: { name?: string; fill?: string; stroke?: string; strokeWidth?: number; rx?: number; ry?: number } & FancyDims<
   MaybeValue<number>
@@ -23,7 +21,7 @@ export const rect = ({
   return new GoFishNode(
     {
       name,
-      type: "rect",
+      type: "ellipse",
       // inferDomains: () => {
       //   return [
       //     isValue(dims[0].size)
@@ -120,13 +118,11 @@ export const rect = ({
           const height = displayDims[1].size ?? 0;
 
           return (
-            <rect
-              x={transformedX - width / 2}
-              y={transformedY - height / 2}
-              rx={rx}
-              ry={ry}
-              width={width}
-              height={height}
+            <ellipse
+              cx={transformedX}
+              cy={transformedY}
+              rx={width / 2}
+              ry={height / 2}
               fill={fill}
               stroke={stroke ?? fill ?? "black"}
               stroke-width={strokeWidth ?? 0}
