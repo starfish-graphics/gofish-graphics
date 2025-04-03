@@ -30,14 +30,14 @@ export const testFishWaffle = (size: { width: number; height: number }) =>
           stack(
             { direction: "y", spacing: 2, alignment: "start" },
             _(d)
-              .sortBy("count")
+              // .sortBy("count")
               .reverse()
               .flatMap((d) => Array(d.count).fill(d))
               .chunk(4)
               .reverse()
               .map((d) =>
                 stack(
-                  { direction: "x", spacing: 2, alignment: "start" },
+                  { direction: "x", spacing: 2, alignment: "end" },
                   d.map((d) => rect({ w: 8, h: 8, fill: fishColors[d.species] }))
                 )
               )

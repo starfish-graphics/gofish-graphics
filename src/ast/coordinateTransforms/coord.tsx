@@ -13,7 +13,11 @@ export type CoordinateTransform = {
 };
 
 /* TODO: implement this. I don't actually need it until I have more complex examples tho */
-const flattenLayout = (node: GoFishAST, transform: [number, number] = [0, 0]): GoFishAST[] => {
+const flattenLayout = (
+  node: GoFishAST,
+  transform: [number, number] = [0, 0],
+  scale: [number, number] = [1, 1]
+): GoFishAST[] => {
   // recursive function
   // as we go down the tree we accumulate transforms
   // we apply the cumulative transform to all nodes we hit and remove their children
@@ -24,12 +28,19 @@ const flattenLayout = (node: GoFishAST, transform: [number, number] = [0, 0]): G
   /* TODO: `connect` is a hack to get the operator to render in coordinate spaces
        A more principled way to do this would be to have "connect" produce a child path mark.  
   */
-  if (!("children" in node) || !node.children || node.children.length === 0 || node.type === "connect") {
+  if (
+    !("children" in node) ||
+    !node.children ||
+    node.children.length === 0 ||
+    node.type === "connect" ||
+    node.type === "box"
+  ) {
     node.transform = {
       translate: [
         (node.transform?.translate?.[0] ?? 0) + transform[0]!,
         (node.transform?.translate?.[1] ?? 0) + transform[1]!,
       ],
+      scale: [(node.transform?.scale?.[0] ?? 1) * (scale[0] ?? 1), (node.transform?.scale?.[1] ?? 1) * (scale[1] ?? 1)],
     };
     return [node];
   }
@@ -38,8 +49,14 @@ const flattenLayout = (node: GoFishAST, transform: [number, number] = [0, 0]): G
     transform[0]! + (node.transform?.translate?.[0] ?? 0),
     transform[1]! + (node.transform?.translate?.[1] ?? 0),
   ];
+  if (node.transform?.scale?.[0] !== undefined || node.transform?.scale?.[1] !== undefined)
+    console.log(node.transform?.scale);
+  const newScale: [number, number] = [
+    (node.transform?.scale?.[0] ?? 1) * (scale[0] ?? 1),
+    (node.transform?.scale?.[1] ?? 1) * (scale[1] ?? 1),
+  ];
 
-  return node.children.flatMap((child) => flattenLayout(child, newTransform));
+  return node.children.flatMap((child) => flattenLayout(child, newTransform, newScale));
 };
 
 /* takes in a GoFishNode and converts it to some set of DisplayObjects

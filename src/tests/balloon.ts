@@ -32,13 +32,37 @@ import { ellipse } from "../ast/marks/ellipse";
 <rect x="192" y="305" width="16" height="12" fill="#cc4444" rx="5" ry="5" />
 */
 
-export const testBalloon = (size: { width: number; height: number }) =>
-  gofish(
-    { width: size.width, height: size.height },
-    layer({ transform: { scale: { x: 0.4, y: 0.4 } } }, [
-      ellipse({ cx: 150, cy: 150, w: 240, h: 300, fill: color.red[4] }),
-      ellipse({ cx: 120, cy: 110, w: 70, h: 110, fill: color.red[3] }),
-      rect({ cx: 110 + 80 / 2, cy: 300 + 40 / 2, w: 80, h: 40, fill: color.red[5], rx: 30, ry: 20 }),
-      rect({ cx: 134 + 32 / 2, cy: 308 + 24 / 2, w: 50, h: 24, fill: color.red[6], rx: 20, ry: 10 }),
-    ])
+export const balloon = (options?: { x?: number; y?: number; scale?: number; color?: string[] }) =>
+  layer(
+    {
+      x: options?.x - 15 * (options?.scale ?? 1),
+      y: options?.y - 25 * (options?.scale ?? 1),
+      box: true,
+      transform: { scale: { x: options?.scale ?? 1, y: options?.scale ?? 1 } },
+    },
+    [
+      ellipse({ cx: 15, cy: 15, w: 24, h: 30, fill: (options?.color ?? color.red)[4] }),
+      ellipse({ cx: 12, cy: 11, w: 7, h: 11, fill: (options?.color ?? color.red)[3] }),
+      rect({
+        cx: 15,
+        cy: 32,
+        w: 8,
+        h: 4,
+        fill: (options?.color ?? color.red)[5],
+        rx: 3,
+        ry: 2,
+      }),
+      rect({
+        cx: 15,
+        cy: 32,
+        w: 5,
+        h: 2.4,
+        fill: (options?.color ?? color.red)[6],
+        rx: 2,
+        ry: 1,
+      }),
+    ]
   );
+
+export const testBalloon = (size: { width: number; height: number }) =>
+  gofish({ width: size.width, height: size.height }, balloon());

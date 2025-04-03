@@ -5,6 +5,7 @@ import { Direction, elaborateDims, elaborateDirection, FancyDims, FancyDirection
 import _, { size } from "lodash";
 import { canUnifyDomains, ContinuousDomain, Domain, unifyContinuousDomains } from "../domain";
 import { findTargetMonotonic } from "../../util";
+import { GoFishAST } from "../_ast";
 
 export const stack = (
   {
@@ -23,7 +24,7 @@ export const stack = (
     sharedScale?: boolean;
     mode?: "edge-to-edge" | "center-to-center";
   } & FancyDims,
-  children: GoFishNode[]
+  children: GoFishAST[]
 ) => {
   const stackDir = elaborateDirection(direction);
   const alignDir = (1 - stackDir) as Direction;

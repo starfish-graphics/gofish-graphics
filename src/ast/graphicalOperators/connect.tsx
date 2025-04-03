@@ -15,6 +15,7 @@ export const connect = (
     strokeWidth,
     opacity,
     mode = "edge-to-edge",
+    mixBlendMode,
   }: {
     direction: FancyDirection;
     fill: string;
@@ -23,6 +24,7 @@ export const connect = (
     strokeWidth?: number;
     opacity?: number;
     mode?: "edge-to-edge" | "center-to-center";
+    mixBlendMode?: "multiply" | "normal";
   },
   children: GoFishAST[]
 ) => {
@@ -223,7 +225,7 @@ export const connect = (
                 return (
                   <path
                     // filter="url(#crumpled-paper)"
-                    style={{ "mix-blend-mode": mode === "center-to-center" ? "normal" : "multiply" }}
+                    style={{ "mix-blend-mode": mixBlendMode ?? mode === "center-to-center" ? "normal" : "multiply" }}
                     d={d}
                     fill={fill ?? "none"}
                     stroke={stroke ?? fill ?? "black"}

@@ -157,11 +157,11 @@ export class GoFishNode {
       } else if (this.transform?.translate?.[i] === undefined) {
         this.transform!.translate![i] = elabPos[i]! - (this.intrinsicDims![i].min ?? 0);
       } else {
-        console.warn(
-          "placing node with both intrinsic and transform defined:",
-          this.type,
-          this.transform!.translate![i]
-        );
+        // console.warn(
+        //   "placing node with both intrinsic and transform defined:",
+        //   this.type,
+        //   this.transform!.translate![i]
+        // );
         // this.transform!.translate![i] = elabPos[i]! - (this.intrinsicDims![i].min ?? 0);
       }
     }
@@ -176,7 +176,7 @@ export class GoFishNode {
         /* TODO: do we want to add this as an object property? */
         coordinateTransform: coordinateTransform,
       },
-      this.children.map((child) => child.render(coordinateTransform))
+      this.children.map((child) => child.render(this.type !== "box" ? coordinateTransform : undefined))
     );
   }
 }

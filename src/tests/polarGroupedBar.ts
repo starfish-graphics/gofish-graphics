@@ -9,7 +9,10 @@ import { coord } from "../ast/coordinateTransforms/coord";
 import { arcLengthPolar } from "../ast/coordinateTransforms/arcLengthPolar";
 
 const data = [
-  { category: "A", group: "x", value: 0.1 },
+  { category: "none", group: "x", value: 0 },
+  // { category: "none", group: "x", value: 0 },
+  // { category: "none", group: "x", value: 0 },
+  { category: "A", group: "x", value: 0.3 },
   { category: "A", group: "y", value: 0.6 },
   { category: "A", group: "z", value: 0.9 },
   { category: "B", group: "x", value: 0.7 },
@@ -23,7 +26,7 @@ const data = [
 export const testPolarGroupedBar = (size: { width: number; height: number }) => {
   // Create the visualization structure first
   return gofish(
-    { width: size.width, height: size.height, transform: { x: 50, y: 200 } },
+    { width: size.width, height: size.height, transform: { x: 50, y: 250 } },
     coord({ transform: polar() }, [
       stack(
         { direction: 0, spacing: 20, alignment: "end", sharedScale: true },

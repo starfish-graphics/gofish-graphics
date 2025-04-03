@@ -7,7 +7,7 @@ import { value } from "../ast/data";
 import { gofish } from "../ast/gofish";
 import { rect } from "../ast/marks/rect";
 import { stack } from "../ast/graphicalOperators/stack";
-import { color, color6, white } from "../color";
+import { black, color, color6, white } from "../color";
 import { coord } from "../ast/coordinateTransforms/coord";
 import { polar } from "../ast/coordinateTransforms/polar";
 import { layer } from "../ast/graphicalOperators/layer";
@@ -297,24 +297,18 @@ const bakedFlowerData = [
 
 const scaleFactor = (2 * Math.PI) / _(flowerData).sumBy("value");
 
-export const testScatterFlower = (size: { width: number; height: number }) =>
+export const testScatterPie2 = (size: { width: number; height: number }) =>
   gofish(
     { width: size.width, height: size.height, transform: { x: 200, y: 600 } },
     layer(
       bakedFlowerData.map((data, i) =>
         (() => {
-          const x = 20 + i * 20;
+          // const x = 20 + i * 20;
+          const x = Math.random() * 200;
           const y = Math.random() * 200;
           const w = Math.random() * 10 + 5;
 
           return layer([
-            rect({
-              x: x,
-              w: 1,
-              y: y,
-              h: size.height - y,
-              fill: color.green[5],
-            }),
             coord(
               {
                 x,
@@ -325,10 +319,10 @@ export const testScatterFlower = (size: { width: number; height: number }) =>
                 stack(
                   { w, direction: 1, spacing: 0, alignment: "start" },
                   data.map((d, i) =>
-                    petal({
+                    rect({
                       h: /* value(d.b, "value") */ (d.value * (2 * Math.PI)) / _(data).sumBy("value"),
                       emY: true,
-                      fill: mix(color6[i % 6], white, 0.6),
+                      fill: color6[i % 6],
                     })
                   )
                 ),

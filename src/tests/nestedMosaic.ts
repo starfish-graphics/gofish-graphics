@@ -58,12 +58,11 @@ export const testNestedMosaic = (size: { width: number; height: number }) =>
                           // h: value(_(items).sumBy("count"), "count"),
                           // h: _(items).sumBy("count") / 10,
                           fill:
-                            survived === "Yes"
+                            survived === "No"
                               ? mix(classColor[cls as keyof typeof classColor], black, 0.7)
                               : classColor[cls as keyof typeof classColor],
                         });
                       })
-                      .reverse()
                       .value()
                   )
                 )

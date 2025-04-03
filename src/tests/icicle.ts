@@ -40,10 +40,10 @@ export const testIcicle = (size: { width: number; height: number }) =>
         _(titanic)
           .groupBy("class")
           .map((items, cls) =>
-            stack({ direction: "x", spacing: 0, alignment: "start" }, [
-              rect({ w: 40, h: _(items).sumBy("count") / 10, fill: classColor[cls as keyof typeof classColor] }),
+            stack({ direction: "x", h: _(items).sumBy("count") / 10, spacing: 0, alignment: "start" }, [
+              rect({ w: 40, fill: classColor[cls as keyof typeof classColor] }),
               stack(
-                { h: _(items).sumBy("count") / 10, direction: "y", spacing: 0, alignment: "middle" },
+                { direction: "y", spacing: 0, alignment: "middle" },
                 _(items)
                   .groupBy("sex")
                   .map((items, sex) =>
@@ -71,15 +71,14 @@ export const testIcicle = (size: { width: number; height: number }) =>
                               // h: _(items).sumBy("count") / 10,
                               fill:
                                 sex === "Female"
-                                  ? survived === "Yes"
+                                  ? survived === "No"
                                     ? mix(color6[2], black, 0.5)
                                     : mix(color6[2], white, 0.5)
-                                  : survived === "Yes"
+                                  : survived === "No"
                                   ? mix(color6[3], black, 0.5)
                                   : mix(color6[3], white, 0.5),
                             });
                           })
-                          .reverse()
                           .value()
                       ),
                     ])

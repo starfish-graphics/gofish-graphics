@@ -1,15 +1,17 @@
 import { GoFishNode } from "../_node";
-import { Size } from "../dims";
+import { Size, elaborateDims, FancyDims } from "../dims";
 
 export const layer = (
-  childrenOrOptions: { transform?: { scale?: { x?: number; y?: number } } } | GoFishNode[],
+  childrenOrOptions: ({ transform?: { scale?: { x?: number; y?: number } }; box?: boolean } & FancyDims) | GoFishNode[],
   maybeChildren?: GoFishNode[]
 ) => {
   const options = Array.isArray(childrenOrOptions) ? {} : childrenOrOptions;
   const children = Array.isArray(childrenOrOptions) ? childrenOrOptions : maybeChildren || [];
+  const dims = elaborateDims(options);
+
   return new GoFishNode(
     {
-      type: "layer",
+      type: options.box === true ? "box" : "layer",
       shared: [false, false],
       measure: (shared, size, children) => {
         const childMeasures = children.map((child) => child.measure(size));
@@ -35,14 +37,20 @@ export const layer = (
         const maxHeight = Math.max(...childPlaceables.map((childPlaceable) => childPlaceable.dims[1].max!));
         const scaleX = options.transform?.scale?.x ?? 1;
         const scaleY = options.transform?.scale?.y ?? 1;
+
+        // Calculate translation based on elaborated dimensions
+        const translateX = dims[0].min !== undefined ? dims[0].min : 0;
+        const translateY = dims[1].min !== undefined ? dims[1].min : 0;
+
         return {
           intrinsicDims: { w: maxWidth * scaleX, h: maxHeight * scaleY },
-          transform: { translate: [0, 0] },
+          transform: { translate: [translateX, translateY], scale: [scaleX, scaleY] },
         };
       },
       render: ({ intrinsicDims, transform }, children) => {
         const scaleX = options.transform?.scale?.x ?? 1;
         const scaleY = options.transform?.scale?.y ?? 1;
+
         return (
           <g
             transform={`translate(${transform?.translate?.[0] ?? 0}, ${

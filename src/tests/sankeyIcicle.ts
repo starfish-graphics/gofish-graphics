@@ -99,7 +99,6 @@ export const testSankeyIcicle = (size: { width: number; height: number }) =>
                                 fill: sex === "Female" ? color6[2] : color6[3],
                               })
                             )
-                            .reverse()
                             .value()
                         ),
                         stack(
@@ -121,15 +120,14 @@ export const testSankeyIcicle = (size: { width: number; height: number }) =>
                                 // h: _(items).sumBy("count") / 10,
                                 fill:
                                   sex === "Female"
-                                    ? survived === "Yes"
+                                    ? survived === "No"
                                       ? mix(color6[2], black, 0.5)
                                       : mix(color6[2], white, 0.5)
-                                    : survived === "Yes"
+                                    : survived === "No"
                                     ? mix(color6[3], black, 0.5)
                                     : mix(color6[3], white, 0.5),
                               });
                             })
-                            .reverse()
                             .value()
                         ),
                       ])
@@ -173,10 +171,10 @@ export const testSankeyIcicle = (size: { width: number; height: number }) =>
                       direction: "x",
                       fill:
                         sex === "Female"
-                          ? survived === "Yes"
+                          ? survived === "No"
                             ? mix(color6[2], black, 0.5)
                             : mix(color6[2], white, 0.5)
-                          : survived === "Yes"
+                          : survived === "No"
                           ? mix(color6[3], black, 0.5)
                           : mix(color6[3], white, 0.5),
                       interpolation: "bezier",

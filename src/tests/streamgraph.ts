@@ -14,29 +14,43 @@ import _ from "lodash";
 import { ref } from "../ast/marks/ref";
 import { connect } from "../ast/graphicalOperators/connect";
 import { streamgraphData, streamgraphColorPalette } from "../data/streamgraphData";
-
 const data = streamgraphData;
 const colorPalette = streamgraphColorPalette;
 
-export const testLineChart = (size: { width: number; height: number }) =>
+export const testStreamgraph = (size: { width: number; height: number }) =>
   gofish(
     { width: size.width, height: size.height },
     layer([
-      ..._(data)
-        .groupBy("c")
-        .flatMap((items, c) =>
-          items.map((d, i) =>
-            ellipse({
-              name: `${c}-${i}`,
-              x: value(d.x * 20),
-              y: value(size.height - d.y),
-              w: 2,
-              h: 2,
-              fill: colorPalette[c][5],
-            })
-          )
-        )
-        .value(),
+      stack(
+        {
+          direction: "x",
+          spacing: 0,
+          alignment: "middle",
+        },
+        [
+          ..._(data)
+            .groupBy("x")
+            .map((items, xCoord) =>
+              stack(
+                {
+                  direction: "y",
+                  spacing: 0,
+                  // alignment: "middle",
+                },
+                items.map((d) =>
+                  rect({
+                    name: `${xCoord}-${d.c}`,
+                    x: value(d.x * 20),
+                    h: d.y,
+                    w: 0,
+                    fill: colorPalette[d.c][5],
+                  })
+                )
+              )
+            )
+            .value(),
+        ]
+      ),
       ..._(data)
         .groupBy("c")
         .map((items, c) =>
@@ -46,10 +60,11 @@ export const testLineChart = (size: { width: number; height: number }) =>
               fill: colorPalette[c][5],
               interpolation: "linear",
               // opacity: 0.7,
-              mode: "center-to-center",
+              mode: "edge-to-edge",
+              mixBlendMode: "normal",
               strokeWidth: 1,
             },
-            items.map((d) => ref(`${c}-${d.x}`))
+            items.map((d) => ref(`${d.x}-${d.c}`))
           )
         )
         .value(),

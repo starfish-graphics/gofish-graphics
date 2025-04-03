@@ -103,11 +103,12 @@ export const elaborateSize = <T>(size: FancySize<T>): Size<T> => {
   return [size.w, size.h];
 };
 
-export type Transform = { translate: Position };
-export type FancyTransform = { translate?: FancyPosition };
+export type Transform = { translate: Position; scale?: Size };
+export type FancyTransform = { translate?: FancyPosition; scale?: FancySize };
 
 export const elaborateTransform = (transform: FancyTransform): Transform => {
   return {
     translate: elaboratePosition(transform?.translate ?? {}),
+    scale: elaborateSize(transform?.scale ?? {}),
   };
 };
