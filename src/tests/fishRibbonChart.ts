@@ -13,7 +13,9 @@ import _ from "lodash";
 import { layer } from "../ast/graphicalOperators/layer";
 import { connect } from "../ast/graphicalOperators/connect";
 import { ref } from "../ast/marks/ref";
-
+import { stackX } from "../ast/graphicalOperators/stackX";
+import { stackY } from "../ast/graphicalOperators/stackY";
+import { connectX } from "../ast/graphicalOperators/connectX";
 const fishColors = {
   Bass: color.blue[5],
   Trout: color.red[5],
@@ -26,13 +28,13 @@ export const testFishRibbonChart = (size: { width: number; height: number }) =>
   gofish(
     { width: size.width, height: size.height },
     layer([
-      stack(
-        { direction: 0, spacing: 64, alignment: "end", sharedScale: true },
+      stackX(
+        { spacing: 64, sharedScale: true },
         _(fish)
           .groupBy("lake")
           .map((d) =>
-            stack(
-              { direction: 1, spacing: 2, alignment: "start" },
+            stackY(
+              { spacing: 2 },
               _(d)
                 .sortBy("count")
                 .reverse()
@@ -52,11 +54,9 @@ export const testFishRibbonChart = (size: { width: number; height: number }) =>
       ..._(fish)
         .groupBy("species")
         .map((items, species) =>
-          connect(
+          connectX(
             {
-              direction: "x",
               fill: fishColors[species as keyof typeof fishColors],
-              interpolation: "bezier",
               opacity: 0.8,
             },
             items.map((d) => ref(`${d.lake}-${d.species}`))

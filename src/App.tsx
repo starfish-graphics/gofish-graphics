@@ -58,18 +58,24 @@ const App: Component = () => {
       <h1>Walkthrough</h1>
       <h2>1. Bar Chart</h2>
       {testFishBar({ width: 500, height: 200 })}
-      <div style={{ display: "flex", "flex-direction": "row", gap: "40px" }}>
-        <div>
+      <div style={{ display: "flex", "flex-direction": "row", gap: "40px", "align-items": "flex-start" }}>
+        <div
+          style={{ display: "flex", "flex-direction": "column", "justify-content": "space-between", height: "420px" }}
+        >
           <h2>2a. Stacked Bar Chart</h2>
-          {testFishStackedBar({ width: 250, height: 200 })}
+          <div>{testFishStackedBar({ width: 250, height: 300 })}</div>
         </div>
-        <div>
+        <div
+          style={{ display: "flex", "flex-direction": "column", "justify-content": "space-between", height: "420px" }}
+        >
           <h2>2b. Grouped Bar Chart</h2>
-          {testFishGroupedBar({ width: 300, height: 200 })}
+          <div>{testFishGroupedBar({ width: 350, height: 300 })}</div>
         </div>
-        <div>
+        <div
+          style={{ display: "flex", "flex-direction": "column", "justify-content": "space-between", height: "400px" }}
+        >
           <h2>2c. Waffle Chart</h2>
-          {testFishWaffle({ width: 300, height: 200 })}
+          <div>{testFishWaffle({ width: 300, height: 350 })}</div>
         </div>
       </div>
       <div style={{ display: "flex", "flex-direction": "row", gap: "40px" }}>
