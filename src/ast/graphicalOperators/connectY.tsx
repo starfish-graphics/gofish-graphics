@@ -1,5 +1,6 @@
 import { GoFishAST } from "../_ast";
 import { connect } from "./connect";
+import { MaybeValue } from "../data";
 export const connectY = (
   {
     fill,
@@ -10,7 +11,7 @@ export const connectY = (
     mode = "edge-to-edge",
     mixBlendMode,
   }: {
-    fill: string;
+    fill?: MaybeValue<string>;
     interpolation?: "linear" | "bezier";
     stroke?: string;
     strokeWidth?: number;

@@ -5,6 +5,8 @@ import { GoFishNode } from "../_node";
 import { elaborateDirection, FancyDirection, Size } from "../dims";
 import { pairs } from "../../util";
 import { linear } from "../coordinateTransforms/linear";
+import { getValue, isValue, MaybeValue } from "../data";
+import { scaleContext } from "../gofish";
 
 export const connect = (
   {
@@ -18,7 +20,7 @@ export const connect = (
     mixBlendMode,
   }: {
     direction: FancyDirection;
-    fill: string;
+    fill?: MaybeValue<string>;
     interpolation?: "linear" | "bezier";
     stroke?: string;
     strokeWidth?: number;
@@ -35,12 +37,15 @@ export const connect = (
     {
       type: "connect",
       shared: [false, false],
+      color: fill,
       measure: (shared, size, children) => {
         return (scaleFactors: Size) => {
           return [size[0], size[1]];
         };
       },
       layout: (shared, size, scaleFactors, children) => {
+        const defaultColor = children[0]?.color ?? "black";
+
         const paths: Path[] = [];
 
         const childPlaceables = children.map((child) => child.layout(size, scaleFactors));
@@ -207,17 +212,21 @@ export const connect = (
         return {
           intrinsicDims: { w: size[0], h: size[1] },
           transform: { translate: [0, 0] },
-          renderData: { paths },
+          renderData: { paths, defaultColor },
         };
       },
       render: ({ intrinsicDims, transform, renderData, coordinateTransform }, children) => {
+        fill = fill ?? renderData.defaultColor;
+        fill = isValue(fill)
+          ? scaleContext?.unit?.color
+            ? scaleContext.unit.color.get(getValue(fill))
+            : getValue(fill)
+          : fill;
+
         return (
           <g transform={`translate(${transform?.translate?.[0] ?? 0}, ${transform?.translate?.[1]! ?? 0})`}>
             <For each={renderData.paths}>
               {(path) => {
-                if (stroke === "black") {
-                  console.log(path);
-                }
                 const transformedPath = coordinateTransform
                   ? transformPath(subdividePath(path, 1000), coordinateTransform)
                   : path;

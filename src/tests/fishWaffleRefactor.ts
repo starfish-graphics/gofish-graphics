@@ -8,7 +8,7 @@ import { gofish } from "../ast/gofish";
 import { rect } from "../ast/marks/rect";
 import { stack } from "../ast/graphicalOperators/stack";
 import { color, color6 } from "../color";
-import { fish } from "../data/fishVaried";
+import { catchData } from "../data/catch";
 import _ from "lodash";
 
 const fishColors = {
@@ -36,7 +36,7 @@ export const testFishWaffleRefactor = (size: { width: number; height: number }) 
     { width: size.width, height: size.height },
     stack(
       { direction: "x", spacing: 8, alignment: "end", sharedScale: true },
-      _(fish)
+      _(catchData)
         .groupBy("lake")
         .map((d) => waffleY(d, { y: "count", numRows: 4 }, (d) => rect({ w: 8, h: 8, fill: fishColors[d.species] })))
         .value()

@@ -14,10 +14,12 @@ import {
   Transform,
 } from "./dims";
 import { Domain } from "./domain";
-import { getScopeContext } from "./gofish";
+import { getScaleContext, getScopeContext } from "./gofish";
 import { GoFishRef } from "./_ref";
 import { GoFishAST } from "./_ast";
 import { CoordinateTransform } from "./coordinateTransforms/coord";
+import { getValue, isValue, MaybeValue } from "./data";
+import { color6 } from "../color";
 
 /* TODO: resolveMeasures and layout feel pretty similar... */
 
@@ -63,6 +65,7 @@ export class GoFishNode {
   private measurement: (scaleFactors: Size) => Size;
   private renderData?: any;
   public coordinateTransform?: CoordinateTransform;
+  public color?: MaybeValue<string>;
   constructor(
     {
       name,
@@ -72,6 +75,7 @@ export class GoFishNode {
       layout,
       render,
       shared = [false, false],
+      color,
     }: {
       name?: string;
       type: string;
@@ -81,6 +85,7 @@ export class GoFishNode {
       layout: Layout;
       render: Render;
       shared?: Size<boolean>;
+      color?: MaybeValue<string>;
     },
     children: GoFishAST[]
   ) {
@@ -95,6 +100,23 @@ export class GoFishNode {
     this.name = name;
     this.type = type;
     this.shared = shared;
+    this.color = color;
+  }
+
+  public resolveColorScale(): void {
+    const scaleContext = getScaleContext();
+    if (this.color !== undefined && isValue(this.color)) {
+      const color = getValue(this.color);
+      if (!scaleContext.unit.color.has(color)) {
+        scaleContext.unit.color.set(color, color6[scaleContext.unit.color.size % 6]);
+      }
+    }
+
+    this.children.forEach((child) => {
+      if (child instanceof GoFishNode) {
+        child.resolveColorScale();
+      }
+    });
   }
 
   public resolveNames(): void {

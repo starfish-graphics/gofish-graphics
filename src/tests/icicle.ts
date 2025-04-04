@@ -3,7 +3,7 @@ import { gofish } from "../ast/gofish";
 import { value } from "../ast/data";
 import { stack } from "../ast/graphicalOperators/stack";
 import { rect } from "../ast/marks/rect";
-import { black, color, color6, white } from "../color";
+import { black, color, color6, color6_old, white } from "../color";
 import { titanic } from "../data/titanic";
 import { mix } from "spectral.js";
 
@@ -20,10 +20,10 @@ const data = [
 ];
 
 const classColor = {
-  First: mix(color6[0], white, 0.5),
-  Second: mix(color6[0], black, 0),
-  Third: mix(color6[0], black, 0.4),
-  Crew: mix(color6[0], black, 0.7),
+  First: mix(color6_old[0], white, 0.5),
+  Second: mix(color6_old[0], black, 0),
+  Third: mix(color6_old[0], black, 0.4),
+  Crew: mix(color6_old[0], black, 0.7),
 };
 
 export const testIcicle = (size: { width: number; height: number }) =>
@@ -51,7 +51,7 @@ export const testIcicle = (size: { width: number; height: number }) =>
                       rect({
                         w: 40,
                         h: _(items).sumBy("count") / 10,
-                        fill: sex === "Female" ? color6[2] : color6[3],
+                        fill: sex === "Female" ? color6_old[2] : color6_old[3],
                       }),
                       stack(
                         {
@@ -72,11 +72,11 @@ export const testIcicle = (size: { width: number; height: number }) =>
                               fill:
                                 sex === "Female"
                                   ? survived === "No"
-                                    ? mix(color6[2], black, 0.5)
-                                    : mix(color6[2], white, 0.5)
+                                    ? mix(color6_old[2], black, 0.5)
+                                    : mix(color6_old[2], white, 0.5)
                                   : survived === "No"
-                                  ? mix(color6[3], black, 0.5)
-                                  : mix(color6[3], white, 0.5),
+                                  ? mix(color6_old[3], black, 0.5)
+                                  : mix(color6_old[3], white, 0.5),
                             });
                           })
                           .value()

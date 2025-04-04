@@ -30,7 +30,6 @@ const flowerData = Array.from({ length: 10 }).map(() =>
     value: Math.round(item.value * (0.5 + Math.random())),
   }))
 );
-console.log("flowerData", flowerData);
 
 const bakedFlowerData = [
   [

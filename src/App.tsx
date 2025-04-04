@@ -52,6 +52,7 @@ import { testNestedWaffle } from "./tests/nestedWaffle";
 import { testStreamgraph } from "./tests/streamgraph";
 import { testScatterPie2 } from "./tests/scatterPie2";
 import { testScatterBalloon2 } from "./tests/scatterBalloon2";
+import { testPolarCenterStackedBarEmbedded } from "./tests/polarCenterStackedBarEmbedded";
 const App: Component = () => {
   return (
     <div style={{ "margin-left": "20px" }}>
@@ -117,11 +118,59 @@ const App: Component = () => {
       <br />
       <br />
       <br />
+      <h1>Polar Grouped Bar Chart (Sec. 4)</h1>
+      {testPolarGroupedBar({ width: 500, height: 300 })}
       <h1>Waffles to Nested Mosaics, Icicles to Node-Link Trees (Sec. 6.2)</h1>
+      <div style={{ display: "flex", "flex-direction": "row", gap: "40px", "flex-wrap": "wrap" }}>
+        <div>
+          <h2>Nested Waffle</h2>
+          {testNestedWaffle({ width: 200, height: 400 })}
+        </div>
+        <div>
+          <h2>Nested Mosaic</h2>
+          {testNestedMosaic({ width: 200, height: 400 })}
+        </div>
+        <div>
+          <h2>Icicle Chart</h2>
+          {testIcicle({ width: 200, height: 400 })}
+        </div>
+        <div>
+          <h2>Sankey Tree</h2>
+          {testSankeyIcicle({ width: 400, height: 400 })}
+        </div>
+      </div>
       <br />
       <br />
       <br />
       <h1>Scatter Pies and Flowers and Balloons... Oh My! (Sec. 6.3)</h1>
+      <div style={{ display: "flex", "flex-direction": "row", gap: "40px", "flex-wrap": "wrap" }}>
+        <div>
+          <h2>Scatter Pie</h2>
+          {testScatterPie2({ width: 250, height: 300 })}
+        </div>
+        <div>
+          <h2>Flower Chart</h2>
+          {testScatterFlower({ width: 250, height: 300 })}
+        </div>
+        <div>
+          <h2>Balloon Chart</h2>
+          {testScatterBalloon2({ width: 300, height: 300 })}
+        </div>
+      </div>
+      <br />
+      <br />
+      <br />
+      <h1>Polar Stacked Bar Embedding (Sec. 6.4)</h1>
+      <div style={{ display: "flex", "flex-direction": "row", gap: "40px", "flex-wrap": "wrap" }}>
+        <div>
+          <h2>Not Embedded</h2>
+          {testPolarCenterStackedBar({ width: 300, height: 300 })}
+        </div>
+        <div>
+          <h2>Embedded</h2>
+          {testPolarCenterStackedBarEmbedded({ width: 300, height: 300 })}
+        </div>
+      </div>
       <br />
       <br />
       <br />

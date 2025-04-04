@@ -1,10 +1,10 @@
-export type FishData = {
+export type CatchData = {
   lake: "Lake A" | "Lake B" | "Lake C" | "Lake D" | "Lake E" | "Lake F";
   species: "Bass" | "Trout" | "Catfish" | "Perch" | "Salmon";
   count: number;
 };
 
-export const fish: FishData[] = [
+export const catchData: CatchData[] = [
   {
     lake: "Lake A",
     species: "Bass",

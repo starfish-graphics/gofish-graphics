@@ -14,6 +14,9 @@ import _ from "lodash";
 import { ref } from "../ast/marks/ref";
 import { connect } from "../ast/graphicalOperators/connect";
 import { streamgraphData, streamgraphColorPalette } from "../data/streamgraphData";
+import { stackX } from "../ast/graphicalOperators/stackX";
+import { stackY } from "../ast/graphicalOperators/stackY";
+import { connectX } from "../ast/graphicalOperators/connectX";
 const data = streamgraphData;
 const colorPalette = streamgraphColorPalette;
 
@@ -21,9 +24,8 @@ export const testStreamgraph = (size: { width: number; height: number }) =>
   gofish(
     { width: size.width, height: size.height },
     layer([
-      stack(
+      stackX(
         {
-          direction: "x",
           spacing: 0,
           alignment: "middle",
           sharedScale: true,
@@ -32,19 +34,15 @@ export const testStreamgraph = (size: { width: number; height: number }) =>
           ..._(data)
             .groupBy("x")
             .map((items, xCoord) =>
-              stack(
-                {
-                  direction: "y",
-                  spacing: 0,
-                  // alignment: "middle",
-                },
+              stackY(
+                { spacing: 0 },
                 items.map((d) =>
                   rect({
                     name: `${xCoord}-${d.c}`,
                     x: value(d.x * 20),
                     h: value(d.y),
                     w: 0,
-                    fill: colorPalette[d.c][5],
+                    fill: value(d.c),
                   })
                 )
               )
@@ -55,13 +53,9 @@ export const testStreamgraph = (size: { width: number; height: number }) =>
       ..._(data)
         .groupBy("c")
         .map((items, c) =>
-          connect(
+          connectX(
             {
-              direction: "x",
-              fill: colorPalette[c][5],
               interpolation: "linear",
-              // opacity: 0.7,
-              mode: "edge-to-edge",
               mixBlendMode: "normal",
               strokeWidth: 1,
             },

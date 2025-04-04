@@ -2,6 +2,7 @@ import { Show, type JSX } from "solid-js";
 import { debugNodeTree, type GoFishNode } from "./_node";
 import { ScopeContext } from "./scopeContext";
 
+/* scope context */
 let scopeContext: ScopeContext | null = null;
 
 export const getScopeContext = (): ScopeContext => {
@@ -9,6 +10,18 @@ export const getScopeContext = (): ScopeContext => {
     throw new Error("Scope context not set");
   }
   return scopeContext;
+};
+
+type ScaleContext = { [measure: string]: { color: Map<any, string> } };
+
+/* scale context */
+export let scaleContext: ScaleContext | null = null;
+
+export const getScaleContext = (): ScaleContext => {
+  if (!scaleContext) {
+    throw new Error("Scale context not set");
+  }
+  return scaleContext;
 };
 
 /* global pass handler */
@@ -22,12 +35,13 @@ export const gofish = (
   child: GoFishNode
 ) => {
   scopeContext = new Map();
-
+  scaleContext = { unit: { color: new Map() } };
   try {
     // const domainAST = child.inferDomain();
     // const sizeThatFitsAST = domainAST.sizeThatFits();
     // const layoutAST = sizeThatFitsAST.layout();
     // return render({ width, height, transform }, layoutAST);
+    child.resolveColorScale();
     child.resolveNames();
     child.measure([width, height])([undefined, undefined]);
     child.layout([width, height], [undefined, undefined]);
@@ -38,6 +52,7 @@ export const gofish = (
     return render({ width, height }, child);
   } finally {
     scopeContext = null;
+    scaleContext = null;
   }
 };
 

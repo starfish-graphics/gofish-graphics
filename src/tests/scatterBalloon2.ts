@@ -32,7 +32,6 @@ const flowerData = Array.from({ length: 10 }).map(() =>
     value: Math.round(item.value * (0.5 + Math.random())),
   }))
 );
-console.log("flowerData", flowerData);
 
 const bakedFlowerData = [
   [
@@ -310,7 +309,7 @@ const colorMap = {
 
 export const testScatterBalloon2 = (size: { width: number; height: number }) =>
   gofish(
-    { width: size.width, height: size.height, transform: { x: 200, y: 600 } },
+    { width: size.width, height: size.height, transform: { x: 200, y: 0 } },
     coord(
       { transform: wavy(), x: 0, y: 0 },
       bakedFlowerData.map((data, i) =>

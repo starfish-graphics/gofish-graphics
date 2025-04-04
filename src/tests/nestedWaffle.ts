@@ -3,10 +3,10 @@ import { gofish } from "../ast/gofish";
 import { value } from "../ast/data";
 import { stack } from "../ast/graphicalOperators/stack";
 import { rect } from "../ast/marks/rect";
-import { black, color, color6 } from "../color";
+import { black, color, color6, color6_old } from "../color";
 import { titanic } from "../data/titanic";
 import { mix } from "spectral.js";
-import { fish } from "../data/fishVaried";
+import { catchData } from "../data/catch";
 import { ellipse } from "../ast/marks/ellipse";
 import { enclose } from "../ast/graphicalOperators/enclose";
 
@@ -23,10 +23,10 @@ const data = [
 ];
 
 const classColor = {
-  First: color6[0],
-  Second: color6[1],
-  Third: color6[2],
-  Crew: color6[3],
+  First: color6_old[0],
+  Second: color6_old[1],
+  Third: color6_old[2],
+  Crew: color6_old[3],
 };
 
 const fishColors = {
@@ -65,7 +65,10 @@ export const testNestedWaffle = (size: { width: number; height: number }) =>
                             ellipse({
                               w: 4,
                               h: 4,
-                              fill: d.survived === "No" ? black : classColor[d.class as keyof typeof classColor],
+                              fill:
+                                d.survived === "No"
+                                  ? black
+                                  : /* value(d.class) */ classColor[d.class as keyof typeof classColor],
                             })
                           )
                         )

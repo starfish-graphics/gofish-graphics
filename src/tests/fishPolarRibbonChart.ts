@@ -8,7 +8,7 @@ import { gofish } from "../ast/gofish";
 import { rect } from "../ast/marks/rect";
 import { stack } from "../ast/graphicalOperators/stack";
 import { color, color6 } from "../color";
-import { fish } from "../data/fishVaried";
+import { catchData } from "../data/catch";
 import _ from "lodash";
 import { layer } from "../ast/graphicalOperators/layer";
 import { connect } from "../ast/graphicalOperators/connect";
@@ -29,6 +29,7 @@ const colorScale = {
   Salmon: color.purple[5],
 };
 
+/* TODO: I need to redo the coordinate system so that it start from the bottom left corner... */
 export const testFishPolarRibbonChart = (size: { width: number; height: number }) =>
   gofish(
     { width: size.width, height: size.height, transform: { x: 200, y: 200 } },
@@ -43,11 +44,12 @@ export const testFishPolarRibbonChart = (size: { width: number; height: number }
             sharedScale: true,
             mode: "center-to-center",
           },
-          Object.entries(_.groupBy(fish, "lake")).map(([lake, items]) =>
+          Object.entries(_.groupBy(catchData, "lake")).map(([lake, items]) =>
             stackY(
               { spacing: 2 },
               _(items)
-                .sortBy("count")
+                /* TODO: changing this to asc gives the correct order but the wrong colors */
+                .orderBy("count", "asc")
                 .map((d) =>
                   rect({
                     name: `${d.lake}-${d.species}`,
@@ -55,23 +57,21 @@ export const testFishPolarRibbonChart = (size: { width: number; height: number }
                     // h: 0.1,
                     emX: true,
                     // w: value(d.value, "value"),
-                    h: d.count,
-                    emY: true,
-                    fill: colorScale[d.species as keyof typeof colorScale],
+                    // h: d.count,
+                    h: value(d.count),
+                    // emY: true,
+                    fill: value(d.species),
                   })
                 )
                 .value()
             )
           )
         ),
-        ..._(fish)
+        ..._(catchData)
           .groupBy("species")
           .map((items, species) =>
             connectX(
-              {
-                fill: colorScale[species as keyof typeof colorScale],
-                opacity: 0.8,
-              },
+              { opacity: 0.8 },
               items.map((d) => ref(`${d.lake}-${d.species}`))
             )
           )

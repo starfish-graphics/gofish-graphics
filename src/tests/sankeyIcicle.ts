@@ -3,7 +3,7 @@ import { gofish } from "../ast/gofish";
 import { value } from "../ast/data";
 import { stack } from "../ast/graphicalOperators/stack";
 import { rect } from "../ast/marks/rect";
-import { black, color, color6, white } from "../color";
+import { black, color, color6, color6_old, white } from "../color";
 import { titanic } from "../data/titanic";
 import { mix } from "spectral.js";
 import { layer } from "../ast/graphicalOperators/layer";
@@ -23,10 +23,10 @@ const data = [
 ];
 
 const classColor = {
-  First: mix(color6[0], white, 0.5),
-  Second: mix(color6[0], black, 0),
-  Third: mix(color6[0], black, 0.4),
-  Crew: mix(color6[0], black, 0.7),
+  First: mix(color6_old[0], white, 0.5),
+  Second: mix(color6_old[0], black, 0),
+  Third: mix(color6_old[0], black, 0.4),
+  Crew: mix(color6_old[0], black, 0.7),
 };
 
 const layerSpacing = 64;
@@ -96,7 +96,7 @@ export const testSankeyIcicle = (size: { width: number; height: number }) =>
                                 name: `${cls}-${sex}-${survived}-src`,
                                 w: 40,
                                 h: _(survivedItems).sumBy("count") / 10,
-                                fill: sex === "Female" ? color6[2] : color6[3],
+                                fill: sex === "Female" ? color6_old[2] : color6_old[3],
                               })
                             )
                             .value()
@@ -121,11 +121,11 @@ export const testSankeyIcicle = (size: { width: number; height: number }) =>
                                 fill:
                                   sex === "Female"
                                     ? survived === "No"
-                                      ? mix(color6[2], black, 0.5)
-                                      : mix(color6[2], white, 0.5)
+                                      ? mix(color6_old[2], black, 0.5)
+                                      : mix(color6_old[2], white, 0.5)
                                     : survived === "No"
-                                    ? mix(color6[3], black, 0.5)
-                                    : mix(color6[3], white, 0.5),
+                                    ? mix(color6_old[3], black, 0.5)
+                                    : mix(color6_old[3], white, 0.5),
                               });
                             })
                             .value()
@@ -157,7 +157,7 @@ export const testSankeyIcicle = (size: { width: number; height: number }) =>
               connect(
                 {
                   direction: "x",
-                  fill: sex === "Female" ? color6[2] : color6[3],
+                  fill: sex === "Female" ? color6_old[2] : color6_old[3],
                   interpolation: "bezier",
                   opacity: 0.7,
                 },
@@ -172,11 +172,11 @@ export const testSankeyIcicle = (size: { width: number; height: number }) =>
                       fill:
                         sex === "Female"
                           ? survived === "No"
-                            ? mix(color6[2], black, 0.5)
-                            : mix(color6[2], white, 0.5)
+                            ? mix(color6_old[2], black, 0.5)
+                            : mix(color6_old[2], white, 0.5)
                           : survived === "No"
-                          ? mix(color6[3], black, 0.5)
-                          : mix(color6[3], white, 0.5),
+                          ? mix(color6_old[3], black, 0.5)
+                          : mix(color6_old[3], white, 0.5),
                       interpolation: "bezier",
                       opacity: 0.7,
                     },

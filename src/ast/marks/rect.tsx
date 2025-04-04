@@ -1,4 +1,4 @@
-import { color6 } from "../../color";
+import { color6, color6_old } from "../../color";
 import { path, Path, pathToSVGPath, segment, subdividePath, transformPath } from "../../path";
 import { GoFishNode } from "../_node";
 import { CoordinateTransform } from "../coordinateTransforms/coord";
@@ -6,24 +6,31 @@ import { linear } from "../coordinateTransforms/linear";
 import { getDataType, getValue, inferEmbedded, isValue, MaybeValue, Value } from "../data";
 import { Dimensions, elaborateDims, FancyDims, FancySize, Size, Transform } from "../dims";
 import { aesthetic, continuous } from "../domain";
+import { scaleContext } from "../gofish";
 
 /* TODO: what should default embedding behavior be when all values are aesthetic? */
 export const rect = ({
   name,
-  fill = color6[0],
+  fill = color6_old[0],
   stroke = fill,
   strokeWidth = 0,
   rx = 0,
   ry = 0,
   ...fancyDims
-}: { name?: string; fill?: string; stroke?: string; strokeWidth?: number; rx?: number; ry?: number } & FancyDims<
-  MaybeValue<number>
->) => {
+}: {
+  name?: string;
+  fill?: MaybeValue<string>;
+  stroke?: MaybeValue<string>;
+  strokeWidth?: number;
+  rx?: number;
+  ry?: number;
+} & FancyDims<MaybeValue<number>>) => {
   const dims = elaborateDims(fancyDims).map(inferEmbedded);
   return new GoFishNode(
     {
       name,
       type: "rect",
+      color: fill,
       // inferDomains: () => {
       //   return [
       //     isValue(dims[0].size)
@@ -108,6 +115,12 @@ export const rect = ({
             max: (transform?.translate?.[1] ?? 0) + (intrinsicDims?.[1]?.max ?? 0),
           },
         ];
+
+        fill = isValue(fill)
+          ? scaleContext?.unit?.color
+            ? scaleContext.unit.color.get(getValue(fill))
+            : getValue(fill)
+          : fill;
 
         // Both dimensions are aesthetic - render as transformed point
         if (!isXEmbedded && !isYEmbedded) {

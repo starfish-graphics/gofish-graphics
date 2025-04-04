@@ -98,7 +98,7 @@ export const appleColor = {
 export const white = "rgb(255, 244, 216)";
 export const black = mix("rgb(20, 20, 20)", white, 0.3);
 
-export const color6 = [
+export const color6_old = [
   mix(appleColorGenerator((6 / 12) * 360), white, 0),
   // "  #ff77bc",
   // mix(appleColor((11 / 12) * 360), "#ffffff", 0.3),
@@ -108,6 +108,7 @@ export const color6 = [
   mix(appleColorGenerator((10 / 12) * 360), white, 0),
   mix(appleColorGenerator((2 / 12) * 360), white, 0.2),
 ];
+export const color6 = [color.blue[5], color.red[5], color.green[5], color.yellow[5], color.purple[5], color.fuschia[5]];
 
 export const color10Order = ["blue", "yellow", "fuschia", "lime", "purple"];
 

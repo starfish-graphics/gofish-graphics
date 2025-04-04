@@ -3,7 +3,7 @@ import { gofish } from "../ast/gofish";
 import { value } from "../ast/data";
 import { stack } from "../ast/graphicalOperators/stack";
 import { rect } from "../ast/marks/rect";
-import { black, color, color6 } from "../color";
+import { black, color, color6, color6_old } from "../color";
 import { titanic } from "../data/titanic";
 import { mix } from "spectral.js";
 
@@ -20,10 +20,10 @@ const data = [
 ];
 
 const classColor = {
-  First: color6[0],
-  Second: color6[1],
-  Third: color6[2],
-  Crew: color6[3],
+  First: color6_old[0],
+  Second: color6_old[1],
+  Third: color6_old[2],
+  Crew: color6_old[3],
 };
 
 export const testNestedMosaic = (size: { width: number; height: number }) =>
@@ -51,9 +51,8 @@ export const testNestedMosaic = (size: { width: number; height: number }) =>
                     },
                     _(sItems)
                       .groupBy("survived")
-                      .map((items, survived) => {
-                        console.log(survived);
-                        return rect({
+                      .map((items, survived) =>
+                        rect({
                           h: value(_(items).sumBy("count"), "survived"),
                           // h: value(_(items).sumBy("count"), "count"),
                           // h: _(items).sumBy("count") / 10,
@@ -61,8 +60,8 @@ export const testNestedMosaic = (size: { width: number; height: number }) =>
                             survived === "No"
                               ? mix(classColor[cls as keyof typeof classColor], black, 0.7)
                               : classColor[cls as keyof typeof classColor],
-                        });
-                      })
+                        })
+                      )
                       .value()
                   )
                 )

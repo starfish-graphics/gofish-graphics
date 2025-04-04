@@ -8,7 +8,7 @@ import { gofish } from "../ast/gofish";
 import { rect } from "../ast/marks/rect";
 import { stack } from "../ast/graphicalOperators/stack";
 import { color, color6 } from "../color";
-import { fish } from "../data/fishVaried";
+import { catchData } from "../data/catch";
 import _ from "lodash";
 import { stackY } from "../ast/graphicalOperators/stackY";
 import { stackX } from "../ast/graphicalOperators/stackX";
@@ -25,14 +25,13 @@ export const testFishStackedBar = (size: { width: number; height: number }) =>
     { width: size.width, height: size.height },
     stackX(
       { spacing: 8, sharedScale: true },
-      _(fish)
+      _(catchData)
         .groupBy("lake")
         .map((d) =>
           stackY(
             { spacing: 2 },
             _(d)
-              .sortBy("count")
-              .map((d) => rect({ w: 32, h: value(d.count), fill: fishColors[d.species] }))
+              .map((d) => rect({ w: 32, h: value(d.count), fill: value(d.species) }))
               .value()
           )
         )

@@ -53,7 +53,7 @@ export const testScatterplot = (size: { width: number; height: number }) =>
             y: value(size.height - d.y),
             w: 8,
             h: 8,
-            fill: colorPalette[d.c][5],
+            fill: value(d.c),
           })
         )
         .value()

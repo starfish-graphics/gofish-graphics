@@ -17,6 +17,7 @@ import { Domain } from "./domain";
 import { getScopeContext } from "./gofish";
 import { GoFishNode } from "./_node";
 import { GoFishAST } from "./_ast";
+import { MaybeValue } from "./data";
 
 /* TODO: resolveMeasures and layout feel pretty similar... */
 
@@ -48,6 +49,7 @@ export class GoFishRef {
   private measurement: (scaleFactors: Size) => Size;
   private selection: string;
   private selectedNode?: GoFishNode;
+  public color?: MaybeValue<string>;
   constructor({
     name,
     selection,
@@ -64,6 +66,7 @@ export class GoFishRef {
 
   public resolveNames(): void {
     this.selectedNode = getScopeContext().get(this.selection);
+    this.color = this.selectedNode?.color;
   }
 
   /* TODO: I'm not really sure what this should do */

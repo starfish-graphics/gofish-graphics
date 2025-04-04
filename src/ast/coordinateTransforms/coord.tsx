@@ -49,8 +49,7 @@ const flattenLayout = (
     transform[0]! + (node.transform?.translate?.[0] ?? 0),
     transform[1]! + (node.transform?.translate?.[1] ?? 0),
   ];
-  if (node.transform?.scale?.[0] !== undefined || node.transform?.scale?.[1] !== undefined)
-    console.log(node.transform?.scale);
+
   const newScale: [number, number] = [
     (node.transform?.scale?.[0] ?? 1) * (scale[0] ?? 1),
     (node.transform?.scale?.[1] ?? 1) * (scale[1] ?? 1),
@@ -92,6 +91,8 @@ export const coord = (
       type: "coord",
       name,
       measure: (shared, size, children) => {
+        // TODO: only works for polar2 right now
+        size = [2 * Math.PI, Math.min(size[0], size[1]) / 2 - 30];
         const childMeasures = children.map((child) => child.measure(size));
         return (scaleFactors: Size) => {
           const childSizes = childMeasures.map((childMeasure) => childMeasure(scaleFactors));
@@ -102,6 +103,8 @@ export const coord = (
       },
       layout: (shared, size, scaleFactors, children, measurement) => {
         /* TODO: need correct scale factors */
+        // TODO: only works for polar2 right now
+        size = [2 * Math.PI, Math.min(size[0], size[1]) / 2 - 30];
         const childPlaceables = children.map((child) => child.layout(size, [1, 1]));
 
         /* TODO: maybe have to be smarter about this... */

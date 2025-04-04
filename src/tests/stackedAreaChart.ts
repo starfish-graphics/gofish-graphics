@@ -12,8 +12,10 @@ import { layer } from "../ast/graphicalOperators/layer";
 import { ellipse } from "../ast/marks/ellipse";
 import _ from "lodash";
 import { ref } from "../ast/marks/ref";
-import { connect } from "../ast/graphicalOperators/connect";
+import { connectX } from "../ast/graphicalOperators/connectX";
 import { streamgraphData, streamgraphColorPalette } from "../data/streamgraphData";
+import { stackX } from "../ast/graphicalOperators/stackX";
+import { stackY } from "../ast/graphicalOperators/stackY";
 const data = streamgraphData;
 const colorPalette = streamgraphColorPalette;
 
@@ -21,22 +23,18 @@ export const testStackedAreaChart = (size: { width: number; height: number }) =>
   gofish(
     { width: size.width, height: size.height },
     layer([
-      stack(
+      stackX(
         {
-          direction: "x",
           spacing: 0,
-          alignment: "end",
           sharedScale: true,
         },
         [
           ..._(data)
             .groupBy("x")
             .map((items, xCoord) =>
-              stack(
+              stackY(
                 {
-                  direction: "y",
                   spacing: 0,
-                  // alignment: "middle",
                 },
                 items.map((d) =>
                   rect({
@@ -44,7 +42,7 @@ export const testStackedAreaChart = (size: { width: number; height: number }) =>
                     x: value(d.x * 20),
                     h: value(d.y),
                     w: 0,
-                    fill: colorPalette[d.c][5],
+                    fill: value(d.c),
                   })
                 )
               )
@@ -55,13 +53,10 @@ export const testStackedAreaChart = (size: { width: number; height: number }) =>
       ..._(data)
         .groupBy("c")
         .map((items, c) =>
-          connect(
+          connectX(
             {
-              direction: "x",
-              fill: colorPalette[c][5],
               interpolation: "linear",
               // opacity: 0.7,
-              mode: "edge-to-edge",
               mixBlendMode: "normal",
               strokeWidth: 1,
             },

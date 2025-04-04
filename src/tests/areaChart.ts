@@ -12,7 +12,7 @@ import { layer } from "../ast/graphicalOperators/layer";
 import { ellipse } from "../ast/marks/ellipse";
 import _ from "lodash";
 import { ref } from "../ast/marks/ref";
-import { connect } from "../ast/graphicalOperators/connect";
+import { connectX } from "../ast/graphicalOperators/connectX";
 import { streamgraphData, streamgraphColorPalette } from "../data/streamgraphData";
 const data = streamgraphData;
 const colorPalette = streamgraphColorPalette;
@@ -34,7 +34,7 @@ export const testAreaChart = (size: { width: number; height: number }) =>
                 y: size.height - d.y,
                 h: d.y,
                 w: 0,
-                fill: colorPalette[c][5],
+                fill: value(c),
               })
             // )
           )
@@ -43,13 +43,10 @@ export const testAreaChart = (size: { width: number; height: number }) =>
       ..._(data)
         .groupBy("c")
         .map((items, c) =>
-          connect(
+          connectX(
             {
-              direction: "x",
-              fill: colorPalette[c][5],
               interpolation: "linear",
               // opacity: 0.7,
-              mode: "edge-to-edge",
               // mixBlendMode: "normal",
               opacity: 0.7,
             },
