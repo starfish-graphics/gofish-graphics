@@ -55,7 +55,7 @@ import { testScatterBalloon2 } from "./tests/scatterBalloon2";
 const App: Component = () => {
   return (
     <div style={{ "margin-left": "20px" }}>
-      <h1>Walkthrough</h1>
+      <h1>Walkthrough (Sec. 3)</h1>
       <h2>1. Bar Chart</h2>
       {testFishBar({ width: 500, height: 200 })}
       <div style={{ display: "flex", "flex-direction": "row", gap: "40px", "align-items": "flex-start" }}>
@@ -85,9 +85,46 @@ const App: Component = () => {
         </div>
         <div>
           <h2>4. Polar Ribbon Chart</h2>
-          {testFishPolarRibbonChart({ width: 500, height: 500 })}
+          {testFishPolarRibbonChart({ width: 500, height: 400 })}
         </div>
       </div>
+      <br />
+      <br />
+      <br />
+      <h1>Building a Streamgraph (Sec. 6.1)</h1>
+      <div style={{ display: "flex", "flex-direction": "row", gap: "40px", "flex-wrap": "wrap" }}>
+        <div>
+          <h2>1. Scatterplot</h2>
+          {testScatterplot({ width: 200, height: 100 })}
+        </div>
+        <div>
+          <h2>2. Line Chart</h2>
+          {testLineChart({ width: 200, height: 100 })}
+        </div>
+        <div>
+          <h2>3. Layered Area Chart</h2>
+          {testAreaChart({ width: 200, height: 100 })}
+        </div>
+        <div>
+          <h2>4. Stacked Area Chart</h2>
+          {testStackedAreaChart({ width: 200, height: 100 })}
+        </div>
+        <div>
+          <h2>5. Streamgraph</h2>
+          {testStreamgraph({ width: 200, height: 100 })}
+        </div>
+      </div>
+      <br />
+      <br />
+      <br />
+      <h1>Waffles to Nested Mosaics, Icicles to Node-Link Trees (Sec. 6.2)</h1>
+      <br />
+      <br />
+      <br />
+      <h1>Scatter Pies and Flowers and Balloons... Oh My! (Sec. 6.3)</h1>
+      <br />
+      <br />
+      <br />
       <h2>Nested Waffle</h2>
       {testNestedWaffle({ width: 800, height: 500 })}
       <h2>Nested Mosaic</h2>

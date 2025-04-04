@@ -26,6 +26,7 @@ export const testStackedAreaChart = (size: { width: number; height: number }) =>
           direction: "x",
           spacing: 0,
           alignment: "end",
+          sharedScale: true,
         },
         [
           ..._(data)
@@ -41,7 +42,7 @@ export const testStackedAreaChart = (size: { width: number; height: number }) =>
                   rect({
                     name: `${xCoord}-${d.c}`,
                     x: value(d.x * 20),
-                    h: d.y,
+                    h: value(d.y),
                     w: 0,
                     fill: colorPalette[d.c][5],
                   })
