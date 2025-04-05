@@ -48,6 +48,13 @@ export const connect = (
 
         const paths: Path[] = [];
 
+        if (mode === "edge-to-edge") {
+          for (const child of children) {
+            // toggle embedding on the direction axis
+            (child as GoFishAST).embed(direction);
+          }
+        }
+
         const childPlaceables = children.map((child) => child.layout(size, scaleFactors));
         const bboxPairs = pairs(childPlaceables.map((child) => child.dims));
         // If in center-to-center mode, adjust bounding boxes to have zero width/height

@@ -6,6 +6,7 @@ import {
   elaborateSize,
   elaborateTransform,
   FancyDims,
+  FancyDirection,
   FancyPosition,
   FancySize,
   FancyTransform,
@@ -67,6 +68,10 @@ export class GoFishRef {
   public resolveNames(): void {
     this.selectedNode = getScopeContext().get(this.selection);
     this.color = this.selectedNode?.color;
+  }
+
+  public embed(direction: FancyDirection): void {
+    this.selectedNode?.embed(direction);
   }
 
   /* TODO: I'm not really sure what this should do */

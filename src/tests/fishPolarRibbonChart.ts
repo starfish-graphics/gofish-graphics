@@ -54,12 +54,7 @@ export const testFishPolarRibbonChart = (size: { width: number; height: number }
                   rect({
                     name: `${d.lake}-${d.species}`,
                     w: 0.1,
-                    // h: 0.1,
-                    emX: true,
-                    // w: value(d.value, "value"),
-                    // h: d.count,
                     h: value(d.count),
-                    // emY: true,
                     fill: value(d.species),
                   })
                 )

@@ -2,10 +2,12 @@ import type { JSX } from "solid-js";
 import {
   Dimensions,
   elaborateDims,
+  elaborateDirection,
   elaboratePosition,
   elaborateSize,
   elaborateTransform,
   FancyDims,
+  FancyDirection,
   FancyPosition,
   FancySize,
   FancyTransform,
@@ -187,6 +189,11 @@ export class GoFishNode {
         // this.transform!.translate![i] = elabPos[i]! - (this.intrinsicDims![i].min ?? 0);
       }
     }
+  }
+
+  public embed(direction: FancyDirection): void {
+    console.log("embedding", direction, "on", this.type, this.name);
+    this.intrinsicDims![elaborateDirection(direction)].embedded = true;
   }
 
   public render(coordinateTransform?: CoordinateTransform): JSX.Element {

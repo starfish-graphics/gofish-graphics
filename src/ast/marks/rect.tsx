@@ -70,12 +70,14 @@ export const rect = ({
               size: w,
               center: w / 2,
               max: w,
+              embedded: dims[0].embedded,
             },
             {
               min: 0,
               size: h,
               center: h / 2,
               max: h,
+              embedded: dims[1].embedded,
             },
           ],
           transform: {
@@ -97,8 +99,8 @@ export const rect = ({
 
         // const isDataX = isValue(dims[0].size);
         // const isDataY = isValue(dims[1].size);
-        const isXEmbedded = dims[0].embedded;
-        const isYEmbedded = dims[1].embedded;
+        const isXEmbedded = intrinsicDims![0].embedded;
+        const isYEmbedded = intrinsicDims![1].embedded;
 
         // combine intrinsicDims with transform
         const displayDims = [
