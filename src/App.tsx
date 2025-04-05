@@ -56,6 +56,12 @@ import { testPolarCenterStackedBarEmbedded } from "./tests/polarCenterStackedBar
 const App: Component = () => {
   return (
     <div style={{ "margin-left": "20px" }}>
+      <h1>Welcome!</h1>
+      <div style={{ "max-width": "500px" }}>
+        Welcome to the GoFish supplemental figures! Below you'll find all the graphics we made in GoFish for the paper.
+        If you navigate to App.tsx, you can see the code that generated each figure.
+      </div>
+      <br />
       <h1>Walkthrough (Sec. 3)</h1>
       <h2>1. Bar Chart</h2>
       {testFishBar({ width: 500, height: 200 })}

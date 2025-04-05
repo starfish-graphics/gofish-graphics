@@ -1,15 +1,17 @@
+import { Measure } from "./data";
+
 export type Domain = ContinuousDomain | AestheticDomain;
 
 export type ContinuousDomain = {
   type: "continuous";
   value: [number, number];
-  dataType: string;
+  measure: Measure;
 };
 
-export const continuous = ({ value, dataType }: { value: [number, number]; dataType: string }): ContinuousDomain => ({
+export const continuous = ({ value, measure }: { value: [number, number]; measure: Measure }): ContinuousDomain => ({
   type: "continuous",
   value,
-  dataType,
+  measure,
 });
 
 export type AestheticDomain = {
@@ -23,15 +25,15 @@ export const aesthetic = (value: any): AestheticDomain => ({
 });
 
 export const canUnifyDomains = (domains: Domain[]) => {
-  return domains.every((domain) => domain.type === "continuous" && domain.dataType === domains[0].dataType);
+  return domains.every((domain) => domain.type === "continuous" && domain.measure === domains[0].measure);
 };
 
 export const unifyContinuousDomains = (domains: ContinuousDomain[]) => {
-  const dataType = domains[0].dataType;
+  const measure = domains[0].measure;
   const mins = domains.map((domain) => domain.value[0]);
   const maxs = domains.map((domain) => domain.value[1]);
   return {
-    dataType,
+    measure,
     value: [Math.min(...mins), Math.max(...maxs)],
   };
 };

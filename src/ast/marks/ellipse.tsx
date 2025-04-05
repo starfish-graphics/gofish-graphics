@@ -3,7 +3,7 @@ import { path, Path, pathToSVGPath, segment, subdividePath, transformPath } from
 import { GoFishNode } from "../_node";
 import { CoordinateTransform } from "../coordinateTransforms/coord";
 import { linear } from "../coordinateTransforms/linear";
-import { getDataType, getValue, inferEmbedded, isValue, MaybeValue, Value } from "../data";
+import { getMeasure, getValue, inferEmbedded, isValue, MaybeValue, Value } from "../data";
 import { Dimensions, elaborateDims, FancyDims, FancySize, Size, Transform } from "../dims";
 import { aesthetic, continuous } from "../domain";
 import { scaleContext } from "../gofish";
