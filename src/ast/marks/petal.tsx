@@ -103,7 +103,7 @@ export const petal = ({
         if (coordinateTransform === undefined) {
           return <></>;
         }
-        if (coordinateTransform?.type !== "polar") {
+        if (coordinateTransform?.type !== "polar2") {
           throw new Error("Petal mark must be used in a polar coordinate transform");
         }
 
@@ -180,10 +180,10 @@ export const petal = ({
           // Subdivide and transform path
           const transformed = transformPath(linePath, space);
 
-          const halfRadius = (displayDims[0].size ?? 0) / 2;
-          const s = space.transform([halfRadius, -displayDims[1].size / 2]);
-          const e = space.transform([halfRadius, displayDims[1].size / 2]);
-          const r = displayDims[0].size ?? 0;
+          const halfRadius = (displayDims[1].size ?? 0) / 2;
+          const s = space.transform([-displayDims[0].size / 2, halfRadius]);
+          const e = space.transform([displayDims[0].size / 2, halfRadius]);
+          const r = displayDims[1].size ?? 0;
           const m = [halfRadius + r / 2, 0];
           const c1 = [halfRadius + r / 4, s[1]];
           const c2 = [halfRadius + r / 4, e[1]];
@@ -216,7 +216,7 @@ export const petal = ({
 
           // 0.5 removes weird white space at least for some charts
           return (
-            <path transform={`rotate(${((displayDims[1].center ?? 0) / Math.PI) * 180})`} d={svgPath} fill={fill} />
+            <path transform={`rotate(${((displayDims[0].center ?? 0) / Math.PI) * 180})`} d={svgPath} fill={fill} />
           );
         }
 

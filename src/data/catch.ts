@@ -1,7 +1,18 @@
+export type Lakes = "Lake A" | "Lake B" | "Lake C" | "Lake D" | "Lake E" | "Lake F";
+
 export type CatchData = {
-  lake: "Lake A" | "Lake B" | "Lake C" | "Lake D" | "Lake E" | "Lake F";
+  lake: Lakes;
   species: "Bass" | "Trout" | "Catfish" | "Perch" | "Salmon";
   count: number;
+};
+
+export const catchLocations: Record<Lakes, { x: number; y: number }> = {
+  "Lake A": { x: 5.26, y: 22.64 },
+  "Lake B": { x: 30.87, y: 120.75 },
+  "Lake C": { x: 50.01, y: 60.94 },
+  "Lake D": { x: 115.13, y: 94.16 },
+  "Lake E": { x: 133.05, y: 50.44 },
+  "Lake F": { x: 85.99, y: 172.78 },
 };
 
 export const catchData: CatchData[] = [

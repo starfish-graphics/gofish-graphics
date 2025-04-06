@@ -48,7 +48,6 @@ export const layer = (
         const childPlaceables = [];
 
         for (const child of children) {
-          console.log("layer posScales", posScales);
           const childPlaceable = child.layout(size, scaleFactors, posScales);
           childPlaceable.place({ x: 0, y: 0 });
           childPlaceables.push(childPlaceable);

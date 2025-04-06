@@ -63,7 +63,8 @@ const App: Component = () => {
         you navigate to <code>App.tsx</code>, you can see the code that generates each one.
         <br />
         <br />
-        <b>Note:</b> Some colors are modified slightly from the paper, because they now use the default color scale.
+        <b>Note:</b> Some colors are modified slightly from the paper, because they now use the default color scale. The
+        data set for the examples in Sec. 6.3 have been modified to extend the <code>catch</code> data set from Sec. 3.
       </div>
       <br />
       <h1>Walkthrough (Sec. 3)</h1>
@@ -128,34 +129,7 @@ const App: Component = () => {
       <br />
       <br />
       <br />
-      <br />
-      <br />
-      <br />
-      <br />
-      <br />
-      <br />
-      <br />
-      <br />
-      <br />
-      <br />
-      <br />
-      <br />
-      <br />
-      <br />
-      <br />
-      <br />
-      <br />
-      <br />
-      <br />
-      <br />
-      <br />
-      <br />
-      <br />
-      <br />
-      <br />
-      <br />
-      <br />
-      {/* <h1>Polar Grouped Bar Chart (Sec. 4)</h1>
+      <h1>Polar Grouped Bar Chart (Sec. 4)</h1>
       {testPolarGroupedBar({ width: 500, height: 300 })}
       <h1>Waffles to Nested Mosaics, Icicles to Node-Link Trees (Sec. 6.2)</h1>
       <div style={{ display: "flex", "flex-direction": "row", gap: "40px", "flex-wrap": "wrap" }}>
@@ -183,21 +157,21 @@ const App: Component = () => {
       <div style={{ display: "flex", "flex-direction": "row", gap: "40px", "flex-wrap": "wrap" }}>
         <div>
           <h2>Scatter Pie</h2>
-          {testScatterPie2({ width: 250, height: 300 })}
+          {testScatterPie2({ width: 250, height: 200 })}
         </div>
         <div>
           <h2>Flower Chart</h2>
-          {testScatterFlower({ width: 250, height: 300 })}
+          {testScatterFlower({ width: 250, height: 200 })}
         </div>
         <div>
           <h2>Balloon Chart</h2>
-          {testScatterBalloon2({ width: 300, height: 300 })}
+          {testScatterBalloon2({ width: 300, height: 200 })}
         </div>
       </div>
       <br />
       <br />
       <br />
-      <h1>Polar Stacked Bar Embedding (Sec. 6.4)</h1>
+      {/* <h1>Polar Stacked Bar Embedding (Sec. 6.4)</h1>
       <div style={{ display: "flex", "flex-direction": "row", gap: "40px", "flex-wrap": "wrap" }}>
         <div>
           <h2>Not Embedded</h2>

@@ -39,7 +39,7 @@ const fishColors = {
 
 export const testNestedWaffle = (size: { width: number; height: number }) =>
   gofish(
-    { width: size.width, height: size.height, transform: { x: 10, y: 10 } },
+    { width: size.width, height: size.height },
     stack(
       { direction: "y", spacing: 8, alignment: "middle", sharedScale: true },
       _(titanic)

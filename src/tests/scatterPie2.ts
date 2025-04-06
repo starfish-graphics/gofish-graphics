@@ -14,321 +14,48 @@ import { layer } from "../ast/graphicalOperators/layer";
 import { petal } from "../ast/marks/petal";
 import _ from "lodash";
 import { mix } from "spectral.js";
-const baseData = [
-  { category: 1, value: 4 },
-  { category: 2, value: 6 },
-  { category: 3, value: 10 },
-  { category: 4, value: 3 },
-  { category: 5, value: 7 },
-  { category: 6, value: 8 },
-];
+import { polar2 } from "../ast/coordinateTransforms/polar2";
+import { stackX } from "../ast/graphicalOperators/stackX";
+import { catchData, catchLocations } from "../data/catch";
 
-// Create ten copies with randomly mutated values
-const flowerData = Array.from({ length: 10 }).map(() =>
-  baseData.map((item) => ({
-    category: item.category,
-    value: Math.round(item.value * (0.5 + Math.random())),
+const scatterData = _(catchData)
+  .groupBy("lake")
+  .map((lakeData, lake) => ({
+    lake,
+    x: catchLocations[lake as keyof typeof catchLocations].x,
+    y: catchLocations[lake as keyof typeof catchLocations].y,
+    collection: lakeData.map((item) => ({
+      species: item.species,
+      count: item.count,
+    })),
   }))
-);
-
-const bakedFlowerData = [
-  [
-    {
-      category: 1,
-      value: 3,
-    },
-    {
-      category: 2,
-      value: 3,
-    },
-    {
-      category: 3,
-      value: 8,
-    },
-    {
-      category: 4,
-      value: 3,
-    },
-    {
-      category: 5,
-      value: 6,
-    },
-    {
-      category: 6,
-      value: 9,
-    },
-  ],
-  [
-    {
-      category: 1,
-      value: 4,
-    },
-    {
-      category: 2,
-      value: 9,
-    },
-    {
-      category: 3,
-      value: 8,
-    },
-    {
-      category: 4,
-      value: 4,
-    },
-    {
-      category: 5,
-      value: 8,
-    },
-    {
-      category: 6,
-      value: 11,
-    },
-  ],
-  [
-    {
-      category: 1,
-      value: 4,
-    },
-    {
-      category: 2,
-      value: 5,
-    },
-    {
-      category: 3,
-      value: 10,
-    },
-    {
-      category: 4,
-      value: 2,
-    },
-    {
-      category: 5,
-      value: 8,
-    },
-    {
-      category: 6,
-      value: 8,
-    },
-  ],
-  [
-    {
-      category: 1,
-      value: 4,
-    },
-    {
-      category: 2,
-      value: 5,
-    },
-    {
-      category: 3,
-      value: 7,
-    },
-    {
-      category: 4,
-      value: 3,
-    },
-    {
-      category: 5,
-      value: 6,
-    },
-    {
-      category: 6,
-      value: 10,
-    },
-  ],
-  [
-    {
-      category: 1,
-      value: 4,
-    },
-    {
-      category: 2,
-      value: 7,
-    },
-    {
-      category: 3,
-      value: 6,
-    },
-    {
-      category: 4,
-      value: 3,
-    },
-    {
-      category: 5,
-      value: 6,
-    },
-    {
-      category: 6,
-      value: 10,
-    },
-  ],
-  [
-    {
-      category: 1,
-      value: 3,
-    },
-    {
-      category: 2,
-      value: 7,
-    },
-    {
-      category: 3,
-      value: 13,
-    },
-    {
-      category: 4,
-      value: 2,
-    },
-    {
-      category: 5,
-      value: 8,
-    },
-    {
-      category: 6,
-      value: 8,
-    },
-  ],
-  [
-    {
-      category: 1,
-      value: 4,
-    },
-    {
-      category: 2,
-      value: 5,
-    },
-    {
-      category: 3,
-      value: 7,
-    },
-    {
-      category: 4,
-      value: 3,
-    },
-    {
-      category: 5,
-      value: 6,
-    },
-    {
-      category: 6,
-      value: 6,
-    },
-  ],
-  [
-    {
-      category: 1,
-      value: 4,
-    },
-    {
-      category: 2,
-      value: 9,
-    },
-    {
-      category: 3,
-      value: 7,
-    },
-    {
-      category: 4,
-      value: 4,
-    },
-    {
-      category: 5,
-      value: 5,
-    },
-    {
-      category: 6,
-      value: 8,
-    },
-  ],
-  [
-    {
-      category: 1,
-      value: 4,
-    },
-    {
-      category: 2,
-      value: 6,
-    },
-    {
-      category: 3,
-      value: 14,
-    },
-    {
-      category: 4,
-      value: 2,
-    },
-    {
-      category: 5,
-      value: 6,
-    },
-    {
-      category: 6,
-      value: 4,
-    },
-  ],
-  [
-    {
-      category: 1,
-      value: 5,
-    },
-    {
-      category: 2,
-      value: 8,
-    },
-    {
-      category: 3,
-      value: 7,
-    },
-    {
-      category: 4,
-      value: 4,
-    },
-    {
-      category: 5,
-      value: 7,
-    },
-    {
-      category: 6,
-      value: 11,
-    },
-  ],
-];
-
-const scaleFactor = (2 * Math.PI) / _(flowerData).sumBy("value");
+  .value();
 
 export const testScatterPie2 = (size: { width: number; height: number }) =>
   gofish(
-    { width: size.width, height: size.height, transform: { x: 200, y: 600 } },
+    { width: size.width, height: size.height },
     layer(
-      bakedFlowerData.map((data, i) =>
-        (() => {
-          // const x = 20 + i * 20;
-          const x = Math.random() * 200;
-          const y = Math.random() * 200;
-          const w = Math.random() * 10 + 5;
-
-          return layer([
-            coord(
-              {
-                x,
-                y,
-                transform: polar(),
-              },
-              [
-                stack(
-                  { w, direction: 1, spacing: 0, alignment: "start" },
-                  data.map((d, i) =>
-                    rect({
-                      h: /* value(d.b, "value") */ (d.value * (2 * Math.PI)) / _(data).sumBy("value"),
-                      emY: true,
-                      fill: color6[i % 6],
-                    })
-                  )
-                ),
-              ]
-            ),
-          ]);
-        })()
+      scatterData.map((sample) =>
+        layer([
+          coord(
+            {
+              x: sample.x,
+              y: sample.y,
+              transform: polar2(),
+            },
+            [
+              stackX(
+                { h: _(sample.collection).sumBy("count") / 7, spacing: 0, alignment: "start", sharedScale: true },
+                sample.collection.map((d, i) =>
+                  rect({
+                    w: value(d.count),
+                    fill: color6[i % 6],
+                  })
+                )
+              ),
+            ]
+          ),
+        ])
       )
     )
   );

@@ -16,6 +16,8 @@ import _ from "lodash";
 import { mix } from "spectral.js";
 import { balloon } from "./balloon";
 import { wavy } from "../ast/coordinateTransforms/wavy";
+import { catchData } from "../data/catch";
+import { catchLocations } from "../data/catch";
 const baseData = [
   { category: 1, value: 4 },
   { category: 2, value: 6 },
@@ -307,29 +309,36 @@ const colorMap = {
   5: color.orange,
 };
 
+const scatterData = _(catchData)
+  .groupBy("lake")
+  .map((lakeData, lake) => ({
+    lake,
+    x: catchLocations[lake as keyof typeof catchLocations].x,
+    y: catchLocations[lake as keyof typeof catchLocations].y,
+    collection: lakeData.map((item) => ({
+      species: item.species,
+      count: item.count,
+    })),
+  }))
+  .value();
+
 export const testScatterBalloon2 = (size: { width: number; height: number }) =>
   gofish(
-    { width: size.width, height: size.height, transform: { x: 200, y: 0 } },
+    { width: size.width, height: size.height },
     coord(
       { transform: wavy(), x: 0, y: 0 },
-      bakedFlowerData.map((data, i) =>
-        (() => {
-          const x = 20 + i * 20;
-          const y = Math.random() * 200;
-          const w = Math.random() * 10 + 5;
-
-          return layer([
-            rect({
-              x: x,
-              w: 1,
-              y: y,
-              h: size.height - y,
-              emY: true,
-              fill: black,
-            }),
-            balloon({ scale: 1, x: x, y: y, color: colorMap[i % 6] }),
-          ]);
-        })()
+      scatterData.map((data, i) =>
+        layer([
+          rect({
+            x: data.x,
+            w: 1,
+            y: data.y,
+            h: size.height - data.y,
+            emY: true,
+            fill: black,
+          }),
+          balloon({ scale: 1, x: data.x, y: data.y, color: colorMap[i % 6] }),
+        ])
       )
     )
   );

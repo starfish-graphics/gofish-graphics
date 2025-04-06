@@ -44,6 +44,5 @@ export const unifyContinuousDomains = (domains: ContinuousDomain[]): ContinuousD
 export const computePosScale = (domain: ContinuousDomain, size: number) => {
   const [min, max] = domain.value;
   const scale = size / (max - min);
-  console.log("computePosScale", domain, size, `(pos - ${min}) * ${scale}`);
   return (pos: number) => (pos - min) * scale;
 };

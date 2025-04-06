@@ -34,7 +34,7 @@ export const stack = (
     {
       type: "stack",
       name,
-      shared: [false, sharedScale],
+      shared: [sharedScale, sharedScale],
       inferPosDomains: (childPosDomains: Size<Domain>[]) => {
         // For the stacking dimension, unify domains like in layer
         const filteredStackDirChildDomains = childPosDomains
@@ -145,7 +145,6 @@ modes!!!
           scaleFactors[alignDir] = alignScaleFactor;
         }
 
-        console.log("posScales", posScales);
         const childPlaceables = children.map((child) => child.layout(size, scaleFactors, posScales));
 
         /* align */
