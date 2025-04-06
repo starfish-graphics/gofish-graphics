@@ -3,6 +3,7 @@ import { GoFishNode } from "../_node";
 import { Size } from "../dims";
 import { GoFishAST } from "../_ast";
 import { black } from "../../color";
+import { Domain } from "../domain";
 export const enclose = (
   { padding = 2, rx = 2, ry = 2 }: { padding?: number; rx?: number; ry?: number },
   children: GoFishAST[]
@@ -11,6 +12,9 @@ export const enclose = (
     {
       type: "enclose",
       shared: [false, false],
+      inferPosDomains: (childPosDomains: Size<Domain>[]) => {
+        return [undefined, undefined];
+      },
       measure: (shared, size, children) => {
         const childMeasures = children.map((child) => child.measure(size));
         return (scaleFactors: Size) => {

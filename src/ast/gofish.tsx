@@ -1,6 +1,7 @@
 import { Show, type JSX } from "solid-js";
 import { debugNodeTree, type GoFishNode } from "./_node";
 import { ScopeContext } from "./scopeContext";
+import { computePosScale } from "./domain";
 
 /* scope context */
 let scopeContext: ScopeContext | null = null;
@@ -43,8 +44,16 @@ export const gofish = (
     // return render({ width, height, transform }, layoutAST);
     child.resolveColorScale();
     child.resolveNames();
+    const [posDomainX, posDomainY] = child.inferPosDomains();
     child.measure([width, height])([undefined, undefined]);
-    child.layout([width, height], [undefined, undefined]);
+    child.layout(
+      [width, height],
+      [undefined, undefined],
+      [
+        posDomainX ? computePosScale(posDomainX, width) : undefined,
+        posDomainY ? computePosScale(posDomainY, height) : undefined,
+      ]
+    );
     child.place({ x: transform?.x ?? 0, y: transform?.y ?? 0 });
     if (debug) {
       debugNodeTree(child);

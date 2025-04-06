@@ -1,5 +1,6 @@
 import { GoFishNode } from "../_node";
 import { Size, elaborateDims, FancyDims } from "../dims";
+import { canUnifyDomains, Domain, unifyContinuousDomains } from "../domain";
 
 export const layer = (
   childrenOrOptions: ({ transform?: { scale?: { x?: number; y?: number } }; box?: boolean } & FancyDims) | GoFishNode[],
@@ -13,6 +14,17 @@ export const layer = (
     {
       type: options.box === true ? "box" : "layer",
       shared: [false, false],
+      inferPosDomains: (childPosDomains: Size<Domain>[]) => {
+        // unify continuous domains of children for each direction
+        return [
+          canUnifyDomains(childPosDomains.map((childPosDomain) => childPosDomain[0]))
+            ? unifyContinuousDomains(childPosDomains.map((childPosDomain) => childPosDomain[0]))
+            : undefined,
+          canUnifyDomains(childPosDomains.map((childPosDomain) => childPosDomain[1]))
+            ? unifyContinuousDomains(childPosDomains.map((childPosDomain) => childPosDomain[1]))
+            : undefined,
+        ];
+      },
       measure: (shared, size, children) => {
         const childMeasures = children.map((child) => child.measure(size));
         return (scaleFactors: Size) => {
@@ -24,11 +36,11 @@ export const layer = (
           return [maxWidth * scaleX, maxHeight * scaleY];
         };
       },
-      layout: (shared, size, scaleFactors, children) => {
+      layout: (shared, size, scaleFactors, children, measurement, posDomains) => {
         const childPlaceables = [];
 
         for (const child of children) {
-          const childPlaceable = child.layout(size, scaleFactors);
+          const childPlaceable = child.layout(size, scaleFactors, posDomains);
           childPlaceable.place({ x: 0, y: 0 });
           childPlaceables.push(childPlaceable);
         }

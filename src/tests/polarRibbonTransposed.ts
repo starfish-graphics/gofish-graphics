@@ -87,6 +87,7 @@ export const testPolarRibbonTransposed = (size: { width: number; height: number 
           connect(
             {
               direction: "x",
+              mode: "center-to-center",
               fill: colorScale[group as keyof typeof colorScale],
               // fill: "black",
               // fill: "none",

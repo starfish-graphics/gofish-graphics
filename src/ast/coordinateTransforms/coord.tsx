@@ -4,6 +4,7 @@ import { GoFishAST } from "../_ast";
 import { GoFishNode } from "../_node";
 import { elaborateDims, FancyDims, Interval, Size } from "../dims";
 import { black } from "../../color";
+import { canUnifyDomains, Domain, unifyContinuousDomains } from "../domain";
 
 export type CoordinateTransform = {
   type: string;
@@ -90,6 +91,17 @@ export const coord = (
     {
       type: "coord",
       name,
+      inferPosDomains: (childPosDomains: Size<Domain>[]) => {
+        // unify continuous domains of children for each direction
+        return [
+          canUnifyDomains(childPosDomains.map((childPosDomain) => childPosDomain[0]))
+            ? unifyContinuousDomains(childPosDomains.map((childPosDomain) => childPosDomain[0]))
+            : undefined,
+          canUnifyDomains(childPosDomains.map((childPosDomain) => childPosDomain[1]))
+            ? unifyContinuousDomains(childPosDomains.map((childPosDomain) => childPosDomain[1]))
+            : undefined,
+        ];
+      },
       measure: (shared, size, children) => {
         // TODO: only works for polar2 right now
         size = [2 * Math.PI, Math.min(size[0], size[1]) / 2 - 30];

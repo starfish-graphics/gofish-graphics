@@ -22,7 +22,7 @@ export const getValue = <T>(value: MaybeValue<T>): T => {
 
 export const getMeasure = <T>(value: MaybeValue<T>): Measure => {
   if (isValue(value)) {
-    return value.measure ?? "unknown";
+    return value.measure ?? "unit";
   }
   return "unknown";
 };

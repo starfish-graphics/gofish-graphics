@@ -5,7 +5,7 @@ import { CoordinateTransform } from "../coordinateTransforms/coord";
 import { linear } from "../coordinateTransforms/linear";
 import { getMeasure, getValue, inferEmbedded, isValue, MaybeValue, Value } from "../data";
 import { Dimensions, elaborateDims, FancyDims, FancySize, Size, Transform } from "../dims";
-import { aesthetic, continuous } from "../domain";
+import { aesthetic, continuous, Domain } from "../domain";
 import { scaleContext } from "../gofish";
 
 /* TODO: what should default embedding behavior be when all values are aesthetic? */
@@ -31,6 +31,22 @@ export const rect = ({
       name,
       type: "rect",
       color: fill,
+      inferPosDomains: (childPosDomains: Size<Domain>[]) => {
+        return [
+          isValue(dims[0].min)
+            ? continuous({
+                value: [getValue(dims[0].min)!, getValue(dims[0].min)!],
+                measure: getMeasure(dims[0].min),
+              })
+            : undefined,
+          isValue(dims[1].min)
+            ? continuous({
+                value: [getValue(dims[1].min)!, getValue(dims[1].min)!],
+                measure: getMeasure(dims[1].min),
+              })
+            : undefined,
+        ];
+      },
       // inferDomains: () => {
       //   return [
       //     isValue(dims[0].size)

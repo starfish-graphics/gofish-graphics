@@ -35,6 +35,9 @@ export const stack = (
       type: "stack",
       name,
       shared: [false, sharedScale],
+      inferPosDomains: (childPosDomains: Size<Domain>[]) => {
+        return [undefined, undefined];
+      },
       /* TODO: I need to write to the children!!!!!!!!!! */
       // inferDomains: (childDomains: Size<Domain>[]) => {
       //   return {
@@ -89,7 +92,6 @@ modes!!!
           [alignDir]: dims[alignDir].size ?? size[alignDir],
         };
 
-        // TODO: alignDir...
         if (shared[stackDir]) {
           const stackScaleFactor = findTargetMonotonic(
             size[stackDir],

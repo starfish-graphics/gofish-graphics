@@ -15,7 +15,7 @@ import {
   Size,
   Transform,
 } from "./dims";
-import { Domain } from "./domain";
+import { ContinuousDomain } from "./domain";
 import { getScaleContext, getScopeContext } from "./gofish";
 import { GoFishRef } from "./_ref";
 import { GoFishAST } from "./_ast";
@@ -38,8 +38,15 @@ export type Layout = (
   shared: Size<boolean>,
   size: Size,
   scaleFactors: Size<number | undefined>,
-  children: { layout: (size: Size, scaleFactors: Size<number | undefined>) => Placeable }[],
-  measurement: (scaleFactors: Size) => Size
+  children: {
+    layout: (
+      size: Size,
+      scaleFactors: Size<number | undefined>,
+      posScales: Size<(pos: number) => number | undefined>
+    ) => Placeable;
+  }[],
+  measurement: (scaleFactors: Size) => Size,
+  posScales: Size<((pos: number) => number) | undefined>
 ) => { intrinsicDims: FancyDims; transform: FancyTransform; renderData?: any };
 
 export type Render = (
@@ -57,6 +64,7 @@ export class GoFishNode {
   public name?: string;
   public parent?: GoFishNode;
   // private inferDomains: (childDomains: Size<Domain>[]) => FancySize<Domain | undefined>;
+  private _inferPosDomains: (childPosDomains: Size<ContinuousDomain>[]) => FancySize<ContinuousDomain | undefined>;
   private _measure: Measure;
   private _layout: Layout;
   private _render: Render;
@@ -64,6 +72,7 @@ export class GoFishNode {
   public intrinsicDims?: Dimensions;
   public transform?: Transform;
   public shared: Size<boolean>;
+  // public posDomains: Size<Domain | undefined> = [undefined, undefined];
   private measurement: (scaleFactors: Size) => Size;
   private renderData?: any;
   public coordinateTransform?: CoordinateTransform;
@@ -76,6 +85,7 @@ export class GoFishNode {
       measure,
       layout,
       render,
+      inferPosDomains,
       shared = [false, false],
       color,
     }: {
@@ -86,6 +96,7 @@ export class GoFishNode {
       measure: Measure;
       layout: Layout;
       render: Render;
+      inferPosDomains: (childPosDomains: Size<ContinuousDomain>[]) => FancySize<ContinuousDomain | undefined>;
       shared?: Size<boolean>;
       color?: MaybeValue<string>;
     },
@@ -95,6 +106,7 @@ export class GoFishNode {
     this._measure = measure;
     this._layout = layout;
     this._render = render;
+    this._inferPosDomains = inferPosDomains;
     this.children = children;
     children.forEach((child) => {
       child.parent = this;
@@ -130,6 +142,12 @@ export class GoFishNode {
     });
   }
 
+  public inferPosDomains(): Size<ContinuousDomain | undefined> {
+    const posDomains = elaborateSize(this._inferPosDomains(this.children.map((child) => child.inferPosDomains())));
+    // this.posDomains = posDomains;
+    return posDomains;
+  }
+
   public measure(size: Size): (scaleFactors: Size) => Size {
     const measurement = (scaleFactors: Size) =>
       elaborateSize(this._measure(this.shared, size, this.children)(scaleFactors));
@@ -137,13 +155,18 @@ export class GoFishNode {
     return measurement;
   }
 
-  public layout(size: Size, scaleFactors: Size<number | undefined>): Placeable {
+  public layout(
+    size: Size,
+    scaleFactors: Size<number | undefined>,
+    posScales: Size<((pos: number) => number) | undefined>
+  ): Placeable {
     const { intrinsicDims, transform, renderData } = this._layout(
       this.shared,
       size,
       scaleFactors,
       this.children,
-      this.measurement
+      this.measurement,
+      posScales
     );
 
     this.intrinsicDims = elaborateDims(intrinsicDims);
@@ -192,7 +215,6 @@ export class GoFishNode {
   }
 
   public embed(direction: FancyDirection): void {
-    console.log("embedding", direction, "on", this.type, this.name);
     this.intrinsicDims![elaborateDirection(direction)].embedded = true;
   }
 

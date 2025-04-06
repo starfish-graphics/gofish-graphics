@@ -49,8 +49,9 @@ export const testScatterplot = (size: { width: number; height: number }) =>
       _(data)
         .map((d) =>
           ellipse({
-            x: value(d.x * 20),
-            y: value(size.height - d.y),
+            x: value(d.x),
+            /* TODO: undo the negation once coordinate direction is fixed */
+            y: value(-d.y),
             w: 8,
             h: 8,
             fill: value(d.c),

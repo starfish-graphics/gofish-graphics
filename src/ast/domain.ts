@@ -25,15 +25,24 @@ export const aesthetic = (value: any): AestheticDomain => ({
 });
 
 export const canUnifyDomains = (domains: Domain[]) => {
-  return domains.every((domain) => domain.type === "continuous" && domain.measure === domains[0].measure);
+  return domains.every(
+    (domain) => domain !== undefined && domain.type === "continuous" && domain.measure === domains[0].measure
+  );
 };
 
-export const unifyContinuousDomains = (domains: ContinuousDomain[]) => {
+export const unifyContinuousDomains = (domains: ContinuousDomain[]): ContinuousDomain => {
   const measure = domains[0].measure;
   const mins = domains.map((domain) => domain.value[0]);
   const maxs = domains.map((domain) => domain.value[1]);
-  return {
+  return continuous({
     measure,
     value: [Math.min(...mins), Math.max(...maxs)],
-  };
+  });
+};
+
+// creates an affine scale transforming the domain to [0, size]
+export const computePosScale = (domain: ContinuousDomain, size: number) => {
+  const [min, max] = domain.value;
+  const scale = size / (max - min);
+  return (pos: number) => (pos - min) * scale;
 };

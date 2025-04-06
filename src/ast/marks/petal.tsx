@@ -6,7 +6,7 @@ import { CoordinateTransform } from "../coordinateTransforms/coord";
 import { linear } from "../coordinateTransforms/linear";
 import { getMeasure, getValue, inferEmbedded, isValue, MaybeValue, Value } from "../data";
 import { Dimensions, elaborateDims, FancyDims, FancySize, Size, Transform } from "../dims";
-import { aesthetic, continuous } from "../domain";
+import { aesthetic, continuous, Domain } from "../domain";
 
 /* Implementation inspired by https://web.archive.org/web/20220808041640/http://bl.ocks.org/herrstucki/6199768 */
 /* TODO: what should default embedding behavior be when all values are aesthetic? */
@@ -42,6 +42,22 @@ export const petal = ({
       //       : undefined,
       //   ];
       // },
+      inferPosDomains: (childPosDomains: Size<Domain>[]) => {
+        return [
+          isValue(dims[0].min)
+            ? continuous({
+                value: [getValue(dims[0].min)!, getValue(dims[0].min)!],
+                measure: getMeasure(dims[0].min),
+              })
+            : undefined,
+          isValue(dims[1].min)
+            ? continuous({
+                value: [getValue(dims[1].min)!, getValue(dims[1].min)!],
+                measure: getMeasure(dims[1].min),
+              })
+            : undefined,
+        ];
+      },
       measure: (shared, size, children) => {
         return (scaleFactors: Size): FancySize => {
           return {

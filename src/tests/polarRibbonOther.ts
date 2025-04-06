@@ -89,6 +89,7 @@ export const testPolarRibbonOther = (size: { width: number; height: number }) =>
           connect(
             {
               direction: "y",
+              mode: "center-to-center",
               fill: colorScale[group as keyof typeof colorScale],
               // fill: "black",
               // fill: "none",

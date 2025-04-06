@@ -57,9 +57,12 @@ const App: Component = () => {
   return (
     <div style={{ "margin-left": "20px" }}>
       <h1>Welcome!</h1>
-      <div style={{ "max-width": "500px" }}>
-        Welcome to the GoFish supplemental figures! Below you'll find all the graphics we made in GoFish for the paper.
-        If you navigate to App.tsx, you can see the code that generated each figure.
+      <div style={{ "max-width": "520px" }}>
+        Welcome to the GoFish supplemental code! Below you'll find all the graphics we made in GoFish for the paper. If
+        you navigate to <code>App.tsx</code>, you can see the code that generates each one.
+        <br />
+        <br />
+        <b>Note:</b> Some colors are modified slightly from the paper, because they now use the default color scale.
       </div>
       <br />
       <h1>Walkthrough (Sec. 3)</h1>
@@ -104,7 +107,7 @@ const App: Component = () => {
           <h2>1. Scatterplot</h2>
           {testScatterplot({ width: 200, height: 100 })}
         </div>
-        <div>
+        {/* <div>
           <h2>2. Line Chart</h2>
           {testLineChart({ width: 200, height: 100 })}
         </div>
@@ -119,7 +122,7 @@ const App: Component = () => {
         <div>
           <h2>5. Streamgraph</h2>
           {testStreamgraph({ width: 200, height: 100 })}
-        </div>
+        </div> */}
       </div>
       <br />
       <br />
@@ -180,7 +183,7 @@ const App: Component = () => {
       <br />
       <br />
       <br />
-      <h2>Nested Waffle</h2>
+      {/* <h2>Nested Waffle</h2>
       {testNestedWaffle({ width: 800, height: 500 })}
       <h2>Nested Mosaic</h2>
       {testNestedMosaic({ width: 500, height: 300 })}
@@ -195,7 +198,7 @@ const App: Component = () => {
       <h2>Area Chart</h2>
       {testAreaChart({ width: 500, height: 100 })}
       <h2>Line Chart</h2>
-      {testLineChart({ width: 500, height: 100 })}
+      {testLineChart({ width: 500, height: 100 })} */}
       <h2>Sankey Icicle</h2>
       {testSankeyIcicle({ width: 500, height: 1000 })}
       <h2>Balloon</h2>
@@ -242,8 +245,6 @@ const App: Component = () => {
       {testCenterBar({ width: 500, height: 300 })}
       <h2>Polar Radial Grouped Bar</h2>
       {testPolarRadialGroupedBar({ width: 500, height: 300 })}
-      <h2>Wrap</h2>
-      {testWrap({ width: 500, height: 300 })}
       <h2>Scatter Pie</h2>
       {testScatterPie({ width: 500, height: 300 })}
       <h2>Petal Chart</h2>
@@ -280,6 +281,8 @@ const App: Component = () => {
       {testPolarBar({ width: 500, height: 300 })}
       <h2>Polar Grouped Bar</h2>
       {testPolarGroupedBar({ width: 500, height: 300 })}
+      {/* <h2>Wrap</h2>
+      {testWrap({ width: 500, height: 300 })} */}
       {/* <h2>Sankey</h2>
       {testSankey({ width: 500, height: 300 })} */}
       {/* <h2>Color Palette</h2>

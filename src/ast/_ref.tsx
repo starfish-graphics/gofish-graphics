@@ -74,6 +74,10 @@ export class GoFishRef {
     this.selectedNode?.embed(direction);
   }
 
+  public inferPosDomains(): Size<Domain | undefined> {
+    return this.selectedNode?.inferPosDomains() ?? [undefined, undefined];
+  }
+
   /* TODO: I'm not really sure what this should do */
   public measure(size: Size): (scaleFactors: Size) => Size {
     const measurement = (scaleFactors: Size) =>

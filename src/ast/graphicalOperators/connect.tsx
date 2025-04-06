@@ -7,6 +7,7 @@ import { pairs } from "../../util";
 import { linear } from "../coordinateTransforms/linear";
 import { getValue, isValue, MaybeValue } from "../data";
 import { scaleContext } from "../gofish";
+import { Domain } from "../domain";
 
 export const connect = (
   {
@@ -42,6 +43,9 @@ export const connect = (
         return (scaleFactors: Size) => {
           return [size[0], size[1]];
         };
+      },
+      inferPosDomains: (childPosDomains: Size<Domain>[]) => {
+        return [undefined, undefined];
       },
       layout: (shared, size, scaleFactors, children) => {
         const defaultColor = children[0]?.color ?? "black";
