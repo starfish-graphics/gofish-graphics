@@ -36,7 +36,19 @@ export const stack = (
       name,
       shared: [false, sharedScale],
       inferPosDomains: (childPosDomains: Size<Domain>[]) => {
-        return [undefined, undefined];
+        // For the stacking dimension, unify domains like in layer
+        const filteredStackDirChildDomains = childPosDomains
+          .map((childPosDomain) => childPosDomain[stackDir])
+          .filter((d) => d !== undefined);
+
+        return [
+          stackDir === 0 && filteredStackDirChildDomains.length > 0 && canUnifyDomains(filteredStackDirChildDomains)
+            ? unifyContinuousDomains(filteredStackDirChildDomains)
+            : undefined,
+          stackDir === 1 && filteredStackDirChildDomains.length > 0 && canUnifyDomains(filteredStackDirChildDomains)
+            ? unifyContinuousDomains(filteredStackDirChildDomains)
+            : undefined,
+        ];
       },
       /* TODO: I need to write to the children!!!!!!!!!! */
       // inferDomains: (childDomains: Size<Domain>[]) => {
@@ -86,7 +98,7 @@ modes!!!
           };
         };
       },
-      layout: (shared, size, scaleFactors, children, measurement) => {
+      layout: (shared, size, scaleFactors, children, measurement, posScales) => {
         size = {
           [stackDir]: dims[stackDir].size ?? size[stackDir],
           [alignDir]: dims[alignDir].size ?? size[alignDir],
@@ -116,7 +128,8 @@ modes!!!
           scaleFactors[alignDir] = alignScaleFactor;
         }
 
-        const childPlaceables = children.map((child) => child.layout(size, scaleFactors));
+        console.log("posScales", posScales);
+        const childPlaceables = children.map((child) => child.layout(size, scaleFactors, posScales));
 
         /* align */
         if (alignment === "start") {

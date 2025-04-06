@@ -75,9 +75,11 @@ export const rect = ({
           };
         };
       },
-      layout: (shared, size, scaleFactors, children, measurement) => {
+      layout: (shared, size, scaleFactors, children, measurement, posScales) => {
         const w = isValue(dims[0].size) ? getValue(dims[0].size!) * scaleFactors[0]! : dims[0].size ?? size[0];
         const h = isValue(dims[1].size) ? getValue(dims[1].size!) * scaleFactors[1]! : dims[1].size ?? size[1];
+        const x = isValue(dims[0].min) ? posScales[0]!(getValue(dims[0].min)!) : dims[0].min ?? undefined;
+        const y = isValue(dims[1].min) ? posScales[1]!(getValue(dims[1].min)!) : dims[1].min ?? undefined;
 
         return {
           intrinsicDims: [
@@ -97,8 +99,7 @@ export const rect = ({
             },
           ],
           transform: {
-            /* TODO: handle the case where they are scaled... */
-            translate: [getValue(dims[0].min!), getValue(dims[1].min!)],
+            translate: [x, y],
           },
         };
       },
@@ -180,6 +181,7 @@ export const rect = ({
             const y = isXEmbedded ? aestheticMid - thickness / 2 : displayDims[1].min ?? 0;
             const width = isXEmbedded ? (displayDims[0].max ?? 0) - (displayDims[0].min ?? 0) : thickness;
             const height = isXEmbedded ? thickness : (displayDims[1].max ?? 0) - (displayDims[1].min ?? 0);
+
             return (
               <rect
                 x={x}

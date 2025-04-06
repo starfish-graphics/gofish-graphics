@@ -76,8 +76,8 @@ export const ellipse = ({
       layout: (shared, size, scaleFactors, children, measurement, posScales) => {
         const w = isValue(dims[0].size) ? getValue(dims[0].size!) * scaleFactors[0]! : dims[0].size ?? size[0];
         const h = isValue(dims[1].size) ? getValue(dims[1].size!) * scaleFactors[1]! : dims[1].size ?? size[1];
-        const x = isValue(dims[0].min) ? posScales[0]!(getValue(dims[0].min)!) : dims[0].min ?? size[0] / 2;
-        const y = isValue(dims[1].min) ? posScales[1]!(getValue(dims[1].min)!) : dims[1].min ?? size[1] / 2;
+        const x = isValue(dims[0].min) ? posScales[0]!(getValue(dims[0].min)!) : dims[0].min ?? undefined;
+        const y = isValue(dims[1].min) ? posScales[1]!(getValue(dims[1].min)!) : dims[1].min ?? undefined;
 
         return {
           intrinsicDims: [
@@ -95,7 +95,6 @@ export const ellipse = ({
             },
           ],
           transform: {
-            /* TODO: handle the case where they are scaled... */
             translate: [x, y],
           },
         };

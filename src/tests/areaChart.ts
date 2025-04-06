@@ -14,6 +14,7 @@ import _ from "lodash";
 import { ref } from "../ast/marks/ref";
 import { connectX } from "../ast/graphicalOperators/connectX";
 import { streamgraphData, streamgraphColorPalette } from "../data/streamgraphData";
+import { stackX } from "../ast/graphicalOperators/stackX";
 const data = streamgraphData;
 const colorPalette = streamgraphColorPalette;
 
@@ -24,19 +25,17 @@ export const testAreaChart = (size: { width: number; height: number }) =>
       ..._(data)
         .groupBy("c")
         .flatMap((items, c) =>
-          // stack(
-          //   { direction: "x", spacing: 0, alignment: "end" },
-          items.map(
-            (d, i) =>
+          stackX(
+            { spacing: 0, sharedScale: true },
+            items.map((d) =>
               rect({
-                name: `${c}-${i}`,
-                x: value(d.x * 20),
-                y: size.height - d.y,
-                h: d.y,
+                name: `${c}-${d.x}`,
+                x: value(d.x),
+                h: value(d.y),
                 w: 0,
                 fill: value(c),
               })
-            // )
+            )
           )
         )
         .value(),

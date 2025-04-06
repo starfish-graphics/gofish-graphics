@@ -53,6 +53,7 @@ import { testStreamgraph } from "./tests/streamgraph";
 import { testScatterPie2 } from "./tests/scatterPie2";
 import { testScatterBalloon2 } from "./tests/scatterBalloon2";
 import { testPolarCenterStackedBarEmbedded } from "./tests/polarCenterStackedBarEmbedded";
+import { testAreaChartBugReduced } from "./tests/areaChartBugReduced";
 const App: Component = () => {
   return (
     <div style={{ "margin-left": "20px" }}>
@@ -111,7 +112,7 @@ const App: Component = () => {
           <h2>2. Line Chart</h2>
           {testLineChart({ width: 200, height: 100 })}
         </div>
-        {/* <div>
+        <div>
           <h2>3. Layered Area Chart</h2>
           {testAreaChart({ width: 200, height: 100 })}
         </div>
@@ -119,7 +120,7 @@ const App: Component = () => {
           <h2>4. Stacked Area Chart</h2>
           {testStackedAreaChart({ width: 200, height: 100 })}
         </div>
-        <div>
+        {/* <div>
           <h2>5. Streamgraph</h2>
           {testStreamgraph({ width: 200, height: 100 })}
         </div> */}
@@ -127,7 +128,7 @@ const App: Component = () => {
       <br />
       <br />
       <br />
-      <h1>Polar Grouped Bar Chart (Sec. 4)</h1>
+      {/* <h1>Polar Grouped Bar Chart (Sec. 4)</h1>
       {testPolarGroupedBar({ width: 500, height: 300 })}
       <h1>Waffles to Nested Mosaics, Icicles to Node-Link Trees (Sec. 6.2)</h1>
       <div style={{ display: "flex", "flex-direction": "row", gap: "40px", "flex-wrap": "wrap" }}>
@@ -182,7 +183,7 @@ const App: Component = () => {
       </div>
       <br />
       <br />
-      <br />
+      <br /> */}
       {/* <h2>Nested Waffle</h2>
       {testNestedWaffle({ width: 800, height: 500 })}
       <h2>Nested Mosaic</h2>
@@ -199,7 +200,7 @@ const App: Component = () => {
       {testAreaChart({ width: 500, height: 100 })}
       <h2>Line Chart</h2>
       {testLineChart({ width: 500, height: 100 })} */}
-      <h2>Sankey Icicle</h2>
+      {/* <h2>Sankey Icicle</h2>
       {testSankeyIcicle({ width: 500, height: 1000 })}
       <h2>Balloon</h2>
       {testBalloon({ width: 300, height: 400 })}
@@ -280,7 +281,7 @@ const App: Component = () => {
       <h2>Polar Bar</h2>
       {testPolarBar({ width: 500, height: 300 })}
       <h2>Polar Grouped Bar</h2>
-      {testPolarGroupedBar({ width: 500, height: 300 })}
+      {testPolarGroupedBar({ width: 500, height: 300 })} */}
       {/* <h2>Wrap</h2>
       {testWrap({ width: 500, height: 300 })} */}
       {/* <h2>Sankey</h2>

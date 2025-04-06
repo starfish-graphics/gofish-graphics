@@ -23,33 +23,24 @@ export const testStackedAreaChart = (size: { width: number; height: number }) =>
   gofish(
     { width: size.width, height: size.height },
     layer([
-      stackX(
-        {
-          spacing: 0,
-          sharedScale: true,
-        },
-        [
-          ..._(data)
-            .groupBy("x")
-            .map((items, xCoord) =>
-              stackY(
-                {
-                  spacing: 0,
-                },
-                items.map((d) =>
-                  rect({
-                    name: `${xCoord}-${d.c}`,
-                    x: value(d.x * 20),
-                    h: value(d.y),
-                    w: 0,
-                    fill: value(d.c),
-                  })
-                )
+      stackX({ spacing: 0, sharedScale: true }, [
+        ..._(data)
+          .groupBy("x")
+          .map((items, xCoord) =>
+            stackY(
+              { x: value(xCoord), spacing: 0 },
+              items.map((d) =>
+                rect({
+                  name: `${xCoord}-${d.c}`,
+                  h: value(d.y),
+                  w: 0,
+                  fill: value(d.c),
+                })
               )
             )
-            .value(),
-        ]
-      ),
+          )
+          .value(),
+      ]),
       ..._(data)
         .groupBy("c")
         .map((items, c) =>
