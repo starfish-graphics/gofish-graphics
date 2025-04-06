@@ -128,6 +128,33 @@ const App: Component = () => {
       <br />
       <br />
       <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
       {/* <h1>Polar Grouped Bar Chart (Sec. 4)</h1>
       {testPolarGroupedBar({ width: 500, height: 300 })}
       <h1>Waffles to Nested Mosaics, Icicles to Node-Link Trees (Sec. 6.2)</h1>

@@ -1,9 +1,9 @@
 import { For } from "solid-js";
 import { GoFishNode } from "../_node";
-import { Value } from "../data";
+import { getMeasure, getValue, isValue, Value } from "../data";
 import { Direction, elaborateDims, elaborateDirection, FancyDims, FancyDirection, FancySize, Size } from "../dims";
 import _, { size } from "lodash";
-import { canUnifyDomains, ContinuousDomain, Domain, unifyContinuousDomains } from "../domain";
+import { canUnifyDomains, continuous, ContinuousDomain, Domain, unifyContinuousDomains } from "../domain";
 import { findTargetMonotonic } from "../../util";
 import { GoFishAST } from "../_ast";
 
@@ -44,9 +44,19 @@ export const stack = (
         return [
           stackDir === 0 && filteredStackDirChildDomains.length > 0 && canUnifyDomains(filteredStackDirChildDomains)
             ? unifyContinuousDomains(filteredStackDirChildDomains)
+            : isValue(dims[0].min)
+            ? continuous({
+                value: [getValue(dims[0].min)!, getValue(dims[0].min)!],
+                measure: getMeasure(dims[0].min),
+              })
             : undefined,
           stackDir === 1 && filteredStackDirChildDomains.length > 0 && canUnifyDomains(filteredStackDirChildDomains)
             ? unifyContinuousDomains(filteredStackDirChildDomains)
+            : isValue(dims[1].min)
+            ? continuous({
+                value: [getValue(dims[1].min)!, getValue(dims[1].min)!],
+                measure: getMeasure(dims[1].min),
+              })
             : undefined,
         ];
       },
@@ -99,6 +109,13 @@ modes!!!
         };
       },
       layout: (shared, size, scaleFactors, children, measurement, posScales) => {
+        const stackPos = isValue(dims[stackDir].min)
+          ? posScales[stackDir]!(getValue(dims[stackDir].min)!)
+          : dims[stackDir].min ?? undefined;
+        const alignPos = isValue(dims[alignDir].min)
+          ? posScales[alignDir]!(getValue(dims[alignDir].min)!)
+          : dims[alignDir].min ?? undefined;
+
         size = {
           [stackDir]: dims[stackDir].size ?? size[stackDir],
           [alignDir]: dims[alignDir].size ?? size[alignDir],
@@ -184,8 +201,8 @@ modes!!!
           },
           transform: {
             translate: {
-              [alignDir]: dims[alignDir].min !== undefined ? dims[alignDir].min - alignMin : undefined,
-              [stackDir]: dims[stackDir].min !== undefined ? dims[stackDir].min : undefined,
+              [alignDir]: alignPos !== undefined ? alignPos - alignMin : undefined,
+              [stackDir]: stackPos !== undefined ? stackPos : undefined,
             },
           },
         };

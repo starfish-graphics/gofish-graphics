@@ -65,17 +65,20 @@ export const gofish = (
   }
 };
 
+const PADDING = 10;
+
 export const render = (
   { width, height, transform }: { width: number; height: number; transform?: string },
   child: GoFishNode
 ): JSX.Element => (
-  <svg width={width} height={height}>
-    <defs>
+  <svg width={width + PADDING * 2} height={height + PADDING * 2}>
+    <g transform={`translate(${PADDING}, ${PADDING})`}>
+      {/* <defs>
       <filter id="crumpled-paper" x="-20%" y="-20%" width="140%" height="140%">
-        {/* <!-- Create subtle texture with turbulence (shape-preserving) --> */}
+        <!-- Create subtle texture with turbulence (shape-preserving) -->
         <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="4" seed="3" result="noise" />
 
-        {/* <!-- Significantly reduce displacement to preserve element shape --> */}
+        <!-- Significantly reduce displacement to preserve element shape -->
         <feDisplacementMap
           in="SourceGraphic"
           in2="noise"
@@ -85,12 +88,12 @@ export const render = (
           result="displacedPaper"
         />
 
-        {/* <!-- Add light effect with lighting --> */}
+        <!-- Add light effect with lighting -->
         <feDiffuseLighting in="noise" surfaceScale="3" diffuseConstant="1" result="diffLight">
           <feDistantLight azimuth="45" elevation="60" />
         </feDiffuseLighting>
 
-        {/* <!-- Adjust the contrast of the lighting --> */}
+        <!-- Adjust the contrast of the lighting -->
         <feComposite
           in="diffLight"
           in2="displacedPaper"
@@ -102,10 +105,10 @@ export const render = (
           result="lightedPaper"
         />
 
-        {/* <!-- Blend the lighting with the displaced image --> */}
+        <!-- Blend the lighting with the displaced image -->
         <feBlend in="displacedPaper" in2="lightedPaper" mode="multiply" result="crumpledPaper" />
 
-        {/* <!-- Add subtle color variation to simulate paper fibers --> */}
+        <!-- Add subtle color variation to simulate paper fibers -->
         <feColorMatrix
           in="crumpledPaper"
           type="matrix"
@@ -117,9 +120,10 @@ export const render = (
           result="coloredPaper"
         />
       </filter>
-    </defs>
-    <Show when={transform} keyed fallback={child.render()}>
-      <g transform={transform ?? ""}>{child.render()}</g>
-    </Show>
+    </defs> */}
+      <Show when={transform} keyed fallback={child.render()}>
+        <g transform={transform ?? ""}>{child.render()}</g>
+      </Show>
+    </g>
   </svg>
 );
