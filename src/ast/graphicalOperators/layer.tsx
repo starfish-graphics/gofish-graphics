@@ -16,12 +16,20 @@ export const layer = (
       shared: [false, false],
       inferPosDomains: (childPosDomains: Size<Domain>[]) => {
         // unify continuous domains of children for each direction
+
+        const filteredXChildDomains = childPosDomains
+          .map((childPosDomain) => childPosDomain[0])
+          .filter((d) => d !== undefined);
+        const filteredYChildDomains = childPosDomains
+          .map((childPosDomain) => childPosDomain[1])
+          .filter((d) => d !== undefined);
+
         return [
-          canUnifyDomains(childPosDomains.map((childPosDomain) => childPosDomain[0]))
-            ? unifyContinuousDomains(childPosDomains.map((childPosDomain) => childPosDomain[0]))
+          filteredXChildDomains.length > 0 && canUnifyDomains(filteredXChildDomains)
+            ? unifyContinuousDomains(filteredXChildDomains)
             : undefined,
-          canUnifyDomains(childPosDomains.map((childPosDomain) => childPosDomain[1]))
-            ? unifyContinuousDomains(childPosDomains.map((childPosDomain) => childPosDomain[1]))
+          filteredYChildDomains.length > 0 && canUnifyDomains(filteredYChildDomains)
+            ? unifyContinuousDomains(filteredYChildDomains)
             : undefined,
         ];
       },
@@ -36,11 +44,11 @@ export const layer = (
           return [maxWidth * scaleX, maxHeight * scaleY];
         };
       },
-      layout: (shared, size, scaleFactors, children, measurement, posDomains) => {
+      layout: (shared, size, scaleFactors, children, measurement, posScales) => {
         const childPlaceables = [];
 
         for (const child of children) {
-          const childPlaceable = child.layout(size, scaleFactors, posDomains);
+          const childPlaceable = child.layout(size, scaleFactors, posScales);
           childPlaceable.place({ x: 0, y: 0 });
           childPlaceables.push(childPlaceable);
         }

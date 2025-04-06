@@ -107,11 +107,11 @@ const App: Component = () => {
           <h2>1. Scatterplot</h2>
           {testScatterplot({ width: 200, height: 100 })}
         </div>
-        {/* <div>
+        <div>
           <h2>2. Line Chart</h2>
           {testLineChart({ width: 200, height: 100 })}
         </div>
-        <div>
+        {/* <div>
           <h2>3. Layered Area Chart</h2>
           {testAreaChart({ width: 200, height: 100 })}
         </div>

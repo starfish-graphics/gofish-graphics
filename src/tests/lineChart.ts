@@ -28,8 +28,8 @@ export const testLineChart = (size: { width: number; height: number }) =>
           items.map((d, i) =>
             ellipse({
               name: `${c}-${i}`,
-              x: value(d.x * 20),
-              y: value(size.height - d.y),
+              x: value(d.x),
+              y: value(-d.y),
               w: 2,
               h: 2,
               fill: value(c),

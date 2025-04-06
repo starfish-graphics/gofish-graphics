@@ -42,7 +42,7 @@ export type Layout = (
     layout: (
       size: Size,
       scaleFactors: Size<number | undefined>,
-      posScales: Size<(pos: number) => number | undefined>
+      posScales: Size<((pos: number) => number) | undefined>
     ) => Placeable;
   }[],
   measurement: (scaleFactors: Size) => Size,
