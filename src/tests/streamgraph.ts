@@ -35,11 +35,10 @@ export const testStreamgraph = (size: { width: number; height: number }) =>
             .groupBy("x")
             .map((items, xCoord) =>
               stackY(
-                { spacing: 0 },
+                { spacing: 0, x: value(xCoord) },
                 items.map((d) =>
                   rect({
                     name: `${xCoord}-${d.c}`,
-                    x: value(d.x * 20),
                     h: value(d.y),
                     w: 0,
                     fill: value(d.c),

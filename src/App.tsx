@@ -120,10 +120,10 @@ const App: Component = () => {
           <h2>4. Stacked Area Chart</h2>
           {testStackedAreaChart({ width: 200, height: 100 })}
         </div>
-        {/* <div>
+        <div>
           <h2>5. Streamgraph</h2>
           {testStreamgraph({ width: 200, height: 100 })}
-        </div> */}
+        </div>
       </div>
       <br />
       <br />
