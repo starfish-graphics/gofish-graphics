@@ -82,7 +82,7 @@ modes!!!
 
       child.size[0].mode = "fixed" | "scaled" | "grow"
 */
-      measure: (shared, size, children) => {
+      inferSizeDomains: (shared, size, children) => {
         // if (shared[stackDir]) {
         //   /* TODO: this is not a very good upper bound guess! */
         //   const stackScaleFactor = findTargetMonotonic(size[stackDir], stackSize, { upperBoundGuess: size[stackDir] });
@@ -96,12 +96,12 @@ modes!!!
         return (scaleFactors: Size): FancySize => {
           const stackSize =
             mode === "edge-to-edge"
-              ? _.sum(children.map((child) => child.measure(size)(scaleFactors)[stackDir])) +
+              ? _.sum(children.map((child) => child.inferSizeDomains(size)(scaleFactors)[stackDir])) +
                 spacing * (children.length - 1)
-              : children[0].measure(size)(scaleFactors)[stackDir] / 2 +
+              : children[0].inferSizeDomains(size)(scaleFactors)[stackDir] / 2 +
                 spacing * (children.length - 1) +
-                children[children.length - 1].measure(size)(scaleFactors)[stackDir] / 2;
-          const alignSize = Math.max(...children.map((child) => child.measure(size)(scaleFactors)[alignDir]));
+                children[children.length - 1].inferSizeDomains(size)(scaleFactors)[stackDir] / 2;
+          const alignSize = Math.max(...children.map((child) => child.inferSizeDomains(size)(scaleFactors)[alignDir]));
           return {
             [stackDir]: stackSize,
             [alignDir]: alignSize,

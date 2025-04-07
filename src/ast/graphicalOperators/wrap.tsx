@@ -8,8 +8,8 @@ export const wrap = (children: GoFishAST[]) => {
     {
       type: "wrap",
       shared: [false, false],
-      measure: (shared, size, children) => {
-        const childMeasures = children.map((child) => child.measure(size));
+      inferSizeDomains: (shared, size, children) => {
+        const childMeasures = children.map((child) => child.inferSizeDomains(size));
         return (scaleFactors: Size) => {
           const childSizes = childMeasures.map((childMeasure) => childMeasure(scaleFactors));
           const maxWidth = Math.max(...childSizes.map((childSize) => childSize[0]));

@@ -45,7 +45,7 @@ export const gofish = (
     child.resolveColorScale();
     child.resolveNames();
     const [posDomainX, posDomainY] = child.inferPosDomains();
-    child.measure([width, height])([undefined, undefined]);
+    child.inferSizeDomains([width, height])([undefined, undefined]);
     child.layout(
       [width, height],
       [undefined, undefined],

@@ -39,7 +39,7 @@ export const connect = (
       type: "connect",
       shared: [false, false],
       color: fill,
-      measure: (shared, size, children) => {
+      inferSizeDomains: (shared, size, children) => {
         return (scaleFactors: Size) => {
           return [size[0], size[1]];
         };

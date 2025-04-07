@@ -65,7 +65,7 @@ export const ellipse = ({
       //       : undefined,
       //   ];
       // },
-      measure: (shared, size, children) => {
+      inferSizeDomains: (shared, size, children) => {
         return (scaleFactors: Size): FancySize => {
           return {
             w: isValue(dims[0].size) ? getValue(dims[0].size!) * scaleFactors[0] : dims[0].size ?? size[0],

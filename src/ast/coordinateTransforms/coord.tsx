@@ -102,10 +102,10 @@ export const coord = (
             : undefined,
         ];
       },
-      measure: (shared, size, children) => {
+      inferSizeDomains: (shared, size, children) => {
         // TODO: only works for polar2 right now
         size = [2 * Math.PI, Math.min(size[0], size[1]) / 2 - 30];
-        const childMeasures = children.map((child) => child.measure(size));
+        const childMeasures = children.map((child) => child.inferSizeDomains(size));
         return (scaleFactors: Size) => {
           const childSizes = childMeasures.map((childMeasure) => childMeasure(scaleFactors));
           const maxWidth = Math.max(...childSizes.map((childSize) => childSize[0]));

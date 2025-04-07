@@ -23,11 +23,9 @@ import { CoordinateTransform } from "./coordinateTransforms/coord";
 import { getValue, isValue, MaybeValue } from "./data";
 import { color6 } from "../color";
 
-/* TODO: resolveMeasures and layout feel pretty similar... */
-
 export type Placeable = { dims: Dimensions; place: (pos: FancyPosition) => void };
 
-export type Measure = (
+export type InferSizeDomains = (
   shared: Size<boolean>,
   // scaleFactors: Size<number | undefined>,
   size: Size,
@@ -45,7 +43,7 @@ export type Layout = (
       posScales: Size<((pos: number) => number) | undefined>
     ) => Placeable;
   }[],
-  measurement: (scaleFactors: Size) => Size,
+  sizeDomains: (scaleFactors: Size) => Size,
   posScales: Size<((pos: number) => number) | undefined>
 ) => { intrinsicDims: FancyDims; transform: FancyTransform; renderData?: any };
 
@@ -65,7 +63,7 @@ export class GoFishNode {
   public parent?: GoFishNode;
   // private inferDomains: (childDomains: Size<Domain>[]) => FancySize<Domain | undefined>;
   private _inferPosDomains: (childPosDomains: Size<ContinuousDomain>[]) => FancySize<ContinuousDomain | undefined>;
-  private _measure: Measure;
+  private _inferSizeDomains: InferSizeDomains;
   private _layout: Layout;
   private _render: Render;
   public children: GoFishAST[];
@@ -73,7 +71,7 @@ export class GoFishNode {
   public transform?: Transform;
   public shared: Size<boolean>;
   // public posDomains: Size<Domain | undefined> = [undefined, undefined];
-  private measurement: (scaleFactors: Size) => Size;
+  private sizeDomains: (scaleFactors: Size) => Size;
   private renderData?: any;
   public coordinateTransform?: CoordinateTransform;
   public color?: MaybeValue<string>;
@@ -82,7 +80,7 @@ export class GoFishNode {
       name,
       type,
       // inferDomains,
-      measure,
+      inferSizeDomains,
       layout,
       render,
       inferPosDomains,
@@ -93,7 +91,7 @@ export class GoFishNode {
       type: string;
       // inferDomains: (childDomains: Size<Domain>[]) => FancySize<Domain | undefined>;
       /* TODO: I'm not sure whether scale inference and sizeThatFits should be separate or the same pass*/
-      measure: Measure;
+      inferSizeDomains: InferSizeDomains;
       layout: Layout;
       render: Render;
       inferPosDomains: (childPosDomains: Size<ContinuousDomain>[]) => FancySize<ContinuousDomain | undefined>;
@@ -103,7 +101,7 @@ export class GoFishNode {
     children: GoFishAST[]
   ) {
     // this.inferDomains = inferDomains;
-    this._measure = measure;
+    this._inferSizeDomains = inferSizeDomains;
     this._layout = layout;
     this._render = render;
     this._inferPosDomains = inferPosDomains;
@@ -148,11 +146,11 @@ export class GoFishNode {
     return posDomains;
   }
 
-  public measure(size: Size): (scaleFactors: Size) => Size {
-    const measurement = (scaleFactors: Size) =>
-      elaborateSize(this._measure(this.shared, size, this.children)(scaleFactors));
-    this.measurement = measurement;
-    return measurement;
+  public inferSizeDomains(size: Size): (scaleFactors: Size) => Size {
+    const sizeDomains = (scaleFactors: Size) =>
+      elaborateSize(this._inferSizeDomains(this.shared, size, this.children)(scaleFactors));
+    this.sizeDomains = sizeDomains;
+    return sizeDomains;
   }
 
   public layout(
@@ -165,7 +163,7 @@ export class GoFishNode {
       size,
       scaleFactors,
       this.children,
-      this.measurement,
+      this.sizeDomains,
       posScales
     );
 
