@@ -51,7 +51,7 @@ export const gofish = (
       [undefined, undefined],
       [
         posDomainX ? computePosScale(posDomainX, width) : undefined,
-        posDomainY ? computePosScale(posDomainY, height) : undefined,
+        posDomainY ? computePosScale(posDomainY, height, true) : undefined,
       ]
     );
     child.place({ x: transform?.x ?? 0, y: transform?.y ?? 0 });

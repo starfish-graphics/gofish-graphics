@@ -40,9 +40,9 @@ export const unifyContinuousDomains = (domains: ContinuousDomain[]): ContinuousD
   });
 };
 
-// creates an affine scale transforming the domain to [0, size]
-export const computePosScale = (domain: ContinuousDomain, size: number) => {
+// creates an affine scale transforming the domain to [0, size] or [size, 0] if reverse is true
+export const computePosScale = (domain: ContinuousDomain, size: number, reverse: boolean = false) => {
   const [min, max] = domain.value;
   const scale = size / (max - min);
-  return (pos: number) => (pos - min) * scale;
+  return (pos: number) => (reverse ? size - (pos - min) * scale : (pos - min) * scale);
 };

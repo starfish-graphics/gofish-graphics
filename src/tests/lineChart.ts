@@ -30,7 +30,7 @@ export const testLineChart = (size: { width: number; height: number }) =>
             ellipse({
               name: `${c}-${i}`,
               x: value(d.x),
-              y: value(-d.y),
+              y: value(d.y),
               w: 2,
               h: 2,
               fill: value(c),

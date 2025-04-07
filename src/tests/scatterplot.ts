@@ -52,7 +52,7 @@ export const testScatterplot = (size: { width: number; height: number }) =>
           ellipse({
             x: value(d.x),
             /* TODO: undo the negation once coordinate direction is fixed */
-            y: value(-d.y),
+            y: value(d.y),
             w: 8,
             h: 8,
             fill: value(d.c),
