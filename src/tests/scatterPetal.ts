@@ -9,7 +9,7 @@ import { rect } from "../ast/marks/rect";
 import { stack } from "../ast/graphicalOperators/stack";
 import { color, color6 } from "../color";
 import { coord } from "../ast/coordinateTransforms/coord";
-import { polar } from "../ast/coordinateTransforms/polar";
+import { polar_DEPRECATED } from "../ast/coordinateTransforms/polar_DEPRECATED";
 import { layer } from "../ast/graphicalOperators/layer";
 import { petal } from "../ast/marks/petal";
 const data = [
@@ -30,7 +30,7 @@ export const testScatterPetal = (size: { width: number; height: number }) =>
           {
             x: Math.random() * 200,
             y: Math.random() * 200,
-            transform: polar(),
+            transform: polar_DEPRECATED(),
           },
           [
             stack(

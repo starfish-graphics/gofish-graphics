@@ -9,7 +9,7 @@ import { rect } from "../ast/marks/rect";
 import { stack } from "../ast/graphicalOperators/stack";
 import { color, color6 } from "../color";
 import { coord } from "../ast/coordinateTransforms/coord";
-import { polar } from "../ast/coordinateTransforms/polar";
+import { polar_DEPRECATED } from "../ast/coordinateTransforms/polar_DEPRECATED";
 const data = [
   { a: "A", b: 28 },
   { a: "B", b: 55 },
@@ -26,7 +26,7 @@ const data = [
 export const testPolarBar = (size: { width: number; height: number }) =>
   gofish(
     { width: size.width, height: size.height, transform: { x: 50, y: 250 } },
-    coord({ transform: polar() }, [
+    coord({ transform: polar_DEPRECATED() }, [
       stack(
         { x: 10, y: -Math.PI / 2, direction: 0, spacing: 4, alignment: "start", sharedScale: true },
         data.map((d, i) =>

@@ -12,7 +12,7 @@ import { mix } from "spectral.js";
 import { cubes } from "rybitten/cubes";
 import { rybHsl2rgb } from "rybitten";
 import { coord } from "../ast/coordinateTransforms/coord";
-import { polar } from "../ast/coordinateTransforms/polar";
+import { polar_DEPRECATED } from "../ast/coordinateTransforms/polar_DEPRECATED";
 import { linear } from "../ast/coordinateTransforms/linear";
 import { polarTransposed } from "../ast/coordinateTransforms/polarTransposed";
 

@@ -103,7 +103,7 @@ export const petal = ({
         if (coordinateTransform === undefined) {
           return <></>;
         }
-        if (coordinateTransform?.type !== "polar2") {
+        if (coordinateTransform?.type !== "polar") {
           throw new Error("Petal mark must be used in a polar coordinate transform");
         }
 

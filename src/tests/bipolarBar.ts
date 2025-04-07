@@ -10,7 +10,7 @@ import { stack } from "../ast/graphicalOperators/stack";
 import { color, color6 } from "../color";
 import { coord } from "../ast/coordinateTransforms/coord";
 import { bipolar } from "../ast/coordinateTransforms/bipolar";
-import { polar } from "../ast/coordinateTransforms/polar";
+import { polar_DEPRECATED } from "../ast/coordinateTransforms/polar_DEPRECATED";
 const data = [
   { a: "A", b: 28 },
   { a: "B", b: 55 },

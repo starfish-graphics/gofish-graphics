@@ -9,7 +9,7 @@ import { rect } from "../ast/marks/rect";
 import { stack } from "../ast/graphicalOperators/stack";
 import { black, color, color6 } from "../color";
 import { coord } from "../ast/coordinateTransforms/coord";
-import { polar } from "../ast/coordinateTransforms/polar";
+import { polar_DEPRECATED } from "../ast/coordinateTransforms/polar_DEPRECATED";
 import { layer } from "../ast/graphicalOperators/layer";
 import { petal } from "../ast/marks/petal";
 import { balloon } from "./balloon";

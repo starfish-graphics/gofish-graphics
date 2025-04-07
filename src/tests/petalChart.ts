@@ -9,7 +9,7 @@ import { rect } from "../ast/marks/rect";
 import { stack } from "../ast/graphicalOperators/stack";
 import { color, color6 } from "../color";
 import { coord } from "../ast/coordinateTransforms/coord";
-import { polar } from "../ast/coordinateTransforms/polar";
+import { polar_DEPRECATED } from "../ast/coordinateTransforms/polar_DEPRECATED";
 import { petal } from "../ast/marks/petal";
 const data = [
   { category: 1, value: 4 },
@@ -23,7 +23,7 @@ const data = [
 export const testPetalChart = (size: { width: number; height: number }) =>
   gofish(
     { width: size.width, height: size.height, transform: { x: 100, y: 150 } },
-    coord({ transform: polar() }, [
+    coord({ transform: polar_DEPRECATED() }, [
       stack(
         { direction: 1, spacing: 0, alignment: "start" },
         data.map((d, i) =>

@@ -9,12 +9,12 @@ import { rect } from "../ast/marks/rect";
 import { stack } from "../ast/graphicalOperators/stack";
 import { black, color, color6, white } from "../color";
 import { coord } from "../ast/coordinateTransforms/coord";
-import { polar } from "../ast/coordinateTransforms/polar";
+import { polar_DEPRECATED } from "../ast/coordinateTransforms/polar_DEPRECATED";
 import { layer } from "../ast/graphicalOperators/layer";
 import { petal } from "../ast/marks/petal";
 import _ from "lodash";
 import { mix } from "spectral.js";
-import { polar2 } from "../ast/coordinateTransforms/polar2";
+import { polar } from "../ast/coordinateTransforms/polar";
 import { stackX } from "../ast/graphicalOperators/stackX";
 import { catchData, catchLocations } from "../data/catch";
 import { frame } from "../ast/graphicalOperators/frame";
@@ -41,7 +41,7 @@ export const testScatterPie2 = (size: { width: number; height: number }) =>
           {
             x: sample.x,
             y: sample.y,
-            coord: polar2(),
+            coord: polar(),
           },
           [
             stackX(

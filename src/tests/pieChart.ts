@@ -9,7 +9,7 @@ import { rect } from "../ast/marks/rect";
 import { stack } from "../ast/graphicalOperators/stack";
 import { color, color6 } from "../color";
 import { coord } from "../ast/coordinateTransforms/coord";
-import { polar } from "../ast/coordinateTransforms/polar";
+import { polar_DEPRECATED } from "../ast/coordinateTransforms/polar_DEPRECATED";
 const data = [
   { category: 1, value: 4 },
   { category: 2, value: 6 },
@@ -22,7 +22,7 @@ const data = [
 export const testPieChart = (size: { width: number; height: number }) =>
   gofish(
     { width: size.width, height: size.height, transform: { x: 100, y: 150 } },
-    coord({ transform: polar() }, [
+    coord({ transform: polar_DEPRECATED() }, [
       stack(
         { x: 20, direction: 1, spacing: 0, alignment: "start" },
         data.map((d, i) =>

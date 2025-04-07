@@ -9,14 +9,14 @@ import { rect } from "../ast/marks/rect";
 import { stack } from "../ast/graphicalOperators/stack";
 import { color, color6, white } from "../color";
 import { coord } from "../ast/coordinateTransforms/coord";
-import { polar } from "../ast/coordinateTransforms/polar";
+import { polar_DEPRECATED } from "../ast/coordinateTransforms/polar_DEPRECATED";
 import { layer } from "../ast/graphicalOperators/layer";
 import { petal } from "../ast/marks/petal";
 import _ from "lodash";
 import { mix } from "spectral.js";
 import { catchData } from "../data/catch";
 import { catchLocations } from "../data/catch";
-import { polar2 } from "../ast/coordinateTransforms/polar2";
+import { polar } from "../ast/coordinateTransforms/polar";
 import { stackX } from "../ast/graphicalOperators/stackX";
 import { frame } from "../ast/graphicalOperators/frame";
 // export const testScatterFlower = (size: { width: number; height: number }) =>
@@ -92,7 +92,7 @@ export const testScatterFlower = (size: { width: number; height: number }) =>
             {
               x: sample.x,
               y: sample.y,
-              coord: polar2(),
+              coord: polar(),
             },
             [
               stackX(

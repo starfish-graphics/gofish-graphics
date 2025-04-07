@@ -14,8 +14,8 @@ import { layer } from "../ast/graphicalOperators/layer";
 import { connect } from "../ast/graphicalOperators/connect";
 import { ref } from "../ast/marks/ref";
 import { coord } from "../ast/coordinateTransforms/coord";
+import { polar_DEPRECATED } from "../ast/coordinateTransforms/polar_DEPRECATED";
 import { polar } from "../ast/coordinateTransforms/polar";
-import { polar2 } from "../ast/coordinateTransforms/polar2";
 import { stackX } from "../ast/graphicalOperators/stackX";
 import { stackY } from "../ast/graphicalOperators/stackY";
 import { connectX } from "../ast/graphicalOperators/connectX";
@@ -34,7 +34,7 @@ const colorScale = {
 export const testFishPolarRibbonChart = (size: { width: number; height: number }) =>
   gofish(
     { width: size.width, height: size.height, transform: { x: 200, y: 200 } },
-    frame({ coord: polar2() }, [
+    frame({ coord: polar() }, [
       stackX(
         {
           y: 50,

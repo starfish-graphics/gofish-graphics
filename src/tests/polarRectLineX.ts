@@ -3,13 +3,13 @@ import { value } from "../ast/data";
 import { gofish } from "../ast/gofish";
 import { rect } from "../ast/marks/rect";
 import { coord } from "../ast/coordinateTransforms/coord";
-import { polar } from "../ast/coordinateTransforms/polar";
+import { polar_DEPRECATED } from "../ast/coordinateTransforms/polar_DEPRECATED";
 
 /* TODO: these values are going all over the place! */
 export const testPolarRectLineX = (size: { width: number; height: number }) =>
   gofish(
     { width: size.width, height: size.height, transform: { x: 100, y: 100 } },
-    coord({ transform: polar(), grid: true }, [
+    coord({ transform: polar_DEPRECATED(), grid: true }, [
       rect({
         dims: [
           {

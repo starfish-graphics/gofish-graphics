@@ -9,7 +9,7 @@ import { rect } from "../ast/marks/rect";
 import { stack } from "../ast/graphicalOperators/stack";
 import { color, color6 } from "../color";
 import { coord } from "../ast/coordinateTransforms/coord";
-import { polar } from "../ast/coordinateTransforms/polar";
+import { polar_DEPRECATED } from "../ast/coordinateTransforms/polar_DEPRECATED";
 import { linear } from "../ast/coordinateTransforms/linear";
 import _ from "lodash";
 import { frame } from "../ast/graphicalOperators/frame";
@@ -29,7 +29,7 @@ const data = [
 export const testPolarCenterStackedBarEmbedded = (size: { width: number; height: number }) =>
   gofish(
     { width: size.width, height: size.height, transform: { x: 200, y: 100 } },
-    frame({ coord: polar() }, [
+    frame({ coord: polar_DEPRECATED() }, [
       stack(
         {
           x: 20,

@@ -12,7 +12,7 @@ import { mix } from "spectral.js";
 import { cubes } from "rybitten/cubes";
 import { rybHsl2rgb } from "rybitten";
 import { coord } from "../ast/coordinateTransforms/coord";
-import { polar } from "../ast/coordinateTransforms/polar";
+import { polar_DEPRECATED } from "../ast/coordinateTransforms/polar_DEPRECATED";
 import { linear } from "../ast/coordinateTransforms/linear";
 
 const data = [
@@ -61,7 +61,7 @@ coords work like this:
 export const testPolarRibbon = (size: { width: number; height: number }) =>
   gofish(
     { width: size.width, height: size.height, transform: { x: 250 } },
-    coord({ transform: polar() }, [
+    coord({ transform: polar_DEPRECATED() }, [
       layer([
         stack(
           { x: 100, direction: 0, spacing: 64, alignment: "end", sharedScale: true },

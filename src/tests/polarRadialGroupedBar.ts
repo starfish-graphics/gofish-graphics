@@ -4,7 +4,7 @@ import { value } from "../ast/data";
 import { stack } from "../ast/graphicalOperators/stack";
 import { rect } from "../ast/marks/rect";
 import { color, /* color6 */ color6_20250323 as color6 } from "../color";
-import { polar } from "../ast/coordinateTransforms/polar";
+import { polar_DEPRECATED } from "../ast/coordinateTransforms/polar_DEPRECATED";
 import { coord } from "../ast/coordinateTransforms/coord";
 import { linear } from "../ast/coordinateTransforms/linear";
 
@@ -24,7 +24,7 @@ export const testPolarRadialGroupedBar = (size: { width: number; height: number 
   // Create the visualization structure first
   return gofish(
     { width: size.width, height: size.height, transform: { x: 50, y: 200 } },
-    coord({ transform: polar() }, [
+    coord({ transform: polar_DEPRECATED() }, [
       stack(
         { direction: 1, spacing: Math.PI / 4, alignment: "end", sharedScale: true, mode: "center-to-center" },
         Object.entries(_.groupBy(data, "category")).map(([category, items]) =>
