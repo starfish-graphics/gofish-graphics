@@ -12,7 +12,7 @@ import { catchData } from "../data/catch";
 import _ from "lodash";
 import { layer } from "../ast/graphicalOperators/layer";
 import { ellipse } from "../ast/marks/ellipse";
-
+import { frame } from "../ast/graphicalOperators/frame";
 /*  From Claude :)
 <!-- Balloon body (ellipse) -->
 <ellipse cx="200" cy="150" rx="120" ry="150" fill="#ff5555" />
@@ -33,7 +33,7 @@ import { ellipse } from "../ast/marks/ellipse";
 */
 
 export const balloon = (options?: { x?: number; y?: number; scale?: number; color?: string[] }) =>
-  layer(
+  frame(
     {
       x: options?.x - 15 * (options?.scale ?? 1),
       y: options?.y - 25 * (options?.scale ?? 1),

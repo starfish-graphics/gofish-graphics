@@ -15,13 +15,14 @@ import { ref } from "../ast/marks/ref";
 import { connectX } from "../ast/graphicalOperators/connectX";
 import { streamgraphData, streamgraphColorPalette } from "../data/streamgraphData";
 import { stackX } from "../ast/graphicalOperators/stackX";
+import { frame } from "../ast/graphicalOperators/frame";
 const data = streamgraphData;
 const colorPalette = streamgraphColorPalette;
 
 export const testAreaChart = (size: { width: number; height: number }) =>
   gofish(
     { width: size.width, height: size.height },
-    layer([
+    frame([
       ..._(data)
         .groupBy("c")
         .flatMap((items, c) =>

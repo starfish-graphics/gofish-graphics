@@ -12,6 +12,7 @@ import { coord } from "../ast/coordinateTransforms/coord";
 import { polar } from "../ast/coordinateTransforms/polar";
 import { linear } from "../ast/coordinateTransforms/linear";
 import _ from "lodash";
+import { frame } from "../ast/graphicalOperators/frame";
 
 const data = [
   { category: "A", group: "x", value: 0.1 },
@@ -28,7 +29,7 @@ const data = [
 export const testPolarCenterStackedBarEmbedded = (size: { width: number; height: number }) =>
   gofish(
     { width: size.width, height: size.height, transform: { x: 200, y: 100 } },
-    coord({ transform: polar() }, [
+    frame({ coord: polar() }, [
       stack(
         {
           x: 20,

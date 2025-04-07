@@ -17,13 +17,14 @@ import { streamgraphData, streamgraphColorPalette } from "../data/streamgraphDat
 import { stackX } from "../ast/graphicalOperators/stackX";
 import { stackY } from "../ast/graphicalOperators/stackY";
 import { connectX } from "../ast/graphicalOperators/connectX";
+import { frame } from "../ast/graphicalOperators/frame";
 const data = streamgraphData;
 const colorPalette = streamgraphColorPalette;
 
 export const testStreamgraph = (size: { width: number; height: number }) =>
   gofish(
     { width: size.width, height: size.height },
-    layer([
+    frame([
       stackX(
         {
           spacing: 0,

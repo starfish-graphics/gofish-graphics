@@ -16,6 +16,7 @@ import { ref } from "../ast/marks/ref";
 import { stackX } from "../ast/graphicalOperators/stackX";
 import { stackY } from "../ast/graphicalOperators/stackY";
 import { connectX } from "../ast/graphicalOperators/connectX";
+import { frame } from "../ast/graphicalOperators/frame";
 const fishColors = {
   Bass: color.blue[5],
   Trout: color.red[5],
@@ -27,7 +28,7 @@ const fishColors = {
 export const testFishRibbonChart = (size: { width: number; height: number }) =>
   gofish(
     { width: size.width, height: size.height },
-    layer([
+    frame([
       stackX(
         { spacing: 64, sharedScale: true },
         _(catchData)

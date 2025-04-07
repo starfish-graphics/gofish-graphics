@@ -171,7 +171,7 @@ const App: Component = () => {
       <br />
       <br />
       <br />
-      {/* <h1>Polar Stacked Bar Embedding (Sec. 6.4)</h1>
+      <h1>Polar Stacked Bar Embedding (Sec. 6.4)</h1>
       <div style={{ display: "flex", "flex-direction": "row", gap: "40px", "flex-wrap": "wrap" }}>
         <div>
           <h2>Not Embedded</h2>
@@ -184,7 +184,7 @@ const App: Component = () => {
       </div>
       <br />
       <br />
-      <br /> */}
+      <br />
       {/* <h2>Nested Waffle</h2>
       {testNestedWaffle({ width: 800, height: 500 })}
       <h2>Nested Mosaic</h2>

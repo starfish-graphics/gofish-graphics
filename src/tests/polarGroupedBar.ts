@@ -7,6 +7,7 @@ import { color, /* color6 */ color6_20250323 as color6 } from "../color";
 import { polar } from "../ast/coordinateTransforms/polar";
 import { coord } from "../ast/coordinateTransforms/coord";
 import { arcLengthPolar } from "../ast/coordinateTransforms/arcLengthPolar";
+import { frame } from "../ast/graphicalOperators/frame";
 
 const data = [
   { category: "none", group: "x", value: 0 },
@@ -27,7 +28,7 @@ export const testPolarGroupedBar = (size: { width: number; height: number }) => 
   // Create the visualization structure first
   return gofish(
     { width: size.width, height: size.height, transform: { x: 50, y: 250 } },
-    coord({ transform: polar() }, [
+    frame({ coord: polar() }, [
       stack(
         { direction: 0, spacing: 20, alignment: "end", sharedScale: true },
         Object.entries(_.groupBy(data, "category")).map(([category, items]) =>

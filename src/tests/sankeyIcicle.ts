@@ -9,6 +9,7 @@ import { mix } from "spectral.js";
 import { layer } from "../ast/graphicalOperators/layer";
 import { connect } from "../ast/graphicalOperators/connect";
 import { ref } from "../ast/marks/ref";
+import { frame } from "../ast/graphicalOperators/frame";
 
 const data = [
   { origin: "Europe", cylinders: "4", count: 66 },
@@ -35,7 +36,7 @@ const internalSpacing = 2;
 export const testSankeyIcicle = (size: { width: number; height: number }) =>
   gofish(
     { width: size.width, height: size.height },
-    layer([
+    frame([
       stack({ direction: "x", spacing: layerSpacing, alignment: "middle" }, [
         stack(
           { direction: "y", spacing: 0, alignment: "middle" },

@@ -14,6 +14,7 @@ import _ from "lodash";
 import { ref } from "../ast/marks/ref";
 import { connect } from "../ast/graphicalOperators/connect";
 import { streamgraphColorPalette, streamgraphData } from "../data/streamgraphData";
+import { frame } from "../ast/graphicalOperators/frame";
 
 // const data = [
 //   { x: 0, y: 28, c: 0 },
@@ -45,7 +46,7 @@ const colorPalette = streamgraphColorPalette;
 export const testScatterplot = (size: { width: number; height: number }) =>
   gofish(
     { width: size.width, height: size.height },
-    layer(
+    frame(
       _(data)
         .map((d) =>
           ellipse({

@@ -16,13 +16,14 @@ import { connectX } from "../ast/graphicalOperators/connectX";
 import { streamgraphData, streamgraphColorPalette } from "../data/streamgraphData";
 import { stackX } from "../ast/graphicalOperators/stackX";
 import { stackY } from "../ast/graphicalOperators/stackY";
+import { frame } from "../ast/graphicalOperators/frame";
 const data = streamgraphData;
 const colorPalette = streamgraphColorPalette;
 
 export const testStackedAreaChart = (size: { width: number; height: number }) =>
   gofish(
     { width: size.width, height: size.height },
-    layer([
+    frame([
       stackX({ spacing: 0, sharedScale: true }, [
         ..._(data)
           .groupBy("x")

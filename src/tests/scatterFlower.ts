@@ -18,7 +18,7 @@ import { catchData } from "../data/catch";
 import { catchLocations } from "../data/catch";
 import { polar2 } from "../ast/coordinateTransforms/polar2";
 import { stackX } from "../ast/graphicalOperators/stackX";
-
+import { frame } from "../ast/graphicalOperators/frame";
 // export const testScatterFlower = (size: { width: number; height: number }) =>
 //   gofish(
 //     { width: size.width, height: size.height, transform: { x: 200, y: 800 } },
@@ -78,9 +78,9 @@ const scatterData = _(catchData)
 export const testScatterFlower = (size: { width: number; height: number }) =>
   gofish(
     { width: size.width, height: size.height },
-    layer(
+    frame(
       scatterData.map((sample) =>
-        layer([
+        frame([
           rect({
             x: sample.x,
             w: 2,
@@ -88,11 +88,11 @@ export const testScatterFlower = (size: { width: number; height: number }) =>
             h: size.height - sample.y,
             fill: color.green[5],
           }),
-          coord(
+          frame(
             {
               x: sample.x,
               y: sample.y,
-              transform: polar2(),
+              coord: polar2(),
             },
             [
               stackX(

@@ -14,6 +14,7 @@ import _ from "lodash";
 import { ref } from "../ast/marks/ref";
 import { connectX } from "../ast/graphicalOperators/connectX";
 import { streamgraphData, streamgraphColorPalette } from "../data/streamgraphData";
+import { frame } from "../ast/graphicalOperators/frame";
 
 const data = streamgraphData;
 const colorPalette = streamgraphColorPalette;
@@ -21,7 +22,7 @@ const colorPalette = streamgraphColorPalette;
 export const testLineChart = (size: { width: number; height: number }) =>
   gofish(
     { width: size.width, height: size.height },
-    layer([
+    frame([
       ..._(data)
         .groupBy("c")
         .flatMap((items, c) =>

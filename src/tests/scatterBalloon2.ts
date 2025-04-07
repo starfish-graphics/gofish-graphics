@@ -18,6 +18,7 @@ import { balloon } from "./balloon";
 import { wavy } from "../ast/coordinateTransforms/wavy";
 import { catchData } from "../data/catch";
 import { catchLocations } from "../data/catch";
+import { frame } from "../ast/graphicalOperators/frame";
 const baseData = [
   { category: 1, value: 4 },
   { category: 2, value: 6 },
@@ -325,10 +326,10 @@ const scatterData = _(catchData)
 export const testScatterBalloon2 = (size: { width: number; height: number }) =>
   gofish(
     { width: size.width, height: size.height },
-    coord(
-      { transform: wavy(), x: 0, y: 0 },
+    frame(
+      { coord: wavy(), x: 0, y: 0 },
       scatterData.map((data, i) =>
-        layer([
+        frame([
           rect({
             x: data.x,
             w: 1,

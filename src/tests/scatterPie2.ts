@@ -17,6 +17,7 @@ import { mix } from "spectral.js";
 import { polar2 } from "../ast/coordinateTransforms/polar2";
 import { stackX } from "../ast/graphicalOperators/stackX";
 import { catchData, catchLocations } from "../data/catch";
+import { frame } from "../ast/graphicalOperators/frame";
 
 const scatterData = _(catchData)
   .groupBy("lake")
@@ -34,28 +35,26 @@ const scatterData = _(catchData)
 export const testScatterPie2 = (size: { width: number; height: number }) =>
   gofish(
     { width: size.width, height: size.height },
-    layer(
+    frame(
       scatterData.map((sample) =>
-        layer([
-          coord(
-            {
-              x: sample.x,
-              y: sample.y,
-              transform: polar2(),
-            },
-            [
-              stackX(
-                { h: _(sample.collection).sumBy("count") / 7, spacing: 0, alignment: "start", sharedScale: true },
-                sample.collection.map((d, i) =>
-                  rect({
-                    w: value(d.count),
-                    fill: color6[i % 6],
-                  })
-                )
-              ),
-            ]
-          ),
-        ])
+        frame(
+          {
+            x: sample.x,
+            y: sample.y,
+            coord: polar2(),
+          },
+          [
+            stackX(
+              { h: _(sample.collection).sumBy("count") / 7, spacing: 0, alignment: "start", sharedScale: true },
+              sample.collection.map((d, i) =>
+                rect({
+                  w: value(d.count),
+                  fill: color6[i % 6],
+                })
+              )
+            ),
+          ]
+        )
       )
     )
   );

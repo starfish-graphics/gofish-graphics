@@ -19,6 +19,7 @@ import { polar2 } from "../ast/coordinateTransforms/polar2";
 import { stackX } from "../ast/graphicalOperators/stackX";
 import { stackY } from "../ast/graphicalOperators/stackY";
 import { connectX } from "../ast/graphicalOperators/connectX";
+import { frame } from "../ast/graphicalOperators/frame";
 // import { fishData } from "../data/fish";
 
 const colorScale = {
@@ -33,44 +34,42 @@ const colorScale = {
 export const testFishPolarRibbonChart = (size: { width: number; height: number }) =>
   gofish(
     { width: size.width, height: size.height, transform: { x: 200, y: 200 } },
-    coord({ transform: polar2() }, [
-      layer([
-        stackX(
-          {
-            y: 50,
-            x: (-3 * Math.PI) / 6,
-            spacing: (2 * Math.PI) / 6,
-            alignment: "start",
-            sharedScale: true,
-            mode: "center-to-center",
-          },
-          Object.entries(_.groupBy(catchData, "lake")).map(([lake, items]) =>
-            stackY(
-              { spacing: 2 },
-              _(items)
-                /* TODO: changing this to asc gives the correct order but the wrong colors */
-                .orderBy("count", "asc")
-                .map((d) =>
-                  rect({
-                    name: `${d.lake}-${d.species}`,
-                    w: 0.1,
-                    h: value(d.count),
-                    fill: value(d.species),
-                  })
-                )
-                .value()
-            )
+    frame({ coord: polar2() }, [
+      stackX(
+        {
+          y: 50,
+          x: (-3 * Math.PI) / 6,
+          spacing: (2 * Math.PI) / 6,
+          alignment: "start",
+          sharedScale: true,
+          mode: "center-to-center",
+        },
+        Object.entries(_.groupBy(catchData, "lake")).map(([lake, items]) =>
+          stackY(
+            { spacing: 2 },
+            _(items)
+              /* TODO: changing this to asc gives the correct order but the wrong colors */
+              .orderBy("count", "asc")
+              .map((d) =>
+                rect({
+                  name: `${d.lake}-${d.species}`,
+                  w: 0.1,
+                  h: value(d.count),
+                  fill: value(d.species),
+                })
+              )
+              .value()
           )
-        ),
-        ..._(catchData)
-          .groupBy("species")
-          .map((items, species) =>
-            connectX(
-              { opacity: 0.8 },
-              items.map((d) => ref(`${d.lake}-${d.species}`))
-            )
+        )
+      ),
+      ..._(catchData)
+        .groupBy("species")
+        .map((items, species) =>
+          connectX(
+            { opacity: 0.8 },
+            items.map((d) => ref(`${d.lake}-${d.species}`))
           )
-          .value(),
-      ]),
+        )
+        .value(),
     ])
   );
