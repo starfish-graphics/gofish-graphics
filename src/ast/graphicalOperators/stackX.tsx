@@ -8,6 +8,7 @@ export const stackX = (
     alignment = "end",
     sharedScale = false,
     mode = "edge-to-edge",
+    reverse = false,
     ...fancyDims
   }: {
     name?: string;
@@ -15,8 +16,9 @@ export const stackX = (
     alignment?: "start" | "middle" | "end";
     sharedScale?: boolean;
     mode?: "edge-to-edge" | "center-to-center";
+    reverse?: boolean;
   } & FancyDims,
   children: GoFishAST[]
 ) => {
-  return stack({ direction: "x", spacing, alignment, sharedScale, mode, ...fancyDims }, children);
+  return stack({ direction: "x", spacing, alignment, sharedScale, mode, reverse, ...fancyDims }, children);
 };

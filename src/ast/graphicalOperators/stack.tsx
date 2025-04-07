@@ -15,6 +15,7 @@ export const stack = (
     alignment = "middle",
     sharedScale = false,
     mode = "edge-to-edge",
+    reverse = false,
     ...fancyDims
   }: {
     name?: string;
@@ -23,6 +24,7 @@ export const stack = (
     alignment?: "start" | "middle" | "end";
     sharedScale?: boolean;
     mode?: "edge-to-edge" | "center-to-center";
+    reverse?: boolean;
   } & FancyDims,
   children: GoFishAST[]
 ) => {
@@ -109,6 +111,9 @@ modes!!!
         };
       },
       layout: (shared, size, scaleFactors, children, measurement, posScales) => {
+        if (reverse) {
+          children = children.reverse();
+        }
         const stackPos = isValue(dims[stackDir].min)
           ? posScales[stackDir]!(getValue(dims[stackDir].min)!)
           : dims[stackDir].min ?? undefined;

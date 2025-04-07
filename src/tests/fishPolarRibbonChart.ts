@@ -46,10 +46,10 @@ export const testFishPolarRibbonChart = (size: { width: number; height: number }
         },
         Object.entries(_.groupBy(catchData, "lake")).map(([lake, items]) =>
           stackY(
-            { spacing: 2 },
+            { spacing: 2, reverse: true },
             _(items)
               /* TODO: changing this to asc gives the correct order but the wrong colors */
-              .orderBy("count", "asc")
+              .orderBy("count", "desc")
               .map((d) =>
                 rect({
                   name: `${d.lake}-${d.species}`,
