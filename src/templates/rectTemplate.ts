@@ -11,6 +11,8 @@ export const rectTemplate = (
     w: number | string;
     h: number | string;
     fillFn: (d: any) => string;
+    stroke?: string;
+    strokeWidth?: number;
   }
 ) => {
   return stackXTemplate(
@@ -25,6 +27,8 @@ export const rectTemplate = (
             w: typeof options.w === "number" ? options.w : value(d[options.w as string]),
             h: typeof options.h === "number" ? options.h : value(d[options.h as string]),
             fill: options.fillFn(keyXY),
+            stroke: options.stroke,
+            strokeWidth: options.strokeWidth,
           })
       )
   );

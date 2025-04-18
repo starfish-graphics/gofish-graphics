@@ -60,6 +60,9 @@ import { testVLWaffleRefactor } from "./tests/vlWaffleRefactor";
 import { testVLStackedBarRefactor } from "./tests/vlStackedBarRefactor";
 import { testVLWaffleRefactorV2 } from "./tests/vlWaffleRefactorV2";
 import { testVLStackedBarRefactorV2 } from "./tests/vlStackedBarRefactorV2";
+import { testVLStackedBarRefactorTextured } from "./tests/vlStackedBarRefactorTextured";
+import { testFishRibbonChartTextured } from "./tests/fishRibbonChartTextured";
+import { testFishPolarRibbonChartTextured } from "./tests/fishPolarRibbonChartTextured";
 const App: Component = () => {
   return (
     <div style={{ "margin-left": "20px" }}>
@@ -75,6 +78,17 @@ const App: Component = () => {
       <br />
       <br />
       {/* {testStacking({ width: 500, height: 200 })} */}
+      {testFishPolarRibbonChartTextured({ width: 1000, height: 1000 })}
+      <br />
+      <br />
+      <br />
+      {testFishRibbonChartTextured({ width: 1000, height: 1000 })}
+      <br />
+      <br />
+      <br />
+      {testVLStackedBarRefactorTextured({ width: 1000, height: 500 })}
+      <br />
+      <br />
       {testVLStackedBar({ width: 200, height: 200 })}
       {testVLStackedBarRefactor({ width: 200, height: 200 })}
       {testVLStackedBarRefactorV2({ width: 200, height: 200 })}

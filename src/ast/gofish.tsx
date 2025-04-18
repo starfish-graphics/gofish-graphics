@@ -32,7 +32,8 @@ export const gofish = (
     height,
     transform,
     debug = false,
-  }: { width: number; height: number; transform?: { x?: number; y?: number }; debug?: boolean },
+    defs,
+  }: { width: number; height: number; transform?: { x?: number; y?: number }; debug?: boolean; defs?: JSX.Element[] },
   child: GoFishNode
 ) => {
   scopeContext = new Map();
@@ -58,7 +59,7 @@ export const gofish = (
     if (debug) {
       debugNodeTree(child);
     }
-    return render({ width, height }, child);
+    return render({ width, height, defs }, child);
   } finally {
     scopeContext = null;
     scaleContext = null;
@@ -68,10 +69,13 @@ export const gofish = (
 const PADDING = 10;
 
 export const render = (
-  { width, height, transform }: { width: number; height: number; transform?: string },
+  { width, height, transform, defs }: { width: number; height: number; transform?: string; defs?: JSX.Element[] },
   child: GoFishNode
 ): JSX.Element => (
   <svg width={width + PADDING * 2} height={height + PADDING * 2}>
+    <Show when={defs}>
+      <defs>{defs}</defs>
+    </Show>
     <g transform={`translate(${PADDING}, ${PADDING})`}>
       {/* <defs>
       <filter id="crumpled-paper" x="-20%" y="-20%" width="140%" height="140%">
