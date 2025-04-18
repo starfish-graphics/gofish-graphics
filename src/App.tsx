@@ -53,7 +53,13 @@ import { testStreamgraph } from "./tests/streamgraph";
 import { testScatterPie2 } from "./tests/scatterPie2";
 import { testScatterBalloon2 } from "./tests/scatterBalloon2";
 import { testPolarCenterStackedBarEmbedded } from "./tests/polarCenterStackedBarEmbedded";
-import { testAreaChartBugReduced } from "./tests/areaChartBugReduced";
+import { testStacking } from "./tests/stacking";
+import { testVLStackedBar } from "./tests/vlStackedBar";
+import { testVLWaffle } from "./tests/vlWaffle";
+import { testVLWaffleRefactor } from "./tests/vlWaffleRefactor";
+import { testVLStackedBarRefactor } from "./tests/vlStackedBarRefactor";
+import { testVLWaffleRefactorV2 } from "./tests/vlWaffleRefactorV2";
+import { testVLStackedBarRefactorV2 } from "./tests/vlStackedBarRefactorV2";
 const App: Component = () => {
   return (
     <div style={{ "margin-left": "20px" }}>
@@ -67,6 +73,17 @@ const App: Component = () => {
         data set for the examples in Sec. 6.3 have been modified to extend the <code>catch</code> data set from Sec. 3.
       </div>
       <br />
+      <br />
+      {/* {testStacking({ width: 500, height: 200 })} */}
+      {testVLStackedBar({ width: 200, height: 200 })}
+      {testVLStackedBarRefactor({ width: 200, height: 200 })}
+      {testVLStackedBarRefactorV2({ width: 200, height: 200 })}
+      {testVLWaffleRefactor({ width: 200, height: 200 })}
+      {testVLWaffleRefactorV2({ width: 200, height: 200 })}
+      {testFishBar({ width: 500, height: 200 })}
+      {testFishStackedBar({ width: 250, height: 300 })}
+      {testFishGroupedBar({ width: 350, height: 300 })}
+      {testFishWaffle({ width: 300, height: 350 })}
       <h1>Walkthrough (Sec. 3)</h1>
       <h2>1. Bar Chart</h2>
       {testFishBar({ width: 500, height: 200 })}
