@@ -27,7 +27,7 @@ layout: false
 
   <div>
   <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; max-width: 800px; margin-top: 2rem; margin-bottom: 0rem; margin-left: auto; margin-right: auto;">
-    <img src="https://placehold.co/250x200" alt="Chart example 1" style="width: 100%; border-radius: 8px;">
+    <img src="./polar-ribbon-chart.png" alt="Chart example 1" style="width: 100%; border-radius: 8px;">
     <img src="https://placehold.co/250x200" alt="Chart example 2" style="width: 100%; border-radius: 8px;">
     <img src="https://placehold.co/250x200" alt="Chart example 3" style="width: 100%; border-radius: 8px;">
     <img src="https://placehold.co/250x200" alt="Chart example 4" style="width: 100%; border-radius: 8px;">
@@ -35,7 +35,7 @@ layout: false
     <img src="https://placehold.co/250x200" alt="Chart example 6" style="width: 100%; border-radius: 8px;">
   </div>
 
-<StackH width="fit-content" style="margin: 0 auto;">
+<StackH width="fit-content" gap="1rem" style="margin: 0 auto;">
 <div style="font-family: 'Fira Code', monospace; background-color: var(--vp-c-brand-soft); color: #fdf6f3; font-weight: 700; padding: 1rem; border-radius: 8px; display: inline-block; margin: 2rem 0;">
   npm install starfish-graphics
 </div>
