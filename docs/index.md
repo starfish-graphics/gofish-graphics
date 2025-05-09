@@ -45,24 +45,28 @@ layout: false
     size="medium"
     text="Get Started!"
     theme="brand"
+    href="/get-started"
   />
 <VPButton
     tag="a"
     size="medium"
     text="Examples"
     theme="alt"
+    href="/examples"
   />
 <VPButton
     tag="a"
     size="medium"
     text="Tutorial"
     theme="alt"
+    href="/tutorial"
   />
 <VPButton
     tag="a"
     size="medium"
     text="Theory"
     theme="alt"
+    href="/theory"
   />
 </div>
 </StackH>
