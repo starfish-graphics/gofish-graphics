@@ -19,7 +19,7 @@ const props = defineProps({
   <div
     :style="{
       display: 'flex',
-      flexDirection: 'column',
+      flexDirection: 'row',
       alignItems: align,
       gap: gap,
       width: width,
