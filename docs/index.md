@@ -55,19 +55,19 @@ layout: false
   />
   </div>
 
-  <div style="background-color: #fff1eb; padding: 2rem; margin: 2rem 0;">
-    <StackV gap="2rem" width="50%" align="flex-start" style="margin: 0 auto;">
+  <div style="background-color: #fff1eb; width: 64%; padding: 2rem; padding-right: 1em; padding-bottom: 1em; margin: 2rem auto; border-radius: 12px;">
+    <StackV gap="2rem" align="flex-start" style="margin: 0 auto;">
       <h2 style="font-family: 'Balsamiq Sans', sans serif; font-size: 36pt; color: coral;">Why Starfish?</h2>
       <StackV gap="1rem" width="100%" align="flex-start">
-        <StackV gap="0.5rem" width="100%" align="flex-start">
+        <StackV gap="0.6rem" width="100%" align="flex-start">
           <h3 style="font-family: 'Source Sans 3', sans serif; font-size: 24pt; color: #301812;">You're a star! Express yourself!</h3>
           <p style="font-family: 'Source Sans 3', sans serif; font-size: 16pt; color: #301812; text-align: left; margin: 0;">Minimalist? Maximalist? Formal? Whimsical? Whatever your style, Starfish is here for you.</p>
         </StackV>
-        <StackV gap="0.5rem" width="100%" align="flex-start">
+        <StackV gap="0.6rem" width="100%" align="flex-start">
           <h3 style="font-family: 'Source Sans 3', sans serif; font-size: 24pt; color: #301812;">Beauty by default</h3>
           <p style="font-family: 'Source Sans 3', sans serif; font-size: 16pt; color: #301812; text-align: left; margin: 0;">Starfish's design system of colors, spacing, and arrows build on graphic design best practices helping you get beautiful results out of the box.</p>
         </StackV>
-        <StackV gap="0.5rem" width="100%" align="flex-start">
+        <StackV gap="0.6rem" width="100%" align="flex-start">
           <h3 style="font-family: 'Source Sans 3', sans serif; font-size: 24pt; color: #301812;">Power when you need it</h3>
           <p style="font-family: 'Source Sans 3', sans serif; font-size: 16pt; color: #301812; text-align: left; margin: 0;">Starfish makes easy things simple, like bar charts and scatterplots. But its primitives can compose to make complex custom charts and diagrams.</p>
         </StackV>
