@@ -99,8 +99,9 @@ const defs = [
   </pattern>,
 ];
 /* TODO: I need to redo the coordinate system so that it start from the bottom left corner... */
-export const testFishPolarRibbonChartTextured = (size: { width: number; height: number }) =>
+export const testFishPolarRibbonChartTextured = (container: HTMLElement, size: { width: number; height: number }) =>
   gofish(
+    container,
     { width: size.width, height: size.height, transform: { x: 500, y: 500 }, defs },
     frame({ coord: polar() }, [
       stackX(

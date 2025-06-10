@@ -4,7 +4,6 @@ import { stack } from "../components/stack";
 import { d as $d } from "../components/data"; */
 
 import { value } from "../ast/data";
-import { gofish } from "../ast/gofish";
 import { rect } from "../ast/marks/rect";
 import { stack } from "../ast/graphicalOperators/stack";
 import { color, color6 } from "../color";
@@ -43,21 +42,18 @@ const data = streamgraphData;
 
 const colorPalette = streamgraphColorPalette;
 
-export const testScatterplot = (size: { width: number; height: number }) =>
-  gofish(
-    { width: size.width, height: size.height },
-    frame(
-      _(data)
-        .map((d) =>
-          ellipse({
-            x: value(d.x),
-            /* TODO: undo the negation once coordinate direction is fixed */
-            y: value(d.y),
-            w: 8,
-            h: 8,
-            fill: value(d.c),
-          })
-        )
-        .value()
-    )
+export const testScatterplot = () =>
+  frame(
+    _(data)
+      .map((d) =>
+        ellipse({
+          x: value(d.x),
+          /* TODO: undo the negation once coordinate direction is fixed */
+          y: value(d.y),
+          w: 8,
+          h: 8,
+          fill: value(d.c),
+        })
+      )
+      .value()
   );

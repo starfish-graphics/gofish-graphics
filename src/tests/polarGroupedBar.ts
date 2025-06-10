@@ -24,29 +24,26 @@ const data = [
   { category: "C", group: "z", value: 0.2 },
 ];
 
-export const testPolarGroupedBar = (size: { width: number; height: number }) => {
+export const testPolarGroupedBar = () => {
   // Create the visualization structure first
-  return gofish(
-    { width: size.width, height: size.height, transform: { x: 50, y: 250 } },
-    frame({ coord: polar_DEPRECATED() }, [
-      stack(
-        { direction: 0, spacing: 20, alignment: "end", sharedScale: true },
-        Object.entries(_.groupBy(data, "category")).map(([category, items]) =>
-          stack(
-            { direction: 0, spacing: 2, alignment: "end" },
-            items.map((d) =>
-              rect({
-                w: 30,
-                // emX: true,
-                // h: value(d.value, "value"),
-                h: d.value,
-                emY: true,
-                fill: d.group === "x" ? color6[0] : d.group === "y" ? color6[1] : color6[2],
-              })
-            )
+  return frame({ coord: polar_DEPRECATED() }, [
+    stack(
+      { direction: 0, spacing: 20, alignment: "end", sharedScale: true },
+      Object.entries(_.groupBy(data, "category")).map(([category, items]) =>
+        stack(
+          { direction: 0, spacing: 2, alignment: "end" },
+          items.map((d) =>
+            rect({
+              w: 30,
+              // emX: true,
+              // h: value(d.value, "value"),
+              h: d.value,
+              emY: true,
+              fill: d.group === "x" ? color6[0] : d.group === "y" ? color6[1] : color6[2],
+            })
           )
         )
-      ),
-    ])
-  );
+      )
+    ),
+  ]);
 };

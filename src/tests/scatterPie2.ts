@@ -32,29 +32,26 @@ const scatterData = _(catchData)
   }))
   .value();
 
-export const testScatterPie2 = (size: { width: number; height: number }) =>
-  gofish(
-    { width: size.width, height: size.height },
-    frame(
-      scatterData.map((sample) =>
-        frame(
-          {
-            x: sample.x,
-            y: sample.y,
-            coord: polar(),
-          },
-          [
-            stackX(
-              { h: _(sample.collection).sumBy("count") / 7, spacing: 0, alignment: "start", sharedScale: true },
-              sample.collection.map((d, i) =>
-                rect({
-                  w: value(d.count),
-                  fill: color6[i % 6],
-                })
-              )
-            ),
-          ]
-        )
+export const testScatterPie2 = () =>
+  frame(
+    scatterData.map((sample) =>
+      frame(
+        {
+          x: sample.x,
+          y: sample.y,
+          coord: polar(),
+        },
+        [
+          stackX(
+            { h: _(sample.collection).sumBy("count") / 7, spacing: 0, alignment: "start", sharedScale: true },
+            sample.collection.map((d, i) =>
+              rect({
+                w: value(d.count),
+                fill: color6[i % 6],
+              })
+            )
+          ),
+        ]
       )
     )
   );

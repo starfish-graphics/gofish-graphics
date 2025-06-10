@@ -37,49 +37,46 @@ const fishColors = {
   Salmon: color.purple[5],
 };
 
-export const testNestedWaffle = (size: { width: number; height: number }) =>
-  gofish(
-    { width: size.width, height: size.height },
-    stack(
-      { direction: "y", spacing: 8, alignment: "middle", sharedScale: true },
-      _(titanic)
-        .groupBy("class")
-        .map((cls) =>
-          stack(
-            { direction: "x", spacing: 4, alignment: "end" },
-            _(cls)
-              .groupBy("sex")
-              .map((sex) =>
-                enclose({}, [
-                  stack(
-                    { direction: "y", spacing: 0.5, alignment: "end" },
-                    _(sex) // Was missing this lodash chain before .reverse()
-                      .reverse()
-                      .flatMap((d) => Array(d.count).fill(d))
-                      .chunk(Math.ceil((_(sex).sumBy("count") / _(cls).sumBy("count")) * 32))
-                      .reverse()
-                      .map((d) =>
-                        stack(
-                          { direction: "x", spacing: 0.5, alignment: "end" },
-                          d.map((d) =>
-                            ellipse({
-                              w: 4,
-                              h: 4,
-                              fill:
-                                d.survived === "No"
-                                  ? black
-                                  : /* value(d.class) */ classColor[d.class as keyof typeof classColor],
-                            })
-                          )
+export const testNestedWaffle = () =>
+  stack(
+    { direction: "y", spacing: 8, alignment: "middle", sharedScale: true },
+    _(titanic)
+      .groupBy("class")
+      .map((cls) =>
+        stack(
+          { direction: "x", spacing: 4, alignment: "end" },
+          _(cls)
+            .groupBy("sex")
+            .map((sex) =>
+              enclose({}, [
+                stack(
+                  { direction: "y", spacing: 0.5, alignment: "end" },
+                  _(sex) // Was missing this lodash chain before .reverse()
+                    .reverse()
+                    .flatMap((d) => Array(d.count).fill(d))
+                    .chunk(Math.ceil((_(sex).sumBy("count") / _(cls).sumBy("count")) * 32))
+                    .reverse()
+                    .map((d) =>
+                      stack(
+                        { direction: "x", spacing: 0.5, alignment: "end" },
+                        d.map((d) =>
+                          ellipse({
+                            w: 4,
+                            h: 4,
+                            fill:
+                              d.survived === "No"
+                                ? black
+                                : /* value(d.class) */ classColor[d.class as keyof typeof classColor],
+                          })
                         )
                       )
-                      .value()
-                  ),
-                ])
-              )
-              .value()
-          )
+                    )
+                    .value()
+                ),
+              ])
+            )
+            .value()
         )
-        .value()
-    )
+      )
+      .value()
   );

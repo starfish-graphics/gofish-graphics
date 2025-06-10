@@ -26,58 +26,55 @@ const classColor = {
   Crew: color6_old[3],
 };
 
-export const testNestedMosaic = (size: { width: number; height: number }) =>
-  gofish(
-    { width: size.width, height: size.height },
-    stack(
-      { direction: "y", spacing: 4, alignment: "middle" },
-      // TODO: I could probably make the width be uniform flexible basically
-      _(titanic)
-        .groupBy("class")
-        .map(
-          (items, cls) =>
-            stack(
-              { h: _(items).sumBy("count") / 10, direction: "x", spacing: 2, alignment: "middle" },
-              _(items)
-                .groupBy("sex")
-                .map((sItems, sex) =>
-                  stack(
-                    {
-                      w: (_(sItems).sumBy("count") / _(items).sumBy("count")) * 100,
-                      direction: "y",
-                      spacing: 0,
-                      alignment: "middle",
-                      sharedScale: true,
-                    },
-                    _(sItems)
-                      .groupBy("survived")
-                      .map((items, survived) =>
-                        rect({
-                          h: value(_(items).sumBy("count"), "survived"),
-                          // h: value(_(items).sumBy("count"), "count"),
-                          // h: _(items).sumBy("count") / 10,
-                          fill:
-                            survived === "No"
-                              ? mix(classColor[cls as keyof typeof classColor], black, 0.7)
-                              : classColor[cls as keyof typeof classColor],
-                        })
-                      )
-                      .value()
-                  )
+export const testNestedMosaic = () =>
+  stack(
+    { direction: "y", spacing: 4, alignment: "middle" },
+    // TODO: I could probably make the width be uniform flexible basically
+    _(titanic)
+      .groupBy("class")
+      .map(
+        (items, cls) =>
+          stack(
+            { h: _(items).sumBy("count") / 10, direction: "x", spacing: 2, alignment: "middle" },
+            _(items)
+              .groupBy("sex")
+              .map((sItems, sex) =>
+                stack(
+                  {
+                    w: (_(sItems).sumBy("count") / _(items).sumBy("count")) * 100,
+                    direction: "y",
+                    spacing: 0,
+                    alignment: "middle",
+                    sharedScale: true,
+                  },
+                  _(sItems)
+                    .groupBy("survived")
+                    .map((items, survived) =>
+                      rect({
+                        h: value(_(items).sumBy("count"), "survived"),
+                        // h: value(_(items).sumBy("count"), "count"),
+                        // h: _(items).sumBy("count") / 10,
+                        fill:
+                          survived === "No"
+                            ? mix(classColor[cls as keyof typeof classColor], black, 0.7)
+                            : classColor[cls as keyof typeof classColor],
+                      })
+                    )
+                    .value()
                 )
-                .value()
-            )
-          // stack(
-          //   { /* w: _(items).sumBy("count") / 2, */ direction: 1, spacing: 2, alignment: "middle", sharedScale: true },
-          //   items.toReversed().map((d) =>
-          //     rect({
-          //       w: 20,
-          //       h: value(d.count, "count"),
-          //       fill: classColor[cls as keyof typeof classColor],
-          //     })
-          //   )
-          // )
-        )
-        .value()
-    )
+              )
+              .value()
+          )
+        // stack(
+        //   { /* w: _(items).sumBy("count") / 2, */ direction: 1, spacing: 2, alignment: "middle", sharedScale: true },
+        //   items.toReversed().map((d) =>
+        //     rect({
+        //       w: 20,
+        //       h: value(d.count, "count"),
+        //       fill: classColor[cls as keyof typeof classColor],
+        //     })
+        //   )
+        // )
+      )
+      .value()
   );

@@ -1,5 +1,4 @@
 import { value } from "../ast/data";
-import { gofish } from "../ast/gofish";
 import { rect } from "../ast/marks/rect";
 import _ from "lodash";
 import { stackY } from "../ast/graphicalOperators/stackY";
@@ -24,17 +23,14 @@ const stackedBarDataset = _(seattleWeather)
   }))
   .value();
 
-export const testVLStackedBarRefactor = (size: { width: number; height: number }) =>
-  gofish(
-    { width: size.width, height: size.height },
-    stackXTemplate(
-      stackedBarDataset,
-      { spacing: 1, sharedScale: true, groupBy: { field: "month", sort: monthNames } },
-      (monthData) =>
-        stackYTemplate(
-          monthData,
-          { spacing: 0, groupBy: { field: "weather", sort: ["drizzle", "fog", "rain", "snow", "sun"] } },
-          (d, weather) => rect({ w: 12, h: value(d.length), fill: colorScale[weather as keyof typeof colorScale] })
-        )
-    )
+export const testVLStackedBarRefactor = () =>
+  stackXTemplate(
+    stackedBarDataset,
+    { spacing: 1, sharedScale: true, groupBy: { field: "month", sort: monthNames } },
+    (monthData) =>
+      stackYTemplate(
+        monthData,
+        { spacing: 0, groupBy: { field: "weather", sort: ["drizzle", "fog", "rain", "snow", "sun"] } },
+        (d, weather) => rect({ w: 12, h: value(d.length), fill: colorScale[weather as keyof typeof colorScale] })
+      )
   );

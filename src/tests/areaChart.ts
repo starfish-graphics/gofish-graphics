@@ -19,40 +19,37 @@ import { frame } from "../ast/graphicalOperators/frame";
 const data = streamgraphData;
 const colorPalette = streamgraphColorPalette;
 
-export const testAreaChart = (size: { width: number; height: number }) =>
-  gofish(
-    { width: size.width, height: size.height },
-    frame([
-      ..._(data)
-        .groupBy("c")
-        .flatMap((items, c) =>
-          stackX(
-            { spacing: 0, sharedScale: true },
-            items.map((d) =>
-              rect({
-                name: `${c}-${d.x}`,
-                x: value(d.x),
-                h: value(d.y),
-                w: 0,
-                fill: value(c),
-              })
-            )
+export const testAreaChart = () =>
+  frame([
+    ..._(data)
+      .groupBy("c")
+      .flatMap((items, c) =>
+        stackX(
+          { spacing: 0, sharedScale: true },
+          items.map((d) =>
+            rect({
+              name: `${c}-${d.x}`,
+              x: value(d.x),
+              h: value(d.y),
+              w: 0,
+              fill: value(c),
+            })
           )
         )
-        .value(),
-      ..._(data)
-        .groupBy("c")
-        .map((items, c) =>
-          connectX(
-            {
-              interpolation: "linear",
-              // opacity: 0.7,
-              // mixBlendMode: "normal",
-              opacity: 0.7,
-            },
-            items.map((d) => ref(`${c}-${d.x}`))
-          )
+      )
+      .value(),
+    ..._(data)
+      .groupBy("c")
+      .map((items, c) =>
+        connectX(
+          {
+            interpolation: "linear",
+            // opacity: 0.7,
+            // mixBlendMode: "normal",
+            opacity: 0.7,
+          },
+          items.map((d) => ref(`${c}-${d.x}`))
         )
-        .value(),
-    ])
-  );
+      )
+      .value(),
+  ]);

@@ -26,39 +26,36 @@ const data = [
   { category: "C", group: "z", value: 0.2 },
 ];
 
-export const testPolarCenterStackedBarEmbedded = (size: { width: number; height: number }) =>
-  gofish(
-    { width: size.width, height: size.height, transform: { x: 200, y: 100 } },
-    frame({ coord: polar_DEPRECATED() }, [
-      stack(
-        {
-          x: 20,
-          direction: 1,
-          spacing: (2 * Math.PI) / 3,
-          alignment: "start",
-          sharedScale: true,
-          mode: "center-to-center",
-        },
-        Object.entries(_.groupBy(data, "category")).map(([category, items]) =>
-          stack(
-            {
-              direction: 0,
-              spacing: 2,
-              alignment: "middle",
-            },
-            items.toReversed().map((d) =>
-              rect({
-                // h: 15,
-                h: 0.4,
-                emY: true,
-                // w: value(d.value, "value"),
-                w: d.value * 50,
-                emX: true,
-                fill: d.group === "x" ? color.red[5] : d.group === "y" ? color.blue[5] : color.green[5],
-              })
-            )
+export const testPolarCenterStackedBarEmbedded = () =>
+  frame({ coord: polar_DEPRECATED() }, [
+    stack(
+      {
+        x: 20,
+        direction: 1,
+        spacing: (2 * Math.PI) / 3,
+        alignment: "start",
+        sharedScale: true,
+        mode: "center-to-center",
+      },
+      Object.entries(_.groupBy(data, "category")).map(([category, items]) =>
+        stack(
+          {
+            direction: 0,
+            spacing: 2,
+            alignment: "middle",
+          },
+          items.toReversed().map((d) =>
+            rect({
+              // h: 15,
+              h: 0.4,
+              emY: true,
+              // w: value(d.value, "value"),
+              w: d.value * 50,
+              emX: true,
+              fill: d.group === "x" ? color.red[5] : d.group === "y" ? color.blue[5] : color.green[5],
+            })
           )
         )
-      ),
-    ])
-  );
+      )
+    ),
+  ]);

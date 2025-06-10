@@ -323,23 +323,20 @@ const scatterData = _(catchData)
   }))
   .value();
 
-export const testScatterBalloon2 = (size: { width: number; height: number }) =>
-  gofish(
-    { width: size.width, height: size.height },
-    frame(
-      { coord: wavy(), x: 0, y: 0 },
-      scatterData.map((data, i) =>
-        frame([
-          rect({
-            x: data.x,
-            w: 1,
-            y: data.y,
-            h: size.height - data.y,
-            emY: true,
-            fill: black,
-          }),
-          balloon({ scale: 1, x: data.x, y: data.y, color: colorMap[i % 6] }),
-        ])
-      )
+export const testScatterBalloon2 = (height: number) =>
+  frame(
+    { coord: wavy(), x: 0, y: 0 },
+    scatterData.map((data, i) =>
+      frame([
+        rect({
+          x: data.x,
+          w: 1,
+          y: data.y,
+          h: height - data.y,
+          emY: true,
+          fill: black,
+        }),
+        balloon({ scale: 1, x: data.x, y: data.y, color: colorMap[i % 6] }),
+      ])
     )
   );

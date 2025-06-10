@@ -19,38 +19,35 @@ import { frame } from "../ast/graphicalOperators/frame";
 const data = streamgraphData;
 const colorPalette = streamgraphColorPalette;
 
-export const testLineChart = (size: { width: number; height: number }) =>
-  gofish(
-    { width: size.width, height: size.height },
-    frame([
-      ..._(data)
-        .groupBy("c")
-        .flatMap((items, c) =>
-          items.map((d, i) =>
-            ellipse({
-              name: `${c}-${i}`,
-              x: value(d.x),
-              y: value(d.y),
-              w: 2,
-              h: 2,
-              fill: value(c),
-            })
-          )
+export const testLineChart = () =>
+  frame([
+    ..._(data)
+      .groupBy("c")
+      .flatMap((items, c) =>
+        items.map((d, i) =>
+          ellipse({
+            name: `${c}-${i}`,
+            x: value(d.x),
+            y: value(d.y),
+            w: 2,
+            h: 2,
+            fill: value(c),
+          })
         )
-        .value(),
-      ..._(data)
-        .groupBy("c")
-        .map((items, c) =>
-          connectX(
-            {
-              interpolation: "linear",
-              // opacity: 0.7,
-              mode: "center-to-center",
-              strokeWidth: 1,
-            },
-            items.map((d) => ref(`${c}-${d.x}`))
-          )
+      )
+      .value(),
+    ..._(data)
+      .groupBy("c")
+      .map((items, c) =>
+        connectX(
+          {
+            interpolation: "linear",
+            // opacity: 0.7,
+            mode: "center-to-center",
+            strokeWidth: 1,
+          },
+          items.map((d) => ref(`${c}-${d.x}`))
         )
-        .value(),
-    ])
-  );
+      )
+      .value(),
+  ]);

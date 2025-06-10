@@ -4,7 +4,6 @@ import { stack } from "../components/stack";
 import { d as $d } from "../components/data"; */
 
 import { value } from "../ast/data";
-import { gofish } from "../ast/gofish";
 import { rect } from "../ast/marks/rect";
 import { stack } from "../ast/graphicalOperators/stack";
 import { color, color6 } from "../color";
@@ -19,19 +18,16 @@ const fishColors = {
   Salmon: color.purple[5],
 };
 
-export const testFishGroupedBar = (size: { width: number; height: number }) =>
-  gofish(
-    { width: size.width, height: size.height },
-    stackX(
-      { spacing: 12, sharedScale: true },
-      _(catchData)
-        .groupBy("lake")
-        .map((d) =>
-          stackX(
-            { spacing: 1 },
-            d.map((d) => rect({ w: 8, h: value(d.count), fill: value(d.species) }))
-          )
+export const testFishGroupedBar = () =>
+  stackX(
+    { spacing: 12, sharedScale: true },
+    _(catchData)
+      .groupBy("lake")
+      .map((d) =>
+        stackX(
+          { spacing: 1 },
+          d.map((d) => rect({ w: 8, h: value(d.count), fill: value(d.species) }))
         )
-        .value()
-    )
+      )
+      .value()
   );

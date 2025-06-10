@@ -21,47 +21,44 @@ import { frame } from "../ast/graphicalOperators/frame";
 const data = streamgraphData;
 const colorPalette = streamgraphColorPalette;
 
-export const testStreamgraph = (size: { width: number; height: number }) =>
-  gofish(
-    { width: size.width, height: size.height },
-    frame([
-      stackX(
-        {
-          spacing: 0,
-          alignment: "middle",
-          sharedScale: true,
-        },
-        [
-          ..._(data)
-            .groupBy("x")
-            .map((items, xCoord) =>
-              stackY(
-                { spacing: 0, x: value(xCoord) },
-                items.map((d) =>
-                  rect({
-                    name: `${xCoord}-${d.c}`,
-                    h: value(d.y),
-                    w: 0,
-                    fill: value(d.c),
-                  })
-                )
+export const testStreamgraph = () =>
+  frame([
+    stackX(
+      {
+        spacing: 0,
+        alignment: "middle",
+        sharedScale: true,
+      },
+      [
+        ..._(data)
+          .groupBy("x")
+          .map((items, xCoord) =>
+            stackY(
+              { spacing: 0, x: value(xCoord) },
+              items.map((d) =>
+                rect({
+                  name: `${xCoord}-${d.c}`,
+                  h: value(d.y),
+                  w: 0,
+                  fill: value(d.c),
+                })
               )
             )
-            .value(),
-        ]
-      ),
-      ..._(data)
-        .groupBy("c")
-        .map((items, c) =>
-          connectX(
-            {
-              interpolation: "linear",
-              mixBlendMode: "normal",
-              strokeWidth: 1,
-            },
-            items.map((d) => ref(`${d.x}-${d.c}`))
           )
+          .value(),
+      ]
+    ),
+    ..._(data)
+      .groupBy("c")
+      .map((items, c) =>
+        connectX(
+          {
+            interpolation: "linear",
+            mixBlendMode: "normal",
+            strokeWidth: 1,
+          },
+          items.map((d) => ref(`${d.x}-${d.c}`))
         )
-        .value(),
-    ])
-  );
+      )
+      .value(),
+  ]);

@@ -89,16 +89,13 @@ const defs = [
   </pattern>,
 ];
 
-export const testVLStackedBarRefactorTextured = (size: { width: number; height: number }) =>
-  gofish(
-    { width: size.width, height: size.height, defs },
-    rectTemplate(stackedBarDataset, {
-      x: { field: "month", sort: monthNames, spacing: 8 },
-      y: { field: "weather", sort: ["drizzle", "fog", "rain", "snow", "sun"], spacing: 0 },
-      w: 40,
-      h: "length",
-      stroke: "black",
-      strokeWidth: 0.5,
-      fillFn: (weather) => colorScale[weather as keyof typeof colorScale],
-    })
-  );
+export const testVLStackedBarRefactorTextured = () =>
+  rectTemplate(stackedBarDataset, {
+    x: { field: "month", sort: monthNames, spacing: 8 },
+    y: { field: "weather", sort: ["drizzle", "fog", "rain", "snow", "sun"], spacing: 0 },
+    w: 40,
+    h: "length",
+    stroke: "black",
+    strokeWidth: 0.5,
+    fillFn: (weather) => colorScale[weather as keyof typeof colorScale],
+  });

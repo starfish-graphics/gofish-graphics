@@ -6,6 +6,7 @@ import { stackX } from "../ast/graphicalOperators/stackX";
 import { seattleWeather } from "../data/seatle-weather";
 import { waffleMark } from "../templates/waffle";
 import { stackXTemplate } from "../templates/stackXTemplate";
+import { waffleTemplate } from "../templates/waffleTemplate";
 
 const colorScale = {
   sun: "#e7ba52",
@@ -23,19 +24,12 @@ const stackedBarDataset = _(seattleWeather)
   }))
   .value();
 
-export const testVLWaffleRefactor = (size: { width: number; height: number }) =>
-  gofish(
-    { width: size.width, height: size.height },
-    stackXTemplate(
-      stackedBarDataset,
-      { spacing: 4, sharedScale: true, groupBy: { field: "month", sort: monthNames } },
-      (entries) =>
-        waffleMark(entries, {
-          chunkSize: 3,
-          spacing: 0.5,
-          rectSize: 3.5,
-          orderBy: { field: "weather", sort: ["sun", "rain", "snow", "fog", "drizzle"] },
-          fillFn: (d) => colorScale[d.weather as keyof typeof colorScale],
-        })
-    )
-  );
+export const testVLWaffleRefactor = () =>
+  waffleTemplate(stackedBarDataset, {
+    x: { field: "month", sort: monthNames, spacing: 4 },
+    chunkSize: 3,
+    spacing: 0.5,
+    rectSize: 3.5,
+    orderBy: { field: "weather", sort: ["sun", "rain", "snow", "fog", "drizzle"] },
+    fillFn: (d) => colorScale[d.weather as keyof typeof colorScale],
+  });

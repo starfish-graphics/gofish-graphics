@@ -75,38 +75,35 @@ const scatterData = _(catchData)
   }))
   .value();
 
-export const testScatterFlower = (size: { width: number; height: number }) =>
-  gofish(
-    { width: size.width, height: size.height },
-    frame(
-      scatterData.map((sample) =>
-        frame([
-          rect({
+export const testScatterFlower = (height: number) =>
+  frame(
+    scatterData.map((sample) =>
+      frame([
+        rect({
+          x: sample.x,
+          w: 2,
+          y: sample.y,
+          h: height - sample.y,
+          fill: color.green[5],
+        }),
+        frame(
+          {
             x: sample.x,
-            w: 2,
             y: sample.y,
-            h: size.height - sample.y,
-            fill: color.green[5],
-          }),
-          frame(
-            {
-              x: sample.x,
-              y: sample.y,
-              coord: polar(),
-            },
-            [
-              stackX(
-                { h: _(sample.collection).sumBy("count") / 7, spacing: 0, alignment: "start", sharedScale: true },
-                sample.collection.map((d, i) =>
-                  petal({
-                    w: value(d.count),
-                    fill: mix(color6[i % 6], white, 0.5),
-                  })
-                )
-              ),
-            ]
-          ),
-        ])
-      )
+            coord: polar(),
+          },
+          [
+            stackX(
+              { h: _(sample.collection).sumBy("count") / 7, spacing: 0, alignment: "start", sharedScale: true },
+              sample.collection.map((d, i) =>
+                petal({
+                  w: value(d.count),
+                  fill: mix(color6[i % 6], white, 0.5),
+                })
+              )
+            ),
+          ]
+        ),
+      ])
     )
   );

@@ -1,4 +1,5 @@
 import { Show, type JSX } from "solid-js";
+import { render as solidRender } from "solid-js/web";
 import { debugNodeTree, type GoFishNode } from "./_node";
 import { ScopeContext } from "./scopeContext";
 import { computePosScale } from "./domain";
@@ -27,13 +28,20 @@ export const getScaleContext = (): ScaleContext => {
 
 /* global pass handler */
 export const gofish = (
+  container: HTMLElement,
   {
     width,
     height,
     transform,
     debug = false,
     defs,
-  }: { width: number; height: number; transform?: { x?: number; y?: number }; debug?: boolean; defs?: JSX.Element[] },
+  }: {
+    width: number;
+    height: number;
+    transform?: { x?: number; y?: number };
+    debug?: boolean;
+    defs?: JSX.Element[];
+  },
   child: GoFishNode
 ) => {
   scopeContext = new Map();
@@ -59,7 +67,10 @@ export const gofish = (
     if (debug) {
       debugNodeTree(child);
     }
-    return render({ width, height, defs }, child);
+
+    // Render to the provided container
+    solidRender(() => render({ width, height, defs }, child), container);
+    return container;
   } finally {
     scopeContext = null;
     scaleContext = null;

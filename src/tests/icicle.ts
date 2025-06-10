@@ -26,68 +26,65 @@ const classColor = {
   Crew: mix(color6_old[0], black, 0.7),
 };
 
-export const testIcicle = (size: { width: number; height: number }) =>
-  gofish(
-    { width: size.width, height: size.height },
-    stack({ direction: "x", spacing: 0, alignment: "middle" }, [
-      rect({
-        w: 40,
-        h: _(titanic).sumBy("count") / 10,
-        fill: "gray",
-      }),
-      stack(
-        { direction: "y", spacing: 0, alignment: "middle" },
-        _(titanic)
-          .groupBy("class")
-          .map((items, cls) =>
-            stack({ direction: "x", h: _(items).sumBy("count") / 10, spacing: 0, alignment: "start" }, [
-              rect({ w: 40, fill: classColor[cls as keyof typeof classColor] }),
-              stack(
-                { direction: "y", spacing: 0, alignment: "middle" },
-                _(items)
-                  .groupBy("sex")
-                  .map((items, sex) =>
-                    stack({ direction: "x", spacing: 0, alignment: "middle" }, [
-                      rect({
+export const testIcicle = () =>
+  stack({ direction: "x", spacing: 0, alignment: "middle" }, [
+    rect({
+      w: 40,
+      h: _(titanic).sumBy("count") / 10,
+      fill: "gray",
+    }),
+    stack(
+      { direction: "y", spacing: 0, alignment: "middle" },
+      _(titanic)
+        .groupBy("class")
+        .map((items, cls) =>
+          stack({ direction: "x", h: _(items).sumBy("count") / 10, spacing: 0, alignment: "start" }, [
+            rect({ w: 40, fill: classColor[cls as keyof typeof classColor] }),
+            stack(
+              { direction: "y", spacing: 0, alignment: "middle" },
+              _(items)
+                .groupBy("sex")
+                .map((items, sex) =>
+                  stack({ direction: "x", spacing: 0, alignment: "middle" }, [
+                    rect({
+                      w: 40,
+                      h: _(items).sumBy("count") / 10,
+                      fill: sex === "Female" ? color6_old[2] : color6_old[3],
+                    }),
+                    stack(
+                      {
                         w: 40,
-                        h: _(items).sumBy("count") / 10,
-                        fill: sex === "Female" ? color6_old[2] : color6_old[3],
-                      }),
-                      stack(
-                        {
-                          w: 40,
-                          direction: "y",
-                          spacing: 0,
-                          alignment: "middle",
-                        },
-                        _(items)
-                          .groupBy("survived")
-                          .map((survivedItems, survived) => {
-                            return rect({
-                              // w: _(items).sumBy("count"),
-                              // w: _(survivedItems).sumBy("count") / 10,
-                              h: _(survivedItems).sumBy("count") / 10,
-                              // h: value(_(items).sumBy("count"), "count"),
-                              // h: _(items).sumBy("count") / 10,
-                              fill:
-                                sex === "Female"
-                                  ? survived === "No"
-                                    ? mix(color6_old[2], black, 0.5)
-                                    : mix(color6_old[2], white, 0.5)
-                                  : survived === "No"
-                                  ? mix(color6_old[3], black, 0.5)
-                                  : mix(color6_old[3], white, 0.5),
-                            });
-                          })
-                          .value()
-                      ),
-                    ])
-                  )
-                  .value()
-              ),
-            ])
-          )
-          .value()
-      ),
-    ])
-  );
+                        direction: "y",
+                        spacing: 0,
+                        alignment: "middle",
+                      },
+                      _(items)
+                        .groupBy("survived")
+                        .map((survivedItems, survived) => {
+                          return rect({
+                            // w: _(items).sumBy("count"),
+                            // w: _(survivedItems).sumBy("count") / 10,
+                            h: _(survivedItems).sumBy("count") / 10,
+                            // h: value(_(items).sumBy("count"), "count"),
+                            // h: _(items).sumBy("count") / 10,
+                            fill:
+                              sex === "Female"
+                                ? survived === "No"
+                                  ? mix(color6_old[2], black, 0.5)
+                                  : mix(color6_old[2], white, 0.5)
+                                : survived === "No"
+                                ? mix(color6_old[3], black, 0.5)
+                                : mix(color6_old[3], white, 0.5),
+                          });
+                        })
+                        .value()
+                    ),
+                  ])
+                )
+                .value()
+            ),
+          ])
+        )
+        .value()
+    ),
+  ]);
