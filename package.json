@@ -1,15 +1,37 @@
 {
-  "name": "vite-template-solid",
-  "version": "0.0.0",
-  "description": "",
+  "name": "gofish-graphics",
+  "version": "0.0.1",
+  "description": "A library for creating charts",
   "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "keywords": [
+    "charts",
+    "graphics",
+    "visualization",
+    "solid-js",
+    "typescript"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
   "scripts": {
     "start": "vite",
     "dev": "vite",
     "build": "vite build",
-    "serve": "vite preview"
+    "serve": "vite preview",
+    "prepublishOnly": "pnpm run build"
   },
-  "license": "MIT",
   "devDependencies": {
     "@types/lodash": "^4.17.16",
     "typescript": "^5.7.2",
@@ -22,5 +44,8 @@
     "rybitten": "^0.22.0",
     "solid-js": "^1.9.5",
     "spectral.js": "^2.0.2"
+  },
+  "peerDependencies": {
+    "solid-js": "^1.9.5"
   }
 }

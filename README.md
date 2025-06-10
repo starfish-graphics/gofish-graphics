@@ -1,34 +1,43 @@
-## Usage
+# GoFish Graphics
 
-Those templates dependencies are maintained via [pnpm](https://pnpm.io) via `pnpm up -Lri`.
+A library for creating charts and graphics in JavaScript.
 
-This is the reason you see a `pnpm-lock.yaml`. That being said, any package manager will work. This file can be safely be removed once you clone a template.
+## Installation
 
 ```bash
-$ npm install # or pnpm install or yarn install
+npm install gofish-graphics
+# or
+pnpm add gofish-graphics
+# or
+yarn add gofish-graphics
 ```
 
-### Learn more on the [Solid Website](https://solidjs.com) and come chat with us on our [Discord](https://discord.com/invite/solidjs)
+## Usage
 
-## Available Scripts
+```typescript
+import /* your exported functions */ "gofish-graphics";
 
-In the project directory, you can run:
+// Use the library functions here
+```
 
-### `npm run dev` or `npm start`
+## Development
 
-Runs the app in the development mode.<br>
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+This project uses [pnpm](https://pnpm.io) for package management.
 
-The page will reload if you make edits.<br>
+```bash
+# Install dependencies
+pnpm install
 
-### `npm run build`
+# Start development server
+pnpm dev
 
-Builds the app for production to the `dist` folder.<br>
-It correctly bundles Solid in production mode and optimizes the build for the best performance.
+# Build the library
+pnpm build
 
-The build is minified and the filenames include the hashes.<br>
-Your app is ready to be deployed!
+# Preview the build
+pnpm serve
+```
 
-## Deployment
+## License
 
-You can deploy the `dist` folder to any static host provider (netlify, surge, now, etc.)
+MIT
