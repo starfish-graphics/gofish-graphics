@@ -3,6 +3,9 @@ export * from "./color";
 export * from "./path";
 export * from "./util";
 
+// Data utilities
+export { value } from "./ast/data";
+
 // Marks
 export { rect } from "./ast/marks/rect";
 export { ellipse } from "./ast/marks/ellipse";
