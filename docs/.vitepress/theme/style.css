@@ -137,3 +137,31 @@
   --docsearch-primary-color: var(--vp-c-brand-1) !important;
 }
 
+/* 
+Observable Plot code block css
+*/
+a.starfish-codepen {
+  font-size: 12px;
+  position: absolute;
+  left: 100%;
+  margin-left: 8px;
+  margin-top: 18px;
+  color: var(--vp-c-text-2);
+  text-decoration: none;
+}
+
+a.starfish-codepen::after {
+  content: " ↗︎";
+  opacity: 0.5;
+}
+
+a.starfish-codepen:hover {
+  color: var(--vp-c-brand);
+  text-decoration: none;
+}
+
+@media (max-width: 820px) {
+  a.starfish-codepen {
+    display: none;
+  }
+}

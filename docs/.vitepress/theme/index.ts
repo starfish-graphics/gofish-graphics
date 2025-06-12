@@ -3,6 +3,7 @@ import { h } from "vue";
 import type { Theme } from "vitepress";
 import DefaultTheme from "vitepress/theme";
 import "./style.css";
+import GoFishVue from "../../../components/GoFishVue.vue";
 
 export default {
   extends: DefaultTheme,
@@ -11,7 +12,7 @@ export default {
       // https://vitepress.dev/guide/extending-default-theme#layout-slots
     });
   },
-  enhanceApp({ app, router, siteData }) {
-    // ...
+  enhanceApp({ app, router }) {
+    app.component("GoFishVue", GoFishVue);
   },
 } satisfies Theme;

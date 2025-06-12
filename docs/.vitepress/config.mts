@@ -1,4 +1,5 @@
 import { defineConfig } from "vitepress";
+import starfish from "./markdown-it-starfish";
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
@@ -6,15 +7,23 @@ export default defineConfig({
   description: "Documentation for Starfish",
   head: [
     ["link", { rel: "preconnect", href: "https://fonts.googleapis.com" }],
-    ["link", { rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: "" }],
+    [
+      "link",
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: "" },
+    ],
     [
       "link",
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Balsamiq+Sans:ital,wght@0,400;0,700;1,400;1,700&family=Fira+Code:wght@300..700&family=Source+Sans+3:ital,wght@0,200..900;1,200..900&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Balsamiq+Sans:ital,wght@0,400;0,700;1,400;1,700&family=Comic+Neue:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&family=Fira+Code:wght@300..700&family=Source+Sans+3:ital,wght@0,200..900;1,200..900&display=swap",
       },
     ],
   ],
+  markdown: {
+    config: (md) => {
+      starfish(md);
+    },
+  },
   themeConfig: {
     search: {
       provider: "local",
@@ -22,39 +31,69 @@ export default defineConfig({
     // https://vitepress.dev/reference/default-theme-config
     nav: [
       { text: "Home", link: "/" },
-      { text: "Get Started!", link: "/get-started/index.md" },
+      { text: "Get Started!", link: "/get-started" },
+      { text: "Tutorial", link: "/tutorial" },
       { text: "Examples", link: "/examples/index.md" },
-      { text: "Tutorial", link: "/tutorial/index.md" },
-      { text: "Theory", link: "/theory/index.md" },
+      // { text: "Guides", link: "/guides/index.md" },
+      { text: "API Reference", link: "/api/index.md" },
     ],
 
     sidebar: [
       {
         text: "Get Started!",
-        collapsed: true,
-        items: [
-          { text: "Installation", link: "/get-started/index.md" },
-          // { text: "Basic Usage", link: "/get-started" },
-          // { text: "Configuration", link: "/get-started" },
-        ],
+        link: "/get-started",
+      },
+      {
+        text: "Tutorial",
+        link: "/tutorial",
       },
       {
         text: "Examples",
         collapsed: true,
-        items: [{ text: "Examples", link: "/examples/index.md" }],
+        items: [
+          { text: "Area Charts", link: "/examples/area-charts.md" },
+          { text: "Bar Charts", link: "/examples/bar-charts.md" },
+          { text: "Line Charts", link: "/examples/line-charts.md" },
+          { text: "Pie Charts", link: "/examples/pie-charts.md" },
+          { text: "Ribbon Charts", link: "/examples/ribbon-charts.md" },
+          { text: "Scatter Plots", link: "/examples/scatter-plots.md" },
+        ],
       },
       {
-        text: "Tutorial",
+        text: "API Reference",
         collapsed: true,
-        items: [{ text: "Tutorial", link: "/tutorial/index.md" }],
+        items: [
+          { text: "Starfish", link: "/api/starfish.md" },
+          {
+            text: "Shapes",
+            items: [
+              { text: "Rect", link: "/api/shapes/rect.md" },
+              { text: "Circle", link: "/api/shapes/circle.md" },
+            ],
+          },
+          {
+            text: "Operators",
+            items: [
+              { text: "Stack", link: "/api/operators/stack.md" },
+              { text: "Connect", link: "/api/operators/connect.md" },
+            ],
+          },
+        ],
       },
-      {
-        text: "Theory",
+      /* {
+        text: "Guides",
         collapsed: true,
-        items: [{ text: "Theory", link: "/theory/index.md" }],
-      },
+        items: [
+          { text: "Color", link: "/guides/color.md" },
+          { text: "Labels", link: "/guides/labels.md" },
+          { text: "Spacing", link: "/guides/spacing.md" },
+          { text: "Style", link: "/guides/style.md" },
+        ],
+      }, */
     ],
 
-    socialLinks: [{ icon: "github", link: "https://github.com/vuejs/vitepress" }],
+    socialLinks: [
+      { icon: "github", link: "https://github.com/vuejs/vitepress" },
+    ],
   },
 });
