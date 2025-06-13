@@ -200,7 +200,7 @@ export const coord = (
 
         return (
           <g transform={`translate(${transform?.translate?.[0] ?? 0}, ${transform?.translate?.[1] ?? 0})`}>
-            {flattenedChildren.map((child) => child.render(coordTransform))}
+            {flattenedChildren.map((child) => child.INTERNAL_render(coordTransform))}
             <Show when={grid}>{gridLines()}</Show>
           </g>
         );

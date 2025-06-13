@@ -6,6 +6,7 @@ import _, { size } from "lodash";
 import { canUnifyDomains, continuous, ContinuousDomain, Domain, unifyContinuousDomains } from "../domain";
 import { findTargetMonotonic } from "../../util";
 import { GoFishAST } from "../_ast";
+import { getScaleContext } from "../gofish";
 
 export const stack = (
   {
@@ -149,6 +150,10 @@ modes!!!
           );
           scaleFactors[alignDir] = alignScaleFactor;
         }
+
+        console.log(size, scaleFactors, posScales);
+        const scaleContext = getScaleContext();
+        scaleContext.y = { domain: [0, size[1] / scaleFactors[1]], scaleFactor: scaleFactors[1] };
 
         const childPlaceables = children.map((child) => child.layout(size, scaleFactors, posScales));
 

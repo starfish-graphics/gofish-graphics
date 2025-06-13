@@ -39,7 +39,9 @@
     "vite-plugin-solid": "^2.11.6"
   },
   "dependencies": {
+    "@types/d3-array": "^3.2.1",
     "bubblesets-js": "^3.0.0",
+    "d3-array": "^3.2.4",
     "lodash": "^4.17.21",
     "rybitten": "^0.22.0",
     "solid-js": "^1.9.5",

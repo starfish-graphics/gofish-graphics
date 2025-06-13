@@ -13,8 +13,4 @@ if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
   );
 }
 
-const vanillaRoot = document.getElementById("vanilla");
-
-testFishPolarRibbonChartTextured(vanillaRoot!, { width: 1000, height: 1000 });
-
 render(() => <App />, root!);

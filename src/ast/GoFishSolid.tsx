@@ -10,6 +10,7 @@ interface GoFishComponentProps {
   debug?: boolean;
   defs?: JSX.Element[];
   children: GoFishNode;
+  axes?: boolean;
 }
 
 export const GoFishSolid: Component<GoFishComponentProps> = (props) => {
@@ -29,6 +30,7 @@ export const GoFishSolid: Component<GoFishComponentProps> = (props) => {
           transform: props.transform,
           debug: props.debug,
           defs: props.defs,
+          axes: props.axes,
         },
         props.children
       );

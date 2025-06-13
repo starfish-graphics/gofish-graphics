@@ -162,7 +162,7 @@ export class GoFishRef {
     }
   }
 
-  public render(): JSX.Element {
+  public INTERNAL_render(): JSX.Element {
     return <></>;
   }
 }

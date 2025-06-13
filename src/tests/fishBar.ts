@@ -18,7 +18,12 @@ const fishColors = {
   Perch: color.yellow[5],
   Salmon: color.purple[5],
 };
-
+console.log(
+  _(catchData)
+    .groupBy("lake")
+    .map((d) => _(d).sumBy("count"))
+    .value()
+);
 export const testFishBar = () =>
   stackX(
     { spacing: 8, sharedScale: true },

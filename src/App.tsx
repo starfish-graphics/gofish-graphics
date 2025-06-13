@@ -64,6 +64,28 @@ import { testVLStackedBarRefactorTextured } from "./tests/vlStackedBarRefactorTe
 import { testFishRibbonChartTextured } from "./tests/fishRibbonChartTextured";
 import { testFishPolarRibbonChartTextured } from "./tests/fishPolarRibbonChartTextured";
 import { GoFishSolid } from "./ast";
+import { DitheringConfig, generateDithering } from "./tests/density";
+import { frame, rect, stackY } from "./lib";
+
+const ditheringTestWidth = 800;
+
+// For sinusoidal dithering
+const sinusoidalSampling = (x: number) => {
+  const frequency = 2;
+  const phase = 0;
+  const normalizedX = (x / ditheringTestWidth) * 2 * Math.PI * frequency;
+  return (Math.sin(normalizedX + phase) + 1) / 2;
+};
+
+const sinePoints = generateDithering({ width: ditheringTestWidth, maxDensitySpacing: 8 }, sinusoidalSampling);
+
+// For other patterns like linear, exponential, etc.
+const uniformSampling = (x: number) => 0.2;
+const uniformPoints = generateDithering({ width: ditheringTestWidth, maxDensitySpacing: 4 }, uniformSampling);
+const exponentialSampling = (x: number) => Math.exp(-x / 50);
+const exponentialPoints = generateDithering({ width: ditheringTestWidth, maxDensitySpacing: 4 }, exponentialSampling);
+const linearSampling = (x: number) => x / 2000;
+const linearPoints = generateDithering({ width: ditheringTestWidth, maxDensitySpacing: 4 }, linearSampling);
 
 const defs = [
   <pattern id="noFill" fill="white" width="1" height="1" patternUnits="userSpaceOnUse">
@@ -132,7 +154,43 @@ const defs = [
 const App: Component = () => {
   return (
     <div style={{ "margin-left": "20px" }}>
-      <h1>Welcome!</h1>
+      <GoFishSolid width={500} height={200} defs={defs} axes={true}>
+        {testFishBar()}
+      </GoFishSolid>
+      <GoFishSolid width={800} height={1000} defs={defs}>
+        {frame({}, [
+          frame({ y: 10 }, [
+            ...sinePoints.map((p) => rect({ x: p, w: 4, h: 20, fill: "black" })),
+            rect({ x: 0, y: 10, w: 1000, h: 2, fill: "black" }),
+          ]),
+          frame({ y: 100 }, [
+            ...uniformPoints.map((p) => rect({ x: p, w: 4, h: 20, fill: "black" })),
+            rect({ x: 0, y: 10, w: 1000, h: 2, fill: "black" }),
+          ]),
+          frame({ y: 200 }, [
+            ...exponentialPoints.map((p) => rect({ x: p, w: 4, h: 20, fill: "black" })),
+            rect({ x: 0, y: 10, w: 1000, h: 2, fill: "black" }),
+          ]),
+          rect({ x: 0, y: 260, w: 1000, h: 4, fill: "black" }),
+          frame({ y: 300 }, [
+            ...sinePoints.map((p) => rect({ x: p, w: 4, h: 20, fill: "black" })),
+            // rect({ x: 0, y: 10, w: 1000, h: 2, fill: "black" }),
+          ]),
+          frame({ y: 400 }, [
+            ...uniformPoints.map((p) => rect({ x: p, w: 4, h: 20, fill: "black" })),
+            // rect({ x: 0, y: 10, w: 1000, h: 2, fill: "black" }),
+          ]),
+          frame({ y: 500 }, [
+            ...exponentialPoints.map((p) => rect({ x: p, w: 4, h: 20, fill: "black" })),
+            // rect({ x: 0, y: 10, w: 1000, h: 2, fill: "black" }),
+          ]),
+          // frame(
+          //   { y: 300 },
+          //   linearPoints.map((p) => rect({ x: p, w: 4, h: 20, fill: "black" }))
+          // ),
+        ])}
+      </GoFishSolid>
+      {/* <h1>Welcome!</h1>
       <div style={{ "max-width": "520px" }}>
         Welcome to the GoFish supplemental code! Below you'll find all the graphics we made in GoFish for the paper. If
         you navigate to <code>App.tsx</code>, you can see the code that generates each one.
@@ -143,8 +201,6 @@ const App: Component = () => {
       </div>
       <br />
       <br />
-      {/* {testStacking({ width: 500, height: 200 })} */}
-      {/* {testFishPolarRibbonChartTextured({ width: 1000, height: 1000 })} */}
       <br />
       <br />
       <br />
@@ -342,7 +398,7 @@ const App: Component = () => {
       </div>
       <br />
       <br />
-      <br />
+      <br /> */}
       {/* <h2>Nested Waffle</h2>
       {testNestedWaffle({ width: 800, height: 500 })}
       <h2>Nested Mosaic</h2>

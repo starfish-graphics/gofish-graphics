@@ -16,7 +16,7 @@ import {
   Transform,
 } from "./dims";
 import { ContinuousDomain } from "./domain";
-import { getScaleContext, getScopeContext } from "./gofish";
+import { getScaleContext, getScopeContext, gofish } from "./gofish";
 import { GoFishRef } from "./_ref";
 import { GoFishAST } from "./_ast";
 import { CoordinateTransform } from "./coordinateTransforms/coord";
@@ -216,7 +216,7 @@ export class GoFishNode {
     this.intrinsicDims![elaborateDirection(direction)].embedded = true;
   }
 
-  public render(coordinateTransform?: CoordinateTransform): JSX.Element {
+  public INTERNAL_render(coordinateTransform?: CoordinateTransform): JSX.Element {
     return this._render(
       {
         intrinsicDims: this.intrinsicDims,
@@ -225,8 +225,29 @@ export class GoFishNode {
         /* TODO: do we want to add this as an object property? */
         coordinateTransform: coordinateTransform,
       },
-      this.children.map((child) => child.render(this.type !== "box" ? coordinateTransform : undefined))
+      this.children.map((child) => child.INTERNAL_render(this.type !== "box" ? coordinateTransform : undefined))
     );
+  }
+
+  public render(
+    container: HTMLElement,
+    {
+      width,
+      height,
+      transform,
+      debug = false,
+      defs,
+      axes = false,
+    }: {
+      width: number;
+      height: number;
+      transform?: { x?: number; y?: number };
+      debug?: boolean;
+      defs?: JSX.Element[];
+      axes?: boolean;
+    }
+  ) {
+    return gofish(container, { width, height, transform, debug, defs, axes }, this);
   }
 }
 
