@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import { gofish, stackX, rect, value } from "gofish-graphics";
+import _ from "lodash";
 
 const props = defineProps<{
   code: string;
@@ -13,18 +14,15 @@ onMounted(() => {
 
   try {
     // Create a scoped sandbox
-    const fn = new Function(
-      "root",
-      "size",
-      "gofish",
-      "stackX",
-      "rect",
-      "value",
-      props.code
-    );
+    const fn = new Function("_", "root", "size", "gf", props.code);
     const root = document.createElement("div");
     const size = { width: 688, height: 400 }; // or dynamic
-    fn(root, size, gofish, stackX, rect, value);
+    fn(_, root, size, {
+      render: gofish,
+      stackX,
+      rect,
+      value,
+    });
     container.value.append(root);
   } catch (err) {
     console.error("GoFish execution failed:", err);

@@ -1,3 +1,7 @@
-# Ribbon Chart
+# Ribbon Charts
 
-# Polar Ribbon Chart
+## Ribbon Chart
+
+## Polar Ribbon Chart
+
+## Sankey Graph

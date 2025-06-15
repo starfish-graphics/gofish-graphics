@@ -1,3 +1,13 @@
-# Area Chart
+# Area Charts
 
-# Streamgraph
+## Area Chart
+
+## Streamgraph
+
+## Interval
+
+## Horizon
+
+## Stacked Area
+
+## Layered Area
