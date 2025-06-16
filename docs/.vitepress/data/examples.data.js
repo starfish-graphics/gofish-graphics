@@ -1,13 +1,11 @@
 export default {
   load() {
-    return [
+    const examples = [
       {
         id: "bar-chart",
         title: "Bar Chart",
         description: "A simple bar chart",
-        // thumbnail: "/examples/bar-chart.png",
         demoUrl: "/examples/bar-chart",
-        // codeUrl: "https://github.com/your-repo/examples/bar-chart",
         code: `const data = [
   { a: "A", b: 28 },
   { a: "B", b: 55 },
@@ -26,6 +24,38 @@ gf.render(
   gf.stackX(
     { spacing: 4, alignment: "end", sharedScale: true },
     data.map((d) => gf.rect({ w: 30, h: gf.value(d.b, "value") }))
+  )
+);
+`,
+        tags: {
+          marks: ["rect", "bar"],
+          operators: ["group", "aggregate"],
+          chartTypes: ["bar", "categorical", "comparison"],
+        },
+      },
+      {
+        id: "horizontal-bar-chart",
+        title: "Horizontal Bar Chart",
+        description: "A simple horizontal bar chart",
+        demoUrl: "/examples/horizontal-bar-chart",
+        code: `const data = [
+  { a: "A", b: 28 },
+  { a: "B", b: 55 },
+  { a: "C", b: 43 },
+  { a: "D", b: 91 },
+  { a: "E", b: 81 },
+  { a: "F", b: 53 },
+  { a: "G", b: 19 },
+  { a: "H", b: 87 },
+  { a: "I", b: 52 },
+];
+
+gf.render(
+  root,
+  { width: size.width, height: size.height },
+  gf.stackY(
+    { spacing: 4, alignment: "start", sharedScale: true },
+    data.map((d) => gf.rect({ w: gf.value(d.b, "value"), h: 30 }))
   )
 );
 `,
@@ -89,5 +119,13 @@ gf.render(
       //   },
       // },
     ];
+
+    return {
+      examples,
+      getCodeById(id) {
+        const example = examples.find((ex) => ex.id === id);
+        return example ? example.code : null;
+      },
+    };
   },
 };

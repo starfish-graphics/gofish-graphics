@@ -211,7 +211,7 @@ const clearAllFilters = () => {
 };
 
 onMounted(() => {
-  examples.value = examplesData;
+  examples.value = examplesData.examples;
 });
 
 const scaleFactor = 0.28;

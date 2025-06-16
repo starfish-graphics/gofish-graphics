@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
-import { gofish, stackX, rect, value } from "gofish-graphics";
+import { gofish, stackX, stackY, rect, value } from "gofish-graphics";
 import _ from "lodash";
 
 const props = defineProps<{
@@ -21,6 +21,7 @@ onMounted(() => {
     fn(_, root, size, {
       render: gofish,
       stackX,
+      stackY,
       rect,
       value,
     });

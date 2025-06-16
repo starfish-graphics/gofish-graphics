@@ -17,24 +17,48 @@ THIS SOFTWARE.
  */
 
 import container from "markdown-it-container";
+import examplesData from "./data/examples.data.js";
 
 export default function starfish(md) {
   md.use(container, "starfish", {
     render(tokens, idx) {
       if (tokens[idx].nesting === 1) {
         const directives = tokens[idx].info.split(/\s+/).slice(1);
-        const token = tokens[idx + 1];
-        if (token.type !== "fence" || token.tag !== "code")
-          throw new Error("missing fenced code block");
 
-        let content = token.content;
+        // Check if this is an example import directive
+        const exampleImport = directives.find((d) => d.startsWith("example:"));
+        let content = "";
+        let codeFence = "";
+
+        if (exampleImport) {
+          const exampleId = exampleImport.split(":")[1];
+          const examples = examplesData.load();
+          const importedCode = examples.getCodeById(exampleId);
+          if (importedCode) {
+            content = importedCode;
+            // Generate the code fence block for display using markdown-it
+            codeFence = md.render(`\`\`\`ts\n${content}\n\`\`\``);
+          } else {
+            console.warn(`Example with id "${exampleId}" not found`);
+            content = `// Example "${exampleId}" not found`;
+            codeFence = md.render(`\`\`\`ts\n${content}\n\`\`\``);
+          }
+        } else {
+          // For non-example imports, require a fenced code block
+          const token = tokens[idx + 1];
+          if (token.type !== "fence" || token.tag !== "code")
+            throw new Error("missing fenced code block");
+          content = token.content;
+          // Don't generate additional code fence for regular blocks
+        }
+
         const href = directives.find((d) => d.startsWith("https://"));
 
         // Create the GoFishVue component with the code content
         // const encoded = encodeURIComponent(md.utils.escapeHtml(token.content));
         // const componentSetup = `<GoFishVue code={decodeURIComponent("${encoded}")}" />\n`;
         const componentSetup = `<GoFishVue code="${md.utils.escapeHtml(
-          token.content
+          content
         )}" />\n`;
 
         const suffix = `\n${
@@ -47,7 +71,7 @@ export default function starfish(md) {
             : ""
         }`;
 
-        return `<div class="starfish-container">\n${componentSetup}${suffix}\n`;
+        return `<div class="starfish-container">\n${componentSetup}${codeFence}${suffix}\n`;
       }
       return `\n</div>\n`;
     },
