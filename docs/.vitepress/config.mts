@@ -48,11 +48,11 @@ export default defineConfig({
         text: "Tutorial",
         link: "/tutorial",
       },
+      { text: "Examples", link: "/examples/" },
       {
-        text: "Examples",
+        text: "Examples List",
         collapsed: true,
         items: [
-          { text: "Search Examples", link: "/examples/" },
           // Programmatically generated example links
           ...examplesData.load().examples.map((example) => ({
             text: example.title,

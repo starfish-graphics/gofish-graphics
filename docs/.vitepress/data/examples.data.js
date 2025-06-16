@@ -81,7 +81,7 @@ gf.render(
       {
         id: "grouped-bar-chart",
         title: "Grouped Bar Chart",
-        // description: "A simple grouped bar chart",
+        description: "Horizontally stacked vertical bars",
         demoUrl: "/examples/grouped-bar-chart",
         code: `gf.render(
   root,
@@ -301,6 +301,7 @@ const color6 = ["#000000", "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"
       {
         id: "donut-chart",
         title: "Donut Chart",
+        description: "A pie with a hole in the middle",
         demoUrl: "/examples/donut-chart",
         code: `const data = [
   { category: 1, value: 4 },

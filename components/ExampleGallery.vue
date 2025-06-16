@@ -78,7 +78,7 @@
         :key="example.id"
         class="example-card"
       >
-        <a :href="example.demoUrl" target="_blank" class="card-link">
+        <a :href="example.demoUrl + '.html'" class="card-link">
           <div class="card-thumbnail">
             <GoFishVue
               :code="example.code"
