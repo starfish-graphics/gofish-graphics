@@ -429,7 +429,7 @@ gf.render(
         title: "Ribbon Chart",
         demoUrl: "/examples/ribbon-chart",
         description:
-          "A hybrid between a stacked bar chart and a stacked area chart.",
+          "A hybrid between a stacked bar chart and a stacked area chart",
         code: `
         gf.render(
   root,
