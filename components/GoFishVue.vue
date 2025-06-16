@@ -2,6 +2,7 @@
 import { onMounted, ref } from "vue";
 import { gofish, stackX, stackY, rect, value } from "gofish-graphics";
 import _ from "lodash";
+import { catchData } from "./catchData";
 
 const props = defineProps<{
   code: string;
@@ -15,16 +16,22 @@ onMounted(() => {
 
   try {
     // Create a scoped sandbox
-    const fn = new Function("_", "root", "size", "gf", props.code);
+    const fn = new Function("_", "root", "size", "gf", "catchData", props.code);
     const root = document.createElement("div");
     const size = { width: 688, height: 400 }; // default size
-    fn(_, root, size, {
-      render: gofish,
-      stackX,
-      stackY,
-      rect,
-      value,
-    });
+    fn(
+      _,
+      root,
+      size,
+      {
+        render: gofish,
+        stackX,
+        stackY,
+        rect,
+        value,
+      },
+      catchData
+    );
     container.value.append(root);
   } catch (err) {
     console.error("GoFish execution failed:", err);

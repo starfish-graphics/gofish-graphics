@@ -113,9 +113,9 @@ import GoFishVue from "./GoFishVue.vue";
 
 const examples = ref([]);
 const searchQuery = ref("");
-const selectedMarks = ref([]);
-const selectedOperators = ref([]);
-const selectedChartTypes = ref([]);
+// const selectedMarks = ref([]);
+// const selectedOperators = ref([]);
+// const selectedChartTypes = ref([]);
 
 // Get all available filter options
 const availableMarks = computed(() => {
@@ -151,7 +151,7 @@ const filteredExamples = computed(() => {
       example.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
       example.description
         .toLowerCase()
-        .includes(searchQuery.value.toLowerCase()) ||
+        .includes(searchQuery.value.toLowerCase()); /* ||
       example.tags.marks.some((tag) =>
         tag.toLowerCase().includes(searchQuery.value.toLowerCase())
       ) ||
@@ -160,28 +160,26 @@ const filteredExamples = computed(() => {
       ) ||
       example.tags.chartTypes.some((tag) =>
         tag.toLowerCase().includes(searchQuery.value.toLowerCase())
-      );
+      ); */
 
-    // Tag filters
-    const matchesMarks =
-      selectedMarks.value.length === 0 ||
-      selectedMarks.value.some((mark) => example.tags.marks.includes(mark));
+    // // Tag filters
+    // const matchesMarks =
+    //   selectedMarks.value.length === 0 ||
+    //   selectedMarks.value.some((mark) => example.tags.marks.includes(mark));
 
-    const matchesOperators =
-      selectedOperators.value.length === 0 ||
-      selectedOperators.value.some((operator) =>
-        example.tags.operators.includes(operator)
-      );
+    // const matchesOperators =
+    //   selectedOperators.value.length === 0 ||
+    //   selectedOperators.value.some((operator) =>
+    //     example.tags.operators.includes(operator)
+    //   );
 
-    const matchesChartTypes =
-      selectedChartTypes.value.length === 0 ||
-      selectedChartTypes.value.some((type) =>
-        example.tags.chartTypes.includes(type)
-      );
+    // const matchesChartTypes =
+    //   selectedChartTypes.value.length === 0 ||
+    //   selectedChartTypes.value.some((type) =>
+    //     example.tags.chartTypes.includes(type)
+    //   );
 
-    return (
-      matchesSearch && matchesMarks && matchesOperators && matchesChartTypes
-    );
+    return matchesSearch /* && matchesMarks && matchesOperators && matchesChartTypes */;
   });
 });
 

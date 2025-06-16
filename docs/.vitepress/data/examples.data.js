@@ -27,11 +27,6 @@ gf.render(
   )
 );
 `,
-        tags: {
-          marks: ["rect", "bar"],
-          operators: ["group", "aggregate"],
-          chartTypes: ["bar", "categorical", "comparison"],
-        },
       },
       {
         id: "horizontal-bar-chart",
@@ -59,11 +54,52 @@ gf.render(
   )
 );
 `,
-        tags: {
-          marks: ["rect", "bar"],
-          operators: ["group", "aggregate"],
-          chartTypes: ["bar", "categorical", "comparison"],
-        },
+      },
+      {
+        id: "stacked-bar-chart",
+        title: "Stacked Bar Chart",
+        description: "A simple stacked bar chart",
+        demoUrl: "/examples/stacked-bar-chart",
+        code: `gf.render(
+  root,
+  { width: size.width, height: size.height },
+  gf.stackX(
+    { spacing: 8, sharedScale: true },
+    _(catchData)
+      .groupBy("lake")
+      .map((d) =>
+        gf.stackY(
+          { spacing: 2 },
+          d.map((d) => gf.rect({ w: 32, h: gf.value(d.count, "value"), fill: gf.value(d.species, "color") }))
+        )
+      )
+      .value()
+  )
+);
+`,
+      },
+      {
+        id: "grouped-bar-chart",
+        title: "Grouped Bar Chart",
+        description: "A simple grouped bar chart",
+        demoUrl: "/examples/grouped-bar-chart",
+        code: `gf.render(
+  root,
+  { width: size.width, height: size.height },
+  gf.stackX(
+    { spacing: 20, sharedScale: true },
+    _(catchData)
+      .groupBy("lake")
+      .map((d) =>
+        gf.stackX(
+          { spacing: 1 },
+          d.map((d) => gf.rect({ w: 16, h: gf.value(d.count, "value"), fill: gf.value(d.species, "color") }))
+        )
+      )
+      .value()
+  )
+);
+`,
       },
       // {
       //   id: "scatter-plot",

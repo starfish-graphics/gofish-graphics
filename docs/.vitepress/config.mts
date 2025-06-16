@@ -1,5 +1,6 @@
 import { defineConfig } from "vitepress";
 import starfish from "./markdown-it-starfish";
+import examplesData from "./data/examples.data.js";
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
@@ -51,12 +52,18 @@ export default defineConfig({
         text: "Examples",
         collapsed: true,
         items: [
-          { text: "Area Charts", link: "/examples/area-charts.md" },
-          { text: "Bar Charts", link: "/examples/bar-charts.md" },
-          { text: "Line Charts", link: "/examples/line-charts.md" },
-          { text: "Pie Charts", link: "/examples/pie-charts.md" },
-          { text: "Ribbon Charts", link: "/examples/ribbon-charts.md" },
-          { text: "Scatter Plots", link: "/examples/scatter-plots.md" },
+          { text: "Search Examples", link: "/examples/" },
+          // Programmatically generated example links
+          ...examplesData.load().examples.map((example) => ({
+            text: example.title,
+            link: example.demoUrl,
+          })),
+          // { text: "Area Charts", link: "/examples/area-charts.md" },
+          // { text: "Bar Charts", link: "/examples/bar-charts.md" },
+          // { text: "Line Charts", link: "/examples/line-charts.md" },
+          // { text: "Pie Charts", link: "/examples/pie-charts.md" },
+          // { text: "Ribbon Charts", link: "/examples/ribbon-charts.md" },
+          // { text: "Scatter Plots", link: "/examples/scatter-plots.md" },
         ],
       },
       {
