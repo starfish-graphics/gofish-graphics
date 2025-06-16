@@ -80,7 +80,12 @@
       >
         <a :href="example.demoUrl" target="_blank" class="card-link">
           <div class="card-thumbnail">
-            <img :src="example.thumbnail" :alt="example.title" />
+            <GoFishVue
+              :code="example.code"
+              :transform="`scale(${scaleFactor}, ${
+                scaleFactor * aspectRatioTransform
+              })`"
+            />
           </div>
 
           <div class="card-content">
@@ -104,6 +109,7 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import { data as examplesData } from "../docs/.vitepress/data/examples.data.js";
+import GoFishVue from "./GoFishVue.vue";
 
 const examples = ref([]);
 const searchQuery = ref("");
@@ -207,6 +213,9 @@ const clearAllFilters = () => {
 onMounted(() => {
   examples.value = examplesData;
 });
+
+const scaleFactor = 0.28;
+const aspectRatioTransform = 16 / 10 / (688 / 400);
 </script>
 
 <style scoped>
@@ -316,12 +325,23 @@ onMounted(() => {
   position: relative;
   aspect-ratio: 16/10;
   overflow: hidden;
+  background: var(--vp-c-bg-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.card-thumbnail img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+.card-thumbnail :deep(.gofish-vue) {
+  transform-origin: center center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-thumbnail :deep(.gofish-vue .container) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .card-content {

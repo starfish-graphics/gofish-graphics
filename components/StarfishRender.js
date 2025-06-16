@@ -1,6 +1,6 @@
 // https://github.com/observablehq/plot/blob/90a56897cabda400e2b7537f8ecbbd2cebd18f7f/docs/components/PlotRender.js
 
-import * as Plot from "@observablehq/plot";
+import * as Plot from "gofish-graphics";
 import { h, withDirectives } from "vue";
 
 class Event {}

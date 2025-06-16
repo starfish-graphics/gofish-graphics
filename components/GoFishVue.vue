@@ -5,6 +5,7 @@ import _ from "lodash";
 
 const props = defineProps<{
   code: string;
+  transform?: string;
 }>();
 
 const container = ref<HTMLElement | null>(null);
@@ -16,7 +17,7 @@ onMounted(() => {
     // Create a scoped sandbox
     const fn = new Function("_", "root", "size", "gf", props.code);
     const root = document.createElement("div");
-    const size = { width: 688, height: 400 }; // or dynamic
+    const size = { width: 688, height: 400 }; // default size
     fn(_, root, size, {
       render: gofish,
       stackX,
@@ -32,7 +33,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="gofish-vue">
+  <div class="gofish-vue" :style="{ transform: transform }">
     <div ref="container" />
   </div>
 </template>
@@ -40,5 +41,6 @@ onMounted(() => {
 <style scoped>
 .gofish-vue {
   padding-bottom: 1rem;
+  transform-origin: center center;
 }
 </style>
