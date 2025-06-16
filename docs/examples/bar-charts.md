@@ -1,6 +1,6 @@
 # Bar Charts
 
-## Bar Chart
+<!-- ## Bar Chart
 
 ```ts
 starfish(stackX(rect()));
@@ -16,13 +16,6 @@ starfish(stackX(stackY(rect())));
 
 ```ts
 starfish(stackX(stackX(rect())));
-```
-
-<!--
-## Waffle Chart
-
-```ts
-starfish(stackX(waffle()));
 ``` -->
 
 ## Waterfall

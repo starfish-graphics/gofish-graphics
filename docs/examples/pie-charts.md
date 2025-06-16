@@ -1,4 +1,4 @@
-# Pie Chart
+<!-- # Pie Chart
 
 ```ts
 starfish(pie());
@@ -6,7 +6,7 @@ starfish(pie());
 
 ```ts
 pie = frame({ space: polar() }, rect());
-```
+``` -->
 
 # Flower Chart
 

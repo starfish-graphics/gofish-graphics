@@ -1,8 +1,25 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
-import { gofish, stackX, stackY, rect, value } from "gofish-graphics";
+import {
+  gofish,
+  stackX,
+  stackY,
+  rect,
+  value,
+  ref as gofishRef,
+  connectX,
+  frame,
+  ellipse,
+  stack,
+  coord,
+  polar_DEPRECATED,
+  color,
+  black,
+} from "gofish-graphics";
 import _ from "lodash";
-import { catchData } from "./catchData";
+import { catchData } from "./data/catchData";
+import { streamgraphData } from "./data/streamgraphData";
+import { titanic } from "./data/titanic";
 
 const props = defineProps<{
   code: string;
@@ -16,7 +33,16 @@ onMounted(() => {
 
   try {
     // Create a scoped sandbox
-    const fn = new Function("_", "root", "size", "gf", "catchData", props.code);
+    const fn = new Function(
+      "_",
+      "root",
+      "size",
+      "gf",
+      "catchData",
+      "streamgraphData",
+      "titanic",
+      props.code
+    );
     const root = document.createElement("div");
     const size = { width: 688, height: 400 }; // default size
     fn(
@@ -29,8 +55,19 @@ onMounted(() => {
         stackY,
         rect,
         value,
+        ref: gofishRef,
+        connectX,
+        frame,
+        ellipse,
+        stack,
+        coord,
+        polar_DEPRECATED,
+        color,
+        black,
       },
-      catchData
+      catchData,
+      streamgraphData,
+      titanic
     );
     container.value.append(root);
   } catch (err) {

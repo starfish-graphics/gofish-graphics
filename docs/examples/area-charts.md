@@ -2,12 +2,12 @@
 
 ## Area Chart
 
-## Streamgraph
+<!-- ## Streamgraph -->
 
 ## Interval
 
 ## Horizon
 
-## Stacked Area
+<!-- ## Stacked Area -->
 
 ## Layered Area

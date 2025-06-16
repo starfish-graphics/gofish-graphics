@@ -149,9 +149,10 @@ const filteredExamples = computed(() => {
     const matchesSearch =
       searchQuery.value === "" ||
       example.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      example.description
-        .toLowerCase()
-        .includes(searchQuery.value.toLowerCase()); /* ||
+      (example.description &&
+        example.description
+          .toLowerCase()
+          .includes(searchQuery.value.toLowerCase())); /* ||
       example.tags.marks.some((tag) =>
         tag.toLowerCase().includes(searchQuery.value.toLowerCase())
       ) ||

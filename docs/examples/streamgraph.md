@@ -1,0 +1,3 @@
+# Streamgraph
+
+::: starfish example:streamgraph

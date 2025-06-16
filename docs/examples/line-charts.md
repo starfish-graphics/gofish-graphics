@@ -10,11 +10,11 @@ starfish(line());
 line = ...
 ```
 
-## Multi-Line Chart
+<!-- ## Multi-Line Chart
 
 ```ts
 starfish(line());
-```
+``` -->
 
 ## Dot Plot
 
