@@ -8,6 +8,14 @@ import { findTargetMonotonic } from "../../util";
 import { GoFishAST } from "../_ast";
 import { getScaleContext } from "../gofish";
 
+// Utility function to unwrap lodash wrapped arrays
+const unwrapLodashArray = function <T>(value: T[] | ReturnType<typeof _>): T[] {
+  if (typeof value === "object" && value !== null && "value" in value) {
+    return (value as ReturnType<typeof _>).value() as T[];
+  }
+  return value as T[];
+};
+
 export const stack = (
   {
     name,
@@ -27,8 +35,11 @@ export const stack = (
     mode?: "edge-to-edge" | "center-to-center";
     reverse?: boolean;
   } & FancyDims,
-  children: GoFishAST[]
+  children: GoFishAST[] | ReturnType<typeof _>
 ) => {
+  // Unwrap lodash wrapped children if needed
+  children = unwrapLodashArray(children);
+
   const stackDir = elaborateDirection(direction);
   const alignDir = (1 - stackDir) as Direction;
   const dims = elaborateDims(fancyDims);

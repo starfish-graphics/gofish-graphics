@@ -1,6 +1,8 @@
 import { stack } from "./stack";
 import { GoFishAST } from "../_ast";
 import { FancyDims } from "../dims";
+import _ from "lodash";
+
 export const stackX = (
   {
     name,
@@ -18,7 +20,7 @@ export const stackX = (
     mode?: "edge-to-edge" | "center-to-center";
     reverse?: boolean;
   } & FancyDims,
-  children: GoFishAST[]
+  children: GoFishAST[] | ReturnType<typeof _>
 ) => {
   return stack({ direction: "x", spacing, alignment, sharedScale, mode, reverse, ...fancyDims }, children);
 };
