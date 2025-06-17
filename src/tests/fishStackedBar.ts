@@ -27,10 +27,12 @@ export const testFishStackedBar = () =>
       .map((d) =>
         stackY(
           { spacing: 2 },
-          _(d)
-            .map((d) => rect({ w: 32, h: value(d.count), fill: value(d.species) }))
-            .value()
+          _(d).map((d) => rect({ w: 32, h: value(d.count), fill: value(d.species) }))
         )
       )
-      .value()
+  );
+
+export const testFishStackedBarDataStyle = () =>
+  stackX(_(catchData).groupBy("lake"), { spacing: 8, sharedScale: true }, (lake) =>
+    stackY(lake, { spacing: 2 }, (d) => rect({ w: 32, h: value(d.count), fill: value(d.species) }))
   );

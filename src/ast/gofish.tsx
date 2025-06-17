@@ -119,7 +119,7 @@ export const gofish = (
     }
 
     // Render to the provided container
-    console.log(scaleContext);
+    // console.log(scaleContext);
     solidRender(() => render({ width, height, defs, axes, scaleContext }, child), container);
     return container;
   } finally {

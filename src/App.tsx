@@ -35,7 +35,7 @@ import { testNestedMosaic } from "./tests/nestedMosaic";
 import { testIcicle } from "./tests/icicle";
 import { testScatterFlower } from "./tests/scatterFlower";
 import { testFishBar } from "./tests/fishBar";
-import { testFishStackedBar } from "./tests/fishStackedBar";
+import { testFishStackedBar, testFishStackedBarDataStyle } from "./tests/fishStackedBar";
 import { testFishGroupedBar } from "./tests/fishGroupedBar";
 import { testFishWaffle } from "./tests/fishWaffle";
 import { testFishWaffleRefactor } from "./tests/fishWaffleRefactor";
@@ -154,6 +154,14 @@ const defs = [
 const App: Component = () => {
   return (
     <div style={{ "margin-left": "20px" }}>
+      <GoFishSolid width={250} height={300} defs={defs}>
+        {testFishStackedBar()}
+      </GoFishSolid>
+      <br />
+      <GoFishSolid width={250} height={300} defs={defs}>
+        {testFishStackedBarDataStyle()}
+      </GoFishSolid>
+      <br />
       <GoFishSolid width={500} height={200} defs={defs} axes={true}>
         {testFishBar()}
       </GoFishSolid>
@@ -190,7 +198,7 @@ const App: Component = () => {
           // ),
         ])}
       </GoFishSolid>
-      {/* <h1>Welcome!</h1>
+      <h1>Welcome!</h1>
       <div style={{ "max-width": "520px" }}>
         Welcome to the GoFish supplemental code! Below you'll find all the graphics we made in GoFish for the paper. If
         you navigate to <code>App.tsx</code>, you can see the code that generates each one.
@@ -398,7 +406,7 @@ const App: Component = () => {
       </div>
       <br />
       <br />
-      <br /> */}
+      <br />
       {/* <h2>Nested Waffle</h2>
       {testNestedWaffle({ width: 800, height: 500 })}
       <h2>Nested Mosaic</h2>
