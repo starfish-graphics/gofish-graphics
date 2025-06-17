@@ -73,7 +73,6 @@ gf.render(
           d.map((d) => gf.rect({ w: 32, h: gf.value(d.count, "value"), fill: gf.value(d.species, "color") }))
         )
       )
-      .value()
   )
 );
 `,
@@ -96,7 +95,6 @@ gf.render(
           d.map((d) => gf.rect({ w: 16, h: gf.value(d.count, "value"), fill: gf.value(d.species, "color") }))
         )
       )
-      .value()
   )
 );
 `,
@@ -414,13 +412,10 @@ gf.render(
                             : classColor[cls],
                       })
                     )
-                    .value()
                 )
               )
-              .value()
           )
       )
-      .value()
     )
 )
         `,
@@ -453,10 +448,8 @@ gf.render(
                   fill: gf.value(d.species),
                 })
               )
-              .value()
           )
         )
-        .value()
     ),
     ..._(catchData)
       .groupBy("species")
