@@ -15,8 +15,8 @@ importers:
         specifier: ^4.17.17
         version: 4.17.17
       gofish-graphics:
-        specifier: ^0.0.3
-        version: 0.0.3(solid-js@1.9.7)
+        specifier: ^0.0.4
+        version: 0.0.4(solid-js@1.9.7)
       lodash:
         specifier: ^4.17.21
         version: 4.17.21
@@ -215,8 +215,8 @@ packages:
   estree-walker@2.0.2:
     resolution: {integrity: sha512-Rfkk/Mp/DL7JVje3u18FxFujQlTNR2q6QfMSMB7AvCBx91NGj/ba3kCfza0f6dVDbw7YlRf/nDrn7pQrCCyQ/w==}
 
-  gofish-graphics@0.0.3:
-    resolution: {integrity: sha512-9+yfsrK30RqO6xKYlFUvy69vgLkNzg1jTXeMB/OgJBeyLgcRg6S8Bn+y0cszHjBsoz3fIurGMKdtkSIXzm2IHA==}
+  gofish-graphics@0.0.4:
+    resolution: {integrity: sha512-y8KtBkukUKZGkmDBTtof2ponyDad0gId3IKdr1R/gQUMViCK9cuMC1flIawqUXX+pCA1NFZNPEU9YxEXQCY4+w==}
     peerDependencies:
       solid-js: ^1.9.5
 
@@ -559,7 +559,7 @@ snapshots:
 
   estree-walker@2.0.2: {}
 
-  gofish-graphics@0.0.3(solid-js@1.9.7):
+  gofish-graphics@0.0.4(solid-js@1.9.7):
     dependencies:
       '@types/d3-array': 3.2.1
       bubblesets-js: 3.0.0

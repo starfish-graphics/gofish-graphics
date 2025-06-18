@@ -4,8 +4,10 @@ import examplesData from "./data/examples.data.js";
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
-  title: "Starfish Graphics",
-  description: "Documentation for Starfish",
+  // title: "Starfish Graphics",
+  // description: "Documentation for Starfish",
+  title: "GoFish Graphics",
+  description: "Documentation for GoFish",
   head: [
     ["link", { rel: "preconnect", href: "https://fonts.googleapis.com" }],
     [
@@ -36,58 +38,93 @@ export default defineConfig({
       { text: "Tutorial", link: "/tutorial" },
       { text: "Examples", link: "/examples/index.md" },
       // { text: "Guides", link: "/guides/index.md" },
-      { text: "API Reference", link: "/api/index.md" },
+      // { text: "API Reference", link: "/api/index.md" },
     ],
 
-    sidebar: [
-      {
-        text: "Get Started!",
-        link: "/get-started",
-      },
-      {
-        text: "Tutorial",
-        link: "/tutorial",
-      },
-      { text: "Examples", link: "/examples/" },
-      {
-        text: "Examples List",
-        collapsed: true,
-        items: [
-          // Programmatically generated example links
-          ...examplesData.load().examples.map((example) => ({
-            text: example.title,
-            link: example.demoUrl,
-          })),
-          // { text: "Area Charts", link: "/examples/area-charts.md" },
-          // { text: "Bar Charts", link: "/examples/bar-charts.md" },
-          // { text: "Line Charts", link: "/examples/line-charts.md" },
-          // { text: "Pie Charts", link: "/examples/pie-charts.md" },
-          // { text: "Ribbon Charts", link: "/examples/ribbon-charts.md" },
-          // { text: "Scatter Plots", link: "/examples/scatter-plots.md" },
-        ],
-      },
-      {
-        text: "API Reference",
-        collapsed: true,
-        items: [
-          { text: "Starfish", link: "/api/starfish.md" },
-          {
-            text: "Shapes",
-            items: [
-              { text: "Rect", link: "/api/shapes/rect.md" },
-              { text: "Circle", link: "/api/shapes/circle.md" },
-            ],
-          },
-          {
-            text: "Operators",
-            items: [
-              { text: "Stack", link: "/api/operators/stack.md" },
-              { text: "Connect", link: "/api/operators/connect.md" },
-            ],
-          },
-        ],
-      },
-      /* {
+    sidebar: {
+      // "/examples/": [
+      //   {
+      //     text: "Examples",
+      //     items: [
+      //       {
+      //         text: "Search",
+      //         link: "/examples/",
+      //       },
+      //       {
+      //         text: "All Examples",
+      //         items: examplesData.load().examples.map((example) => ({
+      //           text: example.title,
+      //           link: example.demoUrl,
+      //         })),
+      //       },
+      //     ],
+      //   },
+      // ],
+      "/": [
+        {
+          text: "Get Started!",
+          link: "/get-started",
+        },
+        {
+          text: "Tutorial",
+          link: "/tutorial",
+        },
+        {
+          text: "Examples",
+          items: [
+            {
+              text: "Search",
+              link: "/examples/",
+            },
+            {
+              text: "All Examples",
+              items: examplesData.load().examples.map((example) => ({
+                text: example.title,
+                link: example.demoUrl,
+              })),
+            },
+          ],
+        },
+        // { text: "Examples", link: "/examples/" },
+        // {
+        //   text: "Examples List",
+        //   collapsed: true,
+        //   items: [
+        //     // Programmatically generated example links
+        //     ...examplesData.load().examples.map((example) => ({
+        //       text: example.title,
+        //       link: example.demoUrl,
+        //     })),
+        //     // { text: "Area Charts", link: "/examples/area-charts.md" },
+        //     // { text: "Bar Charts", link: "/examples/bar-charts.md" },
+        //     // { text: "Line Charts", link: "/examples/line-charts.md" },
+        //     // { text: "Pie Charts", link: "/examples/pie-charts.md" },
+        //     // { text: "Ribbon Charts", link: "/examples/ribbon-charts.md" },
+        //     // { text: "Scatter Plots", link: "/examples/scatter-plots.md" },
+        //   ],
+        // },
+        // {
+        //   text: "API Reference",
+        //   collapsed: true,
+        //   items: [
+        //     { text: "Starfish", link: "/api/starfish.md" },
+        //     {
+        //       text: "Shapes",
+        //       items: [
+        //         { text: "Rect", link: "/api/shapes/rect.md" },
+        //         { text: "Circle", link: "/api/shapes/circle.md" },
+        //       ],
+        //     },
+        //     {
+        //       text: "Operators",
+        //       items: [
+        //         { text: "Stack", link: "/api/operators/stack.md" },
+        //         { text: "Connect", link: "/api/operators/connect.md" },
+        //       ],
+        //     },
+        //   ],
+        // },
+        /* {
         text: "Guides",
         collapsed: true,
         items: [
@@ -97,10 +134,14 @@ export default defineConfig({
           { text: "Style", link: "/guides/style.md" },
         ],
       }, */
-    ],
+      ],
+    },
 
     socialLinks: [
-      { icon: "github", link: "https://github.com/vuejs/vitepress" },
+      {
+        icon: "github",
+        link: "https://github.com/starfish-graphics/gofish-graphics",
+      },
     ],
   },
 });

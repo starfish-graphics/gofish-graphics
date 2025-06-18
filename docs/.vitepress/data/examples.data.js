@@ -6,27 +6,22 @@ export default {
         title: "Bar Chart",
         // description: "A simple bar chart",
         demoUrl: "/examples/bar-chart",
-        code: `const data = [
-  { a: "A", b: 28 },
-  { a: "B", b: 55 },
-  { a: "C", b: 43 },
-  { a: "D", b: 91 },
-  { a: "E", b: 81 },
-  { a: "F", b: 53 },
-  { a: "G", b: 19 },
-  { a: "H", b: 87 },
-  { a: "I", b: 52 },
+        code: `const alphabet = [
+  { letter: "A", frequency: 28 },
+  { letter: "B", frequency: 55 },
+  { letter: "C", frequency: 43 },
+  { letter: "D", frequency: 91 },
+  { letter: "E", frequency: 81 },
+  { letter: "F", frequency: 53 },
+  { letter: "G", frequency: 19 },
+  { letter: "H", frequency: 87 },
+  { letter: "I", frequency: 52 },
 ];
 
-gf.render(
-  root,
-  { width: size.width, height: size.height },
-  gf.stackX(
-    { spacing: 4, alignment: "end", sharedScale: true },
-    data.map((d) => gf.rect({ w: 30, h: gf.value(d.b, "value") }))
-  )
-);
-`,
+StackX(
+  { spacing: 4, alignment: "end", sharedScale: true },
+  Map(alphabet, (d) => Rect({ w: 30, h: v(d.frequency) }))
+).render(root, { width: size.width, height: size.height, axes: true });`,
       },
       {
         id: "horizontal-bar-chart",
@@ -45,14 +40,10 @@ gf.render(
   { a: "I", b: 52 },
 ];
 
-gf.render(
-  root,
-  { width: size.width, height: size.height },
-  gf.stackY(
+gf.stackY(
     { spacing: 4, alignment: "start", sharedScale: true },
-    data.map((d) => gf.rect({ w: gf.value(d.b, "value"), h: 30 }))
-  )
-);
+    gf.map(data, (d) => gf.rect({ w: gf.value(d.b, "value"), h: 30 }))
+  ).render(root, { width: size.width, height: size.height });
 `,
       },
       {
@@ -60,21 +51,12 @@ gf.render(
         title: "Stacked Bar Chart",
         // description: "A simple stacked bar chart",
         demoUrl: "/examples/stacked-bar-chart",
-        code: `gf.render(
-  root,
-  { width: size.width, height: size.height },
-  gf.stackX(
-    { spacing: 8, sharedScale: true },
-    _(catchData)
-      .groupBy("lake")
-      .map((d) =>
-        gf.stackY(
-          { spacing: 2 },
-          d.map((d) => gf.rect({ w: 32, h: gf.value(d.count, "value"), fill: gf.value(d.species, "color") }))
-        )
-      )
-  )
-);
+        code: `StackX({ spacing: 8, sharedScale: true },
+  Map(_(catchData).groupBy("lake"), (lake) =>
+    StackY({ spacing: 2 },
+      Map(lake, (d) =>
+        Rect({ w: 32, h: v(d.count), fill: v(d.species) }))))
+).render(root, { width: size.width, height: size.height });
 `,
       },
       {
@@ -82,71 +64,49 @@ gf.render(
         title: "Grouped Bar Chart",
         description: "Horizontally stacked vertical bars",
         demoUrl: "/examples/grouped-bar-chart",
-        code: `gf.render(
-  root,
-  { width: size.width, height: size.height },
-  gf.stackX(
-    { spacing: 20, sharedScale: true },
-    _(catchData)
-      .groupBy("lake")
-      .map((d) =>
-        gf.stackX(
-          { spacing: 1 },
-          d.map((d) => gf.rect({ w: 16, h: gf.value(d.count, "value"), fill: gf.value(d.species, "color") }))
-        )
-      )
-  )
-);
-`,
+        code: `StackX({ spacing: 20, sharedScale: true },
+  Map(_(catchData).groupBy("lake"), (lake) =>
+    StackX({ spacing: 1 },
+      Map(lake, (d) =>
+        Rect({ w: 16, h: v(d.count), fill: v(d.species) })))),
+).render(root, { width: size.width, height: size.height, axes: true });`,
       },
       {
         id: "streamgraph",
         title: "Streamgraph",
         description: "A center-aligned stacked area chart",
         demoUrl: "/examples/streamgraph",
-        code: `gf.render(
-  root,
-  { width: size.width, height: size.height },
-  gf.frame([
-    gf.stackX(
+        code: `Frame([
+    StackX(
       {
         spacing: 0,
         alignment: "middle",
         sharedScale: true,
       },
-      [
-        ..._(streamgraphData)
-          .groupBy("x")
-          .map((items, xCoord) =>
-            gf.stackY(
-              { spacing: 0, x: gf.value(xCoord, "x") },
-              items.map((d) =>
-                gf.rect({
-                  name: \`\${xCoord}-\${d.c}\`,
-                  h: gf.value(d.y, "value"),
-                  w: 0,
-                  fill: gf.value(d.c, "color"),
-                })
-              )
-            )
+      Map(_(streamgraphData).groupBy("x"), (items, xCoord) =>
+        StackY(
+          { spacing: 0, x: v(xCoord) },
+          Map(items, (d) =>
+            Rect({
+              name: \`\${xCoord}-\${d.c}\`,
+              h: v(d.y),
+              w: 0,
+              fill: v(d.c),
+            })
           )
-          .value(),
-      ]
+        )
+      )
     ),
-    ..._(streamgraphData)
-      .groupBy("c")
-      .map((items, c) =>
-        gf.connectX(
+    ...Map(_(streamgraphData).groupBy("c"), (items, c) =>
+        ConnectX(
           {
             mixBlendMode: "normal",
             strokeWidth: 1,
           },
-          items.map((d) => gf.ref(\`\${d.x}-\${d.c}\`))
+          Map(items, (d) => Ref(\`\${d.x}-\${d.c}\`))
         )
-      )
-      .value(),
-  ])
-);
+      ),
+  ]).render(root, { width: size.width, height: size.height });
 `,
       },
       {
@@ -154,10 +114,7 @@ gf.render(
         title: "Stacked Area Chart",
         // description: "A stacked area chart",
         demoUrl: "/examples/stacked-area-chart",
-        code: `gf.render(
-  root,
-  { width: size.width, height: size.height },
-  gf.frame([
+        code: `gf.frame([
     gf.stackX(
       {
         spacing: 0,
@@ -194,18 +151,14 @@ gf.render(
         )
       )
       .value(),
-  ])
-);
+  ]).render(root, { width: size.width, height: size.height, axes: true });
 `,
       },
       {
         id: "line-chart",
         title: "Line Chart",
         demoUrl: "/examples/line-chart",
-        code: `gf.render(
-  root,
-  { width: size.width, height: size.height },
-  gf.frame([
+        code: `gf.frame([
     ..._(streamgraphData)
       .groupBy("c")
       .flatMap((items, c) =>
@@ -235,8 +188,7 @@ gf.render(
         )
       )
       .value(),
-  ])
-);
+  ]).render(root, { width: size.width, height: size.height });
 `,
       },
       {
@@ -372,53 +324,37 @@ gf.render(
         id: "nested-mosaic-plot",
         title: "Nested Mosaic Plot",
         demoUrl: "/examples/nested-mosaic-plot",
-        code: `
-const classColor = {
+        code: `const classColor = {
   First: gf.color.red[5],
   Second: gf.color.blue[5],
   Third: gf.color.green[5],
   Crew: gf.color.orange[5],
 };
-        
-gf.render(
-  root,
-  { width: size.width, height: size.height },
+
+gf.stackY(
+  { spacing: 4, alignment: "middle" },
+  gf.map(_(titanic).groupBy("class"), (items, cls) =>
+    gf.stackX(
+      { h: _(items).sumBy("count") / 10, spacing: 2, alignment: "middle" },
+      gf.map(_(items).groupBy("sex"), (sItems, sex) =>
         gf.stackY(
-    { spacing: 4, alignment: "middle" },
-    _(titanic)
-      .groupBy("class")
-      .map(
-        (items, cls) =>
-          gf.stackX(
-            { h: _(items).sumBy("count") / 10, spacing: 2, alignment: "middle" },
-            _(items)
-              .groupBy("sex")
-              .map((sItems, sex) =>
-                gf.stackY(
-                  {
-                    w: (_(sItems).sumBy("count") / _(items).sumBy("count")) * 100,
-                    spacing: 0,
-                    alignment: "middle",
-                    sharedScale: true,
-                  },
-                  _(sItems)
-                    .groupBy("survived")
-                    .map((items, survived) =>
-                      gf.rect({
-                        h: gf.value(_(items).sumBy("count"), "survived"),
-                        fill:
-                          survived === "No"
-                            ? gf.black
-                            : classColor[cls],
-                      })
-                    )
-                )
-              )
-          )
-      )
-    )
-)
-        `,
+          {
+            w: (_(sItems).sumBy("count") / _(items).sumBy("count")) * 100,
+            spacing: 0,
+            alignment: "middle",
+            sharedScale: true,
+          },
+          gf.map(_(sItems).groupBy("survived"), (items, survived) =>
+            gf.rect({
+              h: gf.value(_(items).sumBy("count"), "survived"),
+              fill: survived === "No" ? gf.black : classColor[cls],
+            }),
+          ),
+        ),
+      ),
+    ),
+  ),
+).render(root, { width: size.width, height: size.height });`,
       },
       {
         id: "ribbon-chart",
@@ -426,43 +362,16 @@ gf.render(
         demoUrl: "/examples/ribbon-chart",
         description:
           "A hybrid between a stacked bar chart and a stacked area chart",
-        code: `
-        gf.render(
-  root,
-  { width: size.width, height: size.height },
-  gf.frame([
-    gf.stackX(
-      { spacing: 64, sharedScale: true },
-      _(catchData)
-        .groupBy("lake")
-        .map((d) =>
-          gf.stackY(
-            { spacing: 2 },
-            _(d)
-              .orderBy("count", "desc")
-              .map((d) =>
-                gf.rect({
-                  name: \`\${d.lake}-\${d.species}\`,
-                  w: 16,
-                  h: gf.value(d.count),
-                  fill: gf.value(d.species),
-                })
-              )
-          )
-        )
-    ),
-    ..._(catchData)
-      .groupBy("species")
-      .map((items) =>
-        gf.connectX(
-          { opacity: 0.8 },
-          items.map((d) => gf.ref(\`\${d.lake}-\${d.species}\`))
-        )
-      )
-      .value(),
-  ])
-)
-        `,
+        code: `Frame([
+  StackX({ spacing: 64, sharedScale: true },
+    Map(_(catchData).groupBy("lake"), (d) =>
+      StackY({ spacing: 2 },
+        Map(_(d).orderBy("count", "desc"), (d) =>
+          Rect({ name: \`\${d.lake}-\${d.species}\`, w: 16, h: v(d.count), fill: v(d.species) }))))),
+    ...Map(_(catchData).groupBy("species"), (items) =>
+      ConnectX({ opacity: 0.8 },
+        Map(items, (d) => Ref(\`\${d.lake}-\${d.species}\`)))),
+  ]).render(root, { width: size.width, height: size.height });`,
       },
     ];
 

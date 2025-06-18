@@ -41,6 +41,14 @@ onMounted(() => {
       "catchData",
       "streamgraphData",
       "titanic",
+      "StackX",
+      "StackY",
+      "Rect",
+      "Map",
+      "v",
+      "Frame",
+      "ConnectX",
+      "Ref",
       props.code
     );
     const root = document.createElement("div");
@@ -64,10 +72,31 @@ onMounted(() => {
         polar_DEPRECATED,
         color,
         black,
+        map: (data, callback) => data.map(callback),
       },
       catchData,
       streamgraphData,
-      titanic
+      titanic,
+      stackX,
+      stackY,
+      rect,
+      (data, callback) => {
+        // unwrap lodash
+        if (_(data) === data) {
+          data = data.value();
+        }
+        if (Array.isArray(data)) {
+          return data.map(callback);
+        } else if (typeof data === "object" && data !== null) {
+          return Object.entries(data).map(([key, value]) =>
+            callback(value, key)
+          );
+        }
+      },
+      value,
+      frame,
+      connectX,
+      gofishRef
     );
     container.value.append(root);
   } catch (err) {
