@@ -59,7 +59,7 @@ export type Render = (
 
 export class GoFishNode {
   public type: string;
-  public name?: string;
+  public _name?: string;
   public parent?: GoFishNode;
   // private inferDomains: (childDomains: Size<Domain>[]) => FancySize<Domain | undefined>;
   private _inferPosDomains: (childPosDomains: Size<ContinuousDomain>[]) => FancySize<ContinuousDomain | undefined>;
@@ -109,7 +109,7 @@ export class GoFishNode {
     children.forEach((child) => {
       child.parent = this;
     });
-    this.name = name;
+    this._name = name;
     this.type = type;
     this.shared = shared;
     this.color = color;
@@ -132,8 +132,8 @@ export class GoFishNode {
   }
 
   public resolveNames(): void {
-    if (this.name !== undefined) {
-      getScopeContext().set(this.name, this);
+    if (this._name !== undefined) {
+      getScopeContext().set(this._name, this);
     }
     this.children.forEach((child) => {
       child.resolveNames();
@@ -249,6 +249,14 @@ export class GoFishNode {
   ) {
     return gofish(container, { width, height, transform, debug, defs, axes }, this);
   }
+
+  public get name(): string | undefined {
+    return this._name;
+  }
+
+  public set name(name: string) {
+    this._name = name;
+  }
 }
 
 export const findPathToRoot = (node: GoFishNode): GoFishNode[] => {
@@ -280,7 +288,7 @@ const isGoFishNode = (node: GoFishNode | GoFishAST): node is GoFishNode => {
 
 export const debugNodeTree = (node: GoFishNode | GoFishAST, indent: string = ""): void => {
   // Create a group for this node
-  console.group(`${indent}Node: ${node.type}${node.name ? ` (${node.name})` : ""}`);
+  console.group(`${indent}Node: ${node.type}${node._name ? ` (${node._name})` : ""}`);
 
   // Only print GoFishNode specific properties
   if (isGoFishNode(node)) {
