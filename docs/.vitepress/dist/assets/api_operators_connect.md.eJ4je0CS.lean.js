@@ -1,1 +1,0 @@
-import{_ as e,c as t,o}from"./chunks/framework.BR8Ltzpo.js";const m=JSON.parse('{"title":"","description":"","frontmatter":{},"headers":[],"relativePath":"api/operators/connect.md","filePath":"api/operators/connect.md"}'),a={name:"api/operators/connect.md"};function r(c,n,s,p,i,_){return o(),t("div")}const f=e(a,[["render",r]]);export{m as __pageData,f as default};

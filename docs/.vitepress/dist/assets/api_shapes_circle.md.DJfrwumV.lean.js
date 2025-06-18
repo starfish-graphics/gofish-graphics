@@ -1,1 +1,0 @@
-import{_ as e,c as a,o as t}from"./chunks/framework.BR8Ltzpo.js";const d=JSON.parse('{"title":"","description":"","frontmatter":{},"headers":[],"relativePath":"api/shapes/circle.md","filePath":"api/shapes/circle.md"}'),c={name:"api/shapes/circle.md"};function r(s,i,o,p,n,l){return t(),a("div")}const m=e(c,[["render",r]]);export{d as __pageData,m as default};

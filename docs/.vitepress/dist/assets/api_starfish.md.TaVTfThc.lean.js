@@ -1,1 +1,0 @@
-import{_ as t,c as a,o as e}from"./chunks/framework.BR8Ltzpo.js";const d=JSON.parse('{"title":"","description":"","frontmatter":{},"headers":[],"relativePath":"api/starfish.md","filePath":"api/starfish.md"}'),s={name:"api/starfish.md"};function r(i,o,c,n,p,f){return e(),a("div")}const m=t(s,[["render",r]]);export{d as __pageData,m as default};
