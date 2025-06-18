@@ -1,0 +1,1 @@
+import{_ as t,c as a,o as e}from"./chunks/framework.BR8Ltzpo.js";const m=JSON.parse('{"title":"","description":"","frontmatter":{},"headers":[],"relativePath":"api/operators/stack.md","filePath":"api/operators/stack.md"}'),r={name:"api/operators/stack.md"};function o(s,c,p,n,i,_){return e(),a("div")}const f=t(r,[["render",o]]);export{m as __pageData,f as default};

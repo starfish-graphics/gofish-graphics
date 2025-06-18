@@ -1,0 +1,1 @@
+import{_ as e,c as t,o as a}from"./chunks/framework.BR8Ltzpo.js";const m=JSON.parse('{"title":"","description":"","frontmatter":{},"headers":[],"relativePath":"api/shapes/rect.md","filePath":"api/shapes/rect.md"}'),r={name:"api/shapes/rect.md"};function s(c,o,p,n,i,_){return a(),t("div")}const f=e(r,[["render",s]]);export{m as __pageData,f as default};

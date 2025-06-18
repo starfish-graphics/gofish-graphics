@@ -1,0 +1,1 @@
+import{_ as e,c as o,o as t}from"./chunks/framework.BR8Ltzpo.js";const _=JSON.parse('{"title":"","description":"","frontmatter":{},"headers":[],"relativePath":"guides/color.md","filePath":"guides/color.md"}'),r={name:"guides/color.md"};function a(c,s,n,d,i,l){return t(),o("div")}const m=e(r,[["render",a]]);export{_ as __pageData,m as default};

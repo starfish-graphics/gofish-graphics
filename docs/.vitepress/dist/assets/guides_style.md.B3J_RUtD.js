@@ -1,0 +1,1 @@
+import{_ as e,c as t,o as s}from"./chunks/framework.BR8Ltzpo.js";const _=JSON.parse('{"title":"","description":"","frontmatter":{},"headers":[],"relativePath":"guides/style.md","filePath":"guides/style.md"}'),a={name:"guides/style.md"};function r(o,c,n,d,i,l){return s(),t("div")}const m=e(a,[["render",r]]);export{_ as __pageData,m as default};
