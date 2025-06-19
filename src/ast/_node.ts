@@ -250,12 +250,9 @@ export class GoFishNode {
     return gofish(container, { width, height, transform, debug, defs, axes }, this);
   }
 
-  public get name(): string | undefined {
-    return this._name;
-  }
-
-  public set name(name: string) {
+  public name(name: string): this {
     this._name = name;
+    return this;
   }
 }
 

@@ -37,11 +37,10 @@ export const testStreamgraph = () =>
               { spacing: 0, x: value(xCoord) },
               items.map((d) =>
                 rect({
-                  name: `${xCoord}-${d.c}`,
                   h: value(d.y),
                   w: 0,
                   fill: value(d.c),
-                })
+                }).name(`${xCoord}-${d.c}`)
               )
             )
           )
