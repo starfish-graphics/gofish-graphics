@@ -11,7 +11,7 @@ import { catchData } from "../data/catch";
 import _ from "lodash";
 import { stackY } from "../ast/graphicalOperators/stackY";
 import { stackX } from "../ast/graphicalOperators/stackX";
-import { map } from "../ast/iterators/map";
+import { For } from "../ast/iterators/for";
 const fishColors = {
   Bass: color.blue[5],
   Trout: color.red[5],
@@ -23,10 +23,10 @@ const fishColors = {
 export const testFishStackedBar = () =>
   stackX(
     { spacing: 8, sharedScale: true },
-    map(_(catchData).groupBy("lake"), (d) =>
+    For(_(catchData).groupBy("lake"), (d) =>
       stackY(
         { spacing: 2 },
-        map(d, (d) => rect({ w: 32, h: value(d.count), fill: value(d.species) }))
+        For(d, (d) => rect({ w: 32, h: value(d.count), fill: value(d.species) }))
       )
     )
   );

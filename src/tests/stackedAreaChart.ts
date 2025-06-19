@@ -17,7 +17,7 @@ import { streamgraphData, streamgraphColorPalette } from "../data/streamgraphDat
 import { stackX } from "../ast/graphicalOperators/stackX";
 import { stackY } from "../ast/graphicalOperators/stackY";
 import { frame } from "../ast/graphicalOperators/frame";
-import { ConnectX, Frame, groupBy, Map, Rect, Ref, StackX, StackY, v } from "../lib";
+import { ConnectX, Frame, groupBy, For, Rect, Ref, StackX, StackY, v } from "../lib";
 const data = streamgraphData;
 const colorPalette = streamgraphColorPalette;
 
@@ -60,10 +60,10 @@ export const testStackedAreaChart = () =>
 export const testStackedAreaChartV2API = () =>
   Frame([
     StackX({ spacing: 0, sharedScale: true }, [
-      Map(groupBy(data, "x"), (items, xCoord) =>
+      For(groupBy(data, "x"), (items, xCoord) =>
         StackY(
           { x: v(xCoord), spacing: 0 },
-          Map(items, (d) =>
+          For(items, (d) =>
             Rect({
               name: `${xCoord}-${d.c}`,
               h: v(d.y),
@@ -74,14 +74,14 @@ export const testStackedAreaChartV2API = () =>
         )
       ),
     ]),
-    Map(groupBy(data, "c"), (items, c) =>
+    For(groupBy(data, "c"), (items, c) =>
       ConnectX(
         {
           // opacity: 0.7,
           mixBlendMode: "normal",
           strokeWidth: 1,
         },
-        Map(items, (d) => Ref(`${d.x}-${d.c}`))
+        For(items, (d) => Ref(`${d.x}-${d.c}`))
       )
     ),
   ]);

@@ -1,6 +1,6 @@
 import { GoFishNode } from "../_node";
 import { Size, elaborateDims, FancyDims } from "../dims";
-import { canUnifyDomains, Domain, unifyContinuousDomains } from "../domain";
+import { canUnifyDomains, Domain, unifyContinuousDomains, ContinuousDomain } from "../domain";
 
 export const layer = (
   childrenOrOptions: ({ transform?: { scale?: { x?: number; y?: number } }; box?: boolean } & FancyDims) | GoFishNode[],
@@ -19,10 +19,10 @@ export const layer = (
 
         const filteredXChildDomains = childPosDomains
           .map((childPosDomain) => childPosDomain[0])
-          .filter((d) => d !== undefined);
+          .filter((d): d is ContinuousDomain => d !== undefined && d.type === "continuous");
         const filteredYChildDomains = childPosDomains
           .map((childPosDomain) => childPosDomain[1])
-          .filter((d) => d !== undefined);
+          .filter((d): d is ContinuousDomain => d !== undefined && d.type === "continuous");
 
         return [
           filteredXChildDomains.length > 0 && canUnifyDomains(filteredXChildDomains)
@@ -53,18 +53,37 @@ export const layer = (
           childPlaceables.push(childPlaceable);
         }
 
-        const maxWidth = Math.max(...childPlaceables.map((childPlaceable) => childPlaceable.dims[0].max!));
-        const maxHeight = Math.max(...childPlaceables.map((childPlaceable) => childPlaceable.dims[1].max!));
+        // Calculate the bounding box of all children
+        const minX = Math.min(...childPlaceables.map((childPlaceable) => childPlaceable.dims[0].min!));
+        const maxX = Math.max(...childPlaceables.map((childPlaceable) => childPlaceable.dims[0].max!));
+        const minY = Math.min(...childPlaceables.map((childPlaceable) => childPlaceable.dims[1].min!));
+        const maxY = Math.max(...childPlaceables.map((childPlaceable) => childPlaceable.dims[1].max!));
+
         const scaleX = options.transform?.scale?.x ?? 1;
         const scaleY = options.transform?.scale?.y ?? 1;
 
-        // Calculate translation based on elaborated dimensions
-        const translateX = dims[0].min !== undefined ? dims[0].min : 0;
-        const translateY = dims[1].min !== undefined ? dims[1].min : 0;
-
         return {
-          intrinsicDims: { w: maxWidth * scaleX, h: maxHeight * scaleY },
-          transform: { translate: [translateX, translateY], scale: [scaleX, scaleY] },
+          intrinsicDims: [
+            {
+              min: minX,
+              size: maxX - minX,
+              center: minX + (maxX - minX) / 2,
+              max: maxX,
+            },
+            {
+              min: minY,
+              size: maxY - minY,
+              center: minY + (maxY - minY) / 2,
+              max: maxY,
+            },
+          ],
+          transform: {
+            translate: [
+              dims[0].min !== undefined ? dims[0].min - minX : undefined,
+              dims[1].min !== undefined ? dims[1].min - minY : undefined,
+            ],
+            scale: [scaleX, scaleY],
+          },
         };
       },
       render: ({ intrinsicDims, transform }, children) => {

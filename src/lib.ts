@@ -5,7 +5,7 @@ export * from "./util";
 
 // Data utilities
 export { value } from "./ast/data";
-export { map } from "./ast/iterators/map";
+export { For as map } from "./ast/iterators/for";
 
 // Marks
 export { rect } from "./ast/marks/rect";
@@ -42,7 +42,7 @@ export { GoFishSolid } from "./ast/GoFishSolid";
 /* API v2 */
 // Data
 export { value as v } from "./ast/data";
-export { map as Map } from "./ast/iterators/map";
+export { For } from "./ast/iterators/for";
 export { groupBy } from "./ast/iterators/groupBy";
 
 // Marks

@@ -77,20 +77,15 @@ const scatterData = _(catchData)
 
 export const testScatterFlower = (height: number) =>
   frame(
-    {},
     scatterData.map((sample) =>
-      frame([
+      frame({ x: sample.x, y: sample.y }, [
         rect({
-          x: sample.x,
           w: 2,
-          y: sample.y,
           h: height - sample.y,
           fill: color.green[5],
         }),
         frame(
           {
-            x: sample.x,
-            y: sample.y,
             coord: polar(),
           },
           [

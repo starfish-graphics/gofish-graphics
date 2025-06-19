@@ -44,7 +44,7 @@ import { testFishPolarRibbonChart } from "./tests/fishPolarRibbonChart";
 import { testBalloon } from "./tests/balloon";
 import { testSankeyIcicle } from "./tests/sankeyIcicle";
 import { testLineChart } from "./tests/lineChart";
-import { testAreaChart } from "./tests/areaChart";
+import { testAreaChart, testSingletonAreaChart } from "./tests/areaChart";
 import { testStackedAreaChart, testStackedAreaChartV2API } from "./tests/stackedAreaChart";
 import { testScatterplot } from "./tests/scatterplot";
 import { testScatterBalloon } from "./tests/scatterBalloon";
@@ -66,6 +66,7 @@ import { testFishPolarRibbonChartTextured } from "./tests/fishPolarRibbonChartTe
 import { GoFishSolid } from "./ast";
 import { DitheringConfig, generateDithering } from "./tests/density";
 import { frame, rect, stackY } from "./lib";
+import { testRidgeline } from "./tests/ridgeline";
 
 const ditheringTestWidth = 800;
 
@@ -155,6 +156,12 @@ const App: Component = () => {
   return (
     <div style={{ "margin-left": "20px" }}>
       <GoFishSolid width={250} height={300} defs={defs}>
+        {testRidgeline()}
+      </GoFishSolid>
+      <GoFishSolid width={250} height={300} defs={defs}>
+        {testSingletonAreaChart()}
+      </GoFishSolid>
+      <GoFishSolid width={250} height={300} defs={defs}>
         {testStackedAreaChartV2API()}
       </GoFishSolid>
       <GoFishSolid width={250} height={300} defs={defs}>
@@ -195,10 +202,6 @@ const App: Component = () => {
             ...exponentialPoints.map((p) => rect({ x: p, w: 4, h: 20, fill: "black" })),
             // rect({ x: 0, y: 10, w: 1000, h: 2, fill: "black" }),
           ]),
-          // frame(
-          //   { y: 300 },
-          //   linearPoints.map((p) => rect({ x: p, w: 4, h: 20, fill: "black" }))
-          // ),
         ])}
       </GoFishSolid>
       <h1>Welcome!</h1>

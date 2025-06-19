@@ -1,6 +1,6 @@
 import _, { Dictionary } from "lodash";
 
-export function map<T, R>(
+export function For<T, R>(
   data: T[] | Record<string, T> | _.Collection<T> | _.Object<Dictionary<T>>,
   callback: (d: T, i: number | string) => R
 ): R[] {
