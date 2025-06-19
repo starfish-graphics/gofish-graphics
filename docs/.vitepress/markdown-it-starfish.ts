@@ -36,13 +36,13 @@ export default function starfish(md) {
           const importedCode = examples.getCodeById(exampleId);
           if (importedCode) {
             content = importedCode;
-            // Generate the code fence block for display using markdown-it
-            codeFence = md.render(`\`\`\`ts\n${content}\n\`\`\``);
           } else {
             console.warn(`Example with id "${exampleId}" not found`);
             content = `// Example "${exampleId}" not found`;
-            codeFence = md.render(`\`\`\`ts\n${content}\n\`\`\``);
           }
+          codeFence = directives.includes("hidden")
+            ? ""
+            : md.render(`\`\`\`ts\n${content}\n\`\`\``);
         } else {
           // For non-example imports, require a fenced code block
           const token = tokens[idx + 1];
@@ -63,7 +63,8 @@ export default function starfish(md) {
 
         const suffix = `\n${
           directives.includes("hidden")
-            ? `<div style="display: none;">\n`
+            ? // ? `<div style="display: none;">\n`
+              ""
             : href
             ? `<a class="starfish-codepen no-icon" href="${md.utils.escapeHtml(
                 href
@@ -71,6 +72,9 @@ export default function starfish(md) {
             : ""
         }`;
 
+        // return directives.includes("hidden")
+        //   ? `<div class="starfish-container">${componentSetup}`
+        //   : `<div class="starfish-container">\n${componentSetup}${""}${suffix}\n`;
         return `<div class="starfish-container">\n${componentSetup}${codeFence}${suffix}\n`;
       }
       return `\n</div>\n`;

@@ -15,8 +15,8 @@ importers:
         specifier: ^4.17.17
         version: 4.17.17
       gofish-graphics:
-        specifier: ^0.0.4
-        version: 0.0.4(solid-js@1.9.7)
+        specifier: ^0.0.7
+        version: 0.0.7(solid-js@1.9.7)
       lodash:
         specifier: ^4.17.21
         version: 4.17.21
@@ -716,8 +716,8 @@ packages:
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
     os: [darwin]
 
-  gofish-graphics@0.0.4:
-    resolution: {integrity: sha512-y8KtBkukUKZGkmDBTtof2ponyDad0gId3IKdr1R/gQUMViCK9cuMC1flIawqUXX+pCA1NFZNPEU9YxEXQCY4+w==}
+  gofish-graphics@0.0.7:
+    resolution: {integrity: sha512-QLTv7wEDY4K557p/fdOEeom9M4r20MAL60hWBVY2ECufCQW8rgyfO4v05Z9oImBeU0KARzkEijKmfMQFpYoe3w==}
     peerDependencies:
       solid-js: ^1.9.5
 
@@ -1673,7 +1673,7 @@ snapshots:
   fsevents@2.3.3:
     optional: true
 
-  gofish-graphics@0.0.4(solid-js@1.9.7):
+  gofish-graphics@0.0.7(solid-js@1.9.7):
     dependencies:
       '@types/d3-array': 3.2.1
       bubblesets-js: 3.0.0

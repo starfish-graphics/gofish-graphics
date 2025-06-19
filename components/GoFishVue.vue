@@ -15,6 +15,15 @@ import {
   polar_DEPRECATED,
   color,
   black,
+  StackX,
+  StackY,
+  Rect,
+  For,
+  ConnectX,
+  Frame,
+  v,
+  Ref,
+  groupBy,
 } from "gofish-graphics";
 import _ from "lodash";
 import { catchData } from "./data/catchData";
@@ -44,11 +53,12 @@ onMounted(() => {
       "StackX",
       "StackY",
       "Rect",
-      "Map",
+      "For",
       "v",
       "Frame",
       "ConnectX",
       "Ref",
+      "groupBy",
       props.code
     );
     const root = document.createElement("div");
@@ -77,26 +87,15 @@ onMounted(() => {
       catchData,
       streamgraphData,
       titanic,
-      stackX,
-      stackY,
-      rect,
-      (data, callback) => {
-        // unwrap lodash
-        if (_(data) === data) {
-          data = data.value();
-        }
-        if (Array.isArray(data)) {
-          return data.map(callback);
-        } else if (typeof data === "object" && data !== null) {
-          return Object.entries(data).map(([key, value]) =>
-            callback(value, key)
-          );
-        }
-      },
-      value,
-      frame,
-      connectX,
-      gofishRef
+      StackX,
+      StackY,
+      Rect,
+      For,
+      v,
+      Frame,
+      ConnectX,
+      Ref,
+      groupBy
     );
     container.value.append(root);
   } catch (err) {

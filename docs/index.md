@@ -5,9 +5,9 @@ hero:
   name: GoFish Graphics
   text: An Expressive Graphics Library
   tagline: Create bespoke charts with ease
-  # image:
-  #   src: /logo.png
-  #   alt: VitePress
+  image:
+    src: /gofish-logo.png
+    alt: GoFish
   actions:
     - theme: brand
       text: Get Started!
@@ -19,3 +19,5 @@ hero:
       text: Examples
       link: /examples
 ---
+
+<HomeGallery />

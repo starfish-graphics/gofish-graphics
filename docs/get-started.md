@@ -1,5 +1,60 @@
 # Get Started!
 
+1. Install GoFish
+
+```bash
+npm install gofish-graphics
+```
+
+2. Create a chart! Make sure to create or select a DOM element to render it.
+
+::: starfish example:bar-chart hidden
+:::
+
+```ts
+const alphabet = [
+  { letter: "A", frequency: 28 },
+  { letter: "B", frequency: 55 },
+  { letter: "C", frequency: 43 },
+  { letter: "D", frequency: 91 },
+  { letter: "E", frequency: 81 },
+  { letter: "F", frequency: 53 },
+  { letter: "G", frequency: 19 },
+  { letter: "H", frequency: 87 },
+  { letter: "I", frequency: 52 },
+];
+
+const root = document.createElement("div");
+
+StackX(
+  { spacing: 4, alignment: "end", sharedScale: true },
+  Map(alphabet, (d) => Rect({ w: 30, h: v(d.frequency) }))
+).render(root, { width: 688, height: 400, axes: true });
+```
+
+3. Anatomy of a GoFish specification
+
+```ts
+// StackX is a "graphical operator" that arranges shapes in a horizontal stack
+StackX(
+  { spacing: 4, alignment: "end", sharedScale: true },
+  // Map creates an array of shapes
+  Map(alphabet, (d) =>
+    // Rect is a basic shape
+    Rect({ w: 30, h: v(d.frequency) })
+  )
+  // finally, we render the chart!
+).render(root, { width: 688, height: 400, axes: true });
+```
+
+```ts
+Rect({ w: 30, h: v.frequency })
+  .Map(alphabet)
+  .StackX({ spacing: 4, alignment: "end" })
+  .render(root, { width: 688, height: 400, axes: true });
+```
+
+<!--
 :::starfish https://myurl.com
 
 ```ts
@@ -432,5 +487,5 @@ npm install starfish-graphics
 
 - Tutorial
 - Examples
-- API Reference
+- API Reference -->
 <!-- - Guides -->

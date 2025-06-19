@@ -20,7 +20,7 @@
   "dependencies": {
     "@codesandbox/sandpack-themes": "^2.0.21",
     "@types/lodash": "^4.17.17",
-    "gofish-graphics": "^0.0.4",
+    "gofish-graphics": "^0.0.7",
     "lodash": "^4.17.21",
     "markdown-it-container": "^4.0.0",
     "monaco-editor": "^0.52.2",

@@ -20,7 +20,7 @@ export default {
 
 StackX(
   { spacing: 4, alignment: "end", sharedScale: true },
-  Map(alphabet, (d) => Rect({ w: 30, h: v(d.frequency) }))
+  For(alphabet, (d) => Rect({ w: 30, h: v(d.frequency) }))
 ).render(root, { width: size.width, height: size.height, axes: true });`,
       },
       {
@@ -52,9 +52,9 @@ gf.stackY(
         // description: "A simple stacked bar chart",
         demoUrl: "/examples/stacked-bar-chart",
         code: `StackX({ spacing: 8, sharedScale: true },
-  Map(_(catchData).groupBy("lake"), (lake) =>
+  For(_(catchData).groupBy("lake"), (lake) =>
     StackY({ spacing: 2 },
-      Map(lake, (d) =>
+      For(lake, (d) =>
         Rect({ w: 32, h: v(d.count), fill: v(d.species) }))))
 ).render(root, { width: size.width, height: size.height });
 `,
@@ -65,9 +65,9 @@ gf.stackY(
         description: "Horizontally stacked vertical bars",
         demoUrl: "/examples/grouped-bar-chart",
         code: `StackX({ spacing: 20, sharedScale: true },
-  Map(_(catchData).groupBy("lake"), (lake) =>
+  For(_(catchData).groupBy("lake"), (lake) =>
     StackX({ spacing: 1 },
-      Map(lake, (d) =>
+      For(lake, (d) =>
         Rect({ w: 16, h: v(d.count), fill: v(d.species) })))),
 ).render(root, { width: size.width, height: size.height, axes: true });`,
       },
@@ -77,16 +77,51 @@ gf.stackY(
         description: "A center-aligned stacked area chart",
         demoUrl: "/examples/streamgraph",
         code: `Frame([
+  StackX(
+    {
+      spacing: 0,
+      alignment: "middle",
+      sharedScale: true,
+    },
+    For(groupBy(streamgraphData, "x"), (items, xCoord) =>
+      StackY(
+        { spacing: 0, x: v(xCoord) },
+        For(items, (d) =>
+          Rect({
+            h: v(d.y),
+            w: 0,
+            fill: v(d.c),
+          }).name(\`\${xCoord}-\${d.c}\`)
+        )
+      )
+    )
+  ),
+  For(groupBy(streamgraphData, "c"), (items, c) =>
+    ConnectX(
+      {
+        mixBlendMode: "normal",
+        strokeWidth: 1,
+      },
+      For(items, (d) => Ref(\`\${d.x}-\${d.c}\`))
+    )
+  ),
+]).render(root, { width: size.width, height: size.height });`,
+      },
+      {
+        id: "stacked-area-chart",
+        title: "Stacked Area Chart",
+        // description: "A stacked area chart",
+        demoUrl: "/examples/stacked-area-chart",
+        code: `Frame([
     StackX(
       {
         spacing: 0,
-        alignment: "middle",
         sharedScale: true,
       },
-      Map(_(streamgraphData).groupBy("x"), (items, xCoord) =>
+      For(_(streamgraphData).groupBy("x"), (items, xCoord) =>
         StackY(
           { spacing: 0, x: v(xCoord) },
-          Map(items, (d) =>
+          For(items, (d) =>
             Rect({
               name: \`\${xCoord}-\${d.c}\`,
               h: v(d.y),
@@ -97,62 +132,57 @@ gf.stackY(
         )
       )
     ),
-    ...Map(_(streamgraphData).groupBy("c"), (items, c) =>
+    ...For(_(streamgraphData).groupBy("c"), (items, c) =>
         ConnectX(
           {
             mixBlendMode: "normal",
             strokeWidth: 1,
           },
-          Map(items, (d) => Ref(\`\${d.x}-\${d.c}\`))
+          For(items, (d) => Ref(\`\${d.x}-\${d.c}\`))
         )
       ),
-  ]).render(root, { width: size.width, height: size.height });
-`,
+  ]).render(root, { width: size.width, height: size.height, axes: true });`,
       },
       {
-        id: "stacked-area-chart",
-        title: "Stacked Area Chart",
-        // description: "A stacked area chart",
-        demoUrl: "/examples/stacked-area-chart",
-        code: `gf.frame([
-    gf.stackX(
-      {
-        spacing: 0,
-        sharedScale: true,
-      },
-      [
-        ..._(streamgraphData)
-          .groupBy("x")
-          .map((items, xCoord) =>
-            gf.stackY(
-              { spacing: 0, x: gf.value(xCoord, "x") },
-              items.map((d) =>
-                gf.rect({
-                  name: \`\${xCoord}-\${d.c}\`,
-                  h: gf.value(d.y, "value"),
-                  w: 0,
-                  fill: gf.value(d.c, "color"),
-                })
-              )
-            )
+        id: "ridgeline-chart",
+        title: "Ridgeline Chart",
+        description: "A faceted area chart",
+        demoUrl: "/examples/ridgeline-chart",
+        code: `StackY(
+    { spacing: -30, sharedScale: true },
+    For(groupBy(streamgraphData, "c"), (items, c) =>
+      Frame([
+        StackX(
+          { spacing: 60 },
+          For(items, (d) =>
+            Rect({
+              h: d.y,
+              w: 0,
+              fill: v(d.c),
+            }).name(\`\${d.c}-\${d.x}\`)
           )
-          .value(),
-      ]
-    ),
-    ..._(streamgraphData)
-      .groupBy("c")
-      .map((items, c) =>
-        gf.connectX(
-          {
-            mixBlendMode: "normal",
-            strokeWidth: 1,
-          },
-          items.map((d) => gf.ref(\`\${d.x}-\${d.c}\`))
-        )
-      )
-      .value(),
-  ]).render(root, { width: size.width, height: size.height, axes: true });
-`,
+        ),
+        ConnectX({ mixBlendMode: "normal" },
+          For(items, (d) => Ref(\`\${d.c}-\${d.x}\`))
+        ),
+      ])
+    )
+  ).render(root, { width: size.width, height: size.height });`,
+      },
+      {
+        id: "area-chart",
+        title: "Area Chart",
+        demoUrl: "/examples/area-chart",
+        code: `const data = streamgraphData.filter((d) => d.c === 1);
+      
+Frame([
+  StackX({ spacing: 60 },
+    For(data, (d) => Rect({ h: d.y * 5, w: 0, fill: v(d.c) }).name(\`\${d.x}\`))
+  ),
+  ConnectX({},
+    For(data, (d) => Ref(\`\${d.x}\`))
+  ),
+]).render(root, { width: size.width, height: size.height });`,
       },
       {
         id: "line-chart",
@@ -331,22 +361,22 @@ gf.render(
   Crew: gf.color.orange[5],
 };
 
-gf.stackY(
+StackY(
   { spacing: 4, alignment: "middle" },
-  gf.map(_(titanic).groupBy("class"), (items, cls) =>
-    gf.stackX(
+  For(groupBy(titanic, "class"), (items, cls) =>
+    StackX(
       { h: _(items).sumBy("count") / 10, spacing: 2, alignment: "middle" },
-      gf.map(_(items).groupBy("sex"), (sItems, sex) =>
-        gf.stackY(
+      For(groupBy(items, "sex"), (sItems, sex) =>
+        StackY(
           {
             w: (_(sItems).sumBy("count") / _(items).sumBy("count")) * 100,
             spacing: 0,
             alignment: "middle",
             sharedScale: true,
           },
-          gf.map(_(sItems).groupBy("survived"), (items, survived) =>
-            gf.rect({
-              h: gf.value(_(items).sumBy("count"), "survived"),
+          For(groupBy(sItems, "survived"), (items, survived) =>
+            Rect({
+              h: v(_(items).sumBy("count")),
               fill: survived === "No" ? gf.black : classColor[cls],
             }),
           ),
@@ -364,13 +394,13 @@ gf.stackY(
           "A hybrid between a stacked bar chart and a stacked area chart",
         code: `Frame([
   StackX({ spacing: 64, sharedScale: true },
-    Map(_(catchData).groupBy("lake"), (d) =>
+    For(_(catchData).groupBy("lake"), (d) =>
       StackY({ spacing: 2 },
-        Map(_(d).orderBy("count", "desc"), (d) =>
+        For(_(d).orderBy("count", "desc"), (d) =>
           Rect({ name: \`\${d.lake}-\${d.species}\`, w: 16, h: v(d.count), fill: v(d.species) }))))),
-    ...Map(_(catchData).groupBy("species"), (items) =>
+    ...For(_(catchData).groupBy("species"), (items) =>
       ConnectX({ opacity: 0.8 },
-        Map(items, (d) => Ref(\`\${d.lake}-\${d.species}\`)))),
+        For(items, (d) => Ref(\`\${d.lake}-\${d.species}\`)))),
   ]).render(root, { width: size.width, height: size.height });`,
       },
     ];
