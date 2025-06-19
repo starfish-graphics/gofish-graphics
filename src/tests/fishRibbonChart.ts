@@ -48,7 +48,7 @@ export const testFishRibbonChart = () =>
         )
         .value()
     ),
-    ..._(catchData)
+    _(catchData)
       .groupBy("species")
       .map((items) =>
         connectX(

@@ -5,6 +5,7 @@ export * from "./util";
 
 // Data utilities
 export { value } from "./ast/data";
+export { map } from "./ast/iterators/map";
 
 // Marks
 export { rect } from "./ast/marks/rect";
@@ -37,3 +38,37 @@ export { wavy } from "./ast/coordinateTransforms/wavy";
 // Main API
 export { gofish } from "./ast/gofish";
 export { GoFishSolid } from "./ast/GoFishSolid";
+
+/* API v2 */
+// Data
+export { value as v } from "./ast/data";
+export { map as Map } from "./ast/iterators/map";
+export { groupBy } from "./ast/iterators/groupBy";
+
+// Marks
+export { rect as Rect } from "./ast/marks/rect";
+export { ellipse as Ellipse } from "./ast/marks/ellipse";
+export { petal as Petal } from "./ast/marks/petal";
+export { ref as Ref } from "./ast/marks/ref";
+
+// Graphical Operators
+export { stack as Stack } from "./ast/graphicalOperators/stack";
+export { stackX as StackX } from "./ast/graphicalOperators/stackX";
+export { stackY as StackY } from "./ast/graphicalOperators/stackY";
+export { layer as Layer } from "./ast/graphicalOperators/layer";
+export { wrap as Wrap } from "./ast/graphicalOperators/wrap";
+export { connect as Connect } from "./ast/graphicalOperators/connect";
+export { connectX as ConnectX } from "./ast/graphicalOperators/connectX";
+export { connectY as ConnectY } from "./ast/graphicalOperators/connectY";
+export { enclose as Enclose } from "./ast/graphicalOperators/enclose";
+export { frame as Frame } from "./ast/graphicalOperators/frame";
+
+// Coordinate Transforms
+export { coord as Coord } from "./ast/coordinateTransforms/coord";
+export { linear as Linear } from "./ast/coordinateTransforms/linear";
+export { polar as Polar } from "./ast/coordinateTransforms/polar";
+export { polar_DEPRECATED as Polar_DEPRECATED } from "./ast/coordinateTransforms/polar_DEPRECATED";
+export { polarTransposed as PolarTransposed } from "./ast/coordinateTransforms/polarTransposed";
+export { arcLengthPolar as ArcLengthPolar } from "./ast/coordinateTransforms/arcLengthPolar";
+export { bipolar as Bipolar } from "./ast/coordinateTransforms/bipolar";
+export { wavy as Wavy } from "./ast/coordinateTransforms/wavy";

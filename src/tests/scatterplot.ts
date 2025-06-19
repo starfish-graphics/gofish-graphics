@@ -44,6 +44,7 @@ const colorPalette = streamgraphColorPalette;
 
 export const testScatterplot = () =>
   frame(
+    {},
     _(data)
       .map((d) =>
         ellipse({

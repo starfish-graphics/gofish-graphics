@@ -34,6 +34,7 @@ const scatterData = _(catchData)
 
 export const testScatterPie2 = () =>
   frame(
+    {},
     scatterData.map((sample) =>
       frame(
         {

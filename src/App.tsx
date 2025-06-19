@@ -45,7 +45,7 @@ import { testBalloon } from "./tests/balloon";
 import { testSankeyIcicle } from "./tests/sankeyIcicle";
 import { testLineChart } from "./tests/lineChart";
 import { testAreaChart } from "./tests/areaChart";
-import { testStackedAreaChart } from "./tests/stackedAreaChart";
+import { testStackedAreaChart, testStackedAreaChartV2API } from "./tests/stackedAreaChart";
 import { testScatterplot } from "./tests/scatterplot";
 import { testScatterBalloon } from "./tests/scatterBalloon";
 import { testNestedWaffle } from "./tests/nestedWaffle";
@@ -155,18 +155,21 @@ const App: Component = () => {
   return (
     <div style={{ "margin-left": "20px" }}>
       <GoFishSolid width={250} height={300} defs={defs}>
+        {testStackedAreaChartV2API()}
+      </GoFishSolid>
+      <GoFishSolid width={250} height={300} defs={defs}>
         {testFishStackedBar()}
       </GoFishSolid>
       <br />
-      <GoFishSolid width={250} height={300} defs={defs}>
+      {/* <GoFishSolid width={250} height={300} defs={defs}>
         {testFishStackedBarDataStyle()}
-      </GoFishSolid>
+      </GoFishSolid> */}
       <br />
       <GoFishSolid width={500} height={200} defs={defs} axes={true}>
         {testFishBar()}
       </GoFishSolid>
       <GoFishSolid width={800} height={1000} defs={defs}>
-        {frame({}, [
+        {frame([
           frame({ y: 10 }, [
             ...sinePoints.map((p) => rect({ x: p, w: 4, h: 20, fill: "black" })),
             rect({ x: 0, y: 10, w: 1000, h: 2, fill: "black" }),

@@ -6,32 +6,37 @@
 */
 
 import { GoFishAST } from "./_ast";
+import _, { ListOfRecursiveArraysOrValues } from "lodash";
 
-/**
- * Wraps a function that takes (opts, children) to support both calling patterns:
- * - Original: func(opts, children)
- * - Data style: func(data, opts, callback) which compiles to func(opts, data.map(callback))
- */
+/* 
+- Flattens deeply nested children
+- Allows opts to be optional
+*/
 export function withGoFish<T extends Record<string, any>, R>(
   func: (opts: T, children: GoFishAST[]) => R
 ): {
-  (opts: T, children: GoFishAST[]): R;
-  (data: any[], opts: T, callback: (d: any, i?: string | number) => GoFishAST): R;
+  (opts?: T, children?: ListOfRecursiveArraysOrValues<GoFishAST> | null): R;
+  (children: ListOfRecursiveArraysOrValues<GoFishAST> | null): R;
 } {
   return function (...args: any[]): R {
+    let opts: T;
+    let children: ListOfRecursiveArraysOrValues<GoFishAST> | null | undefined;
     if (args.length === 2) {
-      // Original calling pattern: func(opts, children)
-      const [opts, children] = args;
-      return func(opts, children);
-    } else if (args.length === 3) {
-      // Data style calling pattern: func(data, opts, callback)
-      const [data, opts, callback] = args;
-      const children = data.map(callback);
-      return func(opts, children);
+      opts = args[0] ?? ({} as T);
+      children = args[1];
+    } else if (args.length === 1) {
+      opts = {} as T;
+      children = args[0];
+    } else if (args.length === 0) {
+      opts = {} as T;
+      children = undefined;
     } else {
-      throw new Error(`withGoFish: Expected 2 or 3 arguments, got ${args.length}`);
+      throw new Error(`withGoFish: Expected 0, 1, or 2 arguments, got ${args.length}`);
     }
-  } as any;
+    // Flatten deeply nested children
+    const flatChildren = _.flattenDeep(children) as GoFishAST[];
+    return func(opts, flatChildren);
+  };
 }
 
 /**
