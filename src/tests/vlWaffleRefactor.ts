@@ -1,5 +1,5 @@
 import { gofish } from "../ast/gofish";
-import { rect } from "../ast/marks/rect";
+import { rect } from "../ast/shapes/rect";
 import _ from "lodash";
 import { stackY } from "../ast/graphicalOperators/stackY";
 import { stackX } from "../ast/graphicalOperators/stackX";

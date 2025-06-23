@@ -2,7 +2,7 @@ import _ from "lodash";
 import { gofish } from "../ast/gofish";
 import { value } from "../ast/data";
 import { stack } from "../ast/graphicalOperators/stack";
-import { rect } from "../ast/marks/rect";
+import { rect } from "../ast/shapes/rect";
 import { black, color, color6, color6_old, white } from "../color";
 import { titanic } from "../data/titanic";
 import { mix } from "spectral.js";

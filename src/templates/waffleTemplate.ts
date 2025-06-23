@@ -1,7 +1,7 @@
 import _ from "lodash";
 import { stackX } from "../ast/graphicalOperators/stackX";
 import { stackY } from "../ast/graphicalOperators/stackY";
-import { rect } from "../ast/marks/rect";
+import { rect } from "../ast/shapes/rect";
 import { stackXTemplate } from "./stackXTemplate";
 
 // Shared waffle mark function

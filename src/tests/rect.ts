@@ -1,7 +1,7 @@
 import { color, color6 } from "../color";
 import { value } from "../ast/data";
 import { gofish } from "../ast/gofish";
-import { rect } from "../ast/marks/rect";
+import { rect } from "../ast/shapes/rect";
 
 const data = [
   { a: "A", b: 28 },

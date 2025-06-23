@@ -5,14 +5,14 @@ import { d as $d } from "../components/data"; */
 
 import { value } from "../ast/data";
 import { gofish } from "../ast/gofish";
-import { rect } from "../ast/marks/rect";
+import { rect } from "../ast/shapes/rect";
 import { stack } from "../ast/graphicalOperators/stack";
 import { color, color6 } from "../color";
 import { coord } from "../ast/coordinateTransforms/coord";
 import { polar_DEPRECATED } from "../ast/coordinateTransforms/polar_DEPRECATED";
 import { layer } from "../ast/graphicalOperators/layer";
 import { wrap } from "../ast/graphicalOperators/wrap";
-import { ref } from "../ast/marks/ref";
+import { ref } from "../ast/shapes/ref";
 const data = [
   { category: 1, value: 4 },
   { category: 2, value: 6 },

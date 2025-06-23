@@ -1,7 +1,7 @@
 import { color, color6 /* color6_20250320v2 as color6 */ } from "../color";
 import { value } from "../ast/data";
 import { gofish } from "../ast/gofish";
-import { rect } from "../ast/marks/rect";
+import { rect } from "../ast/shapes/rect";
 import { coord } from "../ast/coordinateTransforms/coord";
 import { polar_DEPRECATED } from "../ast/coordinateTransforms/polar_DEPRECATED";
 

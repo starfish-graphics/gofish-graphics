@@ -1,5 +1,5 @@
 import { MaybeValue, value } from "../ast/data";
-import { rect } from "../ast/marks/rect";
+import { rect } from "../ast/shapes/rect";
 import { stackXTemplate } from "./stackXTemplate";
 import { stackYTemplate } from "./stackYTemplate";
 

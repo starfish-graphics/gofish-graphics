@@ -5,13 +5,13 @@ import { d as $d } from "../components/data"; */
 
 import { value } from "../ast/data";
 import { gofish } from "../ast/gofish";
-import { rect } from "../ast/marks/rect";
+import { rect } from "../ast/shapes/rect";
 import { stack } from "../ast/graphicalOperators/stack";
 import { color, color6 } from "../color";
 import { layer } from "../ast/graphicalOperators/layer";
-import { ellipse } from "../ast/marks/ellipse";
+import { ellipse } from "../ast/shapes/ellipse";
 import _ from "lodash";
-import { ref } from "../ast/marks/ref";
+import { ref } from "../ast/shapes/ref";
 import { connect } from "../ast/graphicalOperators/connect";
 import { streamgraphData, streamgraphColorPalette } from "../data/streamgraphData";
 import { stackX } from "../ast/graphicalOperators/stackX";

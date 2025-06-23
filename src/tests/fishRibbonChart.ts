@@ -4,14 +4,14 @@ import { stack } from "../components/stack";
 import { d as $d } from "../components/data"; */
 
 import { value } from "../ast/data";
-import { rect } from "../ast/marks/rect";
+import { rect } from "../ast/shapes/rect";
 import { stack } from "../ast/graphicalOperators/stack";
 import { color, color6 } from "../color";
 import { catchData } from "../data/catch";
 import _ from "lodash";
 import { layer } from "../ast/graphicalOperators/layer";
 import { connect } from "../ast/graphicalOperators/connect";
-import { ref } from "../ast/marks/ref";
+import { ref } from "../ast/shapes/ref";
 import { stackX } from "../ast/graphicalOperators/stackX";
 import { stackY } from "../ast/graphicalOperators/stackY";
 import { connectX } from "../ast/graphicalOperators/connectX";

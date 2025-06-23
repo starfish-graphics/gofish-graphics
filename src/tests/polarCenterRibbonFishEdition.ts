@@ -5,7 +5,7 @@ import { d as $d } from "../components/data"; */
 
 import { value } from "../ast/data";
 import { gofish } from "../ast/gofish";
-import { rect } from "../ast/marks/rect";
+import { rect } from "../ast/shapes/rect";
 import { stack } from "../ast/graphicalOperators/stack";
 import { color, color6 } from "../color";
 import { coord } from "../ast/coordinateTransforms/coord";
@@ -13,7 +13,7 @@ import { polar_DEPRECATED } from "../ast/coordinateTransforms/polar_DEPRECATED";
 import { linear } from "../ast/coordinateTransforms/linear";
 import _ from "lodash";
 import { layer } from "../ast/graphicalOperators/layer";
-import { ref } from "../ast/marks/ref";
+import { ref } from "../ast/shapes/ref";
 import { connect } from "../ast/graphicalOperators/connect";
 import { fishData } from "../data/fish";
 const data = [

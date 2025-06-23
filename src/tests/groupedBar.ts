@@ -2,7 +2,7 @@ import _ from "lodash";
 import { gofish } from "../ast/gofish";
 import { value } from "../ast/data";
 import { stack } from "../ast/graphicalOperators/stack";
-import { rect } from "../ast/marks/rect";
+import { rect } from "../ast/shapes/rect";
 import { color, /* color6 */ color6_20250323 as color6 } from "../color";
 
 const data = [

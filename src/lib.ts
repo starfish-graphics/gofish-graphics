@@ -8,10 +8,10 @@ export { value } from "./ast/data";
 export { For as map } from "./ast/iterators/for";
 
 // Marks
-export { rect } from "./ast/marks/rect";
-export { ellipse } from "./ast/marks/ellipse";
-export { petal } from "./ast/marks/petal";
-export { ref } from "./ast/marks/ref";
+export { rect } from "./ast/shapes/rect";
+export { ellipse } from "./ast/shapes/ellipse";
+export { petal } from "./ast/shapes/petal";
+export { ref } from "./ast/shapes/ref";
 
 // Graphical Operators
 export { stack } from "./ast/graphicalOperators/stack";
@@ -46,10 +46,10 @@ export { For } from "./ast/iterators/for";
 export { groupBy } from "./ast/iterators/groupBy";
 
 // Marks
-export { rect as Rect } from "./ast/marks/rect";
-export { ellipse as Ellipse } from "./ast/marks/ellipse";
-export { petal as Petal } from "./ast/marks/petal";
-export { ref as Ref } from "./ast/marks/ref";
+export { rect as Rect } from "./ast/shapes/rect";
+export { ellipse as Ellipse } from "./ast/shapes/ellipse";
+export { petal as Petal } from "./ast/shapes/petal";
+export { ref as Ref } from "./ast/shapes/ref";
 
 // Graphical Operators
 export { stack as Stack } from "./ast/graphicalOperators/stack";

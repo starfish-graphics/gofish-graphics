@@ -4,13 +4,13 @@ import { stack } from "../components/stack";
 import { d as $d } from "../components/data"; */
 
 import { value } from "../ast/data";
-import { rect } from "../ast/marks/rect";
+import { rect } from "../ast/shapes/rect";
 import { stack } from "../ast/graphicalOperators/stack";
 import { color, color6 } from "../color";
 import { layer } from "../ast/graphicalOperators/layer";
-import { ellipse } from "../ast/marks/ellipse";
+import { ellipse } from "../ast/shapes/ellipse";
 import _ from "lodash";
-import { ref } from "../ast/marks/ref";
+import { ref } from "../ast/shapes/ref";
 import { connect } from "../ast/graphicalOperators/connect";
 import { streamgraphColorPalette, streamgraphData } from "../data/streamgraphData";
 import { frame } from "../ast/graphicalOperators/frame";

@@ -5,13 +5,13 @@ import { d as $d } from "../components/data"; */
 
 import { value } from "../ast/data";
 import { gofish } from "../ast/gofish";
-import { rect } from "../ast/marks/rect";
+import { rect } from "../ast/shapes/rect";
 import { stack } from "../ast/graphicalOperators/stack";
 import { color, color6, white } from "../color";
 import { coord } from "../ast/coordinateTransforms/coord";
 import { polar_DEPRECATED } from "../ast/coordinateTransforms/polar_DEPRECATED";
 import { layer } from "../ast/graphicalOperators/layer";
-import { petal } from "../ast/marks/petal";
+import { petal } from "../ast/shapes/petal";
 import _ from "lodash";
 import { mix } from "spectral.js";
 import { catchData } from "../data/catch";
