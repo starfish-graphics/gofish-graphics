@@ -32,17 +32,17 @@ import { testPolarCenterRibbon } from "./tests/polarCenterRibbon";
 import { testPolarCenterRibbonFishEdition } from "./tests/polarCenterRibbonFishEdition";
 import { testBipolarBar } from "./tests/bipolarBar";
 import { testNestedMosaic } from "./tests/nestedMosaic";
-import { testIcicle } from "./tests/icicle";
+import { testIcicle, testIcicleAPIv2 } from "./tests/icicle";
 import { testScatterFlower } from "./tests/scatterFlower";
 import { testFishBar } from "./tests/fishBar";
 import { testFishStackedBar, testFishStackedBarDataStyle } from "./tests/fishStackedBar";
 import { testFishGroupedBar } from "./tests/fishGroupedBar";
-import { testFishWaffle } from "./tests/fishWaffle";
+import { testFishWaffle, testFishWaffleAPIv2 } from "./tests/fishWaffle";
 import { testFishWaffleRefactor } from "./tests/fishWaffleRefactor";
 import { testFishRibbonChart } from "./tests/fishRibbonChart";
 import { testFishPolarRibbonChart } from "./tests/fishPolarRibbonChart";
 import { testBalloon } from "./tests/balloon";
-import { testSankeyIcicle } from "./tests/sankeyIcicle";
+import { testSankeyIcicle, testSankeyIcicleAPIv2 } from "./tests/sankeyIcicle";
 import { testLineChart } from "./tests/lineChart";
 import { testAreaChart, testSingletonAreaChart } from "./tests/areaChart";
 import { testStackedAreaChart, testStackedAreaChartV2API } from "./tests/stackedAreaChart";
@@ -67,6 +67,17 @@ import { GoFishSolid } from "./ast";
 import { DitheringConfig, generateDithering } from "./tests/density";
 import { frame, rect, stackY } from "./lib";
 import { testRidgeline } from "./tests/ridgeline";
+import {
+  chartBar,
+  chartFacetedBar,
+  chartFacetedBarHorizontal,
+  chartGroupedBar,
+  chartRectBF,
+  chartWaffle,
+  chartStackedBar,
+  chartArea,
+  chartSankeyIcicle,
+} from "./tests/chartAPITest";
 
 const ditheringTestWidth = 800;
 
@@ -155,6 +166,45 @@ const defs = [
 const App: Component = () => {
   return (
     <div style={{ "margin-left": "20px" }}>
+      <GoFishSolid width={500} height={500} defs={defs}>
+        {chartSankeyIcicle()}
+      </GoFishSolid>
+      <GoFishSolid width={500} height={500} defs={defs}>
+        {testSankeyIcicleAPIv2()}
+      </GoFishSolid>
+      <GoFishSolid width={500} height={500} defs={defs}>
+        {chartArea()}
+      </GoFishSolid>
+      <GoFishSolid width={500} height={500} defs={defs}>
+        {testFishBar()}
+      </GoFishSolid>
+      <GoFishSolid width={500} height={500} defs={defs}>
+        {testIcicleAPIv2()}
+      </GoFishSolid>
+      <GoFishSolid width={500} height={500} defs={defs}>
+        {testFishWaffleAPIv2()}
+      </GoFishSolid>
+      <GoFishSolid width={500} height={500} defs={defs}>
+        {chartWaffle()}
+      </GoFishSolid>
+      <GoFishSolid width={500} height={250} defs={defs}>
+        {chartFacetedBarHorizontal()}
+      </GoFishSolid>
+      <GoFishSolid width={250} height={500} defs={defs}>
+        {chartFacetedBar()}
+      </GoFishSolid>
+      <GoFishSolid width={500} height={300} defs={defs}>
+        {chartGroupedBar()}
+      </GoFishSolid>
+      <GoFishSolid width={250} height={300} defs={defs}>
+        {chartStackedBar()}
+      </GoFishSolid>
+      <GoFishSolid width={250} height={300} defs={defs}>
+        {chartBar()}
+      </GoFishSolid>
+      <GoFishSolid width={250} height={300} defs={defs}>
+        {chartRectBF()}
+      </GoFishSolid>
       <GoFishSolid width={250} height={300} defs={defs}>
         {testRidgeline()}
       </GoFishSolid>

@@ -67,6 +67,11 @@ export class GoFishRef {
 
   public resolveNames(): void {
     this.selectedNode = getScopeContext().get(this.selection);
+    if (this.selectedNode === undefined) {
+      throw new Error(
+        `Can't find "${this.selection}". Available nodes: ${Array.from(getScopeContext().keys()).join(", ")}`
+      );
+    }
     this.color = this.selectedNode?.color;
   }
 

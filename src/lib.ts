@@ -45,7 +45,7 @@ export { value as v } from "./ast/data";
 export { For } from "./ast/iterators/for";
 export { groupBy } from "./ast/iterators/groupBy";
 
-// Marks
+// Shapes
 export { rect as Rect } from "./ast/shapes/rect";
 export { ellipse as Ellipse } from "./ast/shapes/ellipse";
 export { petal as Petal } from "./ast/shapes/petal";
@@ -72,3 +72,9 @@ export { polarTransposed as PolarTransposed } from "./ast/coordinateTransforms/p
 export { arcLengthPolar as ArcLengthPolar } from "./ast/coordinateTransforms/arcLengthPolar";
 export { bipolar as Bipolar } from "./ast/coordinateTransforms/bipolar";
 export { wavy as Wavy } from "./ast/coordinateTransforms/wavy";
+
+// Marks
+export { Mark } from "./ast/marks/index";
+
+/* API v3 */
+export { Chart, _Chart } from "./ast/marks/chart";
