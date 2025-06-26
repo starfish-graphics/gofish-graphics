@@ -1,5 +1,6 @@
 import { Chart } from "../ast/marks/chart";
 import { catchData } from "../data/catch";
+import { streamgraphData } from "../data/streamgraphData";
 import { titanic } from "../data/titanic";
 import { For, groupBy, Rect, StackX, v } from "../lib";
 import _ from "lodash";
@@ -117,6 +118,24 @@ export const chartArea = () => {
     .rect({ w: 32, h: "count", fill: "species" })
     .stackX("lake", { spacing: 60, sharedScale: true })
     .connectX("lake", { opacity: 0.7 })
+    .TEST_render();
+};
+
+export const chartStackedArea = () => {
+  return Chart(catchData)
+    .rect({ w: 32, h: "count", fill: "species" })
+    .stackY("species", { spacing: 2 })
+    .stackX("lake", { spacing: 60, sharedScale: true })
+    .connectX("species", { opacity: 0.7 })
+    .TEST_render();
+};
+
+export const chartRidgeline = () => {
+  return Chart(streamgraphData)
+    .rect({ w: 2, h: "y", fill: "c" })
+    .stackX("x", { spacing: 20 })
+    .stackY("c", { spacing: -30, sharedScale: true })
+    .connectX("c", { opacity: 0.7, debug: true })
     .TEST_render();
 };
 

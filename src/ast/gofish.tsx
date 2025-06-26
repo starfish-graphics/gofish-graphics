@@ -3,7 +3,7 @@ import { render as solidRender } from "solid-js/web";
 import { debugNodeTree, type GoFishNode } from "./_node";
 import { ScopeContext } from "./scopeContext";
 import { computePosScale } from "./domain";
-import { tickIncrement } from "d3-array";
+import { tickIncrement, ticks, nice } from "d3-array";
 
 /* scope context */
 let scopeContext: ScopeContext | null = null;
@@ -27,52 +27,52 @@ export const getScaleContext = (): ScaleContext => {
   return scaleContext;
 };
 
-/* d3 nice linear scale re-implementation*/
-const nice = (domain: [number, number], tickCount: number = 10) => {
-  let startIndex = 0;
-  let endIndex = domain.length - 1;
-  let domainStart = domain[startIndex];
-  let domainEnd = domain[endIndex];
+// /* d3 nice linear scale re-implementation*/
+// const nice = (domain: [number, number], tickCount: number = 10) => {
+//   let startIndex = 0;
+//   let endIndex = domain.length - 1;
+//   let domainStart = domain[startIndex];
+//   let domainEnd = domain[endIndex];
 
-  let previousStepSize;
-  let currentStepSize;
-  const maxIterations = 10;
+//   let previousStepSize;
+//   let currentStepSize;
+//   const maxIterations = 10;
 
-  // Handle reversed domains by swapping values and indices
-  if (domainEnd < domainStart) {
-    [domainStart, domainEnd] = [domainEnd, domainStart];
-    [startIndex, endIndex] = [endIndex, startIndex];
-  }
+//   // Handle reversed domains by swapping values and indices
+//   if (domainEnd < domainStart) {
+//     [domainStart, domainEnd] = [domainEnd, domainStart];
+//     [startIndex, endIndex] = [endIndex, startIndex];
+//   }
 
-  // Iteratively refine domain boundaries to "nice" round numbers
-  for (let iteration = 0; iteration < maxIterations; iteration++) {
-    currentStepSize = tickIncrement(domainStart, domainEnd, tickCount);
+//   // Iteratively refine domain boundaries to "nice" round numbers
+//   for (let iteration = 0; iteration < maxIterations; iteration++) {
+//     currentStepSize = tickIncrement(domainStart, domainEnd, tickCount);
 
-    // If step size hasn't changed, we've converged to optimal boundaries
-    if (currentStepSize === previousStepSize) {
-      domain[startIndex] = domainStart;
-      domain[endIndex] = domainEnd;
-      return domain;
-    }
+//     // If step size hasn't changed, we've converged to optimal boundaries
+//     if (currentStepSize === previousStepSize) {
+//       domain[startIndex] = domainStart;
+//       domain[endIndex] = domainEnd;
+//       return domain;
+//     }
 
-    if (currentStepSize > 0) {
-      // Expand domain outward to nice round multiples
-      domainStart = Math.floor(domainStart / currentStepSize) * currentStepSize;
-      domainEnd = Math.ceil(domainEnd / currentStepSize) * currentStepSize;
-    } else if (currentStepSize < 0) {
-      // Contract domain inward (for negative step sizes)
-      domainStart = Math.ceil(domainStart * currentStepSize) / currentStepSize;
-      domainEnd = Math.floor(domainEnd * currentStepSize) / currentStepSize;
-    } else {
-      // Step size is zero, cannot make further improvements
-      break;
-    }
+//     if (currentStepSize > 0) {
+//       // Expand domain outward to nice round multiples
+//       domainStart = Math.floor(domainStart / currentStepSize) * currentStepSize;
+//       domainEnd = Math.ceil(domainEnd / currentStepSize) * currentStepSize;
+//     } else if (currentStepSize < 0) {
+//       // Contract domain inward (for negative step sizes)
+//       domainStart = Math.ceil(domainStart * currentStepSize) / currentStepSize;
+//       domainEnd = Math.floor(domainEnd * currentStepSize) / currentStepSize;
+//     } else {
+//       // Step size is zero, cannot make further improvements
+//       break;
+//     }
 
-    previousStepSize = currentStepSize;
-  }
+//     previousStepSize = currentStepSize;
+//   }
 
-  return domain;
-};
+//   return domain;
+// };
 
 /* global pass handler */
 export const gofish = (
@@ -150,8 +150,8 @@ export const render = (
 ): JSX.Element => {
   let yTicks: number[] = [];
   if (axes) {
-    const [min, max] = nice(scaleContext.y.domain);
-    yTicks = Array.from({ length: 11 }, (_, i) => min + (max - min) * (i / 10));
+    const [min, max] = nice(scaleContext.y.domain[0], scaleContext.y.domain[1], 10);
+    yTicks = ticks(min, max, 10);
   }
 
   return (
@@ -175,19 +175,35 @@ export const render = (
               stroke-width="1px"
             /> */}
             {/* y axis */}
-            <line x1={-PADDING} y1={0} x2={-PADDING} y2={height} stroke="gray" stroke-width="1px" />
+            <line
+              x1={-PADDING}
+              y1={height - yTicks[yTicks.length - 1] * scaleContext.y.scaleFactor - 0.5}
+              x2={-PADDING}
+              y2={height - yTicks[0] * scaleContext.y.scaleFactor + 0.5}
+              stroke="gray"
+              stroke-width="1px"
+            />
             <For each={yTicks}>
               {(tick) => (
-                <text
-                  x={-PADDING * 1.5}
-                  y={height - tick * scaleContext.y.scaleFactor}
-                  text-anchor="end"
-                  dominant-baseline="middle"
-                  font-size="10px"
-                  fill="gray"
-                >
-                  {tick}
-                </text>
+                <>
+                  <text
+                    x={-PADDING * 1.75}
+                    y={height - tick * scaleContext.y.scaleFactor}
+                    text-anchor="end"
+                    dominant-baseline="middle"
+                    font-size="10px"
+                    fill="gray"
+                  >
+                    {tick}
+                  </text>
+                  <line
+                    x1={-PADDING * 1.5}
+                    y1={height - tick * scaleContext.y.scaleFactor}
+                    x2={-PADDING}
+                    y2={height - tick * scaleContext.y.scaleFactor}
+                    stroke="gray"
+                  />
+                </>
               )}
             </For>
           </g>

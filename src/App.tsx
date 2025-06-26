@@ -77,6 +77,8 @@ import {
   chartStackedBar,
   chartArea,
   chartSankeyIcicle,
+  chartStackedArea,
+  chartRidgeline,
 } from "./tests/chartAPITest";
 
 const ditheringTestWidth = 800;
@@ -166,6 +168,15 @@ const defs = [
 const App: Component = () => {
   return (
     <div style={{ "margin-left": "20px" }}>
+      <GoFishSolid width={500} height={200} defs={defs} axes={true}>
+        {testFishBar()}
+      </GoFishSolid>
+      <GoFishSolid width={500} height={500} defs={defs}>
+        {chartRidgeline()}
+      </GoFishSolid>
+      <GoFishSolid width={500} height={500} defs={defs}>
+        {chartStackedArea()}
+      </GoFishSolid>
       <GoFishSolid width={500} height={500} defs={defs}>
         {chartSankeyIcicle()}
       </GoFishSolid>
@@ -222,9 +233,6 @@ const App: Component = () => {
         {testFishStackedBarDataStyle()}
       </GoFishSolid> */}
       <br />
-      <GoFishSolid width={500} height={200} defs={defs} axes={true}>
-        {testFishBar()}
-      </GoFishSolid>
       <GoFishSolid width={800} height={1000} defs={defs}>
         {frame([
           frame({ y: 10 }, [

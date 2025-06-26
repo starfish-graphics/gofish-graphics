@@ -22,8 +22,14 @@ export class _Chart<T> {
       }).name(key.toString());
     });
   }
-  connectX(key: number | string, options?: { interpolation?: "linear" | "bezier"; opacity?: number }) {
+  /* TODO: I think the for/groupby needs to go outside the connectX and then there's another for
+  inside that iterates over all the items.
+  
+  Then I have to grab the keys in a more clever way.
+  */
+  connectX(key: number | string, options?: { interpolation?: "linear" | "bezier"; opacity?: number; debug?: boolean }) {
     return new _Chart(this._data, (d: T[], k: number | string) => {
+      if (options?.debug) console.log("connectX", groupBy(d, key.toString()));
       return Frame([
         this._render(d, k),
         ConnectX(
@@ -99,3 +105,8 @@ export class _Chart<T> {
 }
 
 export const Chart = <T>(data: T[]) => new _Chart(data);
+
+export const rect = <T>(
+  data: T[],
+  { w, h, fill, debug }: { w: number; h: number | string; fill: string; debug?: boolean }
+) => Chart(data).rect({ w, h, fill, debug });
