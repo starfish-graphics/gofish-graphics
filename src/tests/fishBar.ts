@@ -29,6 +29,6 @@ export const testFishBar = () =>
     { spacing: 8, sharedScale: true },
     _(catchData)
       .groupBy("lake")
-      .map((d) => rect({ w: 32, h: value(_(d).sumBy("count")) }))
+      .map((d, key) => rect({ key, w: 32, h: value(_(d).sumBy("count")) }))
       .value()
   );

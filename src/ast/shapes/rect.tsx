@@ -10,6 +10,7 @@ import { scaleContext } from "../gofish";
 
 /* TODO: what should default embedding behavior be when all values are aesthetic? */
 export const rect = ({
+  key,
   name,
   fill = color6_old[0],
   stroke = fill,
@@ -18,6 +19,7 @@ export const rect = ({
   ry = 0,
   ...fancyDims
 }: {
+  key?: string;
   name?: string;
   fill?: MaybeValue<string>;
   stroke?: MaybeValue<string>;
@@ -29,6 +31,7 @@ export const rect = ({
   return new GoFishNode(
     {
       name,
+      key,
       type: "rect",
       color: fill,
       inferPosDomains: (childPosDomains: Size<Domain>[]) => {

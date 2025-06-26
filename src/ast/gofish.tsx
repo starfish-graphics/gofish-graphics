@@ -1,6 +1,6 @@
 import { For, Show, type JSX } from "solid-js";
 import { render as solidRender } from "solid-js/web";
-import { debugNodeTree, type GoFishNode } from "./_node";
+import { debugNodeTree, findPathToRoot, type GoFishNode } from "./_node";
 import { ScopeContext } from "./scopeContext";
 import { computePosScale } from "./domain";
 import { tickIncrement, ticks, nice } from "d3-array";
@@ -27,52 +27,16 @@ export const getScaleContext = (): ScaleContext => {
   return scaleContext;
 };
 
-// /* d3 nice linear scale re-implementation*/
-// const nice = (domain: [number, number], tickCount: number = 10) => {
-//   let startIndex = 0;
-//   let endIndex = domain.length - 1;
-//   let domainStart = domain[startIndex];
-//   let domainEnd = domain[endIndex];
+type KeyContext = { [key: string]: GoFishNode };
 
-//   let previousStepSize;
-//   let currentStepSize;
-//   const maxIterations = 10;
+export let keyContext: KeyContext | null = null;
 
-//   // Handle reversed domains by swapping values and indices
-//   if (domainEnd < domainStart) {
-//     [domainStart, domainEnd] = [domainEnd, domainStart];
-//     [startIndex, endIndex] = [endIndex, startIndex];
-//   }
-
-//   // Iteratively refine domain boundaries to "nice" round numbers
-//   for (let iteration = 0; iteration < maxIterations; iteration++) {
-//     currentStepSize = tickIncrement(domainStart, domainEnd, tickCount);
-
-//     // If step size hasn't changed, we've converged to optimal boundaries
-//     if (currentStepSize === previousStepSize) {
-//       domain[startIndex] = domainStart;
-//       domain[endIndex] = domainEnd;
-//       return domain;
-//     }
-
-//     if (currentStepSize > 0) {
-//       // Expand domain outward to nice round multiples
-//       domainStart = Math.floor(domainStart / currentStepSize) * currentStepSize;
-//       domainEnd = Math.ceil(domainEnd / currentStepSize) * currentStepSize;
-//     } else if (currentStepSize < 0) {
-//       // Contract domain inward (for negative step sizes)
-//       domainStart = Math.ceil(domainStart * currentStepSize) / currentStepSize;
-//       domainEnd = Math.floor(domainEnd * currentStepSize) / currentStepSize;
-//     } else {
-//       // Step size is zero, cannot make further improvements
-//       break;
-//     }
-
-//     previousStepSize = currentStepSize;
-//   }
-
-//   return domain;
-// };
+export const getKeyContext = (): KeyContext => {
+  if (!keyContext) {
+    throw new Error("Key context not set");
+  }
+  return keyContext;
+};
 
 /* global pass handler */
 export const gofish = (
@@ -96,6 +60,7 @@ export const gofish = (
 ) => {
   scopeContext = new Map();
   scaleContext = { unit: { color: new Map() } };
+  keyContext = {};
   try {
     // const domainAST = child.inferDomain();
     // const sizeThatFitsAST = domainAST.sizeThatFits();
@@ -103,6 +68,7 @@ export const gofish = (
     // return render({ width, height, transform }, layoutAST);
     child.resolveColorScale();
     child.resolveNames();
+    child.resolveKeys();
     const [posDomainX, posDomainY] = child.inferPosDomains();
     child.inferSizeDomains([width, height])([undefined, undefined]);
     child.layout(
@@ -120,11 +86,12 @@ export const gofish = (
 
     // Render to the provided container
     // console.log(scaleContext);
-    solidRender(() => render({ width, height, defs, axes, scaleContext }, child), container);
+    solidRender(() => render({ width, height, defs, axes, scaleContext, keyContext }, child), container);
     return container;
   } finally {
     scopeContext = null;
     scaleContext = null;
+    keyContext = null;
   }
 };
 
@@ -138,6 +105,7 @@ export const render = (
     defs,
     axes,
     scaleContext,
+    keyContext,
   }: {
     width: number;
     height: number;
@@ -145,11 +113,14 @@ export const render = (
     defs?: JSX.Element[];
     axes?: boolean;
     scaleContext: ScaleContext;
+    keyContext: KeyContext;
   },
   child: GoFishNode
 ): JSX.Element => {
   let yTicks: number[] = [];
   if (axes) {
+    console.log(scaleContext);
+    console.log(keyContext);
     const [min, max] = nice(scaleContext.y.domain[0], scaleContext.y.domain[1], 10);
     yTicks = ticks(min, max, 10);
   }
@@ -205,6 +176,46 @@ export const render = (
                   />
                 </>
               )}
+            </For>
+            <For each={Object.entries(keyContext)}>
+              {([key, value]) => {
+                const pathToRoot = findPathToRoot(value);
+                const accumulatedTransform = pathToRoot.reduce(
+                  (acc, node) => {
+                    return {
+                      x: acc.x + (node.transform?.translate?.[0] ?? 0),
+                      y: acc.y + (node.transform?.translate?.[1] ?? 0),
+                    };
+                  },
+                  { x: 0, y: 0 }
+                );
+                const displayDims = [
+                  {
+                    min: (accumulatedTransform.x ?? 0) + (value.intrinsicDims?.[0]?.min ?? 0),
+                    size: value.intrinsicDims?.[0]?.size ?? 0,
+                    center: (accumulatedTransform.x ?? 0) + (value.intrinsicDims?.[0]?.center ?? 0),
+                    max: (accumulatedTransform.x ?? 0) + (value.intrinsicDims?.[0]?.max ?? 0),
+                  },
+                  {
+                    min: (accumulatedTransform.y ?? 0) + (value.intrinsicDims?.[1]?.min ?? 0),
+                    size: value.intrinsicDims?.[1]?.size ?? 0,
+                    center: (accumulatedTransform.y ?? 0) + (value.intrinsicDims?.[1]?.center ?? 0),
+                    max: (accumulatedTransform.y ?? 0) + (value.intrinsicDims?.[1]?.max ?? 0),
+                  },
+                ];
+                return (
+                  <text
+                    x={displayDims[0].center ?? 0}
+                    y={(displayDims[1].max ?? 0) + 5}
+                    text-anchor="middle"
+                    dominant-baseline="hanging"
+                    font-size="10px"
+                    fill="gray"
+                  >
+                    {key}
+                  </text>
+                );
+              }}
             </For>
           </g>
         </Show>

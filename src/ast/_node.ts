@@ -16,7 +16,7 @@ import {
   Transform,
 } from "./dims";
 import { ContinuousDomain } from "./domain";
-import { getScaleContext, getScopeContext, gofish } from "./gofish";
+import { getKeyContext, getScaleContext, getScopeContext, gofish } from "./gofish";
 import { GoFishRef } from "./_ref";
 import { GoFishAST } from "./_ast";
 import { CoordinateTransform } from "./coordinateTransforms/coord";
@@ -59,6 +59,7 @@ export type Render = (
 
 export class GoFishNode {
   public type: string;
+  public key?: string;
   public _name?: string;
   public parent?: GoFishNode;
   // private inferDomains: (childDomains: Size<Domain>[]) => FancySize<Domain | undefined>;
@@ -78,6 +79,7 @@ export class GoFishNode {
   constructor(
     {
       name,
+      key,
       type,
       // inferDomains,
       inferSizeDomains,
@@ -110,6 +112,7 @@ export class GoFishNode {
       child.parent = this;
     });
     this._name = name;
+    this.key = key;
     this.type = type;
     this.shared = shared;
     this.color = color;
@@ -140,6 +143,14 @@ export class GoFishNode {
     });
   }
 
+  public resolveKeys(): void {
+    if (this.key !== undefined) {
+      getKeyContext()[this.key] = this;
+    }
+    this.children.forEach((child) => {
+      child.resolveKeys();
+    });
+  }
   public inferPosDomains(): Size<ContinuousDomain | undefined> {
     const posDomains = elaborateSize(this._inferPosDomains(this.children.map((child) => child.inferPosDomains())));
     // this.posDomains = posDomains;
