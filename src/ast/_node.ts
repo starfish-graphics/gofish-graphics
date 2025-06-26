@@ -90,6 +90,7 @@ export class GoFishNode {
       color,
     }: {
       name?: string;
+      key?: string;
       type: string;
       // inferDomains: (childDomains: Size<Domain>[]) => FancySize<Domain | undefined>;
       /* TODO: I'm not sure whether scale inference and sizeThatFits should be separate or the same pass*/

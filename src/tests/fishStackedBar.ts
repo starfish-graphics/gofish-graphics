@@ -23,9 +23,9 @@ const fishColors = {
 export const testFishStackedBar = () =>
   stackX(
     { spacing: 8, sharedScale: true },
-    For(_(catchData).groupBy("lake"), (d) =>
+    For(_(catchData).groupBy("lake"), (d, key) =>
       stackY(
-        { spacing: 2 },
+        { key: key as string, spacing: 0 },
         For(d, (d) => rect({ w: 32, h: value(d.count), fill: value(d.species) }))
       )
     )

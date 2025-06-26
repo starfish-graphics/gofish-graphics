@@ -21,6 +21,7 @@ export const stack = withGoFish(
   (
     {
       name,
+      key,
       direction,
       spacing = 0,
       alignment = "middle",
@@ -30,6 +31,7 @@ export const stack = withGoFish(
       ...fancyDims
     }: {
       name?: string;
+      key?: string;
       direction: FancyDirection;
       spacing?: number;
       alignment?: "start" | "middle" | "end";
@@ -49,6 +51,7 @@ export const stack = withGoFish(
     return new GoFishNode(
       {
         type: "stack",
+        key,
         name,
         shared: [sharedScale, sharedScale],
         inferPosDomains: (childPosDomains: Size<Domain>[]) => {

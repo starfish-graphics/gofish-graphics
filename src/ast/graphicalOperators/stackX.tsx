@@ -8,6 +8,7 @@ export const stackX = withGoFish(
   (
     {
       name,
+      key,
       spacing,
       alignment = "end",
       sharedScale = false,
@@ -16,6 +17,7 @@ export const stackX = withGoFish(
       ...fancyDims
     }: {
       name?: string;
+      key?: string;
       spacing?: number;
       alignment?: "start" | "middle" | "end";
       sharedScale?: boolean;
@@ -24,6 +26,6 @@ export const stackX = withGoFish(
     } & FancyDims,
     children: GoFishAST[] | Collection<GoFishAST>
   ) => {
-    return stack({ direction: "x", spacing, alignment, sharedScale, mode, reverse, ...fancyDims }, children);
+    return stack({ direction: "x", key, spacing, alignment, sharedScale, mode, reverse, ...fancyDims }, children);
   }
 );

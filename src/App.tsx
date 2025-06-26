@@ -171,6 +171,9 @@ const App: Component = () => {
       <GoFishSolid width={500} height={200} defs={defs} axes={true}>
         {testFishBar()}
       </GoFishSolid>
+      <GoFishSolid width={250} height={300} defs={defs} axes={true}>
+        {testFishStackedBar()}
+      </GoFishSolid>
       <GoFishSolid width={500} height={500} defs={defs}>
         {chartRidgeline()}
       </GoFishSolid>
@@ -224,9 +227,6 @@ const App: Component = () => {
       </GoFishSolid>
       <GoFishSolid width={250} height={300} defs={defs}>
         {testStackedAreaChartV2API()}
-      </GoFishSolid>
-      <GoFishSolid width={250} height={300} defs={defs}>
-        {testFishStackedBar()}
       </GoFishSolid>
       <br />
       {/* <GoFishSolid width={250} height={300} defs={defs}>
