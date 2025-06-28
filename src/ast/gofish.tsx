@@ -42,15 +42,19 @@ export const getKeyContext = (): KeyContext => {
 export const gofish = (
   container: HTMLElement,
   {
-    width,
-    height,
+    w,
+    h,
+    x,
+    y,
     transform,
     debug = false,
     defs,
     axes = false,
   }: {
-    width: number;
-    height: number;
+    w: number;
+    h: number;
+    x?: number;
+    y?: number;
     transform?: { x?: number; y?: number };
     debug?: boolean;
     defs?: JSX.Element[];
@@ -70,23 +74,23 @@ export const gofish = (
     child.resolveNames();
     child.resolveKeys();
     const [posDomainX, posDomainY] = child.inferPosDomains();
-    child.inferSizeDomains([width, height])([undefined, undefined]);
+    child.inferSizeDomains([w, h])([undefined, undefined]);
     child.layout(
-      [width, height],
+      [w, h],
       [undefined, undefined],
       [
-        posDomainX ? computePosScale(posDomainX, width) : undefined,
-        posDomainY ? computePosScale(posDomainY, height, true) : undefined,
+        posDomainX ? computePosScale(posDomainX, w) : undefined,
+        posDomainY ? computePosScale(posDomainY, h, true) : undefined,
       ]
     );
-    child.place({ x: transform?.x ?? 0, y: transform?.y ?? 0 });
+    child.place({ x: x ?? transform?.x ?? 0, y: y ?? transform?.y ?? 0 });
     if (debug) {
       debugNodeTree(child);
     }
 
     // Render to the provided container
     // console.log(scaleContext);
-    solidRender(() => render({ width, height, defs, axes, scaleContext, keyContext }, child), container);
+    solidRender(() => render({ width: w, height: h, defs, axes, scaleContext, keyContext }, child), container);
     return container;
   } finally {
     scopeContext = null;

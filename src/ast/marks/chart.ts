@@ -96,7 +96,7 @@ export class _Chart<T> {
       axes?: boolean;
     }
   ) {
-    return this._render(this._data).render(container, { width: w, height: h, transform, debug, defs, axes });
+    return this._render(this._data).render(container, { w: w, h: h, transform, debug, defs, axes });
   }
 
   TEST_render() {

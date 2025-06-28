@@ -244,22 +244,22 @@ export class GoFishNode {
   public render(
     container: HTMLElement,
     {
-      width,
-      height,
+      w,
+      h,
       transform,
       debug = false,
       defs,
       axes = false,
     }: {
-      width: number;
-      height: number;
+      w: number;
+      h: number;
       transform?: { x?: number; y?: number };
       debug?: boolean;
       defs?: JSX.Element[];
       axes?: boolean;
     }
   ) {
-    return gofish(container, { width, height, transform, debug, defs, axes }, this);
+    return gofish(container, { w, h, transform, debug, defs, axes }, this);
   }
 
   public name(name: string): this {

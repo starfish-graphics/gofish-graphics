@@ -4,8 +4,10 @@ import { gofish } from "./gofish";
 import { type GoFishNode } from "./_node";
 
 interface GoFishComponentProps {
-  width: number;
-  height: number;
+  w: number;
+  h: number;
+  x?: number;
+  y?: number;
   transform?: { x?: number; y?: number };
   debug?: boolean;
   defs?: JSX.Element[];
@@ -25,8 +27,10 @@ export const GoFishSolid: Component<GoFishComponentProps> = (props) => {
       gofish(
         containerRef,
         {
-          width: props.width,
-          height: props.height,
+          w: props.w,
+          h: props.h,
+          x: props.x,
+          y: props.y,
           transform: props.transform,
           debug: props.debug,
           defs: props.defs,

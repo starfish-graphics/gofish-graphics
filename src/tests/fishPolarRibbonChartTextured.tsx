@@ -102,7 +102,7 @@ const defs = [
 export const testFishPolarRibbonChartTextured = (container: HTMLElement, size: { width: number; height: number }) =>
   gofish(
     container,
-    { width: size.width, height: size.height, transform: { x: 500, y: 500 }, defs },
+    { w: size.width, h: size.height, transform: { x: 500, y: 500 }, defs },
     frame({ coord: polar() }, [
       stackX(
         {
