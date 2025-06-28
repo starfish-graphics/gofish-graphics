@@ -96,7 +96,7 @@ StackX(
 
 4. Next steps
 
-Go through [our tutorial](/tutorial), check out [some examples](/examples), or play with the live editor below!
+Go through [our tutorial](/tutorial), check out [some examples](/examples/index), or play with the live editor below!
 
 ::: starfish-live {template=vanilla-ts rtl lightTheme=aquaBlue darkTheme=atomDark previewHeight=400 coderHeight=512}
 
