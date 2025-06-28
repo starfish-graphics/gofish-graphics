@@ -80,6 +80,7 @@ import {
   chartStackedArea,
   chartRidgeline,
 } from "./tests/chartAPITest";
+import { testOlympicMedalsStackedBars } from "./tests/olympicMedalsStackedBars";
 
 const ditheringTestWidth = 800;
 
@@ -168,6 +169,12 @@ const defs = [
 const App: Component = () => {
   return (
     <div style={{ "margin-left": "20px" }}>
+      <GoFishSolid width={350} height={300} defs={defs} axes={true}>
+        {testFishGroupedBar()}
+      </GoFishSolid>
+      <GoFishSolid width={600} height={390} defs={defs} axes={true}>
+        {testOlympicMedalsStackedBars()}
+      </GoFishSolid>
       <GoFishSolid width={500} height={200} defs={defs} axes={true}>
         {testFishBar()}
       </GoFishSolid>

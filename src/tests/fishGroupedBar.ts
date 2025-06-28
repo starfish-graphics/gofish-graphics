@@ -23,9 +23,9 @@ export const testFishGroupedBar = () =>
     { spacing: 12, sharedScale: true },
     _(catchData)
       .groupBy("lake")
-      .map((d) =>
+      .map((d, key) =>
         stackX(
-          { spacing: 1 },
+          { key: key as string, spacing: 1 },
           d.map((d) => rect({ w: 8, h: value(d.count), fill: value(d.species) }))
         )
       )
