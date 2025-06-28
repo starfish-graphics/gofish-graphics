@@ -85,6 +85,7 @@ import { testRoseChart } from "./tests/testRoseChart";
 import { testConnectedScatterplot } from "./tests/connectedScatterplot";
 import { testStringLine } from "./tests/stringline";
 import { testBumpChart } from "./tests/bump";
+import { testBoxWhiskerPlot } from "./tests/boxwhisker";
 
 const ditheringTestWidth = 800;
 
@@ -173,6 +174,9 @@ const defs = [
 const App: Component = () => {
   return (
     <div style={{ "margin-left": "20px" }}>
+      <GoFishSolid w={500} h={300} y={-200} defs={defs}>
+        {testBoxWhiskerPlot()}
+      </GoFishSolid>
       <GoFishSolid w={500} h={500} defs={defs}>
         {testBumpChart()}
       </GoFishSolid>
