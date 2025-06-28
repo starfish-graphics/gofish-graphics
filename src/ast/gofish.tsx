@@ -123,8 +123,8 @@ export const render = (
 ): JSX.Element => {
   let yTicks: number[] = [];
   if (axes) {
-    console.log(scaleContext);
-    console.log(keyContext);
+    // console.log(scaleContext);
+    // console.log(keyContext);
     const [min, max] = nice(scaleContext.y.domain[0], scaleContext.y.domain[1], 10);
     yTicks = ticks(min, max, 10);
   }

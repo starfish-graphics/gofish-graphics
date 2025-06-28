@@ -74,11 +74,13 @@ const flattenLayout = (
 */
 export const coord = (
   {
+    key,
     name,
     transform: coordTransform,
     grid = false,
     ...fancyDims
   }: {
+    key?: string;
     name?: string;
     transform: CoordinateTransform;
     grid?: boolean;
@@ -90,6 +92,7 @@ export const coord = (
   return new GoFishNode(
     {
       type: "coord",
+      key,
       name,
       inferPosDomains: (childPosDomains: Size<Domain>[]) => {
         // unify continuous domains of children for each direction

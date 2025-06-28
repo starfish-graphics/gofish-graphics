@@ -82,6 +82,9 @@ import {
 } from "./tests/chartAPITest";
 import { testOlympicMedalsStackedBars } from "./tests/olympicMedalsStackedBars";
 import { testRoseChart } from "./tests/testRoseChart";
+import { testConnectedScatterplot } from "./tests/connectedScatterplot";
+import { testStringLine } from "./tests/stringline";
+import { testBumpChart } from "./tests/bump";
 
 const ditheringTestWidth = 800;
 
@@ -170,6 +173,15 @@ const defs = [
 const App: Component = () => {
   return (
     <div style={{ "margin-left": "20px" }}>
+      <GoFishSolid w={500} h={500} defs={defs}>
+        {testBumpChart()}
+      </GoFishSolid>
+      <GoFishSolid w={500} h={500} defs={defs} /* axes={true} */>
+        {testStringLine()}
+      </GoFishSolid>
+      <GoFishSolid w={500} h={500} defs={defs}>
+        {testConnectedScatterplot()}
+      </GoFishSolid>
       <GoFishSolid w={500} h={500} defs={defs} x={200} y={250}>
         {testRoseChart()}
       </GoFishSolid>

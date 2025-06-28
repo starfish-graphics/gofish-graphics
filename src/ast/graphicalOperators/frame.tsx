@@ -8,6 +8,7 @@ import { GoFishAST } from "../_ast";
 export const frame = withGoFish(
   (
     options: {
+      key?: string;
       coord?: CoordinateTransform;
       x?: number;
       y?: number;
@@ -19,6 +20,7 @@ export const frame = withGoFish(
     if (options.coord !== undefined) {
       return coord(
         {
+          key: options.key,
           x: options.x,
           y: options.y,
           transform: options.coord,

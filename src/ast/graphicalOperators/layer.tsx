@@ -3,7 +3,9 @@ import { Size, elaborateDims, FancyDims } from "../dims";
 import { canUnifyDomains, Domain, unifyContinuousDomains, ContinuousDomain } from "../domain";
 
 export const layer = (
-  childrenOrOptions: ({ transform?: { scale?: { x?: number; y?: number } }; box?: boolean } & FancyDims) | GoFishNode[],
+  childrenOrOptions:
+    | ({ key?: string; transform?: { scale?: { x?: number; y?: number } }; box?: boolean } & FancyDims)
+    | GoFishNode[],
   maybeChildren?: GoFishNode[]
 ) => {
   const options = Array.isArray(childrenOrOptions) ? {} : childrenOrOptions;
@@ -13,6 +15,7 @@ export const layer = (
   return new GoFishNode(
     {
       type: options.box === true ? "box" : "layer",
+      key: options.key,
       shared: [false, false],
       inferPosDomains: (childPosDomains: Size<Domain>[]) => {
         // unify continuous domains of children for each direction

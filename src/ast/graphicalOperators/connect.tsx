@@ -151,71 +151,99 @@ export const connect = (
           }
         } else {
           if (interpolation === "linear") {
-            for (const [b0, b1] of bboxPairs) {
-              paths.push([
-                {
-                  type: "line",
-                  points: [
-                    [b0[0].min!, b0[1].max!],
-                    [b1[0].min!, b1[1].min!],
-                  ],
-                },
-                {
-                  type: "line",
-                  points: [
-                    [b1[0].min!, b1[1].min!],
-                    [b1[0].max!, b1[1].min!],
-                  ],
-                },
-                {
-                  type: "line",
-                  points: [
-                    [b1[0].max!, b1[1].min!],
-                    [b0[0].max!, b0[1].max!],
-                  ],
-                },
-                {
-                  type: "line",
-                  points: [
-                    [b0[0].max!, b0[1].max!],
-                    [b0[0].min!, b0[1].max!],
-                  ],
-                },
-              ]);
+            if (mode === "center-to-center") {
+              for (const [b0, b1] of bboxPairs) {
+                paths.push([
+                  {
+                    type: "line",
+                    points: [
+                      [(b0[0].min! + b0[0].max!) / 2, (b0[1].min! + b0[1].max!) / 2],
+                      [(b1[0].min! + b1[0].max!) / 2, (b1[1].min! + b1[1].max!) / 2],
+                    ],
+                  },
+                ]);
+              }
+            } else {
+              for (const [b0, b1] of bboxPairs) {
+                paths.push([
+                  {
+                    type: "line",
+                    points: [
+                      [b0[0].min!, b0[1].max!],
+                      [b1[0].min!, b1[1].min!],
+                    ],
+                  },
+                  {
+                    type: "line",
+                    points: [
+                      [b1[0].min!, b1[1].min!],
+                      [b1[0].max!, b1[1].min!],
+                    ],
+                  },
+                  {
+                    type: "line",
+                    points: [
+                      [b1[0].max!, b1[1].min!],
+                      [b0[0].max!, b0[1].max!],
+                    ],
+                  },
+                  {
+                    type: "line",
+                    points: [
+                      [b0[0].max!, b0[1].max!],
+                      [b0[0].min!, b0[1].max!],
+                    ],
+                  },
+                ]);
+              }
             }
           } else if (interpolation === "bezier") {
-            for (const [b0, b1] of bboxPairs) {
-              const midY = (b0[1].max! + b1[1].min!) / 2;
-              paths.push([
-                {
-                  type: "bezier",
-                  start: [b0[0].min!, b0[1].max!],
-                  control1: [b0[0].min!, midY],
-                  control2: [b1[0].min!, midY],
-                  end: [b1[0].min!, b1[1].min!],
-                },
-                {
-                  type: "line",
-                  points: [
-                    [b1[0].min!, b1[1].min!],
-                    [b1[0].max!, b1[1].min!],
-                  ],
-                },
-                {
-                  type: "bezier",
-                  start: [b1[0].max!, b1[1].min!],
-                  control1: [b1[0].max!, midY],
-                  control2: [b0[0].max!, midY],
-                  end: [b0[0].max!, b0[1].max!],
-                },
-                {
-                  type: "line",
-                  points: [
-                    [b0[0].max!, b0[1].max!],
-                    [b0[0].min!, b0[1].max!],
-                  ],
-                },
-              ]);
+            if (mode === "center-to-center") {
+              for (const [b0, b1] of bboxPairs) {
+                paths.push([
+                  {
+                    type: "line",
+                    points: [
+                      [(b0[0].min! + b0[0].max!) / 2, (b0[1].min! + b0[1].max!) / 2],
+                      [(b1[0].min! + b1[0].max!) / 2, (b1[1].min! + b1[1].max!) / 2],
+                    ],
+                  },
+                ]);
+              }
+            } else {
+              for (const [b0, b1] of bboxPairs) {
+                const midY = (b0[1].max! + b1[1].min!) / 2;
+                paths.push([
+                  {
+                    type: "bezier",
+                    start: [b0[0].min!, b0[1].max!],
+                    control1: [b0[0].min!, midY],
+                    control2: [b1[0].min!, midY],
+                    end: [b1[0].min!, b1[1].min!],
+                  },
+                  {
+                    type: "line",
+                    points: [
+                      [b1[0].min!, b1[1].min!],
+                      [b1[0].max!, b1[1].min!],
+                    ],
+                  },
+                  {
+                    type: "bezier",
+                    start: [b1[0].max!, b1[1].min!],
+                    control1: [b1[0].max!, midY],
+                    control2: [b0[0].max!, midY],
+                    end: [b0[0].max!, b0[1].max!],
+                  },
+                  {
+                    type: "line",
+                    points: [
+                      [b0[0].max!, b0[1].max!],
+                      [b0[0].min!, b0[1].max!],
+                    ],
+                  },
+                ]);
+              }
             }
           }
         }
