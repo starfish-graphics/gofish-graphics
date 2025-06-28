@@ -10,7 +10,7 @@ export default {
   { letter: "A", frequency: 28 },
   { letter: "B", frequency: 55 },
   { letter: "C", frequency: 43 },
-  { letter: "D", frequency: 91 },
+  { letter: "D", frequency: 95 },
   { letter: "E", frequency: 81 },
   { letter: "F", frequency: 53 },
   { letter: "G", frequency: 19 },
@@ -32,7 +32,7 @@ StackX(
   { a: "A", b: 28 },
   { a: "B", b: 55 },
   { a: "C", b: 43 },
-  { a: "D", b: 91 },
+  { a: "D", b: 95 },
   { a: "E", b: 81 },
   { a: "F", b: 53 },
   { a: "G", b: 19 },
@@ -52,11 +52,11 @@ gf.stackY(
         // description: "A simple stacked bar chart",
         demoUrl: "/examples/stacked-bar-chart",
         code: `StackX({ spacing: 8, sharedScale: true },
-  For(_(catchData).groupBy("lake"), (lake) =>
-    StackY({ spacing: 2 },
+  For(groupBy(catchData, "lake"), (lake, key) =>
+    StackY({ key, spacing: 0 },
       For(lake, (d) =>
         Rect({ w: 32, h: v(d.count), fill: v(d.species) }))))
-).render(root, { width: size.width, height: size.height });
+).render(root, { width: size.width, height: size.height, axes: true });
 `,
       },
       {
@@ -64,11 +64,11 @@ gf.stackY(
         title: "Grouped Bar Chart",
         description: "Horizontally stacked vertical bars",
         demoUrl: "/examples/grouped-bar-chart",
-        code: `StackX({ spacing: 20, sharedScale: true },
-  For(_(catchData).groupBy("lake"), (lake) =>
-    StackX({ spacing: 1 },
+        code: `StackX({ spacing: 16, sharedScale: true },
+  For(groupBy(catchData, "lake"), (lake, key) =>
+    StackX({ key, spacing: 1 },
       For(lake, (d) =>
-        Rect({ w: 16, h: v(d.count), fill: v(d.species) })))),
+        Rect({ w: 12, h: v(d.count), fill: v(d.species) })))),
 ).render(root, { width: size.width, height: size.height, axes: true });`,
       },
       {
@@ -329,25 +329,21 @@ const color6 = ["#000000", "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"
   { origin: "USA", cylinders: "8", count: 108 },
 ];
 
-gf.render(
-  root,
-  { width: size.width, height: size.height },
-  gf.stack(
-      { direction: 0, spacing: 4, alignment: "end" },
+  StackX(
+      { spacing: 4, alignment: "end" },
       // TODO: I could probably make the width be uniform flexible basically
-      Object.entries(_.groupBy(data, "origin")).map(([origin, items]) =>
-        gf.stack(
-          { w: _(items).sumBy("count") / 2, direction: 1, spacing: 2, alignment: "middle", sharedScale: true },
-          items.toReversed().map((d) =>
-            gf.rect({
-              h: gf.value(d.count, "count"),
+      For(groupBy(data, "origin"), (items, origin) =>
+        StackY(
+          { w: _(items).sumBy("count") / 2, spacing: 2, alignment: "middle", sharedScale: true },
+          For(items.toReversed(), (d) =>
+            Rect({
+              h: v(d.count),
               fill: d.origin === "Europe" ? gf.color.red[5] : d.origin === "Japan" ? gf.color.blue[5] : gf.color.green[5],
             })
           )
         )
       )
-    )
-);
+    ).render(root, { width: size.width, height: size.height });
         `,
       },
       {

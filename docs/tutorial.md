@@ -1,8 +1,8 @@
 # Tutorial: From a Bar Chart to a Polar Ribbon
 
-Welcome to Starfish! In this tutorial we'll start by constructing a standard bar chart and slowly
-turn it into a polar ribbon chart. Along the way, we'll encounter Starfish's shapes, operators,
-scales, and coordinate transforms.
+Welcome to GoFish! In this tutorial we'll start by constructing a standard bar chart and slowly
+turn it into a polar ribbon chart. Along the way, we'll encounter the pieces that make up a GoFish
+chart: shapes, graphical operators, scales, and coordinate transforms.
 
 ## The Dataset
 
@@ -314,29 +314,6 @@ starfish(
     )
   )
 );
-```
-
-```ts
-// mascot
-let scn = msc.scene();
-let rect = scn.mark("rect", {
-  // these values seem to set the translation and scaling of the entire chart! (even though it is modifying "rect")
-  top: 100,
-  left: 200,
-  width: 20,
-  height: 300,
-  fillColor: "#84BC66",
-  strokeWidth: 0,
-});
-let dt = await msc.csv("/datasets/csv/GDP Change.csv");
-// hierarchy is implicit and (imo) difficult to read compared to the nested structure
-let quarters = scn.repeat(rect, dt, { attribute: "Quarter" });
-quarters.layout = msc.layout("grid", { numRows: 1, colGap: 1 });
-let years = scn.repeat(quarters, dt, { attribute: "Year" });
-years.layout = msc.layout("grid", { numRows: 1, colGap: 16 });
-// what are the default scales? I mean GoFish also has default scales so that's alright...
-let enc = scn.encode(rect, { attribute: "% Change", channel: "height" });
-msc.renderer("svg", "svgElement").render(scn);
 ```
 
 <!-- ```ts

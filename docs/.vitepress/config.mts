@@ -1,9 +1,13 @@
 import { defineConfig } from "vitepress";
 import starfish from "./markdown-it-starfish";
 import examplesData from "./data/examples.data.js";
+import container from "markdown-it-container";
+import { renderSandbox } from "vitepress-plugin-sandpack";
+import vueJsx from "@vitejs/plugin-vue-jsx";
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
+  vite: { plugins: [vueJsx()] },
   // title: "Starfish Graphics",
   // description: "Documentation for Starfish",
   title: "GoFish Graphics",
@@ -25,9 +29,15 @@ export default defineConfig({
   markdown: {
     config: (md) => {
       starfish(md);
+      md.use(container, "starfish-live", {
+        render(tokens, idx) {
+          return renderSandbox(tokens, idx, "starfish-live");
+        },
+      });
     },
   },
   themeConfig: {
+    logo: "/gofish-logo.png",
     search: {
       provider: "local",
     },

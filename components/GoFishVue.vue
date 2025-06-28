@@ -62,7 +62,7 @@ onMounted(() => {
       props.code
     );
     const root = document.createElement("div");
-    const size = { width: 688, height: 400 }; // default size
+    const size = { width: 500, height: 300 }; // default size
     fn(
       _,
       root,
