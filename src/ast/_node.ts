@@ -246,6 +246,8 @@ export class GoFishNode {
     {
       w,
       h,
+      x,
+      y,
       transform,
       debug = false,
       defs,
@@ -253,13 +255,15 @@ export class GoFishNode {
     }: {
       w: number;
       h: number;
+      x?: number;
+      y?: number;
       transform?: { x?: number; y?: number };
       debug?: boolean;
       defs?: JSX.Element[];
       axes?: boolean;
     }
   ) {
-    return gofish(container, { w, h, transform, debug, defs, axes }, this);
+    return gofish(container, { w, h, x, y, transform, debug, defs, axes }, this);
   }
 
   public name(name: string): this {
