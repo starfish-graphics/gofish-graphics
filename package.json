@@ -34,6 +34,7 @@
   },
   "devDependencies": {
     "@types/lodash": "^4.17.16",
+    "fast-kde": "^0.2.2",
     "typescript": "^5.7.2",
     "vite": "^6.0.0",
     "vite-plugin-solid": "^2.11.6"
