@@ -109,11 +109,11 @@ const root = document.getElementById("app");
 // A bar chart is a horizontal stack...
 StackX(
   { spacing: 4, alignment: "end", sharedScale: true },
-  For(alphabet, (d) =>
+  For(alphabet, (d, key) =>
     // ...of rectangles
-    Rect({ w: 30, h: v(d.frequency) })
+    Rect({ key: d.letter, w: 30, h: v(d.frequency) })
   )
-).render(root, { width: 500, height: 300, axes: true });
+).render(root, { w: 500, h: 300, axes: true });
 ```
 
 ```ts dataset.ts

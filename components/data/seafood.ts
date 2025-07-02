@@ -6,13 +6,13 @@ export type Lakes =
   | "Lake E"
   | "Lake F";
 
-export type CatchData = {
+export type SeafoodData = {
   lake: Lakes;
   species: "Bass" | "Trout" | "Catfish" | "Perch" | "Salmon";
   count: number;
 };
 
-export const catchLocations: Record<Lakes, { x: number; y: number }> = {
+export const lakeLocations: Record<Lakes, { x: number; y: number }> = {
   "Lake A": { x: 5.26, y: 22.64 },
   "Lake B": { x: 30.87, y: 120.75 },
   "Lake C": { x: 50.01, y: 60.94 },
@@ -21,7 +21,7 @@ export const catchLocations: Record<Lakes, { x: number; y: number }> = {
   "Lake F": { x: 85.99, y: 172.78 },
 };
 
-export const catchData: CatchData[] = [
+export const seafood: SeafoodData[] = [
   {
     lake: "Lake A",
     species: "Bass",

@@ -24,11 +24,29 @@ import {
   v,
   Ref,
   groupBy,
+  Polar_DEPRECATED,
+  Ellipse,
+  ConnectY,
+  color6_old,
+  white,
+  Wavy,
+  Polar,
+  color6,
+  Petal,
 } from "gofish-graphics";
+import { sumBy, orderBy } from "lodash";
+import { mix } from "spectral.js";
 import _ from "lodash";
-import { catchData } from "./data/catchData";
 import { streamgraphData } from "./data/streamgraphData";
 import { titanic } from "./data/titanic";
+import { nightingale } from "./data/nightingale";
+import { drivingShifts } from "./data/drivingShifts";
+import { newCarColors } from "./data/newCarColors";
+import { caltrain, caltrainStopOrder } from "./data/caltrain";
+import { penguins } from "./data/penguins";
+import { density1d } from "fast-kde";
+import { genderPayGap, payGrade } from "./data/genderPayGap";
+import { seafood, lakeLocations } from "./data/seafood";
 
 const props = defineProps<{
   code: string;
@@ -47,9 +65,9 @@ onMounted(() => {
       "root",
       "size",
       "gf",
-      "catchData",
       "streamgraphData",
       "titanic",
+      "nightingale",
       "StackX",
       "StackY",
       "Rect",
@@ -57,8 +75,32 @@ onMounted(() => {
       "v",
       "Frame",
       "ConnectX",
+      "ConnectY",
       "Ref",
       "groupBy",
+      "Polar_DEPRECATED",
+      "drivingShifts",
+      "Ellipse",
+      "newCarColors",
+      "caltrain",
+      "caltrainStopOrder",
+      "penguins",
+      "density1d",
+      "genderPayGap",
+      "payGrade",
+      "mix",
+      "color6_old",
+      "white",
+      "black",
+      "color",
+      "seafood",
+      "lakeLocations",
+      "Wavy",
+      "Polar",
+      "color6",
+      "Petal",
+      "sumBy",
+      "orderBy",
       props.code
     );
     const root = document.createElement("div");
@@ -84,9 +126,9 @@ onMounted(() => {
         black,
         map: (data, callback) => data.map(callback),
       },
-      catchData,
       streamgraphData,
       titanic,
+      nightingale,
       StackX,
       StackY,
       Rect,
@@ -94,8 +136,32 @@ onMounted(() => {
       v,
       Frame,
       ConnectX,
+      ConnectY,
       Ref,
-      groupBy
+      groupBy,
+      Polar_DEPRECATED,
+      drivingShifts,
+      Ellipse,
+      newCarColors,
+      caltrain,
+      caltrainStopOrder,
+      penguins,
+      density1d,
+      genderPayGap,
+      payGrade,
+      mix,
+      color6_old,
+      white,
+      black,
+      color,
+      seafood,
+      lakeLocations,
+      Wavy,
+      Polar,
+      color6,
+      Petal,
+      sumBy,
+      orderBy
     );
     container.value.append(root);
   } catch (err) {

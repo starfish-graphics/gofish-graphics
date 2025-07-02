@@ -14,9 +14,12 @@ importers:
       '@types/lodash':
         specifier: ^4.17.17
         version: 4.17.17
+      fast-kde:
+        specifier: ^0.2.2
+        version: 0.2.2
       gofish-graphics:
-        specifier: ^0.0.8
-        version: 0.0.8(solid-js@1.9.7)
+        specifier: ^0.0.11
+        version: 0.0.11(solid-js@1.9.7)
       lodash:
         specifier: ^4.17.21
         version: 4.17.21
@@ -29,6 +32,9 @@ importers:
       sandpack-vue3:
         specifier: ^3.1.12
         version: 3.1.12(vue@3.5.13)
+      spectral.js:
+        specifier: 2.0.2
+        version: 2.0.2
       vite-plugin-monaco-editor:
         specifier: ^1.1.0
         version: 1.1.0(monaco-editor@0.52.2)
@@ -854,6 +860,10 @@ packages:
     resolution: {integrity: sha512-tdQAmyA18i4J7wprpYq8ClcxZy3SC31QMeByyCFyRt7BVHdREQZ5lpzoe5mFEYZUWe+oq8HBvk9JjpibyEV4Jg==}
     engines: {node: '>=12'}
 
+  d3-color@3.1.0:
+    resolution: {integrity: sha512-zg/chbXyeBtMQ1LbD/WSoW2DpC3I0mpmPdW+ynRTj/x2DAWYrIY7qeZIHidozwV24m4iavr15lNwIwLxRmOxhA==}
+    engines: {node: '>=12'}
+
   debug@4.4.1:
     resolution: {integrity: sha512-KcKCqiftBJcZr++7ykoDIEwSa3XWowTfNPo92BYxjXiyYEVrUQh2aLyhxBCwww+heortUFxEJYcRzosstTEBYQ==}
     engines: {node: '>=6.0'}
@@ -899,6 +909,9 @@ packages:
   estree-walker@2.0.2:
     resolution: {integrity: sha512-Rfkk/Mp/DL7JVje3u18FxFujQlTNR2q6QfMSMB7AvCBx91NGj/ba3kCfza0f6dVDbw7YlRf/nDrn7pQrCCyQ/w==}
 
+  fast-kde@0.2.2:
+    resolution: {integrity: sha512-Jebro5gWLQvRirj+YFaNgOCKl/Q+ld9wiHpZvLc0BA8oPhEHvQ8iZHGT2lDFVIqavdL1ip6wffv/IwRwMXjryA==}
+
   focus-trap@7.6.5:
     resolution: {integrity: sha512-7Ke1jyybbbPZyZXFxEftUtxFGLMpE2n6A+z//m4CRDlj0hW+o3iYSmh8nFlYMurOiJVDmJRilUQtJr08KfIxlg==}
 
@@ -915,8 +928,8 @@ packages:
     resolution: {integrity: sha512-WOBp/EEGUiIsJSp7wcv/y6MO+lV9UoncWqxuFfm8eBwzWNgyfBd6Gz+IeKQ9jCmyhoH99g15M3T+QaVHFjizVA==}
     engines: {node: '>=4'}
 
-  gofish-graphics@0.0.8:
-    resolution: {integrity: sha512-3eI7atgN1uGPEvfPqVAE+jBe1MuMmcXlYy9frkwvPkwA6200Xqvwgn8g/35a8sqrFZ/oVktZQKIJQLrGpGaipw==}
+  gofish-graphics@0.0.11:
+    resolution: {integrity: sha512-iHUagoD4wuNjoxiRSup6c4GjhO9a9bRpJNzJ38UYw5XxAV4r59yvN3pgpqdRTH1L1ZzFe4jxL+g9tRx+pu3ZpQ==}
     peerDependencies:
       solid-js: ^1.9.5
 
@@ -2114,6 +2127,8 @@ snapshots:
     dependencies:
       internmap: 2.0.3
 
+  d3-color@3.1.0: {}
+
   debug@4.4.1:
     dependencies:
       ms: 2.1.3
@@ -2164,6 +2179,10 @@ snapshots:
 
   estree-walker@2.0.2: {}
 
+  fast-kde@0.2.2:
+    dependencies:
+      d3-color: 3.1.0
+
   focus-trap@7.6.5:
     dependencies:
       tabbable: 6.2.0
@@ -2175,7 +2194,7 @@ snapshots:
 
   globals@11.12.0: {}
 
-  gofish-graphics@0.0.8(solid-js@1.9.7):
+  gofish-graphics@0.0.11(solid-js@1.9.7):
     dependencies:
       '@types/d3-array': 3.2.1
       bubblesets-js: 3.0.0
