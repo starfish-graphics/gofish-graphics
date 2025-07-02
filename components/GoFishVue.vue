@@ -33,8 +33,9 @@ import {
   Polar,
   color6,
   Petal,
+  sumBy,
+  orderBy,
 } from "gofish-graphics";
-import { sumBy, orderBy } from "lodash";
 import { mix } from "spectral.js";
 import _ from "lodash";
 import { streamgraphData } from "./data/streamgraphData";
