@@ -10,19 +10,7 @@ import { layer } from "../ast/graphicalOperators/layer";
 import { connect } from "../ast/graphicalOperators/connect";
 import { ref } from "../ast/shapes/ref";
 import { frame } from "../ast/graphicalOperators/frame";
-import { Frame, StackY, StackX, Rect, groupBy, For, ConnectX } from "../lib";
-
-const data = [
-  { origin: "Europe", cylinders: "4", count: 66 },
-  { origin: "Europe", cylinders: "5", count: 3 },
-  { origin: "Europe", cylinders: "6", count: 4 },
-  { origin: "Japan", cylinders: "3", count: 4 },
-  { origin: "Japan", cylinders: "4", count: 69 },
-  { origin: "Japan", cylinders: "6", count: 6 },
-  { origin: "USA", cylinders: "4", count: 72 },
-  { origin: "USA", cylinders: "6", count: 74 },
-  { origin: "USA", cylinders: "8", count: 108 },
-];
+import { Frame, StackY, StackX, Rect, groupBy, For, ConnectX, Ref } from "../lib";
 
 const classColor = {
   First: mix(color6_old[0], white, 0.5),
@@ -271,7 +259,7 @@ export const testSankeyIcicleAPIv2 = () =>
         )
       ),
     ]),
-    /* For(groupBy(titanic, "class"), (items, cls) => [
+    For(groupBy(titanic, "class"), (items, cls) => [
       ConnectX(
         {
           fill: classColor[cls as keyof typeof classColor],
@@ -303,9 +291,9 @@ export const testSankeyIcicleAPIv2 = () =>
               interpolation: "bezier",
               opacity: 0.7,
             },
-            [ref(`${cls}-${sex}-${survived}-src`), ref(`${cls}-${sex}-${survived}-tgt`)]
+            [Ref(`${cls}-${sex}-${survived}-src`), Ref(`${cls}-${sex}-${survived}-tgt`)]
           )
         ),
       ]),
-    ]), */
+    ]),
   ]);

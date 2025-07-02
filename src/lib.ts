@@ -43,7 +43,8 @@ export { GoFishSolid } from "./ast/GoFishSolid";
 // Data
 export { value as v } from "./ast/data";
 export { For } from "./ast/iterators/for";
-export { groupBy } from "./ast/iterators/groupBy";
+// export { groupBy } from "./ast/iterators/groupBy";
+export { groupBy, sumBy, orderBy } from "lodash";
 
 // Shapes
 export { rect as Rect } from "./ast/shapes/rect";
