@@ -175,6 +175,15 @@ const defs = [
 const App: Component = () => {
   return (
     <div style={{ "margin-left": "20px" }}>
+      <GoFishSolid w={500} h={500} defs={defs}>
+        {chartArea()}
+      </GoFishSolid>
+      <GoFishSolid w={500} h={500} defs={defs}>
+        {chartStackedArea()}
+      </GoFishSolid>
+      <GoFishSolid w={500} h={500} defs={defs}>
+        {chartRidgeline()}
+      </GoFishSolid>
       <GoFishSolid w={500} h={300} defs={defs}>
         {testViolinPlot()}
       </GoFishSolid>
@@ -206,19 +215,10 @@ const App: Component = () => {
         {testFishStackedBar()}
       </GoFishSolid>
       <GoFishSolid w={500} h={500} defs={defs}>
-        {chartRidgeline()}
-      </GoFishSolid>
-      <GoFishSolid w={500} h={500} defs={defs}>
-        {chartStackedArea()}
-      </GoFishSolid>
-      <GoFishSolid w={500} h={500} defs={defs}>
         {chartSankeyIcicle()}
       </GoFishSolid>
       <GoFishSolid w={500} h={500} defs={defs}>
         {testSankeyIcicleAPIv2()}
-      </GoFishSolid>
-      <GoFishSolid w={500} h={500} defs={defs}>
-        {chartArea()}
       </GoFishSolid>
       <GoFishSolid w={500} h={500} defs={defs}>
         {testFishBar()}

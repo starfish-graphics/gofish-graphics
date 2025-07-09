@@ -14,7 +14,7 @@ export class _Chart<T> {
 
   rect({ w, h, fill, debug }: { w: number; h: number | string; fill: string; debug?: boolean }) {
     return new _Chart(this._data, (d: T[], key: number | string) => {
-      if (debug) console.log("rect", d);
+      if (debug) console.log("rect", key, d);
       return Rect({
         w,
         h: typeof h === "number" ? h : v(_.sumBy(d, h)),
@@ -27,15 +27,37 @@ export class _Chart<T> {
   
   Then I have to grab the keys in a more clever way.
   */
-  connectX(key: number | string, options?: { interpolation?: "linear" | "bezier"; opacity?: number; debug?: boolean }) {
+  connectX(
+    key: number | string,
+    options?: {
+      over?: number | string;
+      interpolation?: "linear" | "bezier";
+      opacity?: number;
+      debug?: boolean;
+    }
+  ) {
     return new _Chart(this._data, (d: T[], k: number | string) => {
-      if (options?.debug) console.log("connectX", groupBy(d, key.toString()));
+      if (options?.debug)
+        console.log(
+          "connectX",
+          k,
+          groupBy(d, key?.toString()),
+          For(groupBy(d, key?.toString()), (items, i) => `${k}-${i}`)
+        );
+      if (options?.debug) console.log("connectX", options?.over, groupBy(d, options?.over?.toString() ?? ""));
       return Frame([
         this._render(d, k),
-        ConnectX(
-          { interpolation: options?.interpolation, opacity: options?.opacity },
-          For(groupBy(d, key.toString()), (items, key) => Ref(key))
-        ),
+        options?.over
+          ? For(groupBy(d, key.toString()), (items, o) =>
+              ConnectX(
+                { interpolation: options?.interpolation, opacity: options?.opacity },
+                For(groupBy(items, options?.over?.toString()), (item, i) => Ref(`${k}-${i}-${o}`))
+              )
+            )
+          : ConnectX(
+              { interpolation: options?.interpolation, opacity: options?.opacity },
+              For(groupBy(d, key.toString()), (items, i) => Ref(`${k}-${i}`))
+            ),
       ]);
     });
   }
@@ -43,7 +65,7 @@ export class _Chart<T> {
     iteratee?: string | ((item: T[]) => any),
     options?: { spacing?: number; sharedScale?: boolean; alignment?: "start" | "end"; debug?: boolean }
   ) {
-    return new _Chart(this._data, (d: T[]) => {
+    return new _Chart(this._data, (d: T[], k: number | string) => {
       let groups;
       if (typeof iteratee === "function") {
         groups = iteratee(d).value();
@@ -53,7 +75,9 @@ export class _Chart<T> {
       if (options?.debug) console.log("stackX groups", groups);
       return StackX(
         { spacing: options?.spacing, sharedScale: options?.sharedScale, alignment: options?.alignment },
-        iteratee ? For(groups, this._render) : For(d, this._render)
+        iteratee
+          ? For(groups, (items, key) => this._render(items, `${k}-${key}`))
+          : For(d, (item, key) => this._render(item, `${k}-${key}`))
       );
     });
   }
@@ -61,7 +85,7 @@ export class _Chart<T> {
     iteratee?: string | ((item: T[]) => any),
     options?: { spacing?: number; sharedScale?: boolean; alignment?: "start" | "end"; debug?: boolean }
   ) {
-    return new _Chart(this._data, (d: T[]) => {
+    return new _Chart(this._data, (d: T[], k: number | string) => {
       let groups;
       if (typeof iteratee === "function") {
         groups = iteratee(d).value();
@@ -71,7 +95,9 @@ export class _Chart<T> {
       if (options?.debug) console.log("stackY groups", groups);
       return StackY(
         { spacing: options?.spacing, sharedScale: options?.sharedScale, alignment: options?.alignment },
-        iteratee ? For(groups, this._render) : For(d, this._render)
+        iteratee
+          ? For(groups, (items, key) => this._render(items, `${k}-${key}`))
+          : For(d, (item, key) => this._render(item, `${k}-${key}`))
       );
     });
   }
@@ -96,11 +122,12 @@ export class _Chart<T> {
       axes?: boolean;
     }
   ) {
-    return this._render(this._data).render(container, { w: w, h: h, transform, debug, defs, axes });
+    return this._render(this._data, "root").render(container, { w: w, h: h, transform, debug, defs, axes });
   }
 
-  TEST_render() {
-    return this._render(this._data);
+  TEST_render(debug?: boolean) {
+    if (debug) console.log("TEST_render", this._render(this._data, "root"));
+    return this._render(this._data, "root");
   }
 }
 

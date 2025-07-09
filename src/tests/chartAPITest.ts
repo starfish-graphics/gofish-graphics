@@ -126,16 +126,16 @@ export const chartStackedArea = () => {
     .rect({ w: 32, h: "count", fill: "species" })
     .stackY("species", { spacing: 2 })
     .stackX("lake", { spacing: 60, sharedScale: true })
-    .connectX("species", { opacity: 0.7 })
+    .connectX("species", { over: "lake", opacity: 0.7 })
     .TEST_render();
 };
 
 export const chartRidgeline = () => {
   return Chart(streamgraphData)
-    .rect({ w: 2, h: "y", fill: "c" })
+    .rect({ w: 2, h: 40, fill: "c" })
     .stackX("x", { spacing: 20 })
-    .stackY("c", { spacing: -30, sharedScale: true })
-    .connectX("c", { opacity: 0.7, debug: true })
+    .connectX("x", { opacity: 0.7, debug: true })
+    .stackY("c", { spacing: 20, sharedScale: true })
     .TEST_render();
 };
 

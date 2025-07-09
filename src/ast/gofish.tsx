@@ -93,6 +93,11 @@ export const gofish = (
     solidRender(() => render({ width: w, height: h, defs, axes, scaleContext, keyContext }, child), container);
     return container;
   } finally {
+    if (debug) {
+      console.log("scopeContext", scopeContext);
+      // console.log("scaleContext", scaleContext);
+      // console.log("keyContext", keyContext);
+    }
     scopeContext = null;
     scaleContext = null;
     keyContext = null;
