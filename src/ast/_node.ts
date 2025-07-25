@@ -270,6 +270,11 @@ export class GoFishNode {
     this._name = name;
     return this;
   }
+
+  public setShared(shared: Size<boolean>): this {
+    this.shared = shared;
+    return this;
+  }
 }
 
 export const findPathToRoot = (node: GoFishNode): GoFishNode[] => {

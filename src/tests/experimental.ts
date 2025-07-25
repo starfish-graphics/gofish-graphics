@@ -73,3 +73,81 @@ const test3 = gf(titanic)
         .rect({ w: 40, h: "count", fill: "sex" }),
     ]),
   ]);
+
+
+Background({ padding: 20}, StackX({ spacing: 50 }, [
+  Text({ text: "Hello", fontSize: 20 }).name("A"),
+  Text({ text: "Hello", fontSize: 20 }).name("B"),
+  Arrow({}, [Ref("A"), Ref("B")]),
+]))
+
+Group([
+  Background({ padding: 20}, StackX({ spacing: 50 }, [
+    Text({ text: "Hello", fontSize: 20 }).name("A"),
+    Text({ text: "Hello", fontSize: 20 }).name("B"),
+  ])),
+  ({ A, B }) => Arrow({}, [A, B]),
+  Arrow({}, [A, B]))
+])
+
+// Background({ padding: 20}, StackX({ spacing: 50 }, [
+//   Text({ text: "Hello", fontSize: 20 }).name("A"),
+//   Text({ text: "Hello", fontSize: 20 }).name("B"),
+//   Arrow({}, [Ref("A"), Ref("B")]),
+// ]))
+
+
+// "square"
+rect(df, { fill: "red" })
+
+// "square"
+rect(df, { fill: "red" })
+  // automatically averages over x and y values for every entry in the group
+  .scatter("lake", { x: "x", y: "y" })
+
+// rect(df, { x: "x", y: "y", fill: "red" })
+//   .scatter("lake")
+
+// rect(df, { x: "x", y: "y", fill: "red" })
+//   .layer("lake")
+
+// rect(df, { x: "x", y: "y", fill: "red" })
+//   .facet("lake")
+
+// "bar"
+// automatically sums over count for each group
+rect(df, { fill: "lake", h: "count" })
+  .stackX("lake")
+
+// "bar" w/ stack
+rect(df, { fill: "lake" })
+  .divideY("species")
+  .stackX("lake")
+
+// "bar" w/ stack, change color
+rect(df, { fill: "species" })
+  .divideY("species")
+  .stackX("lake")
+
+// ribbon chart (hard to do!)
+rect(df, { fill: "red" })
+  .divideY("species")
+  .stackX("lake")
+  .connectX("species"/* , { over: "lake"} */)
+
+// switching divide to a stack to get some spacing
+rect(df, { fill: "red" })
+  .stackY("species")
+  .stackX("lake")
+  .connectX("species")
+
+// polar coordinate transformation of the chart
+rect(df, { fill: "red" })
+  .stackY("species")
+  .stackX("lake")
+  .connectX("species")
+  .coord(polar())
+
+// pie chart (TODO)
+
+// scatterpie

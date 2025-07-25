@@ -65,7 +65,7 @@ import { testFishRibbonChartTextured } from "./tests/fishRibbonChartTextured";
 import { testFishPolarRibbonChartTextured } from "./tests/fishPolarRibbonChartTextured";
 import { GoFishSolid } from "./ast";
 import { DitheringConfig, generateDithering } from "./tests/density";
-import { frame, rect, stackY } from "./lib";
+import { For, frame, Rect, rect, StackX, StackY, stackY } from "./lib";
 import { testRidgeline } from "./tests/ridgeline";
 import {
   chartBar,
@@ -87,6 +87,7 @@ import { testStringLine } from "./tests/stringline";
 import { testBumpChart } from "./tests/bump";
 import { testBoxWhiskerPlot } from "./tests/boxwhisker";
 import { testViolinPlot } from "./tests/violin";
+import { v2ChartBar } from "./tests/chartAPITestV2";
 
 const ditheringTestWidth = 800;
 
@@ -175,6 +176,28 @@ const defs = [
 const App: Component = () => {
   return (
     <div style={{ "margin-left": "20px" }}>
+      <GoFishSolid w={500} h={500} defs={defs}>
+        {v2ChartBar()}
+      </GoFishSolid>
+      <GoFishSolid w={500} h={500} defs={defs}>
+        {StackX(
+          { spacing: 60 },
+          For([5, 12, 20], (d) =>
+            StackY(
+              { spacing: 20 },
+              For([1, 2, 3], () =>
+                StackX({ spacing: d, alignment: "middle" }, [
+                  Rect({ rx: 5, ry: 5, h: 25, w: 16, fill: "cornflowerblue" }),
+                  StackY({ spacing: 2, alignment: "middle" }, [
+                    Rect({ rx: 5, ry: 5, h: 10, w: 10, fill: "cornflowerblue" }),
+                    Rect({ rx: 5, ry: 5, h: 10, w: 10, fill: "cornflowerblue" }),
+                  ]),
+                ])
+              )
+            )
+          )
+        )}
+      </GoFishSolid>
       <GoFishSolid w={500} h={500} defs={defs}>
         {chartArea()}
       </GoFishSolid>

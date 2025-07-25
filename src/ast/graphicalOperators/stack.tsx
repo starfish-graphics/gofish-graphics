@@ -173,7 +173,17 @@ modes!!!
           const scaleContext = getScaleContext();
           scaleContext.y = { domain: [0, size[1] / scaleFactors[1]], scaleFactor: scaleFactors[1] };
 
-          const childPlaceables = children.map((child) => child.layout(size, scaleFactors, posScales));
+          // Calculate available space for children in stacking direction after subtracting spacing
+          const totalSpacing = spacing * (children.length - 1);
+          const availableStackSpace = size[stackDir] - totalSpacing;
+          const childStackSize = availableStackSpace / children.length;
+
+          // Create modified size with equal distribution for stacking direction
+          const modifiedSize: Size = [0, 0];
+          modifiedSize[stackDir] = childStackSize;
+          modifiedSize[alignDir] = size[alignDir];
+
+          const childPlaceables = children.map((child) => child.layout(modifiedSize, scaleFactors, posScales));
 
           /* align */
           if (alignment === "start") {

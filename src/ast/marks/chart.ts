@@ -74,7 +74,7 @@ export class _Chart<T> {
       }
       if (options?.debug) console.log("stackX groups", groups);
       return StackX(
-        { spacing: options?.spacing, sharedScale: options?.sharedScale, alignment: options?.alignment },
+        { spacing: options?.spacing ?? 2, sharedScale: options?.sharedScale, alignment: options?.alignment },
         iteratee
           ? For(groups, (items, key) => this._render(items, `${k}-${key}`))
           : For(d, (item, key) => this._render(item, `${k}-${key}`))
@@ -98,6 +98,26 @@ export class _Chart<T> {
         iteratee
           ? For(groups, (items, key) => this._render(items, `${k}-${key}`))
           : For(d, (item, key) => this._render(item, `${k}-${key}`))
+      );
+    });
+  }
+  // TODO: fix!!!
+  scatterXY(
+    groupKey: string,
+    options: { x: (d: T, i: number | string) => number; y: (d: T, i: number | string) => number }
+  ) {
+    return new _Chart(this._data, (d: T[], k: number | string) => {
+      const groups = groupBy(d, groupKey);
+      return Frame(
+        For(groups, (items, key) =>
+          For(items, (item, i) =>
+            Rect({
+              ...this._render([item], `${k}-${key}-${i}`),
+              x: options.x(item, i),
+              y: options.y(item, i),
+            }).name(`${k}-${key}-${i}`)
+          )
+        )
       );
     });
   }
@@ -127,7 +147,7 @@ export class _Chart<T> {
 
   TEST_render(debug?: boolean) {
     if (debug) console.log("TEST_render", this._render(this._data, "root"));
-    return this._render(this._data, "root");
+    return this._render(this._data, "root").setShared([true, true]);
   }
 }
 
