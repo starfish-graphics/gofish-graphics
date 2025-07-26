@@ -16,14 +16,22 @@ import {
   Transform,
 } from "./dims";
 import { ContinuousDomain } from "./domain";
-import { getKeyContext, getScaleContext, getScopeContext, gofish } from "./gofish";
+import {
+  getKeyContext,
+  getScaleContext,
+  getScopeContext,
+  gofish,
+} from "./gofish";
 import { GoFishRef } from "./_ref";
 import { GoFishAST } from "./_ast";
 import { CoordinateTransform } from "./coordinateTransforms/coord";
 import { getValue, isValue, MaybeValue } from "./data";
 import { color6 } from "../color";
 
-export type Placeable = { dims: Dimensions; place: (pos: FancyPosition) => void };
+export type Placeable = {
+  dims: Dimensions;
+  place: (pos: FancyPosition) => void;
+};
 
 export type InferSizeDomains = (
   shared: Size<boolean>,
@@ -53,7 +61,12 @@ export type Render = (
     transform,
     renderData,
     coordinateTransform,
-  }: { intrinsicDims?: Dimensions; transform?: Transform; renderData?: any; coordinateTransform?: CoordinateTransform },
+  }: {
+    intrinsicDims?: Dimensions;
+    transform?: Transform;
+    renderData?: any;
+    coordinateTransform?: CoordinateTransform;
+  },
   children: JSX.Element[]
 ) => JSX.Element;
 
@@ -63,7 +76,9 @@ export class GoFishNode {
   public _name?: string;
   public parent?: GoFishNode;
   // private inferDomains: (childDomains: Size<Domain>[]) => FancySize<Domain | undefined>;
-  private _inferPosDomains: (childPosDomains: Size<ContinuousDomain>[]) => FancySize<ContinuousDomain | undefined>;
+  private _inferPosDomains: (
+    childPosDomains: Size<ContinuousDomain>[]
+  ) => FancySize<ContinuousDomain | undefined>;
   private _inferSizeDomains: InferSizeDomains;
   private _layout: Layout;
   private _render: Render;
@@ -97,7 +112,9 @@ export class GoFishNode {
       inferSizeDomains: InferSizeDomains;
       layout: Layout;
       render: Render;
-      inferPosDomains: (childPosDomains: Size<ContinuousDomain>[]) => FancySize<ContinuousDomain | undefined>;
+      inferPosDomains: (
+        childPosDomains: Size<ContinuousDomain>[]
+      ) => FancySize<ContinuousDomain | undefined>;
       shared?: Size<boolean>;
       color?: MaybeValue<string>;
     },
@@ -124,7 +141,10 @@ export class GoFishNode {
     if (this.color !== undefined && isValue(this.color)) {
       const color = getValue(this.color);
       if (!scaleContext.unit.color.has(color)) {
-        scaleContext.unit.color.set(color, color6[scaleContext.unit.color.size % 6]);
+        scaleContext.unit.color.set(
+          color,
+          color6[scaleContext.unit.color.size % 6]
+        );
       }
     }
 
@@ -153,14 +173,20 @@ export class GoFishNode {
     });
   }
   public inferPosDomains(): Size<ContinuousDomain | undefined> {
-    const posDomains = elaborateSize(this._inferPosDomains(this.children.map((child) => child.inferPosDomains())));
+    const posDomains = elaborateSize(
+      this._inferPosDomains(
+        this.children.map((child) => child.inferPosDomains())
+      )
+    );
     // this.posDomains = posDomains;
     return posDomains;
   }
 
   public inferSizeDomains(size: Size): (scaleFactors: Size) => Size {
     const sizeDomains = (scaleFactors: Size) =>
-      elaborateSize(this._inferSizeDomains(this.shared, size, this.children)(scaleFactors));
+      elaborateSize(
+        this._inferSizeDomains(this.shared, size, this.children)(scaleFactors)
+      );
     this.sizeDomains = sizeDomains;
     return sizeDomains;
   }
@@ -189,15 +215,27 @@ export class GoFishNode {
     // combine inrinsicDims and transform into a single object
     return [
       {
-        min: (this.intrinsicDims?.[0]?.min ?? 0) + (this.transform?.translate?.[0] ?? 0),
-        center: (this.intrinsicDims?.[0]?.center ?? 0) + (this.transform?.translate?.[0] ?? 0),
-        max: (this.intrinsicDims?.[0]?.max ?? 0) + (this.transform?.translate?.[0] ?? 0),
+        min:
+          (this.intrinsicDims?.[0]?.min ?? 0) +
+          (this.transform?.translate?.[0] ?? 0),
+        center:
+          (this.intrinsicDims?.[0]?.center ?? 0) +
+          (this.transform?.translate?.[0] ?? 0),
+        max:
+          (this.intrinsicDims?.[0]?.max ?? 0) +
+          (this.transform?.translate?.[0] ?? 0),
         size: this.intrinsicDims?.[0]?.size ?? 0,
       },
       {
-        min: (this.intrinsicDims?.[1]?.min ?? 0) + (this.transform?.translate?.[1] ?? 0),
-        center: (this.intrinsicDims?.[1]?.center ?? 0) + (this.transform?.translate?.[1] ?? 0),
-        max: (this.intrinsicDims?.[1]?.max ?? 0) + (this.transform?.translate?.[1] ?? 0),
+        min:
+          (this.intrinsicDims?.[1]?.min ?? 0) +
+          (this.transform?.translate?.[1] ?? 0),
+        center:
+          (this.intrinsicDims?.[1]?.center ?? 0) +
+          (this.transform?.translate?.[1] ?? 0),
+        max:
+          (this.intrinsicDims?.[1]?.max ?? 0) +
+          (this.transform?.translate?.[1] ?? 0),
         size: this.intrinsicDims?.[1]?.size ?? 0,
       },
     ];
@@ -212,7 +250,8 @@ export class GoFishNode {
       if (this.intrinsicDims?.[i]?.min === undefined) {
         this.intrinsicDims![i].min = elabPos[i]!;
       } else if (this.transform?.translate?.[i] === undefined) {
-        this.transform!.translate![i] = elabPos[i]! - (this.intrinsicDims![i].min ?? 0);
+        this.transform!.translate![i] =
+          elabPos[i]! - (this.intrinsicDims![i].min ?? 0);
       } else {
         // console.warn(
         //   "placing node with both intrinsic and transform defined:",
@@ -228,7 +267,9 @@ export class GoFishNode {
     this.intrinsicDims![elaborateDirection(direction)].embedded = true;
   }
 
-  public INTERNAL_render(coordinateTransform?: CoordinateTransform): JSX.Element {
+  public INTERNAL_render(
+    coordinateTransform?: CoordinateTransform
+  ): JSX.Element {
     return this._render(
       {
         intrinsicDims: this.intrinsicDims,
@@ -237,7 +278,11 @@ export class GoFishNode {
         /* TODO: do we want to add this as an object property? */
         coordinateTransform: coordinateTransform,
       },
-      this.children.map((child) => child.INTERNAL_render(this.type !== "box" ? coordinateTransform : undefined))
+      this.children.map((child) =>
+        child.INTERNAL_render(
+          this.type !== "box" ? coordinateTransform : undefined
+        )
+      )
     );
   }
 
@@ -263,11 +308,20 @@ export class GoFishNode {
       axes?: boolean;
     }
   ) {
-    return gofish(container, { w, h, x, y, transform, debug, defs, axes }, this);
+    return gofish(
+      container,
+      { w, h, x, y, transform, debug, defs, axes },
+      this
+    );
   }
 
   public name(name: string): this {
     this._name = name;
+    return this;
+  }
+
+  public setKey(key: string): this {
+    this.key = key;
     return this;
   }
 
@@ -287,7 +341,10 @@ export const findPathToRoot = (node: GoFishNode): GoFishNode[] => {
   return path;
 };
 
-export const findLeastCommonAncestor = (node1: GoFishNode, node2: GoFishNode): GoFishNode => {
+export const findLeastCommonAncestor = (
+  node1: GoFishNode,
+  node2: GoFishNode
+): GoFishNode => {
   const path1 = findPathToRoot(node1);
   const path2 = findPathToRoot(node2);
 
@@ -304,29 +361,39 @@ const isGoFishNode = (node: GoFishNode | GoFishAST): node is GoFishNode => {
   return "intrinsicDims" in node && "transform" in node && "dims" in node;
 };
 
-export const debugNodeTree = (node: GoFishNode | GoFishAST, indent: string = ""): void => {
+export const debugNodeTree = (
+  node: GoFishNode | GoFishAST,
+  indent: string = ""
+): void => {
   // Create a group for this node
-  console.group(`${indent}Node: ${node.type}${node._name ? ` (${node._name})` : ""}`);
+  console.group(
+    `${indent}Node: ${node.type}${node._name ? ` (${node._name})` : ""}`
+  );
 
   // Only print GoFishNode specific properties
   if (isGoFishNode(node)) {
     // Print intrinsic dimensions
     if (node.intrinsicDims) {
       console.group(`${indent}Intrinsic Dimensions`);
-      node.intrinsicDims.forEach((dim: { min?: number; center?: number; max?: number; size?: number }, i: number) => {
-        console.log(
-          `${i === 0 ? "Width" : "Height"}: ${JSON.stringify(
-            {
-              min: dim.min,
-              center: dim.center,
-              max: dim.max,
-              size: dim.size,
-            },
-            null,
-            2
-          )}`
-        );
-      });
+      node.intrinsicDims.forEach(
+        (
+          dim: { min?: number; center?: number; max?: number; size?: number },
+          i: number
+        ) => {
+          console.log(
+            `${i === 0 ? "Width" : "Height"}: ${JSON.stringify(
+              {
+                min: dim.min,
+                center: dim.center,
+                max: dim.max,
+                size: dim.size,
+              },
+              null,
+              2
+            )}`
+          );
+        }
+      );
       console.groupEnd();
     }
 
@@ -344,7 +411,9 @@ export const debugNodeTree = (node: GoFishNode | GoFishAST, indent: string = "")
     }
 
     // Print combined dimensions
-    console.log(`${indent}Combined Dimensions: ${JSON.stringify(node.dims, null, 2)}`);
+    console.log(
+      `${indent}Combined Dimensions: ${JSON.stringify(node.dims, null, 2)}`
+    );
   }
 
   // Print children

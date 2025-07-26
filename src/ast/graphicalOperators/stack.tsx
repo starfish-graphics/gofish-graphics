@@ -1,9 +1,23 @@
 import { For } from "solid-js";
 import { GoFishNode } from "../_node";
 import { getMeasure, getValue, isValue, Value } from "../data";
-import { Direction, elaborateDims, elaborateDirection, FancyDims, FancyDirection, FancySize, Size } from "../dims";
+import {
+  Direction,
+  elaborateDims,
+  elaborateDirection,
+  FancyDims,
+  FancyDirection,
+  FancySize,
+  Size,
+} from "../dims";
 import _, { Collection, size } from "lodash";
-import { canUnifyDomains, continuous, ContinuousDomain, Domain, unifyContinuousDomains } from "../domain";
+import {
+  canUnifyDomains,
+  continuous,
+  ContinuousDomain,
+  Domain,
+  unifyContinuousDomains,
+} from "../domain";
 import { findTargetMonotonic } from "../../util";
 import { GoFishAST } from "../_ast";
 import { getScaleContext } from "../gofish";
@@ -61,22 +75,26 @@ export const stack = withGoFish(
             .filter((d) => d !== undefined);
 
           return [
-            stackDir === 0 && filteredStackDirChildDomains.length > 0 && canUnifyDomains(filteredStackDirChildDomains)
+            stackDir === 0 &&
+            filteredStackDirChildDomains.length > 0 &&
+            canUnifyDomains(filteredStackDirChildDomains)
               ? unifyContinuousDomains(filteredStackDirChildDomains)
               : isValue(dims[0].min)
-              ? continuous({
-                  value: [getValue(dims[0].min)!, getValue(dims[0].min)!],
-                  measure: getMeasure(dims[0].min),
-                })
-              : undefined,
-            stackDir === 1 && filteredStackDirChildDomains.length > 0 && canUnifyDomains(filteredStackDirChildDomains)
+                ? continuous({
+                    value: [getValue(dims[0].min)!, getValue(dims[0].min)!],
+                    measure: getMeasure(dims[0].min),
+                  })
+                : undefined,
+            stackDir === 1 &&
+            filteredStackDirChildDomains.length > 0 &&
+            canUnifyDomains(filteredStackDirChildDomains)
               ? unifyContinuousDomains(filteredStackDirChildDomains)
               : isValue(dims[1].min)
-              ? continuous({
-                  value: [getValue(dims[1].min)!, getValue(dims[1].min)!],
-                  measure: getMeasure(dims[1].min),
-                })
-              : undefined,
+                ? continuous({
+                    value: [getValue(dims[1].min)!, getValue(dims[1].min)!],
+                    measure: getMeasure(dims[1].min),
+                  })
+                : undefined,
           ];
         },
         /* TODO: I need to write to the children!!!!!!!!!! */
@@ -115,13 +133,24 @@ modes!!!
           return (scaleFactors: Size): FancySize => {
             const stackSize =
               mode === "edge-to-edge"
-                ? _.sum(children.map((child) => child.inferSizeDomains(size)(scaleFactors)[stackDir])) +
+                ? _.sum(
+                    children.map(
+                      (child) =>
+                        child.inferSizeDomains(size)(scaleFactors)[stackDir]
+                    )
+                  ) +
                   spacing * (children.length - 1)
-                : children[0].inferSizeDomains(size)(scaleFactors)[stackDir] / 2 +
+                : children[0].inferSizeDomains(size)(scaleFactors)[stackDir] /
+                    2 +
                   spacing * (children.length - 1) +
-                  children[children.length - 1].inferSizeDomains(size)(scaleFactors)[stackDir] / 2;
+                  children[children.length - 1].inferSizeDomains(size)(
+                    scaleFactors
+                  )[stackDir] /
+                    2;
             const alignSize = Math.max(
-              ...children.map((child) => child.inferSizeDomains(size)(scaleFactors)[alignDir])
+              ...children.map(
+                (child) => child.inferSizeDomains(size)(scaleFactors)[alignDir]
+              )
             );
             return {
               [stackDir]: stackSize,
@@ -129,16 +158,23 @@ modes!!!
             };
           };
         },
-        layout: (shared, size, scaleFactors, children, measurement, posScales) => {
+        layout: (
+          shared,
+          size,
+          scaleFactors,
+          children,
+          measurement,
+          posScales
+        ) => {
           if (reverse) {
             children = children.reverse();
           }
           const stackPos = isValue(dims[stackDir].min)
             ? posScales[stackDir]!(getValue(dims[stackDir].min)!)
-            : dims[stackDir].min ?? undefined;
+            : (dims[stackDir].min ?? undefined);
           const alignPos = isValue(dims[alignDir].min)
             ? posScales[alignDir]!(getValue(dims[alignDir].min)!)
-            : dims[alignDir].min ?? undefined;
+            : (dims[alignDir].min ?? undefined);
 
           size = {
             [stackDir]: dims[stackDir].size ?? size[stackDir],
@@ -163,7 +199,10 @@ modes!!!
           if (shared[alignDir]) {
             const alignScaleFactor = findTargetMonotonic(
               size[alignDir],
-              (alignScaleFactor) => measurement({ [stackDir]: 1, [alignDir]: alignScaleFactor })[alignDir],
+              (alignScaleFactor) =>
+                measurement({ [stackDir]: 1, [alignDir]: alignScaleFactor })[
+                  alignDir
+                ],
               { upperBoundGuess: size[alignDir] }
             );
             scaleFactors[alignDir] = alignScaleFactor;
@@ -171,7 +210,10 @@ modes!!!
 
           // console.log(size, scaleFactors, posScales);
           const scaleContext = getScaleContext();
-          scaleContext.y = { domain: [0, size[1] / scaleFactors[1]], scaleFactor: scaleFactors[1] };
+          scaleContext.y = {
+            domain: [0, size[1] / scaleFactors[1]],
+            scaleFactor: scaleFactors[1],
+          };
 
           // Calculate available space for children in stacking direction after subtracting spacing
           const totalSpacing = spacing * (children.length - 1);
@@ -183,7 +225,9 @@ modes!!!
           modifiedSize[stackDir] = childStackSize;
           modifiedSize[alignDir] = size[alignDir];
 
-          const childPlaceables = children.map((child) => child.layout(modifiedSize, scaleFactors, posScales));
+          const childPlaceables = children.map((child) =>
+            child.layout(modifiedSize, scaleFactors, posScales)
+          );
 
           /* align */
           if (alignment === "start") {
@@ -204,9 +248,13 @@ modes!!!
           if (alignment === "start") {
             alignMin = 0;
           } else if (alignment === "middle") {
-            alignMin = Math.min(...childPlaceables.map((child) => -child.dims[alignDir].size! / 2));
+            alignMin = Math.min(
+              ...childPlaceables.map((child) => -child.dims[alignDir].size! / 2)
+            );
           } /* if (alignment === "end") */ else {
-            alignMin = Math.min(...childPlaceables.map((child) => -child.dims[alignDir].size!));
+            alignMin = Math.min(
+              ...childPlaceables.map((child) => -child.dims[alignDir].size!)
+            );
           }
 
           /* distribute */
@@ -227,7 +275,9 @@ modes!!!
             intrinsicDims: {
               [alignDir]: {
                 min: alignMin,
-                size: Math.max(...childPlaceables.map((child) => child.dims[alignDir].size!)),
+                size: Math.max(
+                  ...childPlaceables.map((child) => child.dims[alignDir].size!)
+                ),
               },
               [stackDir]: {
                 min: 0,
@@ -238,7 +288,8 @@ modes!!!
             },
             transform: {
               translate: {
-                [alignDir]: alignPos !== undefined ? alignPos - alignMin : undefined,
+                [alignDir]:
+                  alignPos !== undefined ? alignPos - alignMin : undefined,
                 [stackDir]: stackPos !== undefined ? stackPos : undefined,
               },
             },
@@ -246,7 +297,9 @@ modes!!!
         },
         render: ({ intrinsicDims, transform }, children) => {
           return (
-            <g transform={`translate(${transform?.translate?.[0] ?? 0}, ${transform?.translate?.[1] ?? 0})`}>
+            <g
+              transform={`translate(${transform?.translate?.[0] ?? 0}, ${transform?.translate?.[1] ?? 0})`}
+            >
               {children}
             </g>
           );

@@ -35,7 +35,10 @@ import { testNestedMosaic } from "./tests/nestedMosaic";
 import { testIcicle, testIcicleAPIv2 } from "./tests/icicle";
 import { testScatterFlower } from "./tests/scatterFlower";
 import { testFishBar } from "./tests/fishBar";
-import { testFishStackedBar, testFishStackedBarDataStyle } from "./tests/fishStackedBar";
+import {
+  testFishStackedBar,
+  testFishStackedBarDataStyle,
+} from "./tests/fishStackedBar";
 import { testFishGroupedBar } from "./tests/fishGroupedBar";
 import { testFishWaffle, testFishWaffleAPIv2 } from "./tests/fishWaffle";
 import { testFishWaffleRefactor } from "./tests/fishWaffleRefactor";
@@ -45,7 +48,10 @@ import { testBalloon } from "./tests/balloon";
 import { testSankeyIcicle, testSankeyIcicleAPIv2 } from "./tests/sankeyIcicle";
 import { testLineChart } from "./tests/lineChart";
 import { testAreaChart, testSingletonAreaChart } from "./tests/areaChart";
-import { testStackedAreaChart, testStackedAreaChartV2API } from "./tests/stackedAreaChart";
+import {
+  testStackedAreaChart,
+  testStackedAreaChartV2API,
+} from "./tests/stackedAreaChart";
 import { testScatterplot } from "./tests/scatterplot";
 import { testScatterBalloon } from "./tests/scatterBalloon";
 import { testNestedWaffle } from "./tests/nestedWaffle";
@@ -87,7 +93,12 @@ import { testStringLine } from "./tests/stringline";
 import { testBumpChart } from "./tests/bump";
 import { testBoxWhiskerPlot } from "./tests/boxwhisker";
 import { testViolinPlot } from "./tests/violin";
-import { v2ChartBar } from "./tests/chartAPITestV2";
+import {
+  v2ChartArea,
+  v2ChartBar,
+  v2ChartRibbon,
+  v2ChartStackedBar,
+} from "./tests/chartAPITestV2";
 
 const ditheringTestWidth = 800;
 
@@ -99,22 +110,45 @@ const sinusoidalSampling = (x: number) => {
   return (Math.sin(normalizedX + phase) + 1) / 2;
 };
 
-const sinePoints = generateDithering({ width: ditheringTestWidth, maxDensitySpacing: 8 }, sinusoidalSampling);
+const sinePoints = generateDithering(
+  { width: ditheringTestWidth, maxDensitySpacing: 8 },
+  sinusoidalSampling
+);
 
 // For other patterns like linear, exponential, etc.
 const uniformSampling = (x: number) => 0.2;
-const uniformPoints = generateDithering({ width: ditheringTestWidth, maxDensitySpacing: 4 }, uniformSampling);
+const uniformPoints = generateDithering(
+  { width: ditheringTestWidth, maxDensitySpacing: 4 },
+  uniformSampling
+);
 const exponentialSampling = (x: number) => Math.exp(-x / 50);
-const exponentialPoints = generateDithering({ width: ditheringTestWidth, maxDensitySpacing: 4 }, exponentialSampling);
+const exponentialPoints = generateDithering(
+  { width: ditheringTestWidth, maxDensitySpacing: 4 },
+  exponentialSampling
+);
 const linearSampling = (x: number) => x / 2000;
-const linearPoints = generateDithering({ width: ditheringTestWidth, maxDensitySpacing: 4 }, linearSampling);
+const linearPoints = generateDithering(
+  { width: ditheringTestWidth, maxDensitySpacing: 4 },
+  linearSampling
+);
 
 const defs = [
-  <pattern id="noFill" fill="white" width="1" height="1" patternUnits="userSpaceOnUse">
+  <pattern
+    id="noFill"
+    fill="white"
+    width="1"
+    height="1"
+    patternUnits="userSpaceOnUse"
+  >
     <rect width="1" height="1" />
   </pattern>,
 
-  <pattern id="solidGrayFill" width="1" height="1" patternUnits="userSpaceOnUse">
+  <pattern
+    id="solidGrayFill"
+    width="1"
+    height="1"
+    patternUnits="userSpaceOnUse"
+  >
     <rect width="1" height="1" fill="#808080" />
   </pattern>,
 
@@ -133,24 +167,65 @@ const defs = [
     />
   </pattern>,
 
-  <pattern id="denseDottedFill" width="2.5mm" height="2.5mm" patternUnits="userSpaceOnUse">
+  <pattern
+    id="denseDottedFill"
+    width="2.5mm"
+    height="2.5mm"
+    patternUnits="userSpaceOnUse"
+  >
     <circle cx="1.25mm" cy="1.25mm" r="0.6mm" fill="black" />
   </pattern>,
 
-  <pattern id="verticalFill" width="5mm" height="0.5mm" patternUnits="userSpaceOnUse">
-    <line x1="1.25mm" y1="-1mm" x2="1.25mm" y2="1.5mm" stroke="black" stroke-width="1.3mm" />
+  <pattern
+    id="verticalFill"
+    width="5mm"
+    height="0.5mm"
+    patternUnits="userSpaceOnUse"
+  >
+    <line
+      x1="1.25mm"
+      y1="-1mm"
+      x2="1.25mm"
+      y2="1.5mm"
+      stroke="black"
+      stroke-width="1.3mm"
+    />
   </pattern>,
 
-  <pattern id="horizontalFill" width="0.5mm" height="5mm" patternUnits="userSpaceOnUse">
-    <line x1="-1mm" y1="1.25mm" x2="1.5mm" y2="1.25mm" stroke="black" stroke-width="1.3mm" />
+  <pattern
+    id="horizontalFill"
+    width="0.5mm"
+    height="5mm"
+    patternUnits="userSpaceOnUse"
+  >
+    <line
+      x1="-1mm"
+      y1="1.25mm"
+      x2="1.5mm"
+      y2="1.25mm"
+      stroke="black"
+      stroke-width="1.3mm"
+    />
   </pattern>,
 
-  <pattern id="dottedFill" width="5mm" height="5mm" patternUnits="userSpaceOnUse" fill="black" stroke="none">
+  <pattern
+    id="dottedFill"
+    width="5mm"
+    height="5mm"
+    patternUnits="userSpaceOnUse"
+    fill="black"
+    stroke="none"
+  >
     <circle cx="1.25mm" cy="1.25mm" r="1mm" />
     <circle cx="6.25mm" cy="6.25mm" r="1mm" />
   </pattern>,
 
-  <pattern id="crossFill" width="5.08mm" height="5.08mm" patternUnits="userSpaceOnUse">
+  <pattern
+    id="crossFill"
+    width="5.08mm"
+    height="5.08mm"
+    patternUnits="userSpaceOnUse"
+  >
     <line
       x1="2.54mm"
       y1="0mm"
@@ -162,22 +237,69 @@ const defs = [
     />
   </pattern>,
 
-  <pattern id="diagonalLeftFill" width="5.08mm" height="5.08mm" patternUnits="userSpaceOnUse">
-    <line x1="-0.5mm" y1="-1.27mm" x2="7.12mm" y2="6.35mm" stroke="black" stroke-width="0.8mm" />
-    <line x1="-1.77mm" y1="2.54mm" x2="2.04mm" y2="-1.27mm" stroke="black" stroke-width="0.8mm" />
+  <pattern
+    id="diagonalLeftFill"
+    width="5.08mm"
+    height="5.08mm"
+    patternUnits="userSpaceOnUse"
+  >
+    <line
+      x1="-0.5mm"
+      y1="-1.27mm"
+      x2="7.12mm"
+      y2="6.35mm"
+      stroke="black"
+      stroke-width="0.8mm"
+    />
+    <line
+      x1="-1.77mm"
+      y1="2.54mm"
+      x2="2.04mm"
+      y2="-1.27mm"
+      stroke="black"
+      stroke-width="0.8mm"
+    />
   </pattern>,
 
-  <pattern id="diagonalRightFill" width="5.08mm" height="5.08mm" patternUnits="userSpaceOnUse">
-    <line x1="7.12mm" y1="-1.27mm" x2="-0.5mm" y2="6.35mm" stroke="black" stroke-width="0.8mm" />
-    <line x1="2.04mm" y1="-1.27mm" x2="-1.77mm" y2="2.54mm" stroke="black" stroke-width="0.8mm" />
+  <pattern
+    id="diagonalRightFill"
+    width="5.08mm"
+    height="5.08mm"
+    patternUnits="userSpaceOnUse"
+  >
+    <line
+      x1="7.12mm"
+      y1="-1.27mm"
+      x2="-0.5mm"
+      y2="6.35mm"
+      stroke="black"
+      stroke-width="0.8mm"
+    />
+    <line
+      x1="2.04mm"
+      y1="-1.27mm"
+      x2="-1.77mm"
+      y2="2.54mm"
+      stroke="black"
+      stroke-width="0.8mm"
+    />
   </pattern>,
 ];
 
 const App: Component = () => {
   return (
     <div style={{ "margin-left": "20px" }}>
-      <GoFishSolid w={500} h={500} defs={defs}>
+      <GoFishSolid w={320} h={400} defs={defs} axes={true}>
         {v2ChartBar()}
+      </GoFishSolid>
+      <GoFishSolid w={320} h={400} defs={defs} axes={true}>
+        {v2ChartStackedBar()}
+      </GoFishSolid>
+      <GoFishSolid w={320} h={400} defs={defs} axes={true}>
+        {v2ChartRibbon()}
+      </GoFishSolid>
+      <GoFishSolid w={320} h={400} defs={defs} axes={true}>
+        {v2ChartArea()}
       </GoFishSolid>
       <GoFishSolid w={500} h={500} defs={defs}>
         {StackX(
@@ -189,8 +311,20 @@ const App: Component = () => {
                 StackX({ spacing: d, alignment: "middle" }, [
                   Rect({ rx: 5, ry: 5, h: 25, w: 16, fill: "cornflowerblue" }),
                   StackY({ spacing: 2, alignment: "middle" }, [
-                    Rect({ rx: 5, ry: 5, h: 10, w: 10, fill: "cornflowerblue" }),
-                    Rect({ rx: 5, ry: 5, h: 10, w: 10, fill: "cornflowerblue" }),
+                    Rect({
+                      rx: 5,
+                      ry: 5,
+                      h: 10,
+                      w: 10,
+                      fill: "cornflowerblue",
+                    }),
+                    Rect({
+                      rx: 5,
+                      ry: 5,
+                      h: 10,
+                      w: 10,
+                      fill: "cornflowerblue",
+                    }),
                   ]),
                 ])
               )
@@ -290,40 +424,55 @@ const App: Component = () => {
       <GoFishSolid w={800} h={1000} defs={defs}>
         {frame([
           frame({ y: 10 }, [
-            ...sinePoints.map((p) => rect({ x: p, w: 4, h: 20, fill: "black" })),
+            ...sinePoints.map((p) =>
+              rect({ x: p, w: 4, h: 20, fill: "black" })
+            ),
             rect({ x: 0, y: 10, w: 1000, h: 2, fill: "black" }),
           ]),
           frame({ y: 100 }, [
-            ...uniformPoints.map((p) => rect({ x: p, w: 4, h: 20, fill: "black" })),
+            ...uniformPoints.map((p) =>
+              rect({ x: p, w: 4, h: 20, fill: "black" })
+            ),
             rect({ x: 0, y: 10, w: 1000, h: 2, fill: "black" }),
           ]),
           frame({ y: 200 }, [
-            ...exponentialPoints.map((p) => rect({ x: p, w: 4, h: 20, fill: "black" })),
+            ...exponentialPoints.map((p) =>
+              rect({ x: p, w: 4, h: 20, fill: "black" })
+            ),
             rect({ x: 0, y: 10, w: 1000, h: 2, fill: "black" }),
           ]),
           rect({ x: 0, y: 260, w: 1000, h: 4, fill: "black" }),
           frame({ y: 300 }, [
-            ...sinePoints.map((p) => rect({ x: p, w: 4, h: 20, fill: "black" })),
+            ...sinePoints.map((p) =>
+              rect({ x: p, w: 4, h: 20, fill: "black" })
+            ),
             // rect({ x: 0, y: 10, w: 1000, h: 2, fill: "black" }),
           ]),
           frame({ y: 400 }, [
-            ...uniformPoints.map((p) => rect({ x: p, w: 4, h: 20, fill: "black" })),
+            ...uniformPoints.map((p) =>
+              rect({ x: p, w: 4, h: 20, fill: "black" })
+            ),
             // rect({ x: 0, y: 10, w: 1000, h: 2, fill: "black" }),
           ]),
           frame({ y: 500 }, [
-            ...exponentialPoints.map((p) => rect({ x: p, w: 4, h: 20, fill: "black" })),
+            ...exponentialPoints.map((p) =>
+              rect({ x: p, w: 4, h: 20, fill: "black" })
+            ),
             // rect({ x: 0, y: 10, w: 1000, h: 2, fill: "black" }),
           ]),
         ])}
       </GoFishSolid>
       <h1>Welcome!</h1>
       <div style={{ "max-width": "520px" }}>
-        Welcome to the GoFish supplemental code! Below you'll find all the graphics we made in GoFish for the paper. If
-        you navigate to <code>App.tsx</code>, you can see the code that generates each one.
+        Welcome to the GoFish supplemental code! Below you'll find all the
+        graphics we made in GoFish for the paper. If you navigate to{" "}
+        <code>App.tsx</code>, you can see the code that generates each one.
         <br />
         <br />
-        <b>Note:</b> Some colors are modified slightly from the paper, because they now use the default color scale. The
-        data set for the examples in Sec. 6.3 have been modified to extend the <code>catch</code> data set from Sec. 3.
+        <b>Note:</b> Some colors are modified slightly from the paper, because
+        they now use the default color scale. The data set for the examples in
+        Sec. 6.3 have been modified to extend the <code>catch</code> data set
+        from Sec. 3.
       </div>
       <br />
       <br />
@@ -370,9 +519,21 @@ const App: Component = () => {
       <GoFishSolid w={500} h={200} defs={defs}>
         {testFishBar()}
       </GoFishSolid>
-      <div style={{ display: "flex", "flex-direction": "row", gap: "40px", "align-items": "flex-start" }}>
+      <div
+        style={{
+          display: "flex",
+          "flex-direction": "row",
+          gap: "40px",
+          "align-items": "flex-start",
+        }}
+      >
         <div
-          style={{ display: "flex", "flex-direction": "column", "justify-content": "space-between", height: "420px" }}
+          style={{
+            display: "flex",
+            "flex-direction": "column",
+            "justify-content": "space-between",
+            height: "420px",
+          }}
         >
           <h2>2a. Stacked Bar Chart</h2>
           <GoFishSolid w={250} h={300} defs={defs}>
@@ -380,7 +541,12 @@ const App: Component = () => {
           </GoFishSolid>
         </div>
         <div
-          style={{ display: "flex", "flex-direction": "column", "justify-content": "space-between", height: "420px" }}
+          style={{
+            display: "flex",
+            "flex-direction": "column",
+            "justify-content": "space-between",
+            height: "420px",
+          }}
         >
           <h2>2b. Grouped Bar Chart</h2>
           <GoFishSolid w={350} h={300} defs={defs}>
@@ -388,7 +554,12 @@ const App: Component = () => {
           </GoFishSolid>
         </div>
         <div
-          style={{ display: "flex", "flex-direction": "column", "justify-content": "space-between", height: "400px" }}
+          style={{
+            display: "flex",
+            "flex-direction": "column",
+            "justify-content": "space-between",
+            height: "400px",
+          }}
         >
           <h2>2c. Waffle Chart</h2>
           <GoFishSolid w={300} h={350} defs={defs}>
@@ -405,7 +576,12 @@ const App: Component = () => {
         </div>
         <div>
           <h2>4. Polar Ribbon Chart</h2>
-          <GoFishSolid w={500} h={400} defs={defs} transform={{ x: 200, y: 200 }}>
+          <GoFishSolid
+            w={500}
+            h={400}
+            defs={defs}
+            transform={{ x: 200, y: 200 }}
+          >
             {testFishPolarRibbonChart()}
           </GoFishSolid>
         </div>
@@ -414,7 +590,14 @@ const App: Component = () => {
       <br />
       <br />
       <h1>Building a Streamgraph (Sec. 6.1)</h1>
-      <div style={{ display: "flex", "flex-direction": "row", gap: "40px", "flex-wrap": "wrap" }}>
+      <div
+        style={{
+          display: "flex",
+          "flex-direction": "row",
+          gap: "40px",
+          "flex-wrap": "wrap",
+        }}
+      >
         <div>
           <h2>1. Scatterplot</h2>
           <GoFishSolid w={200} h={100} defs={defs}>
@@ -454,7 +637,14 @@ const App: Component = () => {
         {testPolarGroupedBar()}
       </GoFishSolid>
       <h1>Waffles to Nested Mosaics, Icicles to Node-Link Trees (Sec. 6.2)</h1>
-      <div style={{ display: "flex", "flex-direction": "row", gap: "40px", "flex-wrap": "wrap" }}>
+      <div
+        style={{
+          display: "flex",
+          "flex-direction": "row",
+          gap: "40px",
+          "flex-wrap": "wrap",
+        }}
+      >
         <div>
           <h2>Nested Waffle</h2>
           <GoFishSolid w={200} h={400} defs={defs}>
@@ -484,7 +674,14 @@ const App: Component = () => {
       <br />
       <br />
       <h1>Scatter Pies and Flowers and Balloons... Oh My! (Sec. 6.3)</h1>
-      <div style={{ display: "flex", "flex-direction": "row", gap: "40px", "flex-wrap": "wrap" }}>
+      <div
+        style={{
+          display: "flex",
+          "flex-direction": "row",
+          gap: "40px",
+          "flex-wrap": "wrap",
+        }}
+      >
         <div>
           <h2>Scatter Pie</h2>
           <GoFishSolid w={250} h={200} defs={defs}>
@@ -508,16 +705,33 @@ const App: Component = () => {
       <br />
       <br />
       <h1>Polar Stacked Bar Embedding (Sec. 6.4)</h1>
-      <div style={{ display: "flex", "flex-direction": "row", gap: "40px", "flex-wrap": "wrap" }}>
+      <div
+        style={{
+          display: "flex",
+          "flex-direction": "row",
+          gap: "40px",
+          "flex-wrap": "wrap",
+        }}
+      >
         <div>
           <h2>Not Embedded</h2>
-          <GoFishSolid w={300} h={300} defs={defs} transform={{ x: 200, y: 100 }}>
+          <GoFishSolid
+            w={300}
+            h={300}
+            defs={defs}
+            transform={{ x: 200, y: 100 }}
+          >
             {testPolarCenterStackedBar()}
           </GoFishSolid>
         </div>
         <div>
           <h2>Embedded</h2>
-          <GoFishSolid w={300} h={300} defs={defs} transform={{ x: 200, y: 100 }}>
+          <GoFishSolid
+            w={300}
+            h={300}
+            defs={defs}
+            transform={{ x: 200, y: 100 }}
+          >
             {testPolarCenterStackedBarEmbedded()}
           </GoFishSolid>
         </div>
