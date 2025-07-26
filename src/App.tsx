@@ -7,6 +7,7 @@ import { testStackedBarWithSpacing } from "./tests/stackedBarWithSpacing";
 import { testColorPalette } from "./tests/colorPalette";
 import { testRibbonChart } from "./tests/ribbonChart";
 import { testColor10 } from "./tests/color10";
+import { testPosition, testMultiplePositions } from "./tests/positionTest";
 import { testPolarRibbon } from "./tests/polarRibbon";
 import { testPolarRect } from "./tests/polarRect";
 import { testPolarRectLineY } from "./tests/polarRectLineY";
@@ -289,6 +290,14 @@ const defs = [
 const App: Component = () => {
   return (
     <div style={{ "margin-left": "20px" }}>
+      <h2>Position Test</h2>
+      <GoFishSolid w={400} h={300}>
+        {testPosition()}
+      </GoFishSolid>
+      <h2>Multiple Positions Test</h2>
+      <GoFishSolid w={400} h={300}>
+        {testMultiplePositions()}
+      </GoFishSolid>
       <GoFishSolid w={320} h={400} defs={defs} axes={true}>
         {v2ChartBar()}
       </GoFishSolid>
