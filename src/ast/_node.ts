@@ -286,7 +286,7 @@ export class GoFishNode {
     );
   }
 
-  public render(
+  public NODE_render(
     container: HTMLElement,
     {
       w,

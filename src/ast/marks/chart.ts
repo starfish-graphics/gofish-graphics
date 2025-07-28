@@ -370,7 +370,7 @@ export class _Chart<T> {
   ) {
     return this._render(this._data, "root")
       .setShared([true, true])
-      .render(container, {
+      .NODE_render(container, {
         w: w,
         h: h,
         transform,
