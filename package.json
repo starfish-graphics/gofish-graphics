@@ -1,6 +1,6 @@
 {
   "name": "gofish-graphics",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "description": "A library for creating charts",
   "type": "module",
   "main": "dist/index.js",
