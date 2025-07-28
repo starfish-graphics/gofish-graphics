@@ -10,9 +10,10 @@ import {
   StackX,
   StackY,
   v,
+  sumBy,
+  meanBy,
 } from "../../lib";
 import { GoFishNode } from "../_node";
-import _ from "lodash";
 import { CoordinateTransform } from "../coordinateTransforms/coord";
 
 const connectXMode = {
@@ -56,8 +57,8 @@ export class _Chart<T> {
     return new _Chart(this._data, (d: T[], key: number | string) => {
       if (debug) console.log("rect", key, d);
       return Rect({
-        w: typeof w === "number" || w === undefined ? w : v(_.sumBy(d, w)),
-        h: typeof h === "number" || h === undefined ? h : v(_.sumBy(d, h)),
+        w: typeof w === "number" || w === undefined ? w : v(sumBy(d, w)),
+        h: typeof h === "number" || h === undefined ? h : v(sumBy(d, h)),
         rx,
         ry,
         fill:
@@ -176,11 +177,11 @@ export class _Chart<T> {
           w:
             typeof opts?.w === "number" || opts?.w === undefined
               ? opts?.w
-              : /* v */ _.sumBy(d, opts?.w),
+              : /* v */ sumBy(d, opts?.w),
           h:
             typeof opts?.h === "number" || opts?.h === undefined
               ? opts?.h
-              : /* v */ _.sumBy(d, opts?.h),
+              : /* v */ sumBy(d, opts?.h),
         },
         iteratee
           ? For(groups, (items, key) => {
@@ -232,11 +233,11 @@ export class _Chart<T> {
           w:
             typeof opts?.w === "number" || opts?.w === undefined
               ? opts?.w
-              : /* v */ _.sumBy(d, opts?.w),
+              : /* v */ sumBy(d, opts?.w),
           h:
             typeof opts?.h === "number" || opts?.h === undefined
               ? opts?.h
-              : /* v */ _.sumBy(d, opts?.h),
+              : /* v */ sumBy(d, opts?.h),
         },
         iteratee
           ? For(groups, (items, key) => {
@@ -328,8 +329,8 @@ export class _Chart<T> {
       return Frame(
         For(groups, (items, groupKey) => {
           // Calculate average x and y values for this group
-          const avgX = _.meanBy(items, options.x);
-          const avgY = _.meanBy(items, options.y);
+          const avgX = meanBy(items, options.x);
+          const avgY = meanBy(items, options.y);
 
           if (options?.debug)
             console.log(`Group ${groupKey}: avgX=${avgX}, avgY=${avgY}`);

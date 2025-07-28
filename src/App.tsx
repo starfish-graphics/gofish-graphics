@@ -311,14 +311,14 @@ const App: Component = () => {
       <GoFishSolid w={320} h={400} defs={defs} axes={false}>
         {v2ChartScatterPie()}
       </GoFishSolid>
-      <h2>Position Test</h2>
+      {/* <h2>Position Test</h2>
       <GoFishSolid w={400} h={300}>
         {testPosition()}
       </GoFishSolid>
       <h2>Multiple Positions Test</h2>
       <GoFishSolid w={400} h={300}>
         {testMultiplePositions()}
-      </GoFishSolid>
+      </GoFishSolid> */}
       <GoFishSolid w={320} h={400} defs={defs} axes={true}>
         {v2ChartRibbonMessAround()}
       </GoFishSolid>
