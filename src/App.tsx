@@ -97,8 +97,17 @@ import { testViolinPlot } from "./tests/violin";
 import {
   v2ChartArea,
   v2ChartBar,
+  v2ChartPolarRibbon,
+  v2ChartRect,
+  v2ChartRectSpread,
   v2ChartRibbon,
+  v2ChartRibbonMessAround,
+  v2ChartScatter,
   v2ChartStackedBar,
+  v2ChartPies,
+  v2ChartPie,
+  v2ChartScatterPie,
+  // v2ChartWaffle,
 } from "./tests/chartAPITestV2";
 
 const ditheringTestWidth = 800;
@@ -290,6 +299,18 @@ const defs = [
 const App: Component = () => {
   return (
     <div style={{ "margin-left": "20px" }}>
+      {/* <GoFishSolid w={320} h={400} defs={defs} axes={false}>
+        {v2ChartPies()}
+      </GoFishSolid> */}
+      {/* <GoFishSolid w={320} h={400} defs={defs} axes={false}>
+        {v2ChartWaffle()}
+      </GoFishSolid> */}
+      <GoFishSolid w={320} h={400} defs={defs} axes={false}>
+        {v2ChartPie()}
+      </GoFishSolid>
+      <GoFishSolid w={320} h={400} defs={defs} axes={false}>
+        {v2ChartScatterPie()}
+      </GoFishSolid>
       <h2>Position Test</h2>
       <GoFishSolid w={400} h={300}>
         {testPosition()}
@@ -299,6 +320,18 @@ const App: Component = () => {
         {testMultiplePositions()}
       </GoFishSolid>
       <GoFishSolid w={320} h={400} defs={defs} axes={true}>
+        {v2ChartRibbonMessAround()}
+      </GoFishSolid>
+      <GoFishSolid w={320} h={400} defs={defs} axes={false}>
+        {v2ChartScatter()}
+      </GoFishSolid>
+      <GoFishSolid w={320} h={400} defs={defs} axes={false}>
+        {v2ChartRect()}
+      </GoFishSolid>
+      <GoFishSolid w={320} h={400} defs={defs} axes={false}>
+        {v2ChartRectSpread()}
+      </GoFishSolid>
+      <GoFishSolid w={320} h={400} defs={defs} axes={true}>
         {v2ChartBar()}
       </GoFishSolid>
       <GoFishSolid w={320} h={400} defs={defs} axes={true}>
@@ -306,6 +339,9 @@ const App: Component = () => {
       </GoFishSolid>
       <GoFishSolid w={320} h={400} defs={defs} axes={true}>
         {v2ChartRibbon()}
+      </GoFishSolid>
+      <GoFishSolid w={320} h={400} x={150} y={150} defs={defs} axes={false}>
+        {v2ChartPolarRibbon()}
       </GoFishSolid>
       <GoFishSolid w={320} h={400} defs={defs} axes={true}>
         {v2ChartArea()}

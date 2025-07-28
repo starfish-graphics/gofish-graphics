@@ -1,4 +1,10 @@
-export type Lakes = "Lake A" | "Lake B" | "Lake C" | "Lake D" | "Lake E" | "Lake F";
+export type Lakes =
+  | "Lake A"
+  | "Lake B"
+  | "Lake C"
+  | "Lake D"
+  | "Lake E"
+  | "Lake F";
 
 export type CatchData = {
   lake: Lakes;
@@ -14,6 +20,14 @@ export const catchLocations: Record<Lakes, { x: number; y: number }> = {
   "Lake E": { x: 133.05, y: 50.44 },
   "Lake F": { x: 85.99, y: 172.78 },
 };
+
+export const catchLocationsArray = Object.entries(catchLocations).map(
+  ([lake, { x, y }]) => ({
+    lake,
+    x,
+    y,
+  })
+);
 
 export const catchData: CatchData[] = [
   {
@@ -167,3 +181,16 @@ export const catchData: CatchData[] = [
     count: 47,
   },
 ];
+
+export const catchDataWithLocations = catchData.map((catchItem) => {
+  const location = catchLocationsArray.find(
+    (loc) => loc.lake === catchItem.lake
+  );
+  return {
+    ...catchItem,
+    x: location?.x,
+    y: location?.y,
+  };
+});
+
+export type CatchDataWithLocation = (typeof catchDataWithLocations)[0];

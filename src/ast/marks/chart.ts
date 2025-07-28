@@ -4,6 +4,7 @@ import {
   For,
   Frame,
   groupBy,
+  Position,
   Rect,
   Ref,
   StackX,
@@ -12,6 +13,12 @@ import {
 } from "../../lib";
 import { GoFishNode } from "../_node";
 import _ from "lodash";
+import { CoordinateTransform } from "../coordinateTransforms/coord";
+
+const connectXMode = {
+  edge: "edge-to-edge",
+  center: "center-to-center",
+};
 
 export class _Chart<T> {
   private _data: T[];
@@ -34,20 +41,31 @@ export class _Chart<T> {
   rect({
     w,
     h,
+    rx,
+    ry,
     fill,
     debug,
   }: {
-    w?: number;
+    w?: number | string;
     h?: number | string;
+    rx?: number;
+    ry?: number;
     fill: string;
     debug?: boolean;
   }) {
     return new _Chart(this._data, (d: T[], key: number | string) => {
       if (debug) console.log("rect", key, d);
       return Rect({
-        w,
-        h: typeof h === "number" ? h : v(_.sumBy(d, h)),
-        fill: v(Array.isArray(d) ? d[0][fill as keyof T] : d[fill as keyof T]),
+        w: typeof w === "number" || w === undefined ? w : v(_.sumBy(d, w)),
+        h: typeof h === "number" || h === undefined ? h : v(_.sumBy(d, h)),
+        rx,
+        ry,
+        fill:
+          typeof fill === "string" &&
+          (Array.isArray(d) ? d[0] : d) &&
+          fill in (Array.isArray(d) ? d[0] : d)
+            ? v(Array.isArray(d) ? d[0][fill as keyof T] : d[fill as keyof T])
+            : fill,
       }).name(key.toString());
     });
   }
@@ -75,6 +93,8 @@ export class _Chart<T> {
       over?: number | string;
       interpolation?: "linear" | "bezier";
       opacity?: number;
+      mode?: "edge" | "center";
+      strokeWidth?: number;
       debug?: boolean;
     }
   ) {
@@ -100,6 +120,8 @@ export class _Chart<T> {
                 {
                   interpolation: options?.interpolation,
                   opacity: options?.opacity,
+                  mode: options?.mode ? connectXMode[options?.mode] : undefined,
+                  strokeWidth: options?.strokeWidth,
                 },
                 For(groupBy(items, options?.over?.toString()), (item, i) =>
                   Ref(`${k}-${i}-${o}`)
@@ -110,18 +132,25 @@ export class _Chart<T> {
               {
                 interpolation: options?.interpolation,
                 opacity: options?.opacity,
+                mode: options?.mode ? connectXMode[options?.mode] : undefined,
+                strokeWidth: options?.strokeWidth,
               },
               For(groupBy(d, key.toString()), (items, i) => Ref(`${k}-${i}`))
             ),
       ]);
     });
   }
-  stackX(
+  spreadX(
     iteratee?: string | ((item: T[]) => any),
     options?: {
+      x?: number;
+      y?: number;
+      w?: number | string;
+      h?: number | string;
+      mode?: "edge" | "center";
       spacing?: number;
       sharedScale?: boolean;
-      alignment?: "start" | "end";
+      alignment?: "start" | "middle" | "end";
       debug?: boolean;
       label?: boolean;
     } = {}
@@ -138,9 +167,20 @@ export class _Chart<T> {
       if (opts?.debug) console.log("stackX groups", groups);
       return StackX(
         {
+          x: opts?.x,
+          y: opts?.y,
+          mode: opts?.mode ? connectXMode[opts?.mode] : undefined,
           spacing: opts?.spacing ?? 8,
           sharedScale: opts?.sharedScale,
           alignment: opts?.alignment,
+          w:
+            typeof opts?.w === "number" || opts?.w === undefined
+              ? opts?.w
+              : /* v */ _.sumBy(d, opts?.w),
+          h:
+            typeof opts?.h === "number" || opts?.h === undefined
+              ? opts?.h
+              : /* v */ _.sumBy(d, opts?.h),
         },
         iteratee
           ? For(groups, (items, key) => {
@@ -154,14 +194,20 @@ export class _Chart<T> {
       );
     });
   }
-  stackY(
+  spreadY(
     iteratee?: string | ((item: T[]) => any),
     options?: {
+      x?: number;
+      y?: number;
+      w?: number | string;
+      h?: number | string;
+      mode?: "edge" | "center";
       spacing?: number;
       sharedScale?: boolean;
-      alignment?: "start" | "end";
+      alignment?: "start" | "middle" | "end";
       debug?: boolean;
       label?: boolean;
+      reverse?: boolean;
     } = {}
   ) {
     // Default label to true if not specified
@@ -176,9 +222,21 @@ export class _Chart<T> {
       if (opts?.debug) console.log("stackY groups", groups);
       return StackY(
         {
+          x: opts?.x,
+          y: opts?.y,
+          mode: opts?.mode ? connectXMode[opts?.mode] : undefined,
           spacing: opts?.spacing ?? 8,
           sharedScale: opts?.sharedScale,
           alignment: opts?.alignment,
+          reverse: opts?.reverse,
+          w:
+            typeof opts?.w === "number" || opts?.w === undefined
+              ? opts?.w
+              : /* v */ _.sumBy(d, opts?.w),
+          h:
+            typeof opts?.h === "number" || opts?.h === undefined
+              ? opts?.h
+              : /* v */ _.sumBy(d, opts?.h),
         },
         iteratee
           ? For(groups, (items, key) => {
@@ -192,25 +250,45 @@ export class _Chart<T> {
       );
     });
   }
-  divideX(
+  stackX(
     iteratee?: string | ((item: T[]) => any),
     options?: {
       sharedScale?: boolean;
-      alignment?: "start" | "end";
+      w?: number | string;
+      h?: number | string;
+      alignment?: "start" | "middle" | "end";
       debug?: boolean;
+      spacing?: number;
+      label?: boolean;
+      reverse?: boolean;
     }
   ) {
-    return this.stackX(iteratee, { ...options, spacing: 0, label: false });
+    return this.spreadX(iteratee, {
+      ...options,
+      spacing: options?.spacing ?? 0,
+      label: options?.label ?? false,
+      reverse: options?.reverse ?? false,
+    });
   }
-  divideY(
+  stackY(
     iteratee?: string | ((item: T[]) => any),
     options?: {
       sharedScale?: boolean;
-      alignment?: "start" | "end";
+      w?: number | string;
+      h?: number | string;
+      alignment?: "start" | "middle" | "end";
       debug?: boolean;
+      spacing?: number;
+      label?: boolean;
+      reverse?: boolean;
     }
   ) {
-    return this.stackY(iteratee, { ...options, spacing: 0, label: false });
+    return this.spreadY(iteratee, {
+      ...options,
+      spacing: options?.spacing ?? 0,
+      label: options?.label ?? false,
+      reverse: options?.reverse ?? false,
+    });
   }
   // TODO: fix!!!
   scatterXY(
@@ -235,6 +313,42 @@ export class _Chart<T> {
       );
     });
   }
+  scatter(
+    key: string,
+    options: {
+      x: string;
+      y: string;
+      debug?: boolean;
+    }
+  ) {
+    return new _Chart(this._data, (d: T[], k: number | string) => {
+      const groups = groupBy(d, key);
+      if (options?.debug) console.log("scatter groups", groups);
+
+      return Frame(
+        For(groups, (items, groupKey) => {
+          // Calculate average x and y values for this group
+          const avgX = _.meanBy(items, options.x);
+          const avgY = _.meanBy(items, options.y);
+
+          if (options?.debug)
+            console.log(`Group ${groupKey}: avgX=${avgX}, avgY=${avgY}`);
+
+          // Render the group items and wrap in Position operator
+          return Position({ x: v(avgX), y: v(avgY) }, [
+            this._render(items, `${k}-${groupKey}`),
+          ]);
+        })
+      );
+    });
+  }
+
+  coord(coord: CoordinateTransform) {
+    return new _Chart(this._data, (d: T[], k: number | string) => {
+      return Frame({ coord }, [this._render(d, k).setShared([true, true])]);
+    });
+  }
+
   render(
     container: HTMLElement,
     {
@@ -272,14 +386,52 @@ export class _Chart<T> {
 export const Chart = <T>(data: T[]) => new _Chart(data);
 
 export const rect = <T>(
-  data: T[],
-  {
-    w,
-    h,
-    fill,
-    debug,
-  }: { w?: number; h?: number | string; fill: string; debug?: boolean }
-) => Chart(data).rect({ w, h, fill, debug });
+  dataOrOptions?:
+    | T[]
+    | {
+        w?: number | string;
+        h?: number | string;
+        rx?: number;
+        ry?: number;
+        fill: string;
+        debug?: boolean;
+      },
+  optionsArg?: {
+    w?: number | string;
+    h?: number | string;
+    rx?: number;
+    ry?: number;
+    fill: string;
+    debug?: boolean;
+  }
+) => {
+  let data: T[];
+  let options: {
+    w?: number | string;
+    h?: number | string;
+    rx?: number;
+    ry?: number;
+    fill: string;
+    debug?: boolean;
+  };
+
+  if (Array.isArray(dataOrOptions)) {
+    data = dataOrOptions;
+    options = optionsArg!;
+  } else {
+    data = [];
+    options = dataOrOptions as {
+      w?: number | string;
+      h?: number | string;
+      rx?: number;
+      ry?: number;
+      fill: string;
+      debug?: boolean;
+    };
+  }
+
+  return Chart(data).rect(options);
+};
 
 export const guide = <T>(
   data: T[],

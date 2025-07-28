@@ -1,10 +1,11 @@
 import { GoFishNode } from "../_node";
 import { Size, elaborateDims, FancyDims } from "../dims";
-import { Domain } from "../domain";
+import { Domain, continuous } from "../domain";
+import { getMeasure, getValue, isValue, MaybeValue } from "../data";
 
 export const position = (
   childrenOrOptions:
-    | ({ key?: string; x?: number; y?: number })
+    | ({ key?: string; x?: MaybeValue<number>; y?: MaybeValue<number> })
     | GoFishNode[],
   maybeChildren?: GoFishNode[]
 ) => {
@@ -16,8 +17,20 @@ export const position = (
       key: options.key,
       shared: [false, false],
       inferPosDomains: (childPosDomains: Size<Domain>[]) => {
-        // Position operator doesn't affect domains, just positioning
-        return [undefined, undefined];
+        return [
+          isValue(options.x)
+            ? continuous({
+                value: [getValue(options.x)!, getValue(options.x)!],
+                measure: getMeasure(options.x),
+              })
+            : undefined,
+          isValue(options.y)
+            ? continuous({
+                value: [getValue(options.y)!, getValue(options.y)!],
+                measure: getMeasure(options.y),
+              })
+            : undefined,
+        ];
       },
       inferSizeDomains: (shared, size, children) => {
         // Delegate to the single child's size requirements
@@ -44,9 +57,13 @@ export const position = (
         const childWidth = childPlaceable.dims[0].size || 0;
         const childHeight = childPlaceable.dims[1].size || 0;
         
+        // Handle x and y values (can be literal values or data-bound values)
+        const xPos = options.x ? (isValue(options.x) ? posScales[0]!(getValue(options.x)!) : options.x) : 0;
+        const yPos = options.y ? (isValue(options.y) ? posScales[1]!(getValue(options.y)!) : options.y) : 0;
+        
         // Position is relative to the child's center point (SwiftUI-like behavior)
-        const offsetX = (options.x ?? 0) - childWidth / 2;
-        const offsetY = (options.y ?? 0) - childHeight / 2;
+        const offsetX = xPos - childWidth / 2;
+        const offsetY = yPos - childHeight / 2;
 
         // Update child position
         childPlaceable.place({ x: offsetX, y: offsetY });
@@ -56,13 +73,13 @@ export const position = (
             {
               min: childPlaceable.dims[0].min! + offsetX,
               size: childWidth,
-              center: (options.x ?? 0),
+              center: xPos,
               max: childPlaceable.dims[0].max! + offsetX,
             },
             {
               min: childPlaceable.dims[1].min! + offsetY,
               size: childHeight,
-              center: (options.y ?? 0),
+              center: yPos,
               max: childPlaceable.dims[1].max! + offsetY,
             },
           ],

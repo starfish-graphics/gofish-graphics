@@ -8,13 +8,15 @@ import _ from "lodash";
 export const chartRectBF = () =>
   StackX(
     { spacing: 2, sharedScale: true },
-    For(groupBy(catchData, "species"), (d) => Rect({ w: 32, h: v(_.sumBy(d, "count")), fill: v(d[0].species) }))
+    For(groupBy(catchData, "species"), (d) =>
+      Rect({ w: 32, h: v(_.sumBy(d, "count")), fill: v(d[0].species) })
+    )
   );
 
 export const chartBar = () => {
   return Chart(catchData)
     .rect({ w: 32, h: "count", fill: "species" })
-    .stackX("lake", { spacing: 2, sharedScale: true })
+    .spreadX("lake", { spacing: 2, sharedScale: true })
     .TEST_render();
 };
 
@@ -46,24 +48,24 @@ Mark.rect(catchData, { w: 32, h: "count", fill: "species" })
 export const chartStackedBar = () => {
   return Chart(catchData)
     .rect({ w: 32, h: "count", fill: "species" })
-    .stackY("species", { spacing: 2 })
-    .stackX("lake", { spacing: 8, sharedScale: true })
+    .spreadY("species", { spacing: 2 })
+    .spreadX("lake", { spacing: 8, sharedScale: true })
     .TEST_render();
 };
 
 export const chartGroupedBar = () => {
   return Chart(catchData)
     .rect({ w: 8, h: "count", fill: "species" })
-    .stackX("species", { spacing: 2 })
-    .stackX("lake", { spacing: 4, sharedScale: true })
+    .spreadX("species", { spacing: 2 })
+    .spreadX("lake", { spacing: 4, sharedScale: true })
     .TEST_render();
 };
 
 export const chartFacetedBar = () => {
   return Chart(catchData)
     .rect({ w: 32, h: "count", fill: "species" })
-    .stackX("lake", { spacing: 2 })
-    .stackY("species", { spacing: 8, sharedScale: true })
+    .spreadX("lake", { spacing: 2 })
+    .spreadY("species", { spacing: 8, sharedScale: true })
     .TEST_render();
 };
 
@@ -80,16 +82,16 @@ pipe(r, sx, sy);
 export const chartFacetedBarHorizontal = () => {
   return Chart(catchData)
     .rect({ w: 8, h: "count", fill: "species" })
-    .stackX("lake", { spacing: 2 })
-    .stackX("species", { spacing: 8, sharedScale: true })
+    .spreadX("lake", { spacing: 2 })
+    .spreadX("species", { spacing: 8, sharedScale: true })
     .TEST_render();
 };
 
 export const chartWaffle = () => {
   return Chart(catchData)
     .rect({ w: 8, h: 8, fill: "species" })
-    .stackX(undefined, { spacing: 2 })
-    .stackY(
+    .spreadX(undefined, { spacing: 2 })
+    .spreadY(
       (d) =>
         _(d)
           .reverse()
@@ -98,7 +100,7 @@ export const chartWaffle = () => {
           .reverse(),
       { spacing: 2, alignment: "start" }
     )
-    .stackX("lake", { spacing: 8, sharedScale: true })
+    .spreadX("lake", { spacing: 8, sharedScale: true })
     .TEST_render();
 };
 
@@ -116,7 +118,7 @@ Frame([
 export const chartArea = () => {
   return Chart(catchData)
     .rect({ w: 32, h: "count", fill: "species" })
-    .stackX("lake", { spacing: 60, sharedScale: true })
+    .spreadX("lake", { spacing: 60, sharedScale: true })
     .connectX("lake", { opacity: 0.7 })
     .TEST_render();
 };
@@ -124,8 +126,8 @@ export const chartArea = () => {
 export const chartStackedArea = () => {
   return Chart(catchData)
     .rect({ w: 32, h: "count", fill: "species" })
-    .stackY("species", { spacing: 2 })
-    .stackX("lake", { spacing: 60, sharedScale: true })
+    .spreadY("species", { spacing: 2 })
+    .spreadX("lake", { spacing: 60, sharedScale: true })
     .connectX("species", { over: "lake", opacity: 0.7 })
     .TEST_render();
 };
@@ -133,9 +135,9 @@ export const chartStackedArea = () => {
 export const chartRidgeline = () => {
   return Chart(streamgraphData)
     .rect({ w: 2, h: 40, fill: "c" })
-    .stackX("x", { spacing: 20 })
+    .spreadX("x", { spacing: 20 })
     .connectX("x", { opacity: 0.7, debug: true })
-    .stackY("c", { spacing: 20, sharedScale: true })
+    .spreadY("c", { spacing: 20, sharedScale: true })
     .TEST_render();
 };
 
@@ -145,9 +147,9 @@ export const chartSankeyIcicle = () => {
 
   return Chart(titanic)
     .rect({ w: 40, h: "count", fill: "sex" })
-    .stackY("survived", { spacing: internalSpacing * 4 })
-    .stackY("sex", { spacing: internalSpacing * 2 })
-    .stackY("class", { spacing: internalSpacing, sharedScale: true })
+    .spreadY("survived", { spacing: internalSpacing * 4 })
+    .spreadY("sex", { spacing: internalSpacing * 2 })
+    .spreadY("class", { spacing: internalSpacing, sharedScale: true })
     .TEST_render();
 };
 

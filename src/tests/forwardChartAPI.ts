@@ -13,13 +13,24 @@ import _ from "lodash";
 //     ])
 // }
 
-Rect({ h: 10, fill: "red" }).stackY("survived", { w: 40, spacing: 0, alignment: "middle" });
+Rect({ h: 10, fill: "red" }).stackY("survived", {
+  w: 40,
+  spacing: 0,
+  alignment: "middle",
+});
 
 pipe(
   StackY("sex", { spacing: 0, alignment: "middle" }),
   StackX({ spacing: 0, alignment: "middle" }, [
-    Rect({ w: 40, h: _(items).sumBy("count") / 10, fill: sex === "Female" ? color6_old[2] : color6_old[3] }),
-    pipe(StackY("survived", { w: 40, spacing: 0, alignment: "middle" }), Rect({ h: 10, fill: "red" })),
+    Rect({
+      w: 40,
+      h: _(items).sumBy("count") / 10,
+      fill: sex === "Female" ? color6_old[2] : color6_old[3],
+    }),
+    pipe(
+      StackY("survived", { w: 40, spacing: 0, alignment: "middle" }),
+      Rect({ h: 10, fill: "red" })
+    ),
   ])
 );
 
@@ -79,13 +90,15 @@ pipe(
 export const chartRectBF = () =>
   StackX(
     { spacing: 2, sharedScale: true },
-    For(groupBy(catchData, "species"), (d) => Rect({ w: 32, h: v(_.sumBy(d, "count")), fill: v(d[0].species) }))
+    For(groupBy(catchData, "species"), (d) =>
+      Rect({ w: 32, h: v(_.sumBy(d, "count")), fill: v(d[0].species) })
+    )
   );
 
 export const chartBar = () => {
   return Chart(catchData)
     .rect({ w: 32, h: "count", fill: "species" })
-    .stackX("lake", { spacing: 2, sharedScale: true })
+    .spreadX("lake", { spacing: 2, sharedScale: true })
     .TEST_render();
 };
 
@@ -117,32 +130,32 @@ Mark.rect(catchData, { w: 32, h: "count", fill: "species" })
 export const chartStackedBar = () => {
   return Chart(catchData)
     .rect({ w: 32, h: "count", fill: "species" })
-    .stackY("species", { spacing: 2 })
-    .stackX("lake", { spacing: 8, sharedScale: true })
+    .spreadY("species", { spacing: 2 })
+    .spreadX("lake", { spacing: 8, sharedScale: true })
     .TEST_render();
 };
 
 export const chartGroupedBar = () => {
   return Chart(catchData)
     .rect({ w: 8, h: "count", fill: "species" })
-    .stackX("species", { spacing: 2 })
-    .stackX("lake", { spacing: 4, sharedScale: true })
+    .spreadX("species", { spacing: 2 })
+    .spreadX("lake", { spacing: 4, sharedScale: true })
     .TEST_render();
 };
 
 export const chartFacetedBar = () => {
   return Chart(catchData)
     .rect({ w: 32, h: "count", fill: "species" })
-    .stackX("lake", { spacing: 2 })
-    .stackY("species", { spacing: 8, sharedScale: true })
+    .spreadX("lake", { spacing: 2 })
+    .spreadY("species", { spacing: 8, sharedScale: true })
     .TEST_render();
 };
 
 export const chartFacetedBarHorizontal = () => {
   return Chart(catchData)
     .rect({ w: 8, h: "count", fill: "species" })
-    .stackX("lake", { spacing: 2 })
-    .stackX("species", { spacing: 8, sharedScale: true })
+    .spreadX("lake", { spacing: 2 })
+    .spreadX("species", { spacing: 8, sharedScale: true })
     .TEST_render();
 };
 
@@ -152,7 +165,7 @@ export const chartSquares = () => {
   return (
     Chart(catchData)
       .rect({ w: 8, h: 8, fill: "species" })
-      .stackX("uid", { spacing: 2 })
+      .spreadX("uid", { spacing: 2 })
       .transform((d) =>
         _(d)
           .reverse()
@@ -164,7 +177,7 @@ export const chartSquares = () => {
           .chunk(4)
           .reverse()
       )
-      .stackY("species", { spacing: 2, alignment: "start" })
+      .spreadY("species", { spacing: 2, alignment: "start" })
       // .stackX("uid", { spacing: 2 })
       // .stackY("uid", { spacing: 2, alignment: "start" })
       // .transform((d) =>
@@ -178,7 +191,7 @@ export const chartSquares = () => {
       //     .chunk(4)
       //     .reverse()
       // )
-      .stackX("lake", { spacing: 8, sharedScale: true })
+      .spreadX("lake", { spacing: 8, sharedScale: true })
       .TEST_render()
   );
 };

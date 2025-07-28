@@ -8,7 +8,7 @@ export { value } from "./ast/data";
 export { For as map } from "./ast/iterators/for";
 
 // Marks
-export { rect } from "./ast/shapes/rect";
+// export { rect } from "./ast/shapes/rect";
 export { ellipse } from "./ast/shapes/ellipse";
 export { petal } from "./ast/shapes/petal";
 export { ref } from "./ast/shapes/ref";
@@ -80,4 +80,4 @@ export { wavy as Wavy } from "./ast/coordinateTransforms/wavy";
 export { Mark } from "./ast/marks/index";
 
 /* API v3 */
-export { Chart, _Chart } from "./ast/marks/chart";
+export { Chart, _Chart, rect, guide } from "./ast/marks/chart";
