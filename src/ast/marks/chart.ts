@@ -368,14 +368,16 @@ export class _Chart<T> {
       axes?: boolean;
     }
   ) {
-    return this._render(this._data, "root").render(container, {
-      w: w,
-      h: h,
-      transform,
-      debug,
-      defs,
-      axes,
-    });
+    return this._render(this._data, "root")
+      .setShared([true, true])
+      .render(container, {
+        w: w,
+        h: h,
+        transform,
+        debug,
+        defs,
+        axes,
+      });
   }
 
   TEST_render(debug?: boolean) {
