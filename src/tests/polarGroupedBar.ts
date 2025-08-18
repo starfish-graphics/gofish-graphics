@@ -39,7 +39,8 @@ export const testPolarGroupedBar = () => {
               // h: value(d.value, "value"),
               h: d.value,
               emY: true,
-              fill: d.group === "x" ? color6[0] : d.group === "y" ? color6[1] : color6[2],
+              // fill: d.group === "x" ? color6[0] : d.group === "y" ? color6[1] : color6[2],
+              fill: value(d.group),
             })
           )
         )

@@ -7,7 +7,7 @@ import { value } from "../ast/data";
 import { gofish } from "../ast/gofish";
 import { rect } from "../ast/shapes/rect";
 import { stack } from "../ast/graphicalOperators/stack";
-import { color, color6 } from "../color";
+import { color, color6, gray, neutral } from "../color";
 import { coord } from "../ast/coordinateTransforms/coord";
 import { polar_DEPRECATED } from "../ast/coordinateTransforms/polar_DEPRECATED";
 import { linear } from "../ast/coordinateTransforms/linear";
@@ -30,7 +30,7 @@ export const testPolarCenterStackedBar = () =>
   frame({ coord: polar_DEPRECATED() }, [
     stack(
       {
-        x: 20,
+        x: 2,
         direction: 1,
         spacing: (2 * Math.PI) / 3,
         alignment: "start",
@@ -41,18 +41,20 @@ export const testPolarCenterStackedBar = () =>
         stack(
           {
             direction: 0,
-            spacing: 2,
+            spacing: 0,
             alignment: "middle",
           },
           items.toReversed().map((d) =>
             rect({
-              h: 15,
-              // h: 0.4,
+              // h: 40,
+              h: Math.PI / 3,
               // emY: true,
               // w: value(d.value, "value"),
-              w: d.value * 50,
+              w: (d.value * 50) / 20,
               emX: true,
-              fill: d.group === "x" ? color.red[5] : d.group === "y" ? color.blue[5] : color.green[5],
+              fill: value(d.group),
+              // stroke: gray,
+              // strokeWidth: 0.5,
             })
           )
         )

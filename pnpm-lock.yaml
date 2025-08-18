@@ -14,6 +14,12 @@ importers:
       bubblesets-js:
         specifier: ^3.0.0
         version: 3.0.0
+      chroma-js:
+        specifier: ^3.1.2
+        version: 3.1.2
+      culori:
+        specifier: ^4.0.2
+        version: 4.0.2
       d3-array:
         specifier: ^3.2.4
         version: 3.2.4
@@ -30,6 +36,9 @@ importers:
         specifier: ^2.0.2
         version: 2.0.2
     devDependencies:
+      '@types/chroma-js':
+        specifier: ^3.1.1
+        version: 3.1.1
       '@types/lodash':
         specifier: ^4.17.16
         version: 4.17.16
@@ -396,6 +405,9 @@ packages:
   '@types/babel__traverse@7.20.6':
     resolution: {integrity: sha512-r1bzfrm0tomOI8g1SzvCaQHo6Lcv6zu0EA+W2kHrt8dyrHQxGzBBL4kdkzIS+jBMV+EYcMAEAqXqYaLJq5rOZg==}
 
+  '@types/chroma-js@3.1.1':
+    resolution: {integrity: sha512-SFCr4edNkZ1bGaLzGz7rgR1bRzVX4MmMxwsIa3/Bh6ose8v+hRpneoizHv0KChdjxaXyjRtaMq7sCuZSzPomQA==}
+
   '@types/d3-array@3.2.1':
     resolution: {integrity: sha512-Y2Jn2idRrLzUfAKV2LyRImR+y4oa2AntrgID95SHJxuMUrkNXmanDSed71sRNZysveJVt1hLLemQZIady0FpEg==}
 
@@ -426,11 +438,18 @@ packages:
   caniuse-lite@1.0.30001684:
     resolution: {integrity: sha512-G1LRwLIQjBQoyq0ZJGqGIJUXzJ8irpbjHLpVRXDvBEScFJ9b17sgK6vlx0GAJFE21okD7zXl08rRRUfq6HdoEQ==}
 
+  chroma-js@3.1.2:
+    resolution: {integrity: sha512-IJnETTalXbsLx1eKEgx19d5L6SRM7cH4vINw/99p/M11HCuXGRWL+6YmCm7FWFGIo6dtWuQoQi1dc5yQ7ESIHg==}
+
   convert-source-map@2.0.0:
     resolution: {integrity: sha512-Kvp459HrV2FEJ1CAsi1Ku+MY3kasH19TFykTz2xWmMeq6bk2NU3XXvfJ+Q61m0xktWwt+1HSYf3JZsTms3aRJg==}
 
   csstype@3.1.3:
     resolution: {integrity: sha512-M1uQkMl8rQK/szD0LNhtqxIPLpimGm8sOBwU7lLnCpSbTyY3yeU1Vc7l4KT5zT4s/yOxHH5O7tIuuLOCnLADRw==}
+
+  culori@4.0.2:
+    resolution: {integrity: sha512-1+BhOB8ahCn4O0cep0Sh2l9KCOfOdY+BXJnKMHFFzDEouSr/el18QwXEMRlOj9UY5nCeA8UN3a/82rUWRBeyBw==}
+    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
 
   d3-array@3.2.4:
     resolution: {integrity: sha512-tdQAmyA18i4J7wprpYq8ClcxZy3SC31QMeByyCFyRt7BVHdREQZ5lpzoe5mFEYZUWe+oq8HBvk9JjpibyEV4Jg==}
@@ -933,6 +952,8 @@ snapshots:
     dependencies:
       '@babel/types': 7.26.0
 
+  '@types/chroma-js@3.1.1': {}
+
   '@types/d3-array@3.2.1': {}
 
   '@types/estree@1.0.6': {}
@@ -965,9 +986,13 @@ snapshots:
 
   caniuse-lite@1.0.30001684: {}
 
+  chroma-js@3.1.2: {}
+
   convert-source-map@2.0.0: {}
 
   csstype@3.1.3: {}
+
+  culori@4.0.2: {}
 
   d3-array@3.2.4:
     dependencies:

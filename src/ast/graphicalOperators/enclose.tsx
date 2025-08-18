@@ -2,10 +2,15 @@ import * as BubbleSets from "bubblesets-js";
 import { GoFishNode } from "../_node";
 import { Size } from "../dims";
 import { GoFishAST } from "../_ast";
-import { black } from "../../color";
+import { black, gray, tailwindColors } from "../../color";
 import { Domain } from "../domain";
+
 export const enclose = (
-  { padding = 2, rx = 2, ry = 2 }: { padding?: number; rx?: number; ry?: number },
+  {
+    padding = 2,
+    rx = 2,
+    ry = 2,
+  }: { padding?: number; rx?: number; ry?: number },
   children: GoFishAST[]
 ) => {
   return new GoFishNode(
@@ -16,11 +21,19 @@ export const enclose = (
         return [undefined, undefined];
       },
       inferSizeDomains: (shared, size, children) => {
-        const childMeasures = children.map((child) => child.inferSizeDomains(size));
+        const childMeasures = children.map((child) =>
+          child.inferSizeDomains(size)
+        );
         return (scaleFactors: Size) => {
-          const childSizes = childMeasures.map((childMeasure) => childMeasure(scaleFactors));
-          const maxWidth = Math.max(...childSizes.map((childSize) => childSize[0]));
-          const maxHeight = Math.max(...childSizes.map((childSize) => childSize[1]));
+          const childSizes = childMeasures.map((childMeasure) =>
+            childMeasure(scaleFactors)
+          );
+          const maxWidth = Math.max(
+            ...childSizes.map((childSize) => childSize[0])
+          );
+          const maxHeight = Math.max(
+            ...childSizes.map((childSize) => childSize[1])
+          );
           return [maxWidth + padding * 2, maxHeight + padding * 2];
         };
       },
@@ -33,8 +46,16 @@ export const enclose = (
           childPlaceables.push(childPlaceable);
         }
 
-        const maxWidth = Math.max(...childPlaceables.map((childPlaceable) => childPlaceable.dims[0].max!));
-        const maxHeight = Math.max(...childPlaceables.map((childPlaceable) => childPlaceable.dims[1].max!));
+        const maxWidth = Math.max(
+          ...childPlaceables.map(
+            (childPlaceable) => childPlaceable.dims[0].max!
+          )
+        );
+        const maxHeight = Math.max(
+          ...childPlaceables.map(
+            (childPlaceable) => childPlaceable.dims[1].max!
+          )
+        );
         return {
           intrinsicDims: {
             x: -padding,
@@ -47,7 +68,9 @@ export const enclose = (
       },
       render: ({ intrinsicDims, transform, renderData }, children) => {
         return (
-          <g transform={`translate(${transform?.translate?.[0] ?? 0}, ${transform?.translate?.[1] ?? 0})`}>
+          <g
+            transform={`translate(${transform?.translate?.[0] ?? 0}, ${transform?.translate?.[1] ?? 0})`}
+          >
             {children}
             <rect
               x={-padding}
@@ -57,7 +80,7 @@ export const enclose = (
               rx={rx}
               ry={ry}
               fill="none"
-              stroke={black}
+              stroke={gray}
               stroke-width={1}
             />
           </g>

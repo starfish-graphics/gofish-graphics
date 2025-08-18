@@ -14,9 +14,17 @@ export const findTargetMonotonic = (
     upperBoundGuess?: number;
   }
 ): number => {
-  const defaultOptions = { tolerance: 0.001, maxIterations: 50, lowerBound: 0, upperBoundGuess: 10 };
+  const defaultOptions = {
+    tolerance: 0.0001,
+    maxIterations: 50,
+    lowerBound: 0,
+    upperBoundGuess: 10,
+  };
   const { tolerance, maxIterations } = { ...defaultOptions, ...options };
-  let { lowerBound: low, upperBoundGuess: high } = { ...defaultOptions, ...options };
+  let { lowerBound: low, upperBoundGuess: high } = {
+    ...defaultOptions,
+    ...options,
+  };
 
   // Check if the upper bound is large enough and increase it if necessary
   let growthIterations = 0;

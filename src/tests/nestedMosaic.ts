@@ -3,7 +3,15 @@ import { gofish } from "../ast/gofish";
 import { value } from "../ast/data";
 import { stack } from "../ast/graphicalOperators/stack";
 import { rect } from "../ast/shapes/rect";
-import { black, color, color6, color6_old } from "../color";
+import {
+  black,
+  color,
+  color6,
+  color6_old,
+  gray,
+  tailwindColors,
+  white,
+} from "../color";
 import { titanic } from "../data/titanic";
 import { mix } from "spectral.js";
 
@@ -20,10 +28,10 @@ const data = [
 ];
 
 const classColor = {
-  First: color6_old[0],
-  Second: color6_old[1],
-  Third: color6_old[2],
-  Crew: color6_old[3],
+  First: color6[0],
+  Second: color6[1],
+  Third: color6[2],
+  Crew: color6[3],
 };
 
 export const testNestedMosaic = () =>
@@ -35,13 +43,20 @@ export const testNestedMosaic = () =>
       .map(
         (items, cls) =>
           stack(
-            { h: _(items).sumBy("count") / 10, direction: "x", spacing: 2, alignment: "middle" },
+            {
+              h: _(items).sumBy("count") / 10,
+              direction: "x",
+              spacing: 2,
+              alignment: "middle",
+            },
             _(items)
               .groupBy("sex")
               .map((sItems, sex) =>
                 stack(
                   {
-                    w: (_(sItems).sumBy("count") / _(items).sumBy("count")) * 100,
+                    w:
+                      (_(sItems).sumBy("count") / _(items).sumBy("count")) *
+                      100,
                     direction: "y",
                     spacing: 0,
                     alignment: "middle",
@@ -56,8 +71,18 @@ export const testNestedMosaic = () =>
                         // h: _(items).sumBy("count") / 10,
                         fill:
                           survived === "No"
-                            ? mix(classColor[cls as keyof typeof classColor], black, 0.7)
-                            : classColor[cls as keyof typeof classColor],
+                            ? /*  mix(
+                                classColor[cls as keyof typeof classColor],
+                                black,
+                                0.3
+                              ) */
+                              gray
+                            : // : mix(
+                              //     classColor[cls as keyof typeof classColor],
+                              //     white,
+                              //     0.3
+                              //   ),
+                              classColor[cls as keyof typeof classColor],
                       })
                     )
                     .value()

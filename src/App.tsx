@@ -109,6 +109,16 @@ import {
   v2ChartScatterPie,
   // v2ChartWaffle,
 } from "./tests/chartAPITestV2";
+import {
+  tailwindColorGrid,
+  tailwindColorGridCompact,
+  tailwindColorGridMuted,
+  tailwindColorGridMutedCompact,
+  tailwindColorGridVivid,
+  tailwindColorGridVividCompact,
+  tailwindColorComparison,
+  tailwindColorComparisonCompact,
+} from "./tests/tailwindColors";
 
 const ditheringTestWidth = 800;
 
@@ -299,6 +309,54 @@ const defs = [
 const App: Component = () => {
   return (
     <div style={{ "margin-left": "20px" }}>
+      <h1>Tailwind Color Palette Variants</h1>
+
+      <h2>Color Comparison (Compact)</h2>
+      <div style={{ display: "flex", gap: "20px", "align-items": "center" }}>
+        <div style={{ "text-align": "center" }}>
+          <h3>Original</h3>
+          <GoFishSolid w={200} h={370} defs={defs} axes={false}>
+            {tailwindColorGridCompact()}
+          </GoFishSolid>
+        </div>
+        <div style={{ "text-align": "center" }}>
+          <h3>Muted</h3>
+          <GoFishSolid w={200} h={370} defs={defs} axes={false}>
+            {tailwindColorGridMutedCompact()}
+          </GoFishSolid>
+        </div>
+        <div style={{ "text-align": "center" }}>
+          <h3>Vivid</h3>
+          <GoFishSolid w={200} h={370} defs={defs} axes={false}>
+            {tailwindColorGridVividCompact()}
+          </GoFishSolid>
+        </div>
+      </div>
+
+      <h2>Full Grids</h2>
+      <div style={{ display: "flex", gap: "30px", "flex-wrap": "wrap" }}>
+        <div>
+          <h3>Original</h3>
+          <GoFishSolid w={650} h={1000} defs={defs} axes={false}>
+            {tailwindColorGrid()}
+          </GoFishSolid>
+        </div>
+        <div>
+          <h3>Muted</h3>
+          <GoFishSolid w={650} h={1000} defs={defs} axes={false}>
+            {tailwindColorGridMuted()}
+          </GoFishSolid>
+        </div>
+        <div>
+          <h3>Vivid</h3>
+          <GoFishSolid w={650} h={1000} defs={defs} axes={false}>
+            {tailwindColorGridVivid()}
+          </GoFishSolid>
+        </div>
+      </div>
+
+      <br />
+      <br />
       {/* <GoFishSolid w={320} h={400} defs={defs} axes={false}>
         {v2ChartPies()}
       </GoFishSolid> */}
@@ -466,7 +524,7 @@ const App: Component = () => {
         {testFishStackedBarDataStyle()}
       </GoFishSolid> */}
       <br />
-      <GoFishSolid w={800} h={1000} defs={defs}>
+      {/* <GoFishSolid w={800} h={1000} defs={defs}>
         {frame([
           frame({ y: 10 }, [
             ...sinePoints.map((p) =>
@@ -506,7 +564,7 @@ const App: Component = () => {
             // rect({ x: 0, y: 10, w: 1000, h: 2, fill: "black" }),
           ]),
         ])}
-      </GoFishSolid>
+      </GoFishSolid> */}
       <h1>Welcome!</h1>
       <div style={{ "max-width": "520px" }}>
         Welcome to the GoFish supplemental code! Below you'll find all the
@@ -561,7 +619,7 @@ const App: Component = () => {
       </GoFishSolid>
       <h1>Walkthrough (Sec. 3)</h1>
       <h2>1. Bar Chart</h2>
-      <GoFishSolid w={500} h={200} defs={defs}>
+      <GoFishSolid w={500} h={500 * 0.77} defs={defs}>
         {testFishBar()}
       </GoFishSolid>
       <div
@@ -577,11 +635,11 @@ const App: Component = () => {
             display: "flex",
             "flex-direction": "column",
             "justify-content": "space-between",
-            height: "420px",
+            height: "600px",
           }}
         >
           <h2>2a. Stacked Bar Chart</h2>
-          <GoFishSolid w={250} h={300} defs={defs}>
+          <GoFishSolid w={500} h={500 * 0.77} defs={defs}>
             {testFishStackedBar()}
           </GoFishSolid>
         </div>
@@ -590,11 +648,11 @@ const App: Component = () => {
             display: "flex",
             "flex-direction": "column",
             "justify-content": "space-between",
-            height: "420px",
+            height: "600px",
           }}
         >
           <h2>2b. Grouped Bar Chart</h2>
-          <GoFishSolid w={350} h={300} defs={defs}>
+          <GoFishSolid w={500} h={500 * 0.77} defs={defs}>
             {testFishGroupedBar()}
           </GoFishSolid>
         </div>
@@ -607,7 +665,7 @@ const App: Component = () => {
           }}
         >
           <h2>2c. Waffle Chart</h2>
-          <GoFishSolid w={300} h={350} defs={defs}>
+          <GoFishSolid w={500} h={500}>
             {testFishWaffle()}
           </GoFishSolid>
         </div>
@@ -615,18 +673,13 @@ const App: Component = () => {
       <div style={{ display: "flex", "flex-direction": "row", gap: "40px" }}>
         <div>
           <h2>3. Ribbon Chart</h2>
-          <GoFishSolid w={500} h={400} defs={defs}>
+          <GoFishSolid w={500} h={400}>
             {testFishRibbonChart()}
           </GoFishSolid>
         </div>
         <div>
           <h2>4. Polar Ribbon Chart</h2>
-          <GoFishSolid
-            w={500}
-            h={400}
-            defs={defs}
-            transform={{ x: 200, y: 200 }}
-          >
+          <GoFishSolid w={500} h={400} transform={{ x: 200, y: 200 }}>
             {testFishPolarRibbonChart()}
           </GoFishSolid>
         </div>
@@ -692,7 +745,7 @@ const App: Component = () => {
       >
         <div>
           <h2>Nested Waffle</h2>
-          <GoFishSolid w={200} h={400} defs={defs}>
+          <GoFishSolid w={200} h={400} defs={defs} transform={{ x: 1, y: 1 }}>
             {testNestedWaffle()}
           </GoFishSolid>
         </div>
@@ -729,19 +782,19 @@ const App: Component = () => {
       >
         <div>
           <h2>Scatter Pie</h2>
-          <GoFishSolid w={250} h={200} defs={defs}>
+          <GoFishSolid w={250} h={200} transform={{ x: 50, y: 50 }}>
             {testScatterPie2()}
           </GoFishSolid>
         </div>
         <div>
           <h2>Flower Chart</h2>
-          <GoFishSolid w={250} h={200} defs={defs}>
+          <GoFishSolid w={250} h={200} transform={{ x: 50, y: 50 }}>
             {testScatterFlower(200)}
           </GoFishSolid>
         </div>
         <div>
           <h2>Balloon Chart</h2>
-          <GoFishSolid w={300} h={200} defs={defs}>
+          <GoFishSolid w={300} h={200} transform={{ x: 50, y: 50 }}>
             {testScatterBalloon2(200)}
           </GoFishSolid>
         </div>

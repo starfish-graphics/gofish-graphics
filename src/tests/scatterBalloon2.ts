@@ -327,16 +327,31 @@ export const testScatterBalloon2 = (height: number) =>
   frame(
     { coord: wavy(), x: 0, y: 0 },
     scatterData.map((data, i) =>
-      frame([
+      frame({ x: data.x, y: data.y }, [
         rect({
-          x: data.x,
+          x: 0,
+          y: 0,
+          // x: data.x,
+          // y: data.y,
           w: 1,
-          y: data.y,
           h: height - data.y,
           emY: true,
           fill: black,
         }),
-        balloon({ scale: 1, x: data.x, y: data.y, color: colorMap[i % 6] }),
+        balloon({
+          scale: 1,
+          x: 0,
+          y: 0,
+          color: /* colorMap[i % 6] */ [
+            null,
+            null,
+            null,
+            mix(color6[i % 6], white, 0.5),
+            color6[i % 6],
+            mix(color6[i % 6], black, 0.1),
+            mix(color6[i % 6], black, 0.35),
+          ],
+        }),
       ])
     )
   );

@@ -90,11 +90,17 @@ export const testScatterFlower = (height: number) =>
           },
           [
             stackX(
-              { h: _(sample.collection).sumBy("count") / 7, spacing: 0, alignment: "start", sharedScale: true },
+              {
+                h: _(sample.collection).sumBy("count") / 7,
+                spacing: 0,
+                alignment: "start",
+                sharedScale: true,
+              },
               sample.collection.map((d, i) =>
                 petal({
                   w: value(d.count),
-                  fill: mix(color6[i % 6], white, 0.5),
+                  // fill: mix(color6[i % 6], white, 0.5),
+                  fill: color6[i % 6],
                 })
               )
             ),

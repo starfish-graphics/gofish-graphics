@@ -3,7 +3,15 @@ import { gofish } from "../ast/gofish";
 import { value } from "../ast/data";
 import { stack } from "../ast/graphicalOperators/stack";
 import { rect } from "../ast/shapes/rect";
-import { black, color, color6, color6_old } from "../color";
+import {
+  black,
+  color,
+  color6,
+  color6_old,
+  tailwindColors,
+  tailwindColorsVivid,
+  gray,
+} from "../color";
 import { titanic } from "../data/titanic";
 import { mix } from "spectral.js";
 import { catchData } from "../data/catch";
@@ -23,10 +31,10 @@ const data = [
 ];
 
 const classColor = {
-  First: color6_old[0],
-  Second: color6_old[1],
-  Third: color6_old[2],
-  Crew: color6_old[3],
+  First: color6[0],
+  Second: color6[1],
+  Third: color6[2],
+  Crew: color6[3],
 };
 
 const fishColors = {
@@ -54,7 +62,11 @@ export const testNestedWaffle = () =>
                   _(sex) // Was missing this lodash chain before .reverse()
                     .reverse()
                     .flatMap((d) => Array(d.count).fill(d))
-                    .chunk(Math.ceil((_(sex).sumBy("count") / _(cls).sumBy("count")) * 32))
+                    .chunk(
+                      Math.ceil(
+                        (_(sex).sumBy("count") / _(cls).sumBy("count")) * 32
+                      )
+                    )
                     .reverse()
                     .map((d) =>
                       stack(
@@ -65,8 +77,10 @@ export const testNestedWaffle = () =>
                             h: 4,
                             fill:
                               d.survived === "No"
-                                ? black
-                                : /* value(d.class) */ classColor[d.class as keyof typeof classColor],
+                                ? gray
+                                : /* value(d.class) */ classColor[
+                                    d.class as keyof typeof classColor
+                                  ],
                           })
                         )
                       )

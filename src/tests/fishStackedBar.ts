@@ -26,12 +26,19 @@ export const testFishStackedBar = () =>
     For(_(catchData).groupBy("lake"), (d, key) =>
       stackY(
         { key: key as string, spacing: 0 },
-        For(d, (d) => rect({ w: 32, h: value(d.count), fill: value(d.species) }))
+        For(d, (d) =>
+          rect({ w: 32, h: value(d.count), fill: value(d.species) })
+        )
       )
     )
   );
 
 export const testFishStackedBarDataStyle = () =>
-  stackX(_(catchData).groupBy("lake").values().value(), { spacing: 8, sharedScale: true }, (lake) =>
-    stackY(lake, { spacing: 2 }, (d) => rect({ w: 32, h: value(d.count), fill: value(d.species) }))
+  stackX(
+    _(catchData).groupBy("lake").values().value(),
+    { spacing: 8, sharedScale: true },
+    (lake) =>
+      stackY(lake, { spacing: 2 }, (d) =>
+        rect({ w: 32, h: value(d.count), fill: value(d.species) })
+      )
   );

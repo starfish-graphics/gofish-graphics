@@ -31,7 +31,7 @@ export const testFishWaffle = () =>
           _(d)
             .reverse()
             .flatMap((d) => Array(d.count).fill(d))
-            .chunk(4)
+            .chunk(3)
             .reverse()
             .map((d) =>
               stackX(

@@ -118,3 +118,26 @@ export const v2ChartRibbonMessAround = () =>
     .spreadX("lake", { spacing: 40 })
     .connectX("species", { over: "lake", opacity: 0.7 })
     .TEST_render();
+
+/* 
+guide(seafood, {
+    fill: "species",
+    h: "count",
+  })
+    .stackY("species", { spacing: 2, reverse: true })
+    .transform((d) => orderBy(d, "count", "desc"))
+    .spreadX("lake", {
+      y: 50,
+      x: -Math.PI / 2,
+      spacing: (2 * Math.PI) / 6,
+      alignment: "start",
+    })
+    .connectX("species", { over: "lake", opacity: 1 })
+    .coord(polar())
+  .render(root, {
+    transform: { x: 150, y: 150},
+  w: 500,
+  h: 300,
+    // axes: true,
+});
+*/
