@@ -8,9 +8,7 @@ chart: shapes, graphical operators, scales, and coordinate transforms.
 
 To start, duplicate this tab to follow along in the live editor!
 
-::: starfish-live {template=vanilla-ts rtl lightTheme=aquaBlue darkTheme=atomDark previewHeight=400 coderHeight=768}
-
-```ts index.ts
+<!-- ```ts index.ts
 // prettier-ignore
 import { StackX, StackY, ConnectX, Rect, Ref, For, v, color, Frame, Polar, groupBy, sumBy, orderBy } from "gofish-graphics";
 import { seafood } from "./dataset";
@@ -21,6 +19,22 @@ Rect({ x: 0, y: 0, w: 32, h: 300, fill: color.green[5] }).render(root, {
   w: 500,
   h: 300,
 });
+``` -->
+
+::: starfish-live {template=vanilla-ts rtl lightTheme=aquaBlue darkTheme=atomDark previewHeight=400 coderHeight=768}
+
+```ts index.ts
+import { rect, color, orderBy, guide } from "gofish-graphics";
+import { seafood } from "./dataset";
+
+const root = document.getElementById("app");
+
+rect({ x: 0, y: 0, w: 32, h: 300, fill: color.green[5] }).render(root, {
+  w: 500,
+  h: 300,
+});
+
+// .transform((d) => orderBy(d, "count", "desc"))
 ```
 
 ```ts dataset.ts

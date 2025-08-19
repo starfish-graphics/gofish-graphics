@@ -1,3 +1,0 @@
-# Stringline
-
-::: starfish example:stringline

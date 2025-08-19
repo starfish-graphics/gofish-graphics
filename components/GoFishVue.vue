@@ -35,6 +35,8 @@ import {
   Petal,
   sumBy,
   orderBy,
+  guide,
+  polar,
 } from "gofish-graphics";
 import { mix } from "spectral.js";
 import _ from "lodash";
@@ -71,6 +73,8 @@ onMounted(() => {
       "nightingale",
       "StackX",
       "StackY",
+      "rect",
+      "guide",
       "Rect",
       "For",
       "v",
@@ -102,6 +106,7 @@ onMounted(() => {
       "Petal",
       "sumBy",
       "orderBy",
+      "polar",
       props.code
     );
     const root = document.createElement("div");
@@ -132,6 +137,8 @@ onMounted(() => {
       nightingale,
       StackX,
       StackY,
+      rect,
+      guide,
       Rect,
       For,
       v,
@@ -162,7 +169,8 @@ onMounted(() => {
       color6,
       Petal,
       sumBy,
-      orderBy
+      orderBy,
+      polar
     );
     container.value.append(root);
   } catch (err) {
