@@ -2,10 +2,10 @@ const layerSpacing = 64;
 const internalSpacing = 2;
 
 const classColor = {
-  First: mix(color6_old[0], white, 0.5),
-  Second: mix(color6_old[0], black, 0),
-  Third: mix(color6_old[0], black, 0.4),
-  Crew: mix(color6_old[0], black, 0.7),
+  First: color6[0],
+  Second: color6[1],
+  Third: color6[2],
+  Crew: color6[3],
 };
 
 Frame([
@@ -16,7 +16,7 @@ Frame([
         Rect({
           w: 40,
           h: _(items).sumBy("count") / 10,
-          fill: "gray",
+          fill: neutral,
         }).name(`${cls}-src`)
       )
     ),
@@ -51,7 +51,7 @@ Frame([
                     Rect({
                       w: 40,
                       h: _(survivedItems).sumBy("count") / 10,
-                      fill: sex === "Female" ? color6_old[2] : color6_old[3],
+                      fill: sex === "Female" ? color6[4] : color6[5],
                     }).name(`${cls}-${sex}-${survived}-src`)
                   )
                 ).name(`${cls}-${sex}-tgt`),
@@ -67,11 +67,11 @@ Frame([
                       fill:
                         sex === "Female"
                           ? survived === "No"
-                            ? mix(color6_old[2], black, 0.5)
-                            : mix(color6_old[2], white, 0.5)
+                            ? gray
+                            : color6[4]
                           : survived === "No"
-                          ? mix(color6_old[3], black, 0.5)
-                          : mix(color6_old[3], white, 0.5),
+                          ? gray
+                          : color6[5],
                     }).name(`${cls}-${sex}-${survived}-tgt`);
                   })
                 ),
@@ -94,7 +94,7 @@ Frame([
     For(groupBy(items, "sex"), (sexItems, sex) => [
       ConnectX(
         {
-          fill: sex === "Female" ? color6_old[2] : color6_old[3],
+          fill: sex === "Female" ? color6[4] : color6[5],
           interpolation: "bezier",
           opacity: 0.7,
         },
@@ -106,11 +106,11 @@ Frame([
             fill:
               sex === "Female"
                 ? survived === "No"
-                  ? mix(color6_old[2], black, 0.5)
-                  : mix(color6_old[2], white, 0.5)
+                  ? gray
+                  : color6[4]
                 : survived === "No"
-                ? mix(color6_old[3], black, 0.5)
-                : mix(color6_old[3], white, 0.5),
+                ? gray
+                : color6[5],
             interpolation: "bezier",
             opacity: 0.7,
           },

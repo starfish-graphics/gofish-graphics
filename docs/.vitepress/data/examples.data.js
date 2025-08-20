@@ -141,6 +141,19 @@ export default {
         title: "Polar Ribbon Chart",
         description: "A polar ribbon chart",
       },
+      {
+        id: "waffle-chart",
+        title: "Waffle Chart",
+        description:
+          "A stacked bar chart that replaces each bar with a series of squares",
+      },
+      {
+        id: "nested-waffle-chart",
+        title: "Nested Waffle Chart",
+      },
+      {
+        id: "HIDDEN-bar-chart-get-started",
+      },
     ].map((example) => ({
       ...example,
       demoUrl: `/examples/${example.id}`,
@@ -148,7 +161,9 @@ export default {
     }));
 
     return {
-      examples: examples.sort((a, b) => a.title.localeCompare(b.title)),
+      examples: examples
+        .filter((ex) => !ex.id.startsWith("HIDDEN"))
+        .sort((a, b) => a.title.localeCompare(b.title)),
       getCodeById(id) {
         const example = examples.find((ex) => ex.id === id);
         return example ? example.code : null;

@@ -33,8 +33,6 @@ rect({ x: 0, y: 0, w: 32, h: 300, fill: color.green[5] }).render(root, {
   w: 500,
   h: 300,
 });
-
-// .transform((d) => orderBy(d, "count", "desc"))
 ```
 
 ```ts dataset.ts
@@ -288,19 +286,20 @@ each lake in the dataset:
 :::starfish
 
 ```ts
-StackX(
-  { spacing: 8 },
-  For(groupBy(seafood, "lake"), (lake) =>
-    Rect({ w: 32, h: 300, fill: color.green[5] })
-  )
-).render(root, { w: 500, h: 300 });
+rect(seafood, { w: 32, h: 300, fill: color.green[5] })
+  .spreadX("lake")
+  .render(root, { w: 500, h: 300 });
 ```
 
 :::
 
+### The `spread` operator
+
 We've introduced a `StackX` _graphical operator_ that spaces its children 8 pixels apart. The `For`
 function maps over its input dataset, and calls the anonymous function on each one. In this case,
 we've grouped our dataset by lake so that we'll call the `Rect` shape six times.
+
+### Data-Driven Fields
 
 To turn this into a bar chart, we'll change the `h` encoding of the `Rect` shape to a data-driven
 quantity.
@@ -308,41 +307,26 @@ quantity.
 :::starfish
 
 ```ts
-StackX(
-  { spacing: 8 },
-  For(groupBy(seafood, "lake"), (lake) =>
-    Rect({ w: 32, h: sumBy(lake, "count"), fill: color.green[5] })
-  )
-).render(root, { w: 500, h: 300 });
+rect(seafood, { w: 32, h: "count", fill: color.green[5] })
+  .spreadX("lake")
+  .render(root, { w: 500, h: 300 });
 ```
 
 :::
 
-Great! Now we're summing over the count of each species in the lake. But right now, `h` is using the
-data as exact pixel values. What if we want the data to adjust to the available space? For that, we
-have the `v` function:
+### Inferred Fields
+
+We remove the `w` field from our spec to have GoFish infer it for us. GoFish uses the overall size
+of the chart we gave to `render` as well as the sizing information in `spreadX` to determine the
+width of each rectangle.
 
 :::starfish
 
 ```ts
-StackX(
-  { spacing: 8, sharedScale: true },
-  For(groupBy(seafood, "lake"), (lake) =>
-    Rect({ w: 32, h: v(sumBy(lake, "count")), fill: color.green[5] })
-  )
-).render(root, { w: 500, h: 300 });
+rect(seafood, { h: "count", fill: color.green[5] })
+  .spreadX("lake")
+  .render(root, { w: 500, h: 300 });
 ```
-
-:::
-
-By adding a `v` to `h`'s parameter, we tell GoFish that this should be interpreted as data and
-scaled accordingly. Now we can change the height of the chart and see the bar heights change with
-it! Try changing `render`'s `h` to `100`.
-
-::: info
-
-Notice we also added `sharedScale` to the `StackX`. This tells GoFish that all of `StackX`'s
-children belong to the same coordinate space. We intend to remove this parameter in the future.
 
 :::
 
@@ -354,17 +338,14 @@ your spec as long as you put `axes: true` in the `render` method like so:
 :::starfish
 
 ```ts
-StackX(
-  { spacing: 8, sharedScale: true },
-  For(groupBy(seafood, "lake"), (lake) =>
-    Rect({ w: 32, h: v(sumBy(lake, "count")), fill: color.green[5] })
-  )
-).render(root, { w: 500, h: 300, axes: true });
+rect(seafood, { h: "count", fill: color.green[5] })
+  .spreadX("lake")
+  .render(root, { w: 500, h: 300, axes: true });
 ```
 
 :::
 
-Awesome. Now we have a y-axis. But what about the x-axis? Since the x-axis is a discrete quantity
+<!-- Awesome. Now we have a y-axis. But what about the x-axis? Since the x-axis is a discrete quantity
 not tied to an argument like `h`, we'll need to pass a `key` field to the objects we want to label:
 
 :::starfish
@@ -378,12 +359,12 @@ StackX(
 ).render(root, { w: 500, h: 300, axes: true });
 ```
 
-:::
+::: -->
 
-Voila! Now we have labels for each of the bars.
+Voila! Now we have a y-axis and labels for each of the bars.
 
-Notice also that we've added a `key` field to the `Rect`. This let's GoFish know the identity of
-each
+<!-- Notice also that we've added a `key` field to the `Rect`. This let's GoFish know the identity of -->
+<!-- each -->
 
 ## Stacked Bar Chart
 
@@ -394,20 +375,15 @@ like a normal bar chart, except instead of a line of rectangles, it's a line of 
 :::starfish
 
 ```ts
-StackX(
-  { spacing: 8, sharedScale: true },
-  For(groupBy(seafood, "lake"), (lake, key) =>
-    StackY(
-      { key, spacing: 1 },
-      For(lake, (d) => Rect({ w: 32, h: v(d.count), fill: color.green[5] }))
-    )
-  )
-).render(root, { w: 500, h: 300, axes: true });
+rect(seafood, { h: "count", fill: color.green[5] })
+  .stackY("species")
+  .spreadX("lake")
+  .render(root, { w: 500, h: 300, axes: true });
 ```
 
 :::
 
-We've added a `StackY` in between the `StackX` and the `Rect`. This creates a vertical stack that
+<!-- We've added a `StackY` in between the `StackX` and the `Rect`. This creates a vertical stack that
 iterates over every species in each lake. Notice we've also changed `Rect`'s encoding from a sum
 over all the species in the lake to the direct count.
 
@@ -416,7 +392,7 @@ over all the species in the lake to the direct count.
 Note: We've moved the key to the `StackY` from the `Rect` to keep the label on the elements produced
 by the `For` loop.
 
-:::
+::: -->
 
 Now we have a rectangle for each species in each lake. But we can't tell the fish apart! Let's add a
 color encoding so that each rectangle's color corresponds to the species of fish.
@@ -424,15 +400,10 @@ color encoding so that each rectangle's color corresponds to the species of fish
 :::starfish
 
 ```ts
-StackX(
-  { spacing: 8, sharedScale: true },
-  For(groupBy(seafood, "lake"), (lake, key) =>
-    StackY(
-      { key, spacing: 1 },
-      For(lake, (d) => Rect({ w: 32, h: v(d.count), fill: v(d.species) }))
-    )
-  )
-).render(root, { w: 500, h: 300, axes: true });
+rect(seafood, { h: "count", fill: "species" })
+  .stackY("species")
+  .spreadX("lake")
+  .render(root, { w: 500, h: 300, axes: true });
 ```
 
 :::
@@ -440,7 +411,14 @@ StackX(
 Much better! Notice that we also have a color legend telling us what each color represents. This was
 created automatically because have set `axes: true` on the `render` method.
 
+### The `stack` operator
+
+Notice we've used the `stack` operator to create this stack of bars. `stack` works a lot like
+`spread`, but it "glues" shapes tightly together. This lets us keep the continuous y-axis, for example.
+
 ## Ribbon Chart
+
+### Data Transformation
 
 Now we have a sense of the break down by lake, but these lakes are connected by a river! It's hard
 to track how the proportion of fish changes between each lake. Let's first try ordering the bars by
@@ -449,17 +427,11 @@ their counts:
 :::starfish
 
 ```ts
-StackX(
-  { spacing: 8, sharedScale: true },
-  For(groupBy(seafood, "lake"), (lake, key) =>
-    StackY(
-      { key, spacing: 1 },
-      For(orderBy(lake, "count", "desc"), (d) =>
-        Rect({ w: 32, h: v(d.count), fill: v(d.species) })
-      )
-    )
-  )
-).render(root, { w: 500, h: 300, axes: true });
+rect(seafood, { h: "count", fill: "species" })
+  .stackY("species")
+  .transform((d) => orderBy(d, "count", "desc"))
+  .spreadX("lake")
+  .render(root, { w: 500, h: 300, axes: true });
 ```
 
 :::
@@ -468,7 +440,7 @@ Some trends pop out. The salmon population spikes between lakes B and C while ca
 decline. We can make these trends more obvious by connecting rectangles of the same species
 together.
 
-:::starfish
+<!-- :::starfish
 
 ```ts
 Frame([
@@ -494,6 +466,21 @@ Frame([
 ]).render(root, { w: 500, h: 300, axes: true });
 ```
 
+::: -->
+
+### The `connect` operator
+
+:::starfish
+
+```ts
+rect(seafood, { h: "count", fill: "species" })
+  .stackY("species")
+  .transform((d) => orderBy(d, "count", "desc"))
+  .spreadX("lake")
+  .connectX("species", { over: "lake" })
+  .render(root, { w: 500, h: 300, axes: true });
+```
+
 :::
 
 Great! This is already a ribbon chart but it's a little funky. We'll fix the funkiness in a second,
@@ -508,6 +495,19 @@ To make this look more like a traditional ribbon chart, all we have to do is cha
 the `StackX` and the width of each `Rect`.
 
 :::starfish
+
+```ts
+rect(seafood, { h: "count", fill: "species" })
+  .stackY("species")
+  .transform((d) => orderBy(d, "count", "desc"))
+  .spreadX("lake", { spacing: 64 })
+  .connectX("species", { over: "lake", opacity: 0.8 })
+  .render(root, { w: 500, h: 300, axes: true });
+```
+
+:::
+
+<!-- :::starfish
 
 ```ts
 Frame([
@@ -533,7 +533,7 @@ Frame([
 ]).render(root, { w: 500, h: 300, axes: true });
 ```
 
-:::
+::: -->
 
 ## Polar Ribbon Chart
 
@@ -544,34 +544,23 @@ so that it appears in the proper direction.
 :::starfish
 
 ```ts
-Frame({ coord: Polar() }, [
-  StackX(
-    {
-      y: 50,
-      x: (-3 * Math.PI) / 6,
-      spacing: (2 * Math.PI) / 6,
-      alignment: "start",
-      mode: "center-to-center",
-      sharedScale: true,
-    },
-    For(groupBy(seafood, "lake"), (lake, key) =>
-      StackY(
-        { key, spacing: 1, reverse: true },
-        For(orderBy(lake, "count", "desc"), (d) =>
-          Rect({ w: 0.1, h: v(d.count), fill: v(d.species) }).name(
-            `${d.lake}-${d.species}`
-          )
-        )
-      )
-    )
-  ),
-  For(groupBy(seafood, "species"), (items) =>
-    ConnectX(
-      { opacity: 0.8 },
-      For(items, (d) => Ref(`${d.lake}-${d.species}`))
-    )
-  ),
-]).render(root, { w: 500, h: 300, x: 100, y: 150 });
+rect(seafood, { h: "count", fill: "species" })
+  .stackY("species", { reverse: true })
+  .transform((d) => orderBy(d, "count", "desc"))
+  .spreadX("lake", {
+    y: 50,
+    x: (-3 * Math.PI) / 6,
+    spacing: (2 * Math.PI) / 6,
+    alignment: "start",
+    mode: "center",
+  })
+  .connectX("species", { over: "lake", opacity: 0.8 })
+  .coord(polar())
+  .render(root, { w: 500, h: 300, transform: { x: 200, y: 150 } });
 ```
 
 :::
+
+## What's next?
+
+Go check out some of our [examples](/examples/index)!

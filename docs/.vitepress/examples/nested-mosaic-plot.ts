@@ -1,8 +1,8 @@
 const classColor = {
-  First: color.red[5],
-  Second: color.blue[5],
-  Third: color.green[5],
-  Crew: color.orange[5],
+  First: color6[0],
+  Second: color6[1],
+  Third: color6[2],
+  Crew: color6[3],
 };
 
 StackY(
@@ -21,10 +21,7 @@ StackY(
           For(groupBy(sItems, "survived"), (items, survived) =>
             Rect({
               h: v(_(items).sumBy("count")),
-              fill:
-                survived === "No"
-                  ? mix(classColor[cls], black, 0.7)
-                  : classColor[cls],
+              fill: survived === "No" ? gray : classColor[cls],
             })
           )
         )

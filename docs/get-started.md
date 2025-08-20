@@ -2,59 +2,15 @@
 
 GoFish is a JavaScript library for making bespoke graphics.
 
-<!-- Here's a bar chart in GoFish:
-
-::: starfish-live {template=vanilla-ts rtl lightTheme=aquaBlue darkTheme=atomDark previewHeight=400 coderHeight=512}
-
-```ts index.ts
-import { StackX, Rect, For, v } from "gofish-graphics";
-import { alphabet } from "./dataset";
-
-const root = document.getElementById("app");
-
-// A bar chart is a horizontal stack...
-StackX(
-  { spacing: 4, alignment: "end", sharedScale: true },
-  For(alphabet, (d) =>
-    // ...of rectangles
-    Rect({ w: 30, h: v(d.frequency) })
-  )
-).render(root, { width: 500, height: 300, axes: true });
-```
-
-```ts dataset.ts
-export const alphabet = [
-  { letter: "A", frequency: 28 },
-  { letter: "B", frequency: 55 },
-  { letter: "C", frequency: 43 },
-  { letter: "D", frequency: 91 },
-  { letter: "E", frequency: 81 },
-  { letter: "F", frequency: 53 },
-  { letter: "G", frequency: 19 },
-  { letter: "H", frequency: 87 },
-  { letter: "I", frequency: 52 },
-];
-```
-
-:::
-
-::: info Note
-
-The editor is live! Try changing "spacing" or "w".
-
-:::
-
-To learn more, check out [our tutorial!](/tutorial.md) -->
-
-1. Install GoFish
+## 1. Install GoFish
 
 ```bash
 npm install gofish-graphics
 ```
 
-2. Create a chart! Make sure to create or select a DOM element to render it.
+## 2. Create a chart!
 
-::: starfish example:bar-chart hidden
+::: starfish example:HIDDEN-bar-chart-get-started hidden
 :::
 
 ```ts
@@ -72,48 +28,69 @@ const alphabet = [
 
 const root = document.createElement("div");
 
-StackX(
-  { spacing: 4, alignment: "end", sharedScale: true },
-  For(alphabet, (d) => Rect({ w: 30, h: v(d.frequency) }))
-).render(root, { width: 688, height: 400, axes: true });
+rect(alphabet, { h: "frequency" })
+  .spreadX("letter")
+  .render(root, { w: 500, h: 300, axes: true });
 ```
 
-3. Anatomy of a GoFish specification
+::: info Note
+
+Make sure to create or select a DOM element to render your chart to!
+
+:::
+
+## 3. Anatomy of a GoFish specification
+
+### Shapes
 
 ```ts
-// `StackX` is a *graphical operator* that puts shapes in a horizontal stack
-StackX(
-  { spacing: 4, alignment: "end", sharedScale: true },
-  // `For` creates an array of shapes
-  For(alphabet, (d) =>
-    // `Rect` is a basic shape
-    // `v` tells GoFish it's a data value that should be scaled
-    Rect({ w: 30, h: v(d.frequency) })
-  )
-  // finally, we render the chart!
-).render(root, { width: 688, height: 400, axes: true });
+rect(alphabet, { h: "frequency" });
 ```
 
-4. Next steps
+GoFish draws charts using _shapes_. To make a bar chart, we use the `rect` shape to draw rectangles.
+We pass it a dataset, `alphabet`, and a parameter that maps the `frequency` field of the `alphabet`
+dataset to the height of each rectangle.
+
+GoFish automatically infers the width and color of the rectangle, because we haven't specified them.
+
+### Graphical Operators
+
+```ts
+  .spreadX("letter")
+```
+
+The `rect` shape describes the size and color of each rectangle, but it doesn't tells us how the
+rectangles should be arranged. That's what _graphical operators_ are for.
+
+We use the `spreadX` operator to spread out rectangles horizontally. It also makes one rectangle per
+`letter` in the `alphabet` dataset.
+
+### Rendering
+
+```ts
+  .render(root, { w: 688, h: 400, axes: true });
+```
+
+The `render` method draws our chart to the screen! We give it a DOM container to render into (`root`
+in this case) and some options. We've specified the width and height of our chart with `w` and `h`
+(just like on `rect`). We've also told GoFish to create some axes, labels, and legends for us
+automatically with `axes: true`.
+
+## 4. Next steps
 
 Go through [our tutorial](/tutorial), check out [some examples](/examples/index), or play with the live editor below!
 
 ::: starfish-live {template=vanilla-ts rtl lightTheme=aquaBlue darkTheme=atomDark previewHeight=400 coderHeight=512}
 
 ```ts index.ts
-import { StackX, Rect, For, v } from "gofish-graphics";
+import { rect } from "gofish-graphics";
 import { alphabet } from "./dataset";
 
 const root = document.getElementById("app");
 
-// A bar chart is a horizontal stack...
-StackX(
-  { spacing: 4, alignment: "end", sharedScale: true },
-  For(alphabet, (d, key) =>
-    // ...of rectangles
-    Rect({ key: d.letter, w: 30, h: v(d.frequency) })
-  )
-).render(root, { w: 500, h: 300, axes: true });
+rect(alphabet, { h: "frequency" })
+  .spreadX("letter")
+  .render(root, { w: 500, h: 300, axes: true });
 ```
 
 ```ts dataset.ts

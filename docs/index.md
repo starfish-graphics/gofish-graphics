@@ -3,8 +3,8 @@ layout: home
 
 hero:
   name: GoFish Graphics
-  text: An Expressive Graphics Library
-  tagline: Create bespoke charts with ease
+  text: "JavaScript Charts Without the Headache"
+  tagline: More simple. More beautiful. More expressive. More.
   image:
     src: /gofish-logo.png
     alt: GoFish
