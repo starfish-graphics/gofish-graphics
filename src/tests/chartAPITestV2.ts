@@ -93,20 +93,20 @@ export const v2ChartRibbon = () =>
 
 export const v2ChartPolarRibbon = () =>
   rect(catchData, {
-    w: 0.1,
+    ts: 0.1,
     fill: "species",
-    h: "count",
+    rs: "count",
   })
-    .stackY("species", { spacing: 2, reverse: true })
+    .stackR("species", { reverse: true })
     .transform((d) => orderBy(d, "count", "desc"))
-    .spreadX("lake", {
-      y: 50,
-      x: -Math.PI / 2,
+    .spreadT("lake", {
+      r: 50,
+      t: -Math.PI / 2,
       spacing: (2 * Math.PI) / 6,
       alignment: "start",
       mode: "center",
     })
-    .connectX("species", { over: "lake", opacity: 0.7 })
+    .connectT("species", { over: "lake", opacity: 0.7 })
     .coord(polar())
     .TEST_render();
 
@@ -140,4 +140,28 @@ guide(seafood, {
   h: 300,
     // axes: true,
 });
+*/
+
+/* 
+guide(seafood, {
+    fill: "species",
+    h: "count",
+  })
+    .stackY("species", { reverse: true })
+    .transform((d) => orderBy(d, "count", "desc"))
+    .spreadX("lake", {
+      y: 50,
+      x: -Math.PI / 2,
+      spacing: (2 * Math.PI) / 6,
+      alignment: "start",
+    })
+    .connectX("species", { over: "lake", opacity: 1 })
+    .coord(polar())
+  .render(root, {
+    transform: { x: 150, y: 150},
+  w: 500,
+  h: 300,
+    // axes: true,
+});
+
 */

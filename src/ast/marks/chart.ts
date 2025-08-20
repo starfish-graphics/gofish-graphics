@@ -42,6 +42,8 @@ export class _Chart<T> {
   rect({
     w,
     h,
+    rs,
+    ts,
     rx,
     ry,
     fill,
@@ -49,6 +51,8 @@ export class _Chart<T> {
   }: {
     w?: number | string;
     h?: number | string;
+    rs?: number;
+    ts?: number;
     rx?: number;
     ry?: number;
     fill: string;
@@ -57,8 +61,26 @@ export class _Chart<T> {
     return new _Chart(this._data, (d: T[], key: number | string) => {
       if (debug) console.log("rect", key, d);
       return Rect({
-        w: typeof w === "number" || w === undefined ? w : v(sumBy(d, w)),
-        h: typeof h === "number" || h === undefined ? h : v(sumBy(d, h)),
+        w:
+          typeof w === "number"
+            ? w
+            : w !== undefined
+              ? v(sumBy(d, w))
+              : typeof ts === "number"
+                ? ts
+                : ts !== undefined
+                  ? v(sumBy(d, ts))
+                  : undefined,
+        h:
+          typeof h === "number"
+            ? h
+            : h !== undefined
+              ? v(sumBy(d, h))
+              : typeof rs === "number"
+                ? rs
+                : rs !== undefined
+                  ? v(sumBy(d, rs))
+                  : undefined,
         rx,
         ry,
         fill:
@@ -146,6 +168,8 @@ export class _Chart<T> {
     options?: {
       x?: number;
       y?: number;
+      t?: number;
+      r?: number;
       w?: number | string;
       h?: number | string;
       mode?: "edge" | "center";
@@ -168,8 +192,8 @@ export class _Chart<T> {
       if (opts?.debug) console.log("stackX groups", groups);
       return StackX(
         {
-          x: opts?.x,
-          y: opts?.y,
+          x: opts?.x ?? opts?.t,
+          y: opts?.y ?? opts?.r,
           mode: opts?.mode ? connectXMode[opts?.mode] : undefined,
           spacing: opts?.spacing ?? 8,
           sharedScale: opts?.sharedScale,
@@ -200,6 +224,8 @@ export class _Chart<T> {
     options?: {
       x?: number;
       y?: number;
+      t?: number;
+      r?: number;
       w?: number | string;
       h?: number | string;
       mode?: "edge" | "center";
@@ -223,8 +249,8 @@ export class _Chart<T> {
       if (opts?.debug) console.log("stackY groups", groups);
       return StackY(
         {
-          x: opts?.x,
-          y: opts?.y,
+          x: opts?.x ?? opts?.t,
+          y: opts?.y ?? opts?.r,
           mode: opts?.mode ? connectXMode[opts?.mode] : undefined,
           spacing: opts?.spacing ?? 8,
           sharedScale: opts?.sharedScale,
@@ -291,6 +317,14 @@ export class _Chart<T> {
       reverse: options?.reverse ?? false,
     });
   }
+  /* theta, r aliases */
+  stackT = this.stackX;
+  stackR = this.stackY;
+  spreadT = this.spreadX;
+  spreadR = this.spreadY;
+  connectT = this.connectX;
+  // connectR = this.connectY;
+  /* end aliases */
   // TODO: fix!!!
   scatterXY(
     groupKey: string,
@@ -394,6 +428,8 @@ export const rect = <T>(
     | {
         w?: number | string;
         h?: number | string;
+        ts?: number | string;
+        rs?: number | string;
         rx?: number;
         ry?: number;
         fill: string;
@@ -402,6 +438,8 @@ export const rect = <T>(
   optionsArg?: {
     w?: number | string;
     h?: number | string;
+    ts?: number | string;
+    rs?: number | string;
     rx?: number;
     ry?: number;
     fill: string;
@@ -412,6 +450,8 @@ export const rect = <T>(
   let options: {
     w?: number | string;
     h?: number | string;
+    ts?: number | string;
+    rs?: number | string;
     rx?: number;
     ry?: number;
     fill: string;
@@ -426,6 +466,8 @@ export const rect = <T>(
     options = dataOrOptions as {
       w?: number | string;
       h?: number | string;
+      ts?: number | string;
+      rs?: number | string;
       rx?: number;
       ry?: number;
       fill: string;
