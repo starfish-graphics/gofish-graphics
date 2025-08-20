@@ -8,6 +8,7 @@ import vueJsx from "@vitejs/plugin-vue-jsx";
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
   vite: { plugins: [vueJsx()] },
+  appearance: false,
   // title: "Starfish Graphics",
   // description: "Documentation for Starfish",
   title: "GoFish Graphics",
