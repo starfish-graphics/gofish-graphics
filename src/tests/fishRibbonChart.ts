@@ -34,7 +34,7 @@ export const testFishRibbonChart = () =>
           stackY(
             { spacing: 0 },
             _(d)
-              .orderBy("count", "desc")
+              .orderBy("count", "asc")
               .map((d) =>
                 rect({
                   name: `${d.lake}-${d.species}`,

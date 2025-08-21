@@ -32,17 +32,36 @@ import { frame } from "../ast/graphicalOperators/frame";
 <rect x="192" y="305" width="16" height="12" fill="#cc4444" rx="5" ry="5" />
 */
 
-export const balloon = (options?: { x?: number; y?: number; scale?: number; color?: string[] }) =>
+export const balloon = (options?: {
+  x?: number;
+  y?: number;
+  scale?: number;
+  color?: string[];
+}) =>
   frame(
     {
       x: options?.x - 15 * (options?.scale ?? 1),
-      y: options?.y - 25 * (options?.scale ?? 1),
+      y: options?.y + 27 * (options?.scale ?? 1),
       box: true,
-      transform: { scale: { x: options?.scale ?? 1, y: options?.scale ?? 1 } },
+      transform: {
+        scale: { x: options?.scale ?? 1, y: (options?.scale ?? 1) * -1 },
+      },
     },
     [
-      ellipse({ cx: 15, cy: 15, w: 24, h: 30, fill: (options?.color ?? color.red)[4] }),
-      ellipse({ cx: 12, cy: 11, w: 7, h: 11, fill: (options?.color ?? color.red)[3] }),
+      ellipse({
+        cx: 15,
+        cy: 15,
+        w: 24,
+        h: 30,
+        fill: (options?.color ?? color.red)[4],
+      }),
+      ellipse({
+        cx: 12,
+        cy: 11,
+        w: 7,
+        h: 11,
+        fill: (options?.color ?? color.red)[3],
+      }),
       rect({
         cx: 15,
         cy: 32,

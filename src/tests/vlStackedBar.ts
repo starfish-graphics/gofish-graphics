@@ -66,7 +66,7 @@ export const testVLStackedBar = () =>
               .groupBy("weather")
               .toPairs()
               .sortBy(([weather]) => {
-                const order = { drizzle: 0, fog: 1, rain: 2, snow: 3, sun: 4 };
+                const order = { sun: 0, snow: 1, rain: 2, fog: 3, drizzle: 4 };
                 return order[weather as keyof typeof order];
               })
               .map(([weather, d]) =>

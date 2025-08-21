@@ -14,6 +14,7 @@ export const stackY = withGoFish(
       sharedScale = false,
       mode = "edge-to-edge",
       reverse = false,
+      dir = "btt",
       ...fancyDims
     }: {
       name?: string;
@@ -23,9 +24,23 @@ export const stackY = withGoFish(
       sharedScale?: boolean;
       mode?: "edge-to-edge" | "center-to-center";
       reverse?: boolean;
+      dir?: "ttb" | "btt";
     } & FancyDims,
     children: GoFishAST[] | Collection<GoFishAST>
   ) => {
-    return stack({ direction: "y", key, spacing, alignment, sharedScale, mode, reverse, ...fancyDims }, children);
+    return stack(
+      {
+        name,
+        direction: "y",
+        key,
+        spacing,
+        alignment,
+        sharedScale,
+        mode,
+        reverse: dir === "ttb" ? true : dir === "btt" ? false : reverse,
+        ...fancyDims,
+      },
+      children
+    );
   }
 );

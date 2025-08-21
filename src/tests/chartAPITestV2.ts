@@ -35,14 +35,14 @@ export const v2ChartScatter = () =>
 export const v2ChartStackedBar = () =>
   rect(catchData, { fill: "species", h: "count" })
     .stackY("species" /* , { w: "count" } */)
-    .transform((d) => orderBy(d, "count", "desc"))
-    .spreadX("lake")
+    .transform((d) => orderBy(d, "count", "asc"))
+    .spreadX("lake", { alignment: "start" })
     .TEST_render();
 
 export const v2ChartPies = () =>
   rect(catchData, { fill: "species", w: "count", h: 40 })
     .stackX("species")
-    .transform((d) => orderBy(d, "count", "desc"))
+    .transform((d) => orderBy(d, "count", "asc"))
     .coord(polar())
     .spreadX("lake", { spacing: 100 })
     .TEST_render();
@@ -50,7 +50,7 @@ export const v2ChartPies = () =>
 export const v2ChartPie = () =>
   rect(catchData, { fill: "species", w: "count", h: 40 })
     .stackX("species")
-    .transform((d) => orderBy(d, "count", "desc"))
+    .transform((d) => orderBy(d, "count", "asc"))
     .coord(polar())
     // .spreadX("lake", { spacing: 100 })
     .TEST_render();
@@ -58,7 +58,7 @@ export const v2ChartPie = () =>
 export const v2ChartScatterPie = () =>
   rect(catchDataWithLocations, { fill: "species", w: "count" })
     .stackX("species", { h: 20 /* "count" */ })
-    .transform((d) => orderBy(d, "count", "desc"))
+    .transform((d) => orderBy(d, "count", "asc"))
     .coord(polar())
     .scatter("lake", { x: "x", y: "y" })
     // .spreadX("lake", { spacing: 100 })
@@ -86,7 +86,7 @@ export const v2ChartArea = () =>
 export const v2ChartRibbon = () =>
   rect(catchData, { w: 24, fill: "species", h: "count" })
     .stackY("species")
-    .transform((d) => orderBy(d, "count", "desc"))
+    .transform((d) => orderBy(d, "count", "asc"))
     .spreadX("lake", { spacing: 40 })
     .connectX("species", { over: "lake", opacity: 0.7 })
     .TEST_render();
@@ -97,13 +97,11 @@ export const v2ChartPolarRibbon = () =>
     fill: "species",
     rs: "count",
   })
-    .stackR("species", { reverse: true })
-    .transform((d) => orderBy(d, "count", "desc"))
+    .stackR("species")
+    .transform((d) => orderBy(d, "count", "asc"))
     .spreadT("lake", {
       r: 50,
-      t: -Math.PI / 2,
       spacing: (2 * Math.PI) / 6,
-      alignment: "start",
       mode: "center",
     })
     .connectT("species", { over: "lake", opacity: 0.7 })
@@ -114,7 +112,7 @@ export const v2ChartPolarRibbon = () =>
 export const v2ChartRibbonMessAround = () =>
   rect(catchData, { w: 20, fill: "species", h: 20 })
     .spreadY("species", { label: false, spacing: 20 })
-    .transform((d) => orderBy(d, "count", "desc"))
+    .transform((d) => orderBy(d, "count", "asc"))
     .spreadX("lake", { spacing: 40 })
     .connectX("species", { over: "lake", opacity: 0.7 })
     .TEST_render();

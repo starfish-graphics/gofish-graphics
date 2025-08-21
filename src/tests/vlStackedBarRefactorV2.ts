@@ -16,7 +16,20 @@ const colorScale = {
   snow: "#9467bd",
 };
 
-const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const monthNames = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
 const stackedBarDataset = _(seattleWeather)
   .map((d) => ({
     ...d,
@@ -27,7 +40,11 @@ const stackedBarDataset = _(seattleWeather)
 export const testVLStackedBarRefactorV2 = () =>
   rectTemplate(stackedBarDataset, {
     x: { field: "month", sort: monthNames, spacing: 1 },
-    y: { field: "weather", sort: ["drizzle", "fog", "rain", "snow", "sun"], spacing: 0 },
+    y: {
+      field: "weather",
+      sort: ["sun", "snow", "rain", "fog", "drizzle"],
+      spacing: 0,
+    },
     w: 12,
     h: "length",
     fillFn: (weather) => colorScale[weather as keyof typeof colorScale],

@@ -447,7 +447,7 @@ const App: Component = () => {
       <GoFishSolid w={500} h={300} defs={defs}>
         {testViolinPlot()}
       </GoFishSolid>
-      <GoFishSolid w={500} h={300} y={-200} defs={defs}>
+      <GoFishSolid w={500} h={300} defs={defs}>
         {testBoxWhiskerPlot()}
       </GoFishSolid>
       <GoFishSolid w={500} h={500} defs={defs}>

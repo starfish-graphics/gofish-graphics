@@ -27,9 +27,11 @@ export const waffleTemplate = (
       stackY(
         { spacing: options.spacing, alignment: "start" },
         _(d)
-          .sortBy((d) => options.orderBy?.sort?.indexOf(d[options.orderBy?.field]) ?? 0)
+          .sortBy(
+            (d) =>
+              options.orderBy?.sort?.indexOf(d[options.orderBy?.field]) ?? 0
+          )
           .chunk(options.chunkSize)
-          .reverse()
           .map((row) =>
             stackX(
               { spacing: options.spacing },

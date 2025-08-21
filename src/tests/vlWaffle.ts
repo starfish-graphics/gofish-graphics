@@ -15,7 +15,20 @@ const colorScale = {
 
 const stackedBarDataset = _(seattleWeather).groupBy((d) => {
   const date = new Date(d.date);
-  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const monthNames = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
   return monthNames[date.getMonth()];
 });
 

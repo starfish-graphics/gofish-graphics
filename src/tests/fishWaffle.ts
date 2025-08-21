@@ -29,10 +29,8 @@ export const testFishWaffle = () =>
         stackY(
           { spacing: 2, alignment: "start" },
           _(d)
-            .reverse()
             .flatMap((d) => Array(d.count).fill(d))
             .chunk(3)
-            .reverse()
             .map((d) =>
               stackX(
                 { spacing: 2 },

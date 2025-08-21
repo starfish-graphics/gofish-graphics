@@ -61,8 +61,8 @@ export const testIcicle = () =>
       h: _(titanic).sumBy("count") / 10,
       fill: neutral,
     }),
-    stack(
-      { direction: "y", spacing: 0, alignment: "middle" },
+    StackY(
+      { dir: "ttb", spacing: 0, alignment: "middle" },
       _(titanic)
         .groupBy("class")
         .map((items, cls) =>
@@ -75,8 +75,8 @@ export const testIcicle = () =>
             },
             [
               rect({ w: 40, fill: classColor[cls as keyof typeof classColor] }),
-              stack(
-                { direction: "y", spacing: 0, alignment: "middle" },
+              StackY(
+                { dir: "ttb", spacing: 0, alignment: "middle" },
                 _(items)
                   .groupBy("sex")
                   .map((items, sex) =>
@@ -91,10 +91,10 @@ export const testIcicle = () =>
                         // ),
                         fill: sex === "Female" ? color6[4] : color6[5],
                       }),
-                      stack(
+                      StackY(
                         {
                           w: 40,
-                          direction: "y",
+                          dir: "ttb",
                           spacing: 0,
                           alignment: "middle",
                         },

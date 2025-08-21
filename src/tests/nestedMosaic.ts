@@ -14,6 +14,7 @@ import {
 } from "../color";
 import { titanic } from "../data/titanic";
 import { mix } from "spectral.js";
+import { StackY } from "../lib";
 
 const data = [
   { origin: "Europe", cylinders: "4", count: 66 },
@@ -35,8 +36,8 @@ const classColor = {
 };
 
 export const testNestedMosaic = () =>
-  stack(
-    { direction: "y", spacing: 4, alignment: "middle" },
+  StackY(
+    { dir: "ttb", spacing: 4, alignment: "middle" },
     // TODO: I could probably make the width be uniform flexible basically
     _(titanic)
       .groupBy("class")
@@ -52,12 +53,12 @@ export const testNestedMosaic = () =>
             _(items)
               .groupBy("sex")
               .map((sItems, sex) =>
-                stack(
+                StackY(
                   {
                     w:
                       (_(sItems).sumBy("count") / _(items).sumBy("count")) *
                       100,
-                    direction: "y",
+                    dir: "ttb",
                     spacing: 0,
                     alignment: "middle",
                     sharedScale: true,

@@ -28,9 +28,21 @@ export const testPolarBar = (size: { width: number; height: number }) =>
     { width: size.width, height: size.height, transform: { x: 50, y: 250 } },
     coord({ transform: polar_DEPRECATED() }, [
       stack(
-        { x: 10, y: -Math.PI / 2, direction: 0, spacing: 4, alignment: "start", sharedScale: true },
+        {
+          x: 10,
+          y: -Math.PI / 2,
+          direction: 0,
+          spacing: 4,
+          alignment: "start",
+          sharedScale: true,
+        },
         data.map((d, i) =>
-          rect({ w: 20, h: /* value(d.b, "value") */ d.b / 40, emY: true, fill: i < 3 ? "none" : color6[i % 6] })
+          rect({
+            w: 20,
+            h: /* value(d.b, "value") */ d.b / 40,
+            emY: true,
+            fill: i < 3 ? "none" : color6[i % 6],
+          })
         )
       ),
     ])

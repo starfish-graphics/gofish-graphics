@@ -80,7 +80,7 @@ export const gofish = (
       [undefined, undefined],
       [
         posDomainX ? computePosScale(posDomainX, w) : undefined,
-        posDomainY ? computePosScale(posDomainY, h, true) : undefined,
+        posDomainY ? computePosScale(posDomainY, h /* , true */) : undefined,
       ]
     );
     child.place({ x: x ?? transform?.x ?? 0, y: y ?? transform?.y ?? 0 });
@@ -135,7 +135,6 @@ export const render = (
 ): JSX.Element => {
   let yTicks: number[] = [];
   if (axes) {
-    // console.log(scaleContext);
     // console.log(keyContext);
     const [min, max] = nice(
       scaleContext.y.domain[0],
@@ -154,7 +153,9 @@ export const render = (
       <Show when={defs}>
         <defs>{defs}</defs>
       </Show>
-      <g transform={`translate(${PADDING * 4}, ${PADDING * 4})`}>
+      <g
+        transform={`scale(1, -1) translate(${PADDING * 4}, ${-height - PADDING * 4})`}
+      >
         <Show when={transform} keyed fallback={child.INTERNAL_render()}>
           <g transform={transform ?? ""}>{child.INTERNAL_render()}</g>
         </Show>
@@ -173,13 +174,11 @@ export const render = (
             <g>
               <line
                 x1={-PADDING}
-                y1={
-                  height -
-                  yTicks[yTicks.length - 1] * scaleContext.y.scaleFactor -
-                  0.5
-                }
+                y1={yTicks[0] * scaleContext.y.scaleFactor - 0.5}
                 x2={-PADDING}
-                y2={height - yTicks[0] * scaleContext.y.scaleFactor + 0.5}
+                y2={
+                  yTicks[yTicks.length - 1] * scaleContext.y.scaleFactor + 0.5
+                }
                 stroke="gray"
                 stroke-width="1px"
               />
@@ -187,8 +186,9 @@ export const render = (
                 {(tick) => (
                   <>
                     <text
+                      transform="scale(1, -1)"
                       x={-PADDING * 1.75}
-                      y={height - tick * scaleContext.y.scaleFactor}
+                      y={-tick * scaleContext.y.scaleFactor}
                       text-anchor="end"
                       dominant-baseline="middle"
                       font-size="10px"
@@ -198,9 +198,9 @@ export const render = (
                     </text>
                     <line
                       x1={-PADDING * 1.5}
-                      y1={height - tick * scaleContext.y.scaleFactor}
+                      y1={tick * scaleContext.y.scaleFactor}
                       x2={-PADDING}
-                      y2={height - tick * scaleContext.y.scaleFactor}
+                      y2={tick * scaleContext.y.scaleFactor}
                       stroke="gray"
                     />
                   </>
@@ -249,8 +249,9 @@ export const render = (
                   ];
                   return (
                     <text
+                      transform="scale(1, -1)"
                       x={displayDims[0].center ?? 0}
-                      y={(displayDims[1].max ?? 0) + 5}
+                      y={(displayDims[1].min ?? 0) + 5}
                       text-anchor="middle"
                       dominant-baseline="hanging"
                       font-size="10px"
@@ -267,10 +268,11 @@ export const render = (
               <For each={Array.from(scaleContext.unit.color.entries())}>
                 {([key, value], i) => (
                   <g
-                    transform={`translate(${width + PADDING * 3}, ${i() * 20})`}
+                    transform={`translate(${width + PADDING * 3}, ${height - i() * 20})`}
                   >
                     <rect x={-20} y={-5} width={10} height={10} fill={value} />
                     <text
+                      transform="scale(1, -1)"
                       x={-5}
                       y={0}
                       text-anchor="start"

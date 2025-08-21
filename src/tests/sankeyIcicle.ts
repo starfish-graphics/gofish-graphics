@@ -67,8 +67,8 @@ const internalSpacing = 2;
 export const testSankeyIcicle = () =>
   frame([
     stack({ direction: "x", spacing: layerSpacing, alignment: "middle" }, [
-      stack(
-        { direction: "y", spacing: 0, alignment: "middle" },
+      StackY(
+        { dir: "ttb", spacing: 0, alignment: "middle" },
         _(titanic)
           .groupBy("class")
           .map((items, cls) =>
@@ -81,18 +81,18 @@ export const testSankeyIcicle = () =>
           )
           .value()
       ),
-      stack(
-        { direction: "y", spacing: internalSpacing, alignment: "middle" },
+      StackY(
+        { dir: "ttb", spacing: internalSpacing, alignment: "middle" },
         _(titanic)
           .groupBy("class")
           .map((items, cls) =>
             stack(
               { direction: "x", spacing: layerSpacing, alignment: "middle" },
               [
-                stack(
+                StackY(
                   {
                     name: `${cls}-tgt`,
-                    direction: "y",
+                    dir: "ttb",
                     spacing: 0,
                     alignment: "middle",
                   },
@@ -108,10 +108,10 @@ export const testSankeyIcicle = () =>
                     )
                     .value()
                 ),
-                stack(
+                StackY(
                   {
                     h: _(items).sumBy("count") / 10,
-                    direction: "y",
+                    dir: "ttb",
                     spacing: internalSpacing * 2,
                     alignment: "middle",
                   },
@@ -125,10 +125,10 @@ export const testSankeyIcicle = () =>
                           alignment: "middle",
                         },
                         [
-                          stack(
+                          StackY(
                             {
                               name: `${cls}-${sex}-tgt`,
-                              direction: "y",
+                              dir: "ttb",
                               spacing: 0,
                               alignment: "middle",
                             },
@@ -157,10 +157,10 @@ export const testSankeyIcicle = () =>
                               )
                               .value()
                           ),
-                          stack(
+                          StackY(
                             {
                               w: 40,
-                              direction: "y",
+                              dir: "ttb",
                               spacing: internalSpacing * 4,
                               alignment: "middle",
                             },
