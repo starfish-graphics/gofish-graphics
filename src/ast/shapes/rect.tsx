@@ -28,6 +28,7 @@ import {
 } from "../dims";
 import { aesthetic, continuous, Domain } from "../domain";
 import { scaleContext } from "../gofish";
+import * as Linear from "../../util/linear";
 
 /* TODO: what should default embedding behavior be when all values are aesthetic? */
 export const rect = ({
@@ -93,16 +94,12 @@ export const rect = ({
       // },
       inferSizeDomains: (shared, size, children) => {
         return {
-          w: (scaleFactor: number) => {
-            return isValue(dims[0].size)
-              ? getValue(dims[0].size!) * scaleFactor
-              : (dims[0].size ?? size[0]);
-          },
-          h: (scaleFactor: number) => {
-            return isValue(dims[1].size)
-              ? getValue(dims[1].size!) * scaleFactor
-              : (dims[1].size ?? size[1]);
-          },
+          w: isValue(dims[0].size)
+            ? Linear.mk(getValue(dims[0].size!), 0)
+            : Linear.mk(0, dims[0].size ?? size[0]),
+          h: isValue(dims[1].size)
+            ? Linear.mk(getValue(dims[1].size!), 0)
+            : Linear.mk(0, dims[1].size ?? size[1]),
         };
       },
       layout: (

@@ -14,6 +14,7 @@ import { linear } from "../coordinateTransforms/linear";
 import { getValue, isValue, MaybeValue } from "../data";
 import { scaleContext } from "../gofish";
 import { Domain } from "../domain";
+import * as Linear from "../../util/linear";
 
 export const connect = (
   {
@@ -47,8 +48,8 @@ export const connect = (
       color: fill,
       inferSizeDomains: (shared, size, children) => {
         return {
-          w: (scaleFactor: number) => size[0],
-          h: (scaleFactor: number) => size[1],
+          w: Linear.mk(0, size[0]),
+          h: Linear.mk(0, size[1]),
         };
       },
       inferPosDomains: (childPosDomains: Size<Domain>[]) => {

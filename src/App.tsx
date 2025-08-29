@@ -356,7 +356,7 @@ const App: Component = () => {
       </div>
       <br />
       <br />
-      <GoFishSolid w={320} h={400} defs={defs} axes={false}>
+      <GoFishSolid w={500} h={300} x={200} y={200} defs={defs} axes={false}>
         {v2ChartPie()}
       </GoFishSolid>
       <GoFishSolid w={320} h={400} defs={defs} axes={false}>

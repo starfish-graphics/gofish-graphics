@@ -4,6 +4,8 @@ import { Size } from "../dims";
 import { GoFishAST } from "../_ast";
 import { black, gray, tailwindColors } from "../../color";
 import { Domain } from "../domain";
+import * as Linear from "../../util/linear";
+import * as Unknown from "../../util/unknown";
 
 export const enclose = (
   {
@@ -24,6 +26,47 @@ export const enclose = (
         const childMeasures = children.map((child) =>
           child.inferSizeDomains(size)
         );
+
+        const childMeasuresWidth = childMeasures.map((cm) => cm[0]);
+        const childMeasuresHeight = childMeasures.map((cm) => cm[1]);
+
+        return {
+          w:
+            childMeasuresWidth.every(Linear.isLinear) &&
+            childMeasuresWidth.every(
+              (childMeasureWidth) =>
+                childMeasureWidth.intercept === childMeasuresWidth[0].intercept
+            )
+              ? Linear.mk(
+                  Math.max(...childMeasuresWidth.map((cw) => cw.slope)),
+                  childMeasuresWidth[0].intercept + padding * 2
+                )
+              : Unknown.mk(
+                  (scaleFactor: number) =>
+                    Math.max(
+                      ...childMeasuresWidth.map((cw) => cw.run(scaleFactor))
+                    ) +
+                    padding * 2
+                ),
+          h:
+            childMeasuresHeight.every(Linear.isLinear) &&
+            childMeasuresHeight.every(
+              (childMeasureHeight) =>
+                childMeasureHeight.intercept ===
+                childMeasuresHeight[0].intercept
+            )
+              ? Linear.mk(
+                  Math.max(...childMeasuresHeight.map((ch) => ch.slope)),
+                  childMeasuresHeight[0].intercept + padding * 2
+                )
+              : Unknown.mk((scaleFactor: number) =>
+                  Math.max(
+                    ...childMeasuresHeight.map(
+                      (ch) => ch.run(scaleFactor) + padding * 2
+                    )
+                  )
+                ),
+        };
 
         return {
           w: (scaleFactor: number) => {

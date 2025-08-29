@@ -1,3 +1,5 @@
+import * as Linear from "../../util/linear";
+import * as Unknown from "../../util/unknown";
 import { GoFishNode } from "../_node";
 import { Size, elaborateDims, FancyDims } from "../dims";
 import {
@@ -60,23 +62,45 @@ export const layer = (
           child.inferSizeDomains(size)
         );
 
+        const childMeasuresWidth = childMeasures.map((cm) => cm[0]);
+        const childMeasuresHeight = childMeasures.map((cm) => cm[1]);
+
         return {
-          w: (scaleFactor: number) => {
-            const childSizes = childMeasures.map((childMeasure) =>
-              childMeasure[0](scaleFactor)
-            );
-            const maxWidth = Math.max(...childSizes);
-            const scaleX = options.transform?.scale?.x ?? 1;
-            return maxWidth * scaleX;
-          },
-          h: (scaleFactor: number) => {
-            const childSizes = childMeasures.map((childMeasure) =>
-              childMeasure[1](scaleFactor)
-            );
-            const maxHeight = Math.max(...childSizes);
-            const scaleY = options.transform?.scale?.y ?? 1;
-            return maxHeight * scaleY;
-          },
+          w:
+            childMeasuresWidth.every(Linear.isLinear) &&
+            childMeasuresWidth.every(
+              (childMeasureWidth) =>
+                childMeasureWidth.intercept === childMeasuresWidth[0].intercept
+            )
+              ? Linear.mk(
+                  Math.max(...childMeasuresWidth.map((cw) => cw.slope)) *
+                    (options.transform?.scale?.x ?? 1),
+                  childMeasuresWidth[0].intercept
+                )
+              : Unknown.mk(
+                  (scaleFactor: number) =>
+                    Math.max(
+                      ...childMeasuresWidth.map((cw) => cw.run(scaleFactor))
+                    ) * (options.transform?.scale?.x ?? 1)
+                ),
+          h:
+            childMeasuresHeight.every(Linear.isLinear) &&
+            childMeasuresHeight.every(
+              (childMeasureHeight) =>
+                childMeasureHeight.intercept ===
+                childMeasuresHeight[0].intercept
+            )
+              ? Linear.mk(
+                  Math.max(...childMeasuresHeight.map((ch) => ch.slope)) *
+                    (options.transform?.scale?.y ?? 1),
+                  childMeasuresHeight[0].intercept
+                )
+              : Unknown.mk(
+                  (scaleFactor: number) =>
+                    Math.max(
+                      ...childMeasuresHeight.map((ch) => ch.run(scaleFactor))
+                    ) * (options.transform?.scale?.y ?? 1)
+                ),
         };
       },
       layout: (

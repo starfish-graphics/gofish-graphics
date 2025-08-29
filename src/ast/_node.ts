@@ -27,6 +27,35 @@ import { GoFishAST } from "./_ast";
 import { CoordinateTransform } from "./coordinateTransforms/coord";
 import { getValue, isValue, MaybeValue } from "./data";
 import { color6 } from "../color";
+import { Linear, isLinear, inverse } from "../util/linear";
+import { Unknown } from "../util/unknown";
+import { findTargetMonotonic } from "../util";
+
+export type ScaleFactorFunction = Linear | Unknown;
+
+export const findScaleFactor = (
+  sizeDomain: ScaleFactorFunction,
+  targetValue: number,
+  options: {
+    tolerance?: number;
+    maxIterations?: number;
+    lowerBound?: number;
+    upperBoundGuess?: number;
+  }
+): number => {
+  if (isLinear(sizeDomain)) {
+    try {
+      return inverse(sizeDomain).run(targetValue);
+    } catch (e) {
+      // TODO: for now we're ignoring this... I think it happens when there is no data-driven stuff
+      // in a particular direction (eg the horizontal direction of a bar chart). In that case we
+      // probably don't need a scale factor at all...
+      return 0;
+    }
+  } else {
+    return findTargetMonotonic(targetValue, sizeDomain.run, options);
+  }
+};
 
 export type Placeable = {
   dims: Dimensions;
@@ -38,7 +67,7 @@ export type InferSizeDomains = (
   // scaleFactors: Size<number | undefined>,
   size: Size,
   children: GoFishNode[]
-) => FancySize<(scaleFactor: number) => number>;
+) => FancySize<ScaleFactorFunction>;
 
 export type Layout = (
   shared: Size<boolean>,
@@ -51,7 +80,7 @@ export type Layout = (
       posScales: Size<((pos: number) => number) | undefined>
     ) => Placeable;
   }[],
-  sizeDomains: Size<(scaleFactor: number) => number>,
+  sizeDomains: Size<ScaleFactorFunction>,
   posScales: Size<((pos: number) => number) | undefined>
 ) => { intrinsicDims: FancyDims; transform: FancyTransform; renderData?: any };
 
@@ -87,7 +116,7 @@ export class GoFishNode {
   public transform?: Transform;
   public shared: Size<boolean>;
   // public posDomains: Size<Domain | undefined> = [undefined, undefined];
-  private sizeDomains: Size<(scaleFactor: number) => number>;
+  private sizeDomains: Size<ScaleFactorFunction>;
   private renderData?: any;
   public coordinateTransform?: CoordinateTransform;
   public color?: MaybeValue<string>;
@@ -182,15 +211,10 @@ export class GoFishNode {
     return posDomains;
   }
 
-  public inferSizeDomains(size: Size): Size<(scaleFactor: number) => number> {
-    const [infer0, infer1] = elaborateSize(
+  public inferSizeDomains(size: Size): Size<ScaleFactorFunction> {
+    const sizeDomains = elaborateSize(
       this._inferSizeDomains(this.shared, size, this.children)
     );
-
-    const sizeDomains = [
-      (scaleFactor: number) => infer0(scaleFactor),
-      (scaleFactor: number) => infer1(scaleFactor),
-    ] satisfies Size<(scaleFactor: number) => number>;
 
     this.sizeDomains = sizeDomains;
     return sizeDomains;

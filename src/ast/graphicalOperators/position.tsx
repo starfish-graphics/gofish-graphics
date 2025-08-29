@@ -41,8 +41,8 @@ export const position = (
         }
         const childMeasure = children[0].inferSizeDomains(size);
         return {
-          w: (scaleFactor: number) => childMeasure[0](scaleFactor),
-          h: (scaleFactor: number) => childMeasure[1](scaleFactor),
+          w: childMeasure[0],
+          h: childMeasure[1],
         };
       },
       layout: (

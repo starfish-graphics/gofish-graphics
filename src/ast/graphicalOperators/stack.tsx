@@ -1,5 +1,5 @@
 import { For } from "solid-js";
-import { GoFishNode } from "../_node";
+import { findScaleFactor, GoFishNode } from "../_node";
 import { getMeasure, getValue, isValue, Value } from "../data";
 import {
   Direction,
@@ -22,6 +22,8 @@ import { findTargetMonotonic } from "../../util";
 import { GoFishAST } from "../_ast";
 import { getScaleContext } from "../gofish";
 import { withGoFish } from "../withGoFish";
+import * as Linear from "../../util/linear";
+import * as Unknown from "../../util/unknown";
 
 // Utility function to unwrap lodash wrapped arrays
 const unwrapLodashArray = function <T>(value: T[] | Collection<T>): T[] {
@@ -130,28 +132,66 @@ modes!!!
             [alignDir]: dims[alignDir].size ?? size[alignDir],
           };
 
+          const childSizeDomains = children.map((child) =>
+            child.inferSizeDomains(size)
+          );
+          const childSizeDomainsStackDir = childSizeDomains.map(
+            (childSizeDomain) => childSizeDomain[stackDir]
+          );
+          const childSizeDomainsAlignDir = childSizeDomains.map(
+            (childSizeDomain) => childSizeDomain[alignDir]
+          );
+
           return {
-            [stackDir]: (scaleFactor: number) =>
+            [stackDir]:
               mode === "edge-to-edge"
-                ? _.sum(
-                    children.map((child) =>
-                      child.inferSizeDomains(size)[stackDir](scaleFactor)
+                ? // if all the children are linear, then we can create a new linear repr
+                  childSizeDomainsStackDir.every(Linear.isLinear)
+                  ? Linear.sum(
+                      ...childSizeDomainsStackDir,
+                      Linear.mk(0, spacing * (children.length - 1))
                     )
-                  ) +
-                  spacing * (children.length - 1)
-                : children[0].inferSizeDomains(size)[stackDir](scaleFactor) /
-                    2 +
-                  spacing * (children.length - 1) +
-                  children[children.length - 1]
-                    .inferSizeDomains(size)
-                    [stackDir](scaleFactor) /
-                    2,
-            [alignDir]: (scaleFactor: number) =>
-              Math.max(
-                ...children.map((child) =>
-                  child.inferSizeDomains(size)[alignDir](scaleFactor)
-                )
-              ),
+                  : Unknown.mk(
+                      (scaleFactor: number) =>
+                        _.sum(
+                          childSizeDomainsStackDir.map((child) =>
+                            child.run(scaleFactor)
+                          )
+                        ) +
+                        spacing * (children.length - 1)
+                    )
+                : // TODO: optimize this case...
+                  Unknown.mk(
+                    (scaleFactor: number) =>
+                      childSizeDomainsStackDir[0].run(scaleFactor) / 2 +
+                      spacing * (children.length - 1) +
+                      childSizeDomainsStackDir[
+                        childSizeDomainsStackDir.length - 1
+                      ].run(scaleFactor) /
+                        2
+                  ),
+            [alignDir]:
+              childSizeDomainsAlignDir.every(Linear.isLinear) &&
+              childSizeDomainsAlignDir.every(
+                (childSizeDomain) =>
+                  childSizeDomain.intercept ===
+                  childSizeDomainsAlignDir[0].intercept
+              )
+                ? Linear.mk(
+                    Math.max(
+                      ...childSizeDomainsAlignDir.map(
+                        (childSizeDomain) => childSizeDomain.slope
+                      )
+                    ),
+                    childSizeDomainsAlignDir[0].intercept
+                  )
+                : Unknown.mk((scaleFactor: number) =>
+                    Math.max(
+                      ...childSizeDomainsAlignDir.map((childSizeDomain) =>
+                        childSizeDomain.run(scaleFactor)
+                      )
+                    )
+                  ),
           };
         },
         layout: (
@@ -178,9 +218,9 @@ modes!!!
           };
 
           if (shared[stackDir]) {
-            const stackScaleFactor = findTargetMonotonic(
+            const stackScaleFactor = findScaleFactor(
+              measurement[stackDir],
               size[stackDir],
-              (stackScaleFactor) => measurement[stackDir](stackScaleFactor),
               {
                 upperBoundGuess: size[stackDir],
               }
@@ -189,9 +229,9 @@ modes!!!
           }
 
           if (shared[alignDir]) {
-            const alignScaleFactor = findTargetMonotonic(
+            const alignScaleFactor = findScaleFactor(
+              measurement[alignDir],
               size[alignDir],
-              (alignScaleFactor) => measurement[alignDir](alignScaleFactor),
               { upperBoundGuess: size[alignDir] }
             );
             scaleFactors[alignDir] = alignScaleFactor;
