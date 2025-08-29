@@ -130,32 +130,28 @@ modes!!!
             [alignDir]: dims[alignDir].size ?? size[alignDir],
           };
 
-          return (scaleFactors: Size): FancySize => {
-            const stackSize =
+          return {
+            [stackDir]: (scaleFactor: number) =>
               mode === "edge-to-edge"
                 ? _.sum(
-                    children.map(
-                      (child) =>
-                        child.inferSizeDomains(size)(scaleFactors)[stackDir]
+                    children.map((child) =>
+                      child.inferSizeDomains(size)[stackDir](scaleFactor)
                     )
                   ) +
                   spacing * (children.length - 1)
-                : children[0].inferSizeDomains(size)(scaleFactors)[stackDir] /
+                : children[0].inferSizeDomains(size)[stackDir](scaleFactor) /
                     2 +
                   spacing * (children.length - 1) +
-                  children[children.length - 1].inferSizeDomains(size)(
-                    scaleFactors
-                  )[stackDir] /
-                    2;
-            const alignSize = Math.max(
-              ...children.map(
-                (child) => child.inferSizeDomains(size)(scaleFactors)[alignDir]
-              )
-            );
-            return {
-              [stackDir]: stackSize,
-              [alignDir]: alignSize,
-            };
+                  children[children.length - 1]
+                    .inferSizeDomains(size)
+                    [stackDir](scaleFactor) /
+                    2,
+            [alignDir]: (scaleFactor: number) =>
+              Math.max(
+                ...children.map((child) =>
+                  child.inferSizeDomains(size)[alignDir](scaleFactor)
+                )
+              ),
           };
         },
         layout: (
@@ -184,11 +180,7 @@ modes!!!
           if (shared[stackDir]) {
             const stackScaleFactor = findTargetMonotonic(
               size[stackDir],
-              (stackScaleFactor) =>
-                measurement({
-                  [stackDir]: stackScaleFactor,
-                  [alignDir]: 1,
-                })[stackDir],
+              (stackScaleFactor) => measurement[stackDir](stackScaleFactor),
               {
                 upperBoundGuess: size[stackDir],
               }
@@ -199,10 +191,7 @@ modes!!!
           if (shared[alignDir]) {
             const alignScaleFactor = findTargetMonotonic(
               size[alignDir],
-              (alignScaleFactor) =>
-                measurement({ [stackDir]: 1, [alignDir]: alignScaleFactor })[
-                  alignDir
-                ],
+              (alignScaleFactor) => measurement[alignDir](alignScaleFactor),
               { upperBoundGuess: size[alignDir] }
             );
             scaleFactors[alignDir] = alignScaleFactor;

@@ -24,17 +24,22 @@ export const enclose = (
         const childMeasures = children.map((child) =>
           child.inferSizeDomains(size)
         );
-        return (scaleFactors: Size) => {
-          const childSizes = childMeasures.map((childMeasure) =>
-            childMeasure(scaleFactors)
-          );
-          const maxWidth = Math.max(
-            ...childSizes.map((childSize) => childSize[0])
-          );
-          const maxHeight = Math.max(
-            ...childSizes.map((childSize) => childSize[1])
-          );
-          return [maxWidth + padding * 2, maxHeight + padding * 2];
+
+        return {
+          w: (scaleFactor: number) => {
+            const childSizes = childMeasures.map((childMeasure) =>
+              childMeasure[0](scaleFactor)
+            );
+            const maxWidth = Math.max(...childSizes);
+            return maxWidth + padding * 2;
+          },
+          h: (scaleFactor: number) => {
+            const childSizes = childMeasures.map((childMeasure) =>
+              childMeasure[1](scaleFactor)
+            );
+            const maxHeight = Math.max(...childSizes);
+            return maxHeight + padding * 2;
+          },
         };
       },
       layout: (shared, size, scaleFactors, children) => {

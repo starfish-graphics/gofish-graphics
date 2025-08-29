@@ -76,8 +76,5 @@ export { arcLengthPolar as ArcLengthPolar } from "./ast/coordinateTransforms/arc
 export { bipolar as Bipolar } from "./ast/coordinateTransforms/bipolar";
 export { wavy as Wavy } from "./ast/coordinateTransforms/wavy";
 
-// Marks
-export { Mark } from "./ast/marks/index";
-
 /* API v3 */
 export { Chart, _Chart, rect, guide } from "./ast/marks/chart";

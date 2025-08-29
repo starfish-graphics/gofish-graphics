@@ -354,29 +354,14 @@ const App: Component = () => {
           </GoFishSolid>
         </div>
       </div>
-
       <br />
       <br />
-      {/* <GoFishSolid w={320} h={400} defs={defs} axes={false}>
-        {v2ChartPies()}
-      </GoFishSolid> */}
-      {/* <GoFishSolid w={320} h={400} defs={defs} axes={false}>
-        {v2ChartWaffle()}
-      </GoFishSolid> */}
       <GoFishSolid w={320} h={400} defs={defs} axes={false}>
         {v2ChartPie()}
       </GoFishSolid>
       <GoFishSolid w={320} h={400} defs={defs} axes={false}>
         {v2ChartScatterPie()}
       </GoFishSolid>
-      {/* <h2>Position Test</h2>
-      <GoFishSolid w={400} h={300}>
-        {testPosition()}
-      </GoFishSolid>
-      <h2>Multiple Positions Test</h2>
-      <GoFishSolid w={400} h={300}>
-        {testMultiplePositions()}
-      </GoFishSolid> */}
       <GoFishSolid w={320} h={400} defs={defs} axes={true}>
         {v2ChartRibbonMessAround()}
       </GoFishSolid>
@@ -453,7 +438,7 @@ const App: Component = () => {
       <GoFishSolid w={500} h={500} defs={defs}>
         {testBumpChart()}
       </GoFishSolid>
-      <GoFishSolid w={500} h={500} defs={defs} /* axes={true} */>
+      <GoFishSolid w={500} h={500} defs={defs}>
         {testStringLine()}
       </GoFishSolid>
       <GoFishSolid w={500} h={500} defs={defs}>
@@ -520,51 +505,6 @@ const App: Component = () => {
         {testStackedAreaChartV2API()}
       </GoFishSolid>
       <br />
-      {/* <GoFishSolid width={250} height={300} defs={defs}>
-        {testFishStackedBarDataStyle()}
-      </GoFishSolid> */}
-      <br />
-      {/* <GoFishSolid w={800} h={1000} defs={defs}>
-        {frame([
-          frame({ y: 10 }, [
-            ...sinePoints.map((p) =>
-              rect({ x: p, w: 4, h: 20, fill: "black" })
-            ),
-            rect({ x: 0, y: 10, w: 1000, h: 2, fill: "black" }),
-          ]),
-          frame({ y: 100 }, [
-            ...uniformPoints.map((p) =>
-              rect({ x: p, w: 4, h: 20, fill: "black" })
-            ),
-            rect({ x: 0, y: 10, w: 1000, h: 2, fill: "black" }),
-          ]),
-          frame({ y: 200 }, [
-            ...exponentialPoints.map((p) =>
-              rect({ x: p, w: 4, h: 20, fill: "black" })
-            ),
-            rect({ x: 0, y: 10, w: 1000, h: 2, fill: "black" }),
-          ]),
-          rect({ x: 0, y: 260, w: 1000, h: 4, fill: "black" }),
-          frame({ y: 300 }, [
-            ...sinePoints.map((p) =>
-              rect({ x: p, w: 4, h: 20, fill: "black" })
-            ),
-            // rect({ x: 0, y: 10, w: 1000, h: 2, fill: "black" }),
-          ]),
-          frame({ y: 400 }, [
-            ...uniformPoints.map((p) =>
-              rect({ x: p, w: 4, h: 20, fill: "black" })
-            ),
-            // rect({ x: 0, y: 10, w: 1000, h: 2, fill: "black" }),
-          ]),
-          frame({ y: 500 }, [
-            ...exponentialPoints.map((p) =>
-              rect({ x: p, w: 4, h: 20, fill: "black" })
-            ),
-            // rect({ x: 0, y: 10, w: 1000, h: 2, fill: "black" }),
-          ]),
-        ])}
-      </GoFishSolid> */}
       <h1>Welcome!</h1>
       <div style={{ "max-width": "520px" }}>
         Welcome to the GoFish supplemental code! Below you'll find all the
@@ -799,7 +739,7 @@ const App: Component = () => {
           </GoFishSolid>
         </div>
       </div>
-      <br />
+      {/* <br />
       <br />
       <br />
       <h1>Polar Stacked Bar Embedding (Sec. 6.4)</h1>
@@ -836,7 +776,48 @@ const App: Component = () => {
       </div>
       <br />
       <br />
-      <br />
+      <br /> */}
+      {/* <GoFishSolid w={800} h={1000} defs={defs}>
+        {frame([
+          frame({ y: 10 }, [
+            ...sinePoints.map((p) =>
+              rect({ x: p, w: 4, h: 20, fill: "black" })
+            ),
+            rect({ x: 0, y: 10, w: 1000, h: 2, fill: "black" }),
+          ]),
+          frame({ y: 100 }, [
+            ...uniformPoints.map((p) =>
+              rect({ x: p, w: 4, h: 20, fill: "black" })
+            ),
+            rect({ x: 0, y: 10, w: 1000, h: 2, fill: "black" }),
+          ]),
+          frame({ y: 200 }, [
+            ...exponentialPoints.map((p) =>
+              rect({ x: p, w: 4, h: 20, fill: "black" })
+            ),
+            rect({ x: 0, y: 10, w: 1000, h: 2, fill: "black" }),
+          ]),
+          rect({ x: 0, y: 260, w: 1000, h: 4, fill: "black" }),
+          frame({ y: 300 }, [
+            ...sinePoints.map((p) =>
+              rect({ x: p, w: 4, h: 20, fill: "black" })
+            ),
+            // rect({ x: 0, y: 10, w: 1000, h: 2, fill: "black" }),
+          ]),
+          frame({ y: 400 }, [
+            ...uniformPoints.map((p) =>
+              rect({ x: p, w: 4, h: 20, fill: "black" })
+            ),
+            // rect({ x: 0, y: 10, w: 1000, h: 2, fill: "black" }),
+          ]),
+          frame({ y: 500 }, [
+            ...exponentialPoints.map((p) =>
+              rect({ x: p, w: 4, h: 20, fill: "black" })
+            ),
+            // rect({ x: 0, y: 10, w: 1000, h: 2, fill: "black" }),
+          ]),
+        ])}
+      </GoFishSolid> */}
       {/* <h2>Nested Waffle</h2>
       {testNestedWaffle({ width: 800, height: 500 })}
       <h2>Nested Mosaic</h2>

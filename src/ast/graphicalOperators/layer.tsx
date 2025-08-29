@@ -1,15 +1,26 @@
 import { GoFishNode } from "../_node";
 import { Size, elaborateDims, FancyDims } from "../dims";
-import { canUnifyDomains, Domain, unifyContinuousDomains, ContinuousDomain } from "../domain";
+import {
+  canUnifyDomains,
+  Domain,
+  unifyContinuousDomains,
+  ContinuousDomain,
+} from "../domain";
 
 export const layer = (
   childrenOrOptions:
-    | ({ key?: string; transform?: { scale?: { x?: number; y?: number } }; box?: boolean } & FancyDims)
+    | ({
+        key?: string;
+        transform?: { scale?: { x?: number; y?: number } };
+        box?: boolean;
+      } & FancyDims)
     | GoFishNode[],
   maybeChildren?: GoFishNode[]
 ) => {
   const options = Array.isArray(childrenOrOptions) ? {} : childrenOrOptions;
-  const children = Array.isArray(childrenOrOptions) ? childrenOrOptions : maybeChildren || [];
+  const children = Array.isArray(childrenOrOptions)
+    ? childrenOrOptions
+    : maybeChildren || [];
   const dims = elaborateDims(options);
 
   return new GoFishNode(
@@ -22,32 +33,60 @@ export const layer = (
 
         const filteredXChildDomains = childPosDomains
           .map((childPosDomain) => childPosDomain[0])
-          .filter((d): d is ContinuousDomain => d !== undefined && d.type === "continuous");
+          .filter(
+            (d): d is ContinuousDomain =>
+              d !== undefined && d.type === "continuous"
+          );
         const filteredYChildDomains = childPosDomains
           .map((childPosDomain) => childPosDomain[1])
-          .filter((d): d is ContinuousDomain => d !== undefined && d.type === "continuous");
+          .filter(
+            (d): d is ContinuousDomain =>
+              d !== undefined && d.type === "continuous"
+          );
 
         return [
-          filteredXChildDomains.length > 0 && canUnifyDomains(filteredXChildDomains)
+          filteredXChildDomains.length > 0 &&
+          canUnifyDomains(filteredXChildDomains)
             ? unifyContinuousDomains(filteredXChildDomains)
             : undefined,
-          filteredYChildDomains.length > 0 && canUnifyDomains(filteredYChildDomains)
+          filteredYChildDomains.length > 0 &&
+          canUnifyDomains(filteredYChildDomains)
             ? unifyContinuousDomains(filteredYChildDomains)
             : undefined,
         ];
       },
       inferSizeDomains: (shared, size, children) => {
-        const childMeasures = children.map((child) => child.inferSizeDomains(size));
-        return (scaleFactors: Size) => {
-          const childSizes = childMeasures.map((childMeasure) => childMeasure(scaleFactors));
-          const maxWidth = Math.max(...childSizes.map((childSize) => childSize[0]));
-          const maxHeight = Math.max(...childSizes.map((childSize) => childSize[1]));
-          const scaleX = options.transform?.scale?.x ?? 1;
-          const scaleY = options.transform?.scale?.y ?? 1;
-          return [maxWidth * scaleX, maxHeight * scaleY];
+        const childMeasures = children.map((child) =>
+          child.inferSizeDomains(size)
+        );
+
+        return {
+          w: (scaleFactor: number) => {
+            const childSizes = childMeasures.map((childMeasure) =>
+              childMeasure[0](scaleFactor)
+            );
+            const maxWidth = Math.max(...childSizes);
+            const scaleX = options.transform?.scale?.x ?? 1;
+            return maxWidth * scaleX;
+          },
+          h: (scaleFactor: number) => {
+            const childSizes = childMeasures.map((childMeasure) =>
+              childMeasure[1](scaleFactor)
+            );
+            const maxHeight = Math.max(...childSizes);
+            const scaleY = options.transform?.scale?.y ?? 1;
+            return maxHeight * scaleY;
+          },
         };
       },
-      layout: (shared, size, scaleFactors, children, measurement, posScales) => {
+      layout: (
+        shared,
+        size,
+        scaleFactors,
+        children,
+        measurement,
+        posScales
+      ) => {
         const childPlaceables = [];
 
         for (const child of children) {
@@ -57,10 +96,26 @@ export const layer = (
         }
 
         // Calculate the bounding box of all children
-        const minX = Math.min(...childPlaceables.map((childPlaceable) => childPlaceable.dims[0].min!));
-        const maxX = Math.max(...childPlaceables.map((childPlaceable) => childPlaceable.dims[0].max!));
-        const minY = Math.min(...childPlaceables.map((childPlaceable) => childPlaceable.dims[1].min!));
-        const maxY = Math.max(...childPlaceables.map((childPlaceable) => childPlaceable.dims[1].max!));
+        const minX = Math.min(
+          ...childPlaceables.map(
+            (childPlaceable) => childPlaceable.dims[0].min!
+          )
+        );
+        const maxX = Math.max(
+          ...childPlaceables.map(
+            (childPlaceable) => childPlaceable.dims[0].max!
+          )
+        );
+        const minY = Math.min(
+          ...childPlaceables.map(
+            (childPlaceable) => childPlaceable.dims[1].min!
+          )
+        );
+        const maxY = Math.max(
+          ...childPlaceables.map(
+            (childPlaceable) => childPlaceable.dims[1].max!
+          )
+        );
 
         const scaleX = options.transform?.scale?.x ?? 1;
         const scaleY = options.transform?.scale?.y ?? 1;

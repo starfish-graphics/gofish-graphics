@@ -9,11 +9,19 @@ export const wrap = (children: GoFishAST[]) => {
       type: "wrap",
       shared: [false, false],
       inferSizeDomains: (shared, size, children) => {
-        const childMeasures = children.map((child) => child.inferSizeDomains(size));
+        const childMeasures = children.map((child) =>
+          child.inferSizeDomains(size)
+        );
         return (scaleFactors: Size) => {
-          const childSizes = childMeasures.map((childMeasure) => childMeasure(scaleFactors));
-          const maxWidth = Math.max(...childSizes.map((childSize) => childSize[0]));
-          const maxHeight = Math.max(...childSizes.map((childSize) => childSize[1]));
+          const childSizes = childMeasures.map((childMeasure) =>
+            childMeasure(scaleFactors)
+          );
+          const maxWidth = Math.max(
+            ...childSizes.map((childSize) => childSize[0])
+          );
+          const maxHeight = Math.max(
+            ...childSizes.map((childSize) => childSize[1])
+          );
           return [maxWidth, maxHeight];
         };
       },
@@ -38,10 +46,22 @@ export const wrap = (children: GoFishAST[]) => {
           );
         }
         const pointPath = bubbleSets.compute();
-        const cleanPath = pointPath.sample(4).simplify(0).bSplines().simplify(0);
+        const cleanPath = pointPath
+          .sample(4)
+          .simplify(0)
+          .bSplines()
+          .simplify(0);
 
-        const maxWidth = Math.max(...childPlaceables.map((childPlaceable) => childPlaceable.dims[0].max!));
-        const maxHeight = Math.max(...childPlaceables.map((childPlaceable) => childPlaceable.dims[1].max!));
+        const maxWidth = Math.max(
+          ...childPlaceables.map(
+            (childPlaceable) => childPlaceable.dims[0].max!
+          )
+        );
+        const maxHeight = Math.max(
+          ...childPlaceables.map(
+            (childPlaceable) => childPlaceable.dims[1].max!
+          )
+        );
         return {
           intrinsicDims: { w: maxWidth, h: maxHeight },
           transform: { translate: [0, 0] },
@@ -52,8 +72,15 @@ export const wrap = (children: GoFishAST[]) => {
       },
       render: ({ intrinsicDims, transform, renderData }, children) => {
         return (
-          <g transform={`translate(${transform?.translate?.[0] ?? 0}, ${transform?.translate?.[1] ?? 0})`}>
-            <path d={renderData?.path?.toString()} fill="none" stroke="black" stroke-width={1} />
+          <g
+            transform={`translate(${transform?.translate?.[0] ?? 0}, ${transform?.translate?.[1] ?? 0})`}
+          >
+            <path
+              d={renderData?.path?.toString()}
+              fill="none"
+              stroke="black"
+              stroke-width={1}
+            />
             {children}
           </g>
         );

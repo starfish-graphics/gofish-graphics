@@ -85,15 +85,17 @@ export const petal = ({
         ];
       },
       inferSizeDomains: (shared, size, children) => {
-        return (scaleFactors: Size): FancySize => {
-          return {
-            w: isValue(dims[0].size)
-              ? getValue(dims[0].size!) * scaleFactors[0]
-              : (dims[0].size ?? size[0]),
-            h: isValue(dims[1].size)
-              ? getValue(dims[1].size!) * scaleFactors[1]
-              : (dims[1].size ?? size[1]),
-          };
+        return {
+          w: (scaleFactor: number) => {
+            return isValue(dims[0].size)
+              ? getValue(dims[0].size!) * scaleFactor
+              : (dims[0].size ?? size[0]);
+          },
+          h: (scaleFactor: number) => {
+            return isValue(dims[1].size)
+              ? getValue(dims[1].size!) * scaleFactor
+              : (dims[1].size ?? size[1]);
+          },
         };
       },
       layout: (shared, size, scaleFactors, children, measurement) => {

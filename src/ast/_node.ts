@@ -38,7 +38,7 @@ export type InferSizeDomains = (
   // scaleFactors: Size<number | undefined>,
   size: Size,
   children: GoFishNode[]
-) => (scaleFactors: Size) => FancySize;
+) => FancySize<(scaleFactor: number) => number>;
 
 export type Layout = (
   shared: Size<boolean>,
@@ -51,7 +51,7 @@ export type Layout = (
       posScales: Size<((pos: number) => number) | undefined>
     ) => Placeable;
   }[],
-  sizeDomains: (scaleFactors: Size) => Size,
+  sizeDomains: Size<(scaleFactor: number) => number>,
   posScales: Size<((pos: number) => number) | undefined>
 ) => { intrinsicDims: FancyDims; transform: FancyTransform; renderData?: any };
 
@@ -87,7 +87,7 @@ export class GoFishNode {
   public transform?: Transform;
   public shared: Size<boolean>;
   // public posDomains: Size<Domain | undefined> = [undefined, undefined];
-  private sizeDomains: (scaleFactors: Size) => Size;
+  private sizeDomains: Size<(scaleFactor: number) => number>;
   private renderData?: any;
   public coordinateTransform?: CoordinateTransform;
   public color?: MaybeValue<string>;
@@ -182,11 +182,16 @@ export class GoFishNode {
     return posDomains;
   }
 
-  public inferSizeDomains(size: Size): (scaleFactors: Size) => Size {
-    const sizeDomains = (scaleFactors: Size) =>
-      elaborateSize(
-        this._inferSizeDomains(this.shared, size, this.children)(scaleFactors)
-      );
+  public inferSizeDomains(size: Size): Size<(scaleFactor: number) => number> {
+    const [infer0, infer1] = elaborateSize(
+      this._inferSizeDomains(this.shared, size, this.children)
+    );
+
+    const sizeDomains = [
+      (scaleFactor: number) => infer0(scaleFactor),
+      (scaleFactor: number) => infer1(scaleFactor),
+    ] satisfies Size<(scaleFactor: number) => number>;
+
     this.sizeDomains = sizeDomains;
     return sizeDomains;
   }

@@ -5,12 +5,14 @@ import { getMeasure, getValue, isValue, MaybeValue } from "../data";
 
 export const position = (
   childrenOrOptions:
-    | ({ key?: string; x?: MaybeValue<number>; y?: MaybeValue<number> })
+    | { key?: string; x?: MaybeValue<number>; y?: MaybeValue<number> }
     | GoFishNode[],
   maybeChildren?: GoFishNode[]
 ) => {
   const options = Array.isArray(childrenOrOptions) ? {} : childrenOrOptions;
-  const children = Array.isArray(childrenOrOptions) ? childrenOrOptions : maybeChildren || [];
+  const children = Array.isArray(childrenOrOptions)
+    ? childrenOrOptions
+    : maybeChildren || [];
   return new GoFishNode(
     {
       type: "position",
@@ -38,29 +40,45 @@ export const position = (
           throw new Error("Position operator expects exactly one child");
         }
         const childMeasure = children[0].inferSizeDomains(size);
-        return (scaleFactors: Size) => {
-          return childMeasure(scaleFactors);
+        return {
+          w: (scaleFactor: number) => childMeasure[0](scaleFactor),
+          h: (scaleFactor: number) => childMeasure[1](scaleFactor),
         };
       },
-      layout: (shared, size, scaleFactors, children, measurement, posScales) => {
+      layout: (
+        shared,
+        size,
+        scaleFactors,
+        children,
+        measurement,
+        posScales
+      ) => {
         if (children.length !== 1) {
           throw new Error("Position operator expects exactly one child");
         }
 
         const child = children[0];
         const childPlaceable = child.layout(size, scaleFactors, posScales);
-        
+
         // Place child at origin first to get its dimensions
         childPlaceable.place({ x: 0, y: 0 });
 
         // Calculate the position offset based on the child's intrinsic dimensions
         const childWidth = childPlaceable.dims[0].size || 0;
         const childHeight = childPlaceable.dims[1].size || 0;
-        
+
         // Handle x and y values (can be literal values or data-bound values)
-        const xPos = options.x ? (isValue(options.x) ? posScales[0]!(getValue(options.x)!) : options.x) : 0;
-        const yPos = options.y ? (isValue(options.y) ? posScales[1]!(getValue(options.y)!) : options.y) : 0;
-        
+        const xPos = options.x
+          ? isValue(options.x)
+            ? posScales[0]!(getValue(options.x)!)
+            : options.x
+          : 0;
+        const yPos = options.y
+          ? isValue(options.y)
+            ? posScales[1]!(getValue(options.y)!)
+            : options.y
+          : 0;
+
         // Position is relative to the child's center point (SwiftUI-like behavior)
         const offsetX = xPos - childWidth / 2;
         const offsetY = yPos - childHeight / 2;

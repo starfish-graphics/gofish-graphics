@@ -41,7 +41,10 @@ const flattenLayout = (
         (node.transform?.translate?.[0] ?? 0) + transform[0]!,
         (node.transform?.translate?.[1] ?? 0) + transform[1]!,
       ],
-      scale: [(node.transform?.scale?.[0] ?? 1) * (scale[0] ?? 1), (node.transform?.scale?.[1] ?? 1) * (scale[1] ?? 1)],
+      scale: [
+        (node.transform?.scale?.[0] ?? 1) * (scale[0] ?? 1),
+        (node.transform?.scale?.[1] ?? 1) * (scale[1] ?? 1),
+      ],
     };
     return [node];
   }
@@ -56,7 +59,9 @@ const flattenLayout = (
     (node.transform?.scale?.[1] ?? 1) * (scale[1] ?? 1),
   ];
 
-  return node.children.flatMap((child) => flattenLayout(child, newTransform, newScale));
+  return node.children.flatMap((child) =>
+    flattenLayout(child, newTransform, newScale)
+  );
 };
 
 /* takes in a GoFishNode and converts it to some set of DisplayObjects
@@ -97,36 +102,75 @@ export const coord = (
       inferPosDomains: (childPosDomains: Size<Domain>[]) => {
         // unify continuous domains of children for each direction
         return [
-          canUnifyDomains(childPosDomains.map((childPosDomain) => childPosDomain[0]))
-            ? unifyContinuousDomains(childPosDomains.map((childPosDomain) => childPosDomain[0]))
+          canUnifyDomains(
+            childPosDomains.map((childPosDomain) => childPosDomain[0])
+          )
+            ? unifyContinuousDomains(
+                childPosDomains.map((childPosDomain) => childPosDomain[0])
+              )
             : undefined,
-          canUnifyDomains(childPosDomains.map((childPosDomain) => childPosDomain[1]))
-            ? unifyContinuousDomains(childPosDomains.map((childPosDomain) => childPosDomain[1]))
+          canUnifyDomains(
+            childPosDomains.map((childPosDomain) => childPosDomain[1])
+          )
+            ? unifyContinuousDomains(
+                childPosDomains.map((childPosDomain) => childPosDomain[1])
+              )
             : undefined,
         ];
       },
       inferSizeDomains: (shared, size, children) => {
         // TODO: only works for polar2 right now
         size = [2 * Math.PI, Math.min(size[0], size[1]) / 2 - 30];
-        const childMeasures = children.map((child) => child.inferSizeDomains(size));
-        return (scaleFactors: Size) => {
-          const childSizes = childMeasures.map((childMeasure) => childMeasure(scaleFactors));
-          const maxWidth = Math.max(...childSizes.map((childSize) => childSize[0]));
-          const maxHeight = Math.max(...childSizes.map((childSize) => childSize[1]));
-          return [maxWidth, maxHeight];
+        const childMeasures = children.map((child) =>
+          child.inferSizeDomains(size)
+        );
+
+        return {
+          w: (scaleFactor: number) => {
+            const childSizes = childMeasures.map((childMeasure) =>
+              childMeasure[0](scaleFactor)
+            );
+            const maxWidth = Math.max(...childSizes);
+            return maxWidth;
+          },
+          h: (scaleFactor: number) => {
+            const childSizes = childMeasures.map((childMeasure) =>
+              childMeasure[1](scaleFactor)
+            );
+            const maxHeight = Math.max(...childSizes);
+            return maxHeight;
+          },
         };
       },
       layout: (shared, size, scaleFactors, children, measurement) => {
         /* TODO: need correct scale factors */
         // TODO: only works for polar2 right now
         size = [2 * Math.PI, Math.min(size[0], size[1]) / 2 - 30];
-        const childPlaceables = children.map((child) => child.layout(size, [1, 1]));
+        const childPlaceables = children.map((child) =>
+          child.layout(size, [1, 1])
+        );
 
         /* TODO: maybe have to be smarter about this... */
-        const minX = Math.min(...childPlaceables.map((childPlaceable) => childPlaceable.dims[0].min!));
-        const maxX = Math.max(...childPlaceables.map((childPlaceable) => childPlaceable.dims[0].max!));
-        const minY = Math.min(...childPlaceables.map((childPlaceable) => childPlaceable.dims[1].min!));
-        const maxY = Math.max(...childPlaceables.map((childPlaceable) => childPlaceable.dims[1].max!));
+        const minX = Math.min(
+          ...childPlaceables.map(
+            (childPlaceable) => childPlaceable.dims[0].min!
+          )
+        );
+        const maxX = Math.max(
+          ...childPlaceables.map(
+            (childPlaceable) => childPlaceable.dims[0].max!
+          )
+        );
+        const minY = Math.min(
+          ...childPlaceables.map(
+            (childPlaceable) => childPlaceable.dims[1].min!
+          )
+        );
+        const maxY = Math.max(
+          ...childPlaceables.map(
+            (childPlaceable) => childPlaceable.dims[1].max!
+          )
+        );
 
         return {
           intrinsicDims: {
@@ -153,7 +197,11 @@ export const coord = (
 
           const domain = coordTransform.domain;
 
-          for (let i = domain[0].min!; i <= domain[0].max!; i += domain[0].size! / 10) {
+          for (
+            let i = domain[0].min!;
+            i <= domain[0].max!;
+            i += domain[0].size! / 10
+          ) {
             const line = transformPath(
               path(
                 [
@@ -164,7 +212,9 @@ export const coord = (
               ),
               coordTransform
             );
-            lines.push(<path d={pathToSVGPath(line)} stroke={black} fill="none" />);
+            lines.push(
+              <path d={pathToSVGPath(line)} stroke={black} fill="none" />
+            );
             const [x, y] = coordTransform.transform([i, domain[1].max!]);
             ticks.push(
               <text x={x} y={y} /* dy="-1em" */ font-size="8pt" fill={black}>
@@ -172,7 +222,11 @@ export const coord = (
               </text>
             );
           }
-          for (let i = domain[1].min!; i <= domain[1].max!; i += domain[1].size! / 10) {
+          for (
+            let i = domain[1].min!;
+            i <= domain[1].max!;
+            i += domain[1].size! / 10
+          ) {
             const line = transformPath(
               path(
                 [
@@ -183,8 +237,13 @@ export const coord = (
               ),
               coordTransform
             );
-            lines.push(<path d={pathToSVGPath(line)} stroke={black} fill="none" />);
-            const [x, y] = coordTransform.transform([domain[0].max! + domain[0].size! / 20, i]);
+            lines.push(
+              <path d={pathToSVGPath(line)} stroke={black} fill="none" />
+            );
+            const [x, y] = coordTransform.transform([
+              domain[0].max! + domain[0].size! / 20,
+              i,
+            ]);
             ticks.push(
               <text x={x} y={y} /* dy="-1em" */ font-size="8pt" fill={black}>
                 {i.toFixed(0)}
@@ -199,11 +258,17 @@ export const coord = (
           );
         };
 
-        const flattenedChildren = children.flatMap((child) => flattenLayout(child));
+        const flattenedChildren = children.flatMap((child) =>
+          flattenLayout(child)
+        );
 
         return (
-          <g transform={`translate(${transform?.translate?.[0] ?? 0}, ${transform?.translate?.[1] ?? 0})`}>
-            {flattenedChildren.map((child) => child.INTERNAL_render(coordTransform))}
+          <g
+            transform={`translate(${transform?.translate?.[0] ?? 0}, ${transform?.translate?.[1] ?? 0})`}
+          >
+            {flattenedChildren.map((child) =>
+              child.INTERNAL_render(coordTransform)
+            )}
             <Show when={grid}>{gridLines()}</Show>
           </g>
         );

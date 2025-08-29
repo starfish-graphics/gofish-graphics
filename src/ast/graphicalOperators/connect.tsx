@@ -1,5 +1,11 @@
 import { For } from "solid-js";
-import { Path, PathSegment, pathToSVGPath, transformPath, subdividePath } from "../../path";
+import {
+  Path,
+  PathSegment,
+  pathToSVGPath,
+  transformPath,
+  subdividePath,
+} from "../../path";
 import { GoFishAST } from "../_ast";
 import { GoFishNode } from "../_node";
 import { elaborateDirection, FancyDirection, Size } from "../dims";
@@ -40,8 +46,9 @@ export const connect = (
       shared: [false, false],
       color: fill,
       inferSizeDomains: (shared, size, children) => {
-        return (scaleFactors: Size) => {
-          return [size[0], size[1]];
+        return {
+          w: (scaleFactor: number) => size[0],
+          h: (scaleFactor: number) => size[1],
         };
       },
       inferPosDomains: (childPosDomains: Size<Domain>[]) => {
@@ -59,7 +66,9 @@ export const connect = (
           }
         }
 
-        const childPlaceables = children.map((child) => child.layout(size, scaleFactors));
+        const childPlaceables = children.map((child) =>
+          child.layout(size, scaleFactors, [undefined, undefined])
+        );
         const bboxPairs = pairs(childPlaceables.map((child) => child.dims));
         // If in center-to-center mode, adjust bounding boxes to have zero width/height
         // with min and max equal to the center point
@@ -74,8 +83,14 @@ export const connect = (
                   {
                     type: "line",
                     points: [
-                      [(b0[0].min! + b0[0].max!) / 2, (b0[1].min! + b0[1].max!) / 2],
-                      [(b1[0].min! + b1[0].max!) / 2, (b1[1].min! + b1[1].max!) / 2],
+                      [
+                        (b0[0].min! + b0[0].max!) / 2,
+                        (b0[1].min! + b0[1].max!) / 2,
+                      ],
+                      [
+                        (b1[0].min! + b1[0].max!) / 2,
+                        (b1[1].min! + b1[1].max!) / 2,
+                      ],
                     ],
                   },
                 ]);
@@ -157,8 +172,14 @@ export const connect = (
                   {
                     type: "line",
                     points: [
-                      [(b0[0].min! + b0[0].max!) / 2, (b0[1].min! + b0[1].max!) / 2],
-                      [(b1[0].min! + b1[0].max!) / 2, (b1[1].min! + b1[1].max!) / 2],
+                      [
+                        (b0[0].min! + b0[0].max!) / 2,
+                        (b0[1].min! + b0[1].max!) / 2,
+                      ],
+                      [
+                        (b1[0].min! + b1[0].max!) / 2,
+                        (b1[1].min! + b1[1].max!) / 2,
+                      ],
                     ],
                   },
                 ]);
@@ -204,8 +225,14 @@ export const connect = (
                   {
                     type: "line",
                     points: [
-                      [(b0[0].min! + b0[0].max!) / 2, (b0[1].min! + b0[1].max!) / 2],
-                      [(b1[0].min! + b1[0].max!) / 2, (b1[1].min! + b1[1].max!) / 2],
+                      [
+                        (b0[0].min! + b0[0].max!) / 2,
+                        (b0[1].min! + b0[1].max!) / 2,
+                      ],
+                      [
+                        (b1[0].min! + b1[0].max!) / 2,
+                        (b1[1].min! + b1[1].max!) / 2,
+                      ],
                     ],
                   },
                 ]);
@@ -254,7 +281,10 @@ export const connect = (
           renderData: { paths, defaultColor },
         };
       },
-      render: ({ intrinsicDims, transform, renderData, coordinateTransform }, children) => {
+      render: (
+        { intrinsicDims, transform, renderData, coordinateTransform },
+        children
+      ) => {
         fill = fill ?? renderData.defaultColor;
         fill = isValue(fill)
           ? scaleContext?.unit?.color
@@ -263,17 +293,27 @@ export const connect = (
           : fill;
 
         return (
-          <g transform={`translate(${transform?.translate?.[0] ?? 0}, ${transform?.translate?.[1]! ?? 0})`}>
+          <g
+            transform={`translate(${transform?.translate?.[0] ?? 0}, ${transform?.translate?.[1]! ?? 0})`}
+          >
             <For each={renderData.paths}>
               {(path) => {
                 const transformedPath = coordinateTransform
-                  ? transformPath(subdividePath(path, 1000), coordinateTransform)
+                  ? transformPath(
+                      subdividePath(path, 1000),
+                      coordinateTransform
+                    )
                   : path;
                 const d = pathToSVGPath(transformedPath);
                 return (
                   <path
                     // filter="url(#crumpled-paper)"
-                    style={{ "mix-blend-mode": mixBlendMode ?? mode === "center-to-center" ? "normal" : "multiply" }}
+                    style={{
+                      "mix-blend-mode":
+                        (mixBlendMode ?? mode === "center-to-center")
+                          ? "normal"
+                          : "multiply",
+                    }}
                     d={d}
                     fill={fill ?? "none"}
                     stroke={stroke ?? fill ?? "black"}
