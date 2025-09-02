@@ -117,6 +117,13 @@ export const v2ChartRibbonMessAround = () =>
     .connectX("species", { over: "lake", opacity: 0.7 })
     .TEST_render();
 
+export const v2ChartMosaic = () =>
+  rect(catchData, { fill: "species", h: "count" })
+    .stackY("species" /* , { w: "count" } */)
+    .transform((d) => orderBy(d, "count", "asc"))
+    .spreadX("lake", { alignment: "start" })
+    .TEST_render();
+
 /* 
 guide(seafood, {
     fill: "species",

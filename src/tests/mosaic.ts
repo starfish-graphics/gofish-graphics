@@ -4,6 +4,7 @@ import { value } from "../ast/data";
 import { stack } from "../ast/graphicalOperators/stack";
 import { rect } from "../ast/shapes/rect";
 import { color } from "../color";
+import { Rect, StackX, StackY, v } from "../lib";
 
 const data = [
   { origin: "Europe", cylinders: "4", count: 66 },
@@ -17,22 +18,33 @@ const data = [
   { origin: "USA", cylinders: "8", count: 108 },
 ];
 
-export const testMosaic = (size: { width: number; height: number }) =>
-  gofish(
-    { width: size.width, height: size.height },
-    stack(
-      { direction: 0, spacing: 4, alignment: "end" },
-      // TODO: I could probably make the width be uniform flexible basically
-      Object.entries(_.groupBy(data, "origin")).map(([origin, items]) =>
-        stack(
-          { w: _(items).sumBy("count") / 2, direction: 1, spacing: 2, alignment: "middle", sharedScale: true },
-          items.toReversed().map((d) =>
-            rect({
-              h: value(d.count, "count"),
-              fill: d.origin === "Europe" ? color.red[5] : d.origin === "Japan" ? color.blue[5] : color.green[5],
-            })
-          )
+export const testMosaic = () =>
+  StackX(
+    { spacing: 4, alignment: "end", sharedScale: true },
+    // TODO: I could probably make the width be uniform flexible basically
+    Object.entries(_.groupBy(data, "origin")).map(([origin, items]) =>
+      StackY(
+        {
+          // w: _(items).sumBy("count") / 2,
+          w: v(_(items).sumBy("count")),
+          spacing: 2,
+          alignment: "middle",
+          sharedScale: true,
+        },
+        items.toReversed().map((d) =>
+          Rect({
+            h: v(d.count),
+            fill: v(d.origin),
+          })
         )
       )
     )
   );
+
+/* 
+  
+rect(data, { h: "count", fill: "origin" })
+  .stackY("cylinders", { w: "count" })
+  .stackX("origin")
+  .render(root, { w: 500, h: 300 })
+  */

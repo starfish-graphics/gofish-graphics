@@ -43,18 +43,6 @@ export const findScaleFactor = (
   }
 ): number => {
   return sizeDomain.inverse(targetValue, options) ?? 0;
-  // if (isLinear(sizeDomain)) {
-  //   try {
-  //     return inverse(sizeDomain).run(targetValue);
-  //   } catch (e) {
-  //     // TODO: for now we're ignoring this... I think it happens when there is no data-driven stuff
-  //     // in a particular direction (eg the horizontal direction of a bar chart). In that case we
-  //     // probably don't need a scale factor at all...
-  //     return 0;
-  //   }
-  // } else {
-  //   return findTargetMonotonic(targetValue, sizeDomain.run, options);
-  // }
 };
 
 export type Placeable = {

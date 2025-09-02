@@ -107,6 +107,7 @@ import {
   v2ChartPies,
   v2ChartPie,
   v2ChartScatterPie,
+  v2ChartMosaic,
   // v2ChartWaffle,
 } from "./tests/chartAPITestV2";
 import {
@@ -309,6 +310,13 @@ const defs = [
 const App: Component = () => {
   return (
     <div style={{ "margin-left": "20px" }}>
+      <GoFishSolid w={350} h={300} defs={defs}>
+        {testMosaic()}
+      </GoFishSolid>
+      {/* <br />
+      <GoFishSolid w={320} h={400} defs={defs} axes={false}>
+        {v2ChartMosaic()}
+      </GoFishSolid>
       <h1>Tailwind Color Palette Variants</h1>
 
       <h2>Color Comparison (Compact)</h2>
@@ -738,7 +746,7 @@ const App: Component = () => {
             {testScatterBalloon2(200)}
           </GoFishSolid>
         </div>
-      </div>
+      </div> */}
       {/* <br />
       <br />
       <br />

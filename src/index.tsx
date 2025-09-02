@@ -14,6 +14,6 @@ if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
   );
 }
 
-renderBarChart();
+// renderBarChart();
 
 render(() => <App />, root!);

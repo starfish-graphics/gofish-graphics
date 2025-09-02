@@ -1,6 +1,6 @@
 import { For } from "solid-js";
-import { findScaleFactor, GoFishNode } from "../_node";
-import { getMeasure, getValue, isValue, Value } from "../data";
+import { GoFishNode } from "../_node";
+import { getMeasure, getValue, isValue, MaybeValue, Value } from "../data";
 import {
   Direction,
   elaborateDims,
@@ -53,7 +53,7 @@ export const stack = withGoFish(
       sharedScale?: boolean;
       mode?: "edge-to-edge" | "center-to-center";
       reverse?: boolean;
-    } & FancyDims,
+    } & FancyDims<MaybeValue<number>>,
     children: GoFishAST[] | Collection<GoFishAST>
   ) => {
     // Unwrap lodash wrapped children if needed
@@ -144,10 +144,12 @@ modes!!!
           return {
             [stackDir]:
               mode === "edge-to-edge"
-                ? Monotonic.adds(
-                    Monotonic.add(...childSizeDomainsStackDir),
-                    spacing * (children.length - 1)
-                  )
+                ? isValue(dims[stackDir].size)
+                  ? Monotonic.linear(getValue(dims[stackDir].size!), 0)
+                  : Monotonic.adds(
+                      Monotonic.add(...childSizeDomainsStackDir),
+                      spacing * (children.length - 1)
+                    )
                 : // TODO: optimize this case...
                   Monotonic.unknown(
                     (scaleFactor: number) =>
@@ -158,7 +160,9 @@ modes!!!
                       ].run(scaleFactor) /
                         2
                   ),
-            [alignDir]: Monotonic.max(...childSizeDomainsAlignDir),
+            [alignDir]: isValue(dims[alignDir].size)
+              ? Monotonic.linear(getValue(dims[alignDir].size!), 0)
+              : Monotonic.max(...childSizeDomainsAlignDir),
           };
         },
         layout: (
@@ -180,27 +184,27 @@ modes!!!
             : (dims[alignDir].min ?? undefined);
 
           size = {
-            [stackDir]: dims[stackDir].size ?? size[stackDir],
-            [alignDir]: dims[alignDir].size ?? size[alignDir],
+            [stackDir]: isValue(dims[stackDir].size)
+              ? getValue(dims[stackDir].size!) * scaleFactors[stackDir]!
+              : (dims[stackDir].size ?? size[stackDir]),
+            [alignDir]: isValue(dims[alignDir].size)
+              ? getValue(dims[alignDir].size!) * scaleFactors[alignDir]!
+              : (dims[alignDir].size ?? size[alignDir]),
           };
 
           if (shared[stackDir]) {
-            const stackScaleFactor = findScaleFactor(
-              measurement[stackDir],
-              size[stackDir],
-              {
+            const stackScaleFactor =
+              measurement[stackDir].inverse(size[stackDir], {
                 upperBoundGuess: size[stackDir],
-              }
-            );
+              }) ?? 0;
             scaleFactors[stackDir] = stackScaleFactor;
           }
 
           if (shared[alignDir]) {
-            const alignScaleFactor = findScaleFactor(
-              measurement[alignDir],
-              size[alignDir],
-              { upperBoundGuess: size[alignDir] }
-            );
+            const alignScaleFactor =
+              measurement[alignDir].inverse(size[alignDir], {
+                upperBoundGuess: size[alignDir],
+              }) ?? 0;
             scaleFactors[alignDir] = alignScaleFactor;
           }
 
@@ -220,6 +224,7 @@ modes!!!
           const modifiedSize: Size = [0, 0];
           modifiedSize[stackDir] = childStackSize;
           modifiedSize[alignDir] = size[alignDir];
+          // console.log(size[stackDir], size[alignDir]);
 
           const childPlaceables = children.map((child) =>
             child.layout(modifiedSize, scaleFactors, posScales)
