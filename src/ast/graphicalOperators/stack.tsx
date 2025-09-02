@@ -22,8 +22,7 @@ import { findTargetMonotonic } from "../../util";
 import { GoFishAST } from "../_ast";
 import { getScaleContext } from "../gofish";
 import { withGoFish } from "../withGoFish";
-import * as Linear from "../../util/linear";
-import * as Unknown from "../../util/unknown";
+import * as Monotonic from "../../util/monotonic";
 
 // Utility function to unwrap lodash wrapped arrays
 const unwrapLodashArray = function <T>(value: T[] | Collection<T>): T[] {
@@ -146,12 +145,12 @@ modes!!!
             [stackDir]:
               mode === "edge-to-edge"
                 ? // if all the children are linear, then we can create a new linear repr
-                  childSizeDomainsStackDir.every(Linear.isLinear)
-                  ? Linear.sum(
+                  childSizeDomainsStackDir.every(Monotonic.isLinear)
+                  ? Monotonic.sum(
                       ...childSizeDomainsStackDir,
-                      Linear.mk(0, spacing * (children.length - 1))
+                      Monotonic.linear(0, spacing * (children.length - 1))
                     )
-                  : Unknown.mk(
+                  : Monotonic.unknown(
                       (scaleFactor: number) =>
                         _.sum(
                           childSizeDomainsStackDir.map((child) =>
@@ -161,7 +160,7 @@ modes!!!
                         spacing * (children.length - 1)
                     )
                 : // TODO: optimize this case...
-                  Unknown.mk(
+                  Monotonic.unknown(
                     (scaleFactor: number) =>
                       childSizeDomainsStackDir[0].run(scaleFactor) / 2 +
                       spacing * (children.length - 1) +
@@ -171,13 +170,13 @@ modes!!!
                         2
                   ),
             [alignDir]:
-              childSizeDomainsAlignDir.every(Linear.isLinear) &&
+              childSizeDomainsAlignDir.every(Monotonic.isLinear) &&
               childSizeDomainsAlignDir.every(
                 (childSizeDomain) =>
                   childSizeDomain.intercept ===
                   childSizeDomainsAlignDir[0].intercept
               )
-                ? Linear.mk(
+                ? Monotonic.linear(
                     Math.max(
                       ...childSizeDomainsAlignDir.map(
                         (childSizeDomain) => childSizeDomain.slope
@@ -185,7 +184,7 @@ modes!!!
                     ),
                     childSizeDomainsAlignDir[0].intercept
                   )
-                : Unknown.mk((scaleFactor: number) =>
+                : Monotonic.unknown((scaleFactor: number) =>
                     Math.max(
                       ...childSizeDomainsAlignDir.map((childSizeDomain) =>
                         childSizeDomain.run(scaleFactor)

@@ -14,7 +14,7 @@ import { linear } from "../coordinateTransforms/linear";
 import { getValue, isValue, MaybeValue } from "../data";
 import { scaleContext } from "../gofish";
 import { Domain } from "../domain";
-import * as Linear from "../../util/linear";
+import * as Monotonic from "../../util/monotonic";
 
 export const connect = (
   {
@@ -48,8 +48,8 @@ export const connect = (
       color: fill,
       inferSizeDomains: (shared, size, children) => {
         return {
-          w: Linear.mk(0, size[0]),
-          h: Linear.mk(0, size[1]),
+          w: Monotonic.linear(0, size[0]),
+          h: Monotonic.linear(0, size[1]),
         };
       },
       inferPosDomains: (childPosDomains: Size<Domain>[]) => {

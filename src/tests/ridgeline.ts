@@ -1,5 +1,15 @@
 import { streamgraphData } from "../data/streamgraphData";
-import { StackY, For, groupBy, StackX, Rect, v, Frame, ConnectX, Ref } from "../lib";
+import {
+  StackY,
+  For,
+  groupBy,
+  StackX,
+  Rect,
+  v,
+  Frame,
+  ConnectX,
+  Ref,
+} from "../lib";
 
 export const testRidgeline = () =>
   StackY(

@@ -1,5 +1,4 @@
-import * as Linear from "../../util/linear";
-import * as Unknown from "../../util/unknown";
+import * as Monotonic from "../../util/monotonic";
 import { GoFishNode } from "../_node";
 import { Size, elaborateDims, FancyDims } from "../dims";
 import {
@@ -67,35 +66,35 @@ export const layer = (
 
         return {
           w:
-            childMeasuresWidth.every(Linear.isLinear) &&
+            childMeasuresWidth.every(Monotonic.isLinear) &&
             childMeasuresWidth.every(
               (childMeasureWidth) =>
                 childMeasureWidth.intercept === childMeasuresWidth[0].intercept
             )
-              ? Linear.mk(
+              ? Monotonic.linear(
                   Math.max(...childMeasuresWidth.map((cw) => cw.slope)) *
                     (options.transform?.scale?.x ?? 1),
                   childMeasuresWidth[0].intercept
                 )
-              : Unknown.mk(
+              : Monotonic.unknown(
                   (scaleFactor: number) =>
                     Math.max(
                       ...childMeasuresWidth.map((cw) => cw.run(scaleFactor))
                     ) * (options.transform?.scale?.x ?? 1)
                 ),
           h:
-            childMeasuresHeight.every(Linear.isLinear) &&
+            childMeasuresHeight.every(Monotonic.isLinear) &&
             childMeasuresHeight.every(
               (childMeasureHeight) =>
                 childMeasureHeight.intercept ===
                 childMeasuresHeight[0].intercept
             )
-              ? Linear.mk(
+              ? Monotonic.linear(
                   Math.max(...childMeasuresHeight.map((ch) => ch.slope)) *
                     (options.transform?.scale?.y ?? 1),
                   childMeasuresHeight[0].intercept
                 )
-              : Unknown.mk(
+              : Monotonic.unknown(
                   (scaleFactor: number) =>
                     Math.max(
                       ...childMeasuresHeight.map((ch) => ch.run(scaleFactor))

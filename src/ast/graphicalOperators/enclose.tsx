@@ -4,8 +4,7 @@ import { Size } from "../dims";
 import { GoFishAST } from "../_ast";
 import { black, gray, tailwindColors } from "../../color";
 import { Domain } from "../domain";
-import * as Linear from "../../util/linear";
-import * as Unknown from "../../util/unknown";
+import * as Monotonic from "../../util/monotonic";
 
 export const enclose = (
   {
@@ -32,16 +31,16 @@ export const enclose = (
 
         return {
           w:
-            childMeasuresWidth.every(Linear.isLinear) &&
+            childMeasuresWidth.every(Monotonic.isLinear) &&
             childMeasuresWidth.every(
               (childMeasureWidth) =>
                 childMeasureWidth.intercept === childMeasuresWidth[0].intercept
             )
-              ? Linear.mk(
+              ? Monotonic.linear(
                   Math.max(...childMeasuresWidth.map((cw) => cw.slope)),
                   childMeasuresWidth[0].intercept + padding * 2
                 )
-              : Unknown.mk(
+              : Monotonic.unknown(
                   (scaleFactor: number) =>
                     Math.max(
                       ...childMeasuresWidth.map((cw) => cw.run(scaleFactor))
@@ -49,40 +48,23 @@ export const enclose = (
                     padding * 2
                 ),
           h:
-            childMeasuresHeight.every(Linear.isLinear) &&
+            childMeasuresHeight.every(Monotonic.isLinear) &&
             childMeasuresHeight.every(
               (childMeasureHeight) =>
                 childMeasureHeight.intercept ===
                 childMeasuresHeight[0].intercept
             )
-              ? Linear.mk(
+              ? Monotonic.linear(
                   Math.max(...childMeasuresHeight.map((ch) => ch.slope)),
                   childMeasuresHeight[0].intercept + padding * 2
                 )
-              : Unknown.mk((scaleFactor: number) =>
+              : Monotonic.unknown((scaleFactor: number) =>
                   Math.max(
                     ...childMeasuresHeight.map(
                       (ch) => ch.run(scaleFactor) + padding * 2
                     )
                   )
                 ),
-        };
-
-        return {
-          w: (scaleFactor: number) => {
-            const childSizes = childMeasures.map((childMeasure) =>
-              childMeasure[0](scaleFactor)
-            );
-            const maxWidth = Math.max(...childSizes);
-            return maxWidth + padding * 2;
-          },
-          h: (scaleFactor: number) => {
-            const childSizes = childMeasures.map((childMeasure) =>
-              childMeasure[1](scaleFactor)
-            );
-            const maxHeight = Math.max(...childSizes);
-            return maxHeight + padding * 2;
-          },
         };
       },
       layout: (shared, size, scaleFactors, children) => {

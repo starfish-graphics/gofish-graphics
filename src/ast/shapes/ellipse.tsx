@@ -1,4 +1,4 @@
-import * as Linear from "../../util/linear";
+import * as Monotonic from "../../util/monotonic";
 import { color6_old } from "../../color";
 import {
   path,
@@ -90,11 +90,11 @@ export const ellipse = ({
       inferSizeDomains: (shared, size, children) => {
         return {
           w: isValue(dims[0].size)
-            ? Linear.mk(getValue(dims[0].size!), 0)
-            : Linear.mk(0, dims[0].size ?? size[0]),
+            ? Monotonic.linear(getValue(dims[0].size!), 0)
+            : Monotonic.linear(0, dims[0].size ?? size[0]),
           h: isValue(dims[1].size)
-            ? Linear.mk(getValue(dims[1].size!), 0)
-            : Linear.mk(0, dims[1].size ?? size[1]),
+            ? Monotonic.linear(getValue(dims[1].size!), 0)
+            : Monotonic.linear(0, dims[1].size ?? size[1]),
         };
       },
       layout: (

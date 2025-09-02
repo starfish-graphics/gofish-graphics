@@ -27,11 +27,10 @@ import { GoFishAST } from "./_ast";
 import { CoordinateTransform } from "./coordinateTransforms/coord";
 import { getValue, isValue, MaybeValue } from "./data";
 import { color6 } from "../color";
-import { Linear, isLinear, inverse } from "../util/linear";
-import { Unknown } from "../util/unknown";
+import * as Monotonic from "../util/monotonic";
 import { findTargetMonotonic } from "../util";
 
-export type ScaleFactorFunction = Linear | Unknown;
+export type ScaleFactorFunction = Monotonic.Monotonic;
 
 export const findScaleFactor = (
   sizeDomain: ScaleFactorFunction,
@@ -43,18 +42,19 @@ export const findScaleFactor = (
     upperBoundGuess?: number;
   }
 ): number => {
-  if (isLinear(sizeDomain)) {
-    try {
-      return inverse(sizeDomain).run(targetValue);
-    } catch (e) {
-      // TODO: for now we're ignoring this... I think it happens when there is no data-driven stuff
-      // in a particular direction (eg the horizontal direction of a bar chart). In that case we
-      // probably don't need a scale factor at all...
-      return 0;
-    }
-  } else {
-    return findTargetMonotonic(targetValue, sizeDomain.run, options);
-  }
+  return sizeDomain.inverse(targetValue, options) ?? 0;
+  // if (isLinear(sizeDomain)) {
+  //   try {
+  //     return inverse(sizeDomain).run(targetValue);
+  //   } catch (e) {
+  //     // TODO: for now we're ignoring this... I think it happens when there is no data-driven stuff
+  //     // in a particular direction (eg the horizontal direction of a bar chart). In that case we
+  //     // probably don't need a scale factor at all...
+  //     return 0;
+  //   }
+  // } else {
+  //   return findTargetMonotonic(targetValue, sizeDomain.run, options);
+  // }
 };
 
 export type Placeable = {

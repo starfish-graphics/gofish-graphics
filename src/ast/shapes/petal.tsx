@@ -28,7 +28,8 @@ import {
   Transform,
 } from "../dims";
 import { aesthetic, continuous, Domain } from "../domain";
-import * as Linear from "../../util/linear";
+import * as Monotonic from "../../util/monotonic";
+import { Linear } from "../../lib";
 
 /* Implementation inspired by https://web.archive.org/web/20220808041640/http://bl.ocks.org/herrstucki/6199768 */
 /* TODO: what should default embedding behavior be when all values are aesthetic? */
@@ -88,11 +89,11 @@ export const petal = ({
       inferSizeDomains: (shared, size, children) => {
         return {
           w: isValue(dims[0].size)
-            ? Linear.mk(getValue(dims[0].size!), 0)
-            : Linear.mk(0, dims[0].size ?? size[0]),
+            ? Monotonic.linear(getValue(dims[0].size!), 0)
+            : Monotonic.linear(0, dims[0].size ?? size[0]),
           h: isValue(dims[1].size)
-            ? Linear.mk(getValue(dims[1].size!), 0)
-            : Linear.mk(0, dims[1].size ?? size[1]),
+            ? Monotonic.linear(getValue(dims[1].size!), 0)
+            : Monotonic.linear(0, dims[1].size ?? size[1]),
         };
       },
       layout: (shared, size, scaleFactors, children, measurement) => {

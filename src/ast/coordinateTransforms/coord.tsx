@@ -1,5 +1,4 @@
-import * as Linear from "../../util/linear";
-import * as Unknown from "../../util/unknown";
+import * as Monotonic from "../../util/monotonic";
 import { Show } from "solid-js";
 import { path, pathToSVGPath, transformPath } from "../../path";
 import { GoFishAST } from "../_ast";
@@ -131,32 +130,32 @@ export const coord = (
 
         return {
           w:
-            childMeasuresWidth.every(Linear.isLinear) &&
+            childMeasuresWidth.every(Monotonic.isLinear) &&
             childMeasuresWidth.every(
               (childMeasureWidth) =>
                 childMeasureWidth.intercept === childMeasuresWidth[0].intercept
             )
-              ? Linear.mk(
+              ? Monotonic.linear(
                   Math.max(...childMeasuresWidth.map((cw) => cw.slope)),
                   childMeasuresWidth[0].intercept
                 )
-              : Unknown.mk((scaleFactor: number) =>
+              : Monotonic.unknown((scaleFactor: number) =>
                   Math.max(
                     ...childMeasuresWidth.map((cw) => cw.run(scaleFactor))
                   )
                 ),
           h:
-            childMeasuresHeight.every(Linear.isLinear) &&
+            childMeasuresHeight.every(Monotonic.isLinear) &&
             childMeasuresHeight.every(
               (childMeasureHeight) =>
                 childMeasureHeight.intercept ===
                 childMeasuresHeight[0].intercept
             )
-              ? Linear.mk(
+              ? Monotonic.linear(
                   Math.max(...childMeasuresHeight.map((ch) => ch.slope)),
                   childMeasuresHeight[0].intercept
                 )
-              : Unknown.mk((scaleFactor: number) =>
+              : Monotonic.unknown((scaleFactor: number) =>
                   Math.max(
                     ...childMeasuresHeight.map((ch) => ch.run(scaleFactor))
                   )

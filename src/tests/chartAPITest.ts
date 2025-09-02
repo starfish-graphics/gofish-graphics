@@ -62,11 +62,14 @@ export const chartGroupedBar = () => {
 };
 
 export const chartFacetedBar = () => {
-  return Chart(catchData)
-    .rect({ w: 32, h: "count", fill: "species" })
-    .spreadX("lake", { spacing: 2 })
-    .spreadY("species", { spacing: 8, sharedScale: true })
-    .TEST_render();
+  return (
+    Chart(catchData)
+      .rect({ w: 32, h: "count", fill: "species" })
+      .spreadX("lake", { spacing: 2 })
+      // .connectX("lake")
+      .spreadY("species", { spacing: 8, sharedScale: true })
+      .TEST_render()
+  );
 };
 
 /* 
