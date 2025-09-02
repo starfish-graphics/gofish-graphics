@@ -313,7 +313,7 @@ const App: Component = () => {
       <GoFishSolid w={350} h={300} defs={defs}>
         {testMosaic()}
       </GoFishSolid>
-      {/* <br />
+      <br />
       <GoFishSolid w={320} h={400} defs={defs} axes={false}>
         {v2ChartMosaic()}
       </GoFishSolid>
@@ -746,7 +746,7 @@ const App: Component = () => {
             {testScatterBalloon2(200)}
           </GoFishSolid>
         </div>
-      </div> */}
+      </div>
       {/* <br />
       <br />
       <br />

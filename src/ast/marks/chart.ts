@@ -15,6 +15,19 @@ import {
 } from "../../lib";
 import { GoFishNode } from "../_node";
 import { CoordinateTransform } from "../coordinateTransforms/coord";
+import { MaybeValue } from "../data";
+
+/* inference */
+const inferSize = <T>(
+  accessor: string | number | undefined,
+  d: T[]
+): MaybeValue<number> | undefined => {
+  return typeof accessor === "number"
+    ? accessor
+    : accessor !== undefined
+      ? v(sumBy(d, accessor))
+      : undefined;
+};
 
 const connectXMode = {
   edge: "edge-to-edge",
@@ -61,26 +74,10 @@ export class _Chart<T> {
     return new _Chart(this._data, (d: T[], key: number | string) => {
       if (debug) console.log("rect", key, d);
       return Rect({
-        w:
-          typeof w === "number"
-            ? w
-            : w !== undefined
-              ? v(sumBy(d, w))
-              : typeof ts === "number"
-                ? ts
-                : ts !== undefined
-                  ? v(sumBy(d, ts))
-                  : undefined,
-        h:
-          typeof h === "number"
-            ? h
-            : h !== undefined
-              ? v(sumBy(d, h))
-              : typeof rs === "number"
-                ? rs
-                : rs !== undefined
-                  ? v(sumBy(d, rs))
-                  : undefined,
+        w: inferSize(w, d) ?? inferSize(ts, d),
+        h: inferSize(h, d) ?? inferSize(rs, d),
+        // rs: inferSize(rs, d),
+        // ts: inferSize(ts, d),
         rx,
         ry,
         fill:
@@ -198,14 +195,8 @@ export class _Chart<T> {
           spacing: opts?.spacing ?? 8,
           sharedScale: opts?.sharedScale,
           alignment: opts?.alignment,
-          w:
-            typeof opts?.w === "number" || opts?.w === undefined
-              ? opts?.w
-              : /* v */ sumBy(d, opts?.w),
-          h:
-            typeof opts?.h === "number" || opts?.h === undefined
-              ? opts?.h
-              : /* v */ sumBy(d, opts?.h),
+          w: inferSize(opts?.w, d),
+          h: inferSize(opts?.h, d),
         },
         iteratee
           ? For(groups, (items, key) => {
@@ -256,14 +247,8 @@ export class _Chart<T> {
           sharedScale: opts?.sharedScale,
           alignment: opts?.alignment,
           reverse: opts?.reverse,
-          w:
-            typeof opts?.w === "number" || opts?.w === undefined
-              ? opts?.w
-              : /* v */ sumBy(d, opts?.w),
-          h:
-            typeof opts?.h === "number" || opts?.h === undefined
-              ? opts?.h
-              : /* v */ sumBy(d, opts?.h),
+          w: inferSize(opts?.w, d),
+          h: inferSize(opts?.h, d),
         },
         iteratee
           ? For(groups, (items, key) => {

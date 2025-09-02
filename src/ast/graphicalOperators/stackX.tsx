@@ -3,6 +3,7 @@ import { GoFishAST } from "../_ast";
 import { FancyDims } from "../dims";
 import { Collection } from "lodash";
 import { withGoFish } from "../withGoFish";
+import { MaybeValue } from "../data";
 
 export const stackX = withGoFish(
   (
@@ -23,7 +24,7 @@ export const stackX = withGoFish(
       sharedScale?: boolean;
       mode?: "edge-to-edge" | "center-to-center";
       reverse?: boolean;
-    } & FancyDims,
+    } & FancyDims<MaybeValue<number>>,
     children: GoFishAST[] | Collection<GoFishAST>
   ) => {
     return stack(
