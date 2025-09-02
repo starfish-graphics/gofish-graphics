@@ -129,37 +129,8 @@ export const coord = (
         const childMeasuresHeight = childMeasures.map((cm) => cm[1]);
 
         return {
-          w:
-            childMeasuresWidth.every(Monotonic.isLinear) &&
-            childMeasuresWidth.every(
-              (childMeasureWidth) =>
-                childMeasureWidth.intercept === childMeasuresWidth[0].intercept
-            )
-              ? Monotonic.linear(
-                  Math.max(...childMeasuresWidth.map((cw) => cw.slope)),
-                  childMeasuresWidth[0].intercept
-                )
-              : Monotonic.unknown((scaleFactor: number) =>
-                  Math.max(
-                    ...childMeasuresWidth.map((cw) => cw.run(scaleFactor))
-                  )
-                ),
-          h:
-            childMeasuresHeight.every(Monotonic.isLinear) &&
-            childMeasuresHeight.every(
-              (childMeasureHeight) =>
-                childMeasureHeight.intercept ===
-                childMeasuresHeight[0].intercept
-            )
-              ? Monotonic.linear(
-                  Math.max(...childMeasuresHeight.map((ch) => ch.slope)),
-                  childMeasuresHeight[0].intercept
-                )
-              : Monotonic.unknown((scaleFactor: number) =>
-                  Math.max(
-                    ...childMeasuresHeight.map((ch) => ch.run(scaleFactor))
-                  )
-                ),
+          w: Monotonic.max(...childMeasuresWidth),
+          h: Monotonic.max(...childMeasuresHeight),
         };
       },
       layout: (shared, size, scaleFactors, children, measurement) => {

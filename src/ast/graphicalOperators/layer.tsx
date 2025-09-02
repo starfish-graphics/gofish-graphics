@@ -65,41 +65,14 @@ export const layer = (
         const childMeasuresHeight = childMeasures.map((cm) => cm[1]);
 
         return {
-          w:
-            childMeasuresWidth.every(Monotonic.isLinear) &&
-            childMeasuresWidth.every(
-              (childMeasureWidth) =>
-                childMeasureWidth.intercept === childMeasuresWidth[0].intercept
-            )
-              ? Monotonic.linear(
-                  Math.max(...childMeasuresWidth.map((cw) => cw.slope)) *
-                    (options.transform?.scale?.x ?? 1),
-                  childMeasuresWidth[0].intercept
-                )
-              : Monotonic.unknown(
-                  (scaleFactor: number) =>
-                    Math.max(
-                      ...childMeasuresWidth.map((cw) => cw.run(scaleFactor))
-                    ) * (options.transform?.scale?.x ?? 1)
-                ),
-          h:
-            childMeasuresHeight.every(Monotonic.isLinear) &&
-            childMeasuresHeight.every(
-              (childMeasureHeight) =>
-                childMeasureHeight.intercept ===
-                childMeasuresHeight[0].intercept
-            )
-              ? Monotonic.linear(
-                  Math.max(...childMeasuresHeight.map((ch) => ch.slope)) *
-                    (options.transform?.scale?.y ?? 1),
-                  childMeasuresHeight[0].intercept
-                )
-              : Monotonic.unknown(
-                  (scaleFactor: number) =>
-                    Math.max(
-                      ...childMeasuresHeight.map((ch) => ch.run(scaleFactor))
-                    ) * (options.transform?.scale?.y ?? 1)
-                ),
+          w: Monotonic.smul(
+            options.transform?.scale?.x ?? 1,
+            Monotonic.max(...childMeasuresWidth)
+          ),
+          h: Monotonic.smul(
+            options.transform?.scale?.y ?? 1,
+            Monotonic.max(...childMeasuresHeight)
+          ),
         };
       },
       layout: (

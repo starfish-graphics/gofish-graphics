@@ -61,7 +61,7 @@ export const isUnknown = (x: Monotonic): x is Unknown => {
   return x.kind === "unknown";
 };
 
-export const sum = (...args: Monotonic[]): Monotonic => {
+export const add = (...args: Monotonic[]): Monotonic => {
   if (args.every(isLinear)) {
     return linear(
       args.reduce((sum, arg) => sum + arg.slope, 0),
@@ -71,6 +71,22 @@ export const sum = (...args: Monotonic[]): Monotonic => {
     return unknown((x: number) =>
       args.reduce((sum, arg) => sum + arg.run(x), 0)
     );
+  }
+};
+
+export const smul = (scalar: number, fn: Monotonic): Monotonic => {
+  if (isLinear(fn)) {
+    return linear(scalar * fn.slope, scalar * fn.intercept);
+  } else {
+    return unknown((x: number) => scalar * fn.run(x));
+  }
+};
+
+export const adds = (fn: Monotonic, scalar: number): Monotonic => {
+  if (isLinear(fn)) {
+    return linear(fn.slope, fn.intercept + scalar);
+  } else {
+    return unknown((x: number) => fn.run(x) + scalar);
   }
 };
 

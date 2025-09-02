@@ -144,21 +144,10 @@ modes!!!
           return {
             [stackDir]:
               mode === "edge-to-edge"
-                ? // if all the children are linear, then we can create a new linear repr
-                  childSizeDomainsStackDir.every(Monotonic.isLinear)
-                  ? Monotonic.sum(
-                      ...childSizeDomainsStackDir,
-                      Monotonic.linear(0, spacing * (children.length - 1))
-                    )
-                  : Monotonic.unknown(
-                      (scaleFactor: number) =>
-                        _.sum(
-                          childSizeDomainsStackDir.map((child) =>
-                            child.run(scaleFactor)
-                          )
-                        ) +
-                        spacing * (children.length - 1)
-                    )
+                ? Monotonic.adds(
+                    Monotonic.add(...childSizeDomainsStackDir),
+                    spacing * (children.length - 1)
+                  )
                 : // TODO: optimize this case...
                   Monotonic.unknown(
                     (scaleFactor: number) =>
@@ -169,28 +158,7 @@ modes!!!
                       ].run(scaleFactor) /
                         2
                   ),
-            [alignDir]:
-              childSizeDomainsAlignDir.every(Monotonic.isLinear) &&
-              childSizeDomainsAlignDir.every(
-                (childSizeDomain) =>
-                  childSizeDomain.intercept ===
-                  childSizeDomainsAlignDir[0].intercept
-              )
-                ? Monotonic.linear(
-                    Math.max(
-                      ...childSizeDomainsAlignDir.map(
-                        (childSizeDomain) => childSizeDomain.slope
-                      )
-                    ),
-                    childSizeDomainsAlignDir[0].intercept
-                  )
-                : Monotonic.unknown((scaleFactor: number) =>
-                    Math.max(
-                      ...childSizeDomainsAlignDir.map((childSizeDomain) =>
-                        childSizeDomain.run(scaleFactor)
-                      )
-                    )
-                  ),
+            [alignDir]: Monotonic.max(...childSizeDomainsAlignDir),
           };
         },
         layout: (
