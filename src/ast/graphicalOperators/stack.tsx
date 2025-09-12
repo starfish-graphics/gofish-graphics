@@ -75,43 +75,28 @@ export const stack = withGoFish(
             .map((childPosDomain) => childPosDomain[stackDir])
             .filter((d) => d !== undefined);
 
-          return [
-            stackDir === 0 &&
-            filteredStackDirChildDomains.length > 0 &&
-            canUnifyDomains(filteredStackDirChildDomains)
-              ? unifyContinuousDomains(filteredStackDirChildDomains)
-              : isValue(dims[0].min)
-                ? continuous({
-                    value: [getValue(dims[0].min)!, getValue(dims[0].min)!],
-                    measure: getMeasure(dims[0].min),
-                  })
-                : undefined,
-            stackDir === 1 &&
-            filteredStackDirChildDomains.length > 0 &&
-            canUnifyDomains(filteredStackDirChildDomains)
-              ? unifyContinuousDomains(filteredStackDirChildDomains)
-              : isValue(dims[1].min)
-                ? continuous({
-                    value: [getValue(dims[1].min)!, getValue(dims[1].min)!],
-                    measure: getMeasure(dims[1].min),
-                  })
-                : undefined,
-          ];
-        },
-        /* TODO: I need to write to the children!!!!!!!!!! */
-        // inferDomains: (childDomains: Size<Domain>[]) => {
-        //   return {
-        //     [stackDir]: canUnifyDomains(childDomains.map((childDomain) => childDomain[stackDir]))
-        //       ? unifyContinuousDomains(childDomains.map((childDomain) => childDomain[stackDir]) as ContinuousDomain[])
-        //       : undefined,
-        //     [alignDir]: canUnifyDomains(childDomains.map((childDomain) => childDomain[alignDir]))
-        //       ? unifyContinuousDomains(childDomains.map((childDomain) => childDomain[alignDir]) as ContinuousDomain[])
-        //       : undefined,
-        //   };
-        // },
-        /* TODO: I need to search for the right scale factor in a way that accounts for all layout
-modes!!!
+          const result = [undefined, undefined] as (Domain | undefined)[];
 
+          if (
+            filteredStackDirChildDomains.length > 0 &&
+            canUnifyDomains(filteredStackDirChildDomains)
+          ) {
+            result[stackDir] = unifyContinuousDomains(
+              filteredStackDirChildDomains
+            );
+          } else if (isValue(dims[stackDir].min)) {
+            result[stackDir] = continuous({
+              value: [
+                getValue(dims[stackDir].min)!,
+                getValue(dims[stackDir].min)!,
+              ],
+              measure: getMeasure(dims[stackDir].min),
+            });
+          }
+
+          return result;
+        },
+        /* TODO:
       Nodes are either:
       - fixed size
       - scaled (b/c data-driven) (eg bar chart bar heights). equal scale? shared scale?
@@ -121,16 +106,6 @@ modes!!!
       child.size[0].mode = "fixed" | "scaled" | "grow"
 */
         inferSizeDomains: (shared, children) => {
-          // if (shared[stackDir]) {
-          //   /* TODO: this is not a very good upper bound guess! */
-          //   const stackScaleFactor = findTargetMonotonic(size[stackDir], stackSize, { upperBoundGuess: size[stackDir] });
-          // }
-
-          // size = {
-          //   [stackDir]: dims[stackDir].size ?? size[stackDir],
-          //   [alignDir]: dims[alignDir].size ?? size[alignDir],
-          // };
-
           const childSizeDomains = children.map((child) =>
             child.inferSizeDomains()
           );
