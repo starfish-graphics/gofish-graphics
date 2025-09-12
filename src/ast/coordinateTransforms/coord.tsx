@@ -119,12 +119,10 @@ export const coord = (
             : undefined,
         ];
       },
-      inferSizeDomains: (shared, size, children) => {
+      inferSizeDomains: (shared, children) => {
         // TODO: only works for polar2 right now
-        size = [2 * Math.PI, Math.min(size[0], size[1]) / 2 - 30];
-        const childMeasures = children.map((child) =>
-          child.inferSizeDomains(size)
-        );
+        // size = [2 * Math.PI, Math.min(size[0], size[1]) / 2 - 30];
+        const childMeasures = children.map((child) => child.inferSizeDomains());
         const childMeasuresWidth = childMeasures.map((cm) => cm[0]);
         const childMeasuresHeight = childMeasures.map((cm) => cm[1]);
 

@@ -46,10 +46,10 @@ export const connect = (
       type: "connect",
       shared: [false, false],
       color: fill,
-      inferSizeDomains: (shared, size, children) => {
+      inferSizeDomains: (shared, children) => {
         return {
-          w: Monotonic.linear(0, size[0]),
-          h: Monotonic.linear(0, size[1]),
+          w: Monotonic.linear(0, 0),
+          h: Monotonic.linear(0, 0),
         };
       },
       inferPosDomains: (childPosDomains: Size<Domain>[]) => {

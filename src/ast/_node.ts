@@ -53,7 +53,7 @@ export type Placeable = {
 export type InferSizeDomains = (
   shared: Size<boolean>,
   // scaleFactors: Size<number | undefined>,
-  size: Size,
+  // size: Size,
   children: GoFishNode[]
 ) => FancySize<ScaleFactorFunction>;
 
@@ -199,9 +199,9 @@ export class GoFishNode {
     return posDomains;
   }
 
-  public inferSizeDomains(size: Size): Size<ScaleFactorFunction> {
+  public inferSizeDomains(): Size<ScaleFactorFunction> {
     const sizeDomains = elaborateSize(
-      this._inferSizeDomains(this.shared, size, this.children)
+      this._inferSizeDomains(this.shared, this.children)
     );
 
     this.sizeDomains = sizeDomains;

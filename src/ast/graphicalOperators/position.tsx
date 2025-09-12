@@ -34,12 +34,12 @@ export const position = (
             : undefined,
         ];
       },
-      inferSizeDomains: (shared, size, children) => {
+      inferSizeDomains: (shared, children) => {
         // Delegate to the single child's size requirements
         if (children.length !== 1) {
           throw new Error("Position operator expects exactly one child");
         }
-        const childMeasure = children[0].inferSizeDomains(size);
+        const childMeasure = children[0].inferSizeDomains();
         return {
           w: childMeasure[0],
           h: childMeasure[1],

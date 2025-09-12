@@ -56,10 +56,8 @@ export const layer = (
             : undefined,
         ];
       },
-      inferSizeDomains: (shared, size, children) => {
-        const childMeasures = children.map((child) =>
-          child.inferSizeDomains(size)
-        );
+      inferSizeDomains: (shared, children) => {
+        const childMeasures = children.map((child) => child.inferSizeDomains());
 
         const childMeasuresWidth = childMeasures.map((cm) => cm[0]);
         const childMeasuresHeight = childMeasures.map((cm) => cm[1]);

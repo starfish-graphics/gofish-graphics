@@ -74,7 +74,7 @@ export const gofish = (
     child.resolveNames();
     child.resolveKeys();
     const [posDomainX, posDomainY] = child.inferPosDomains();
-    child.inferSizeDomains([w, h]);
+    child.inferSizeDomains();
     child.layout(
       [w, h],
       [undefined, undefined],

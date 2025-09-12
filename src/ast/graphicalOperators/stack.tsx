@@ -136,19 +136,19 @@ modes!!!
 
       child.size[0].mode = "fixed" | "scaled" | "grow"
 */
-        inferSizeDomains: (shared, size, children) => {
+        inferSizeDomains: (shared, children) => {
           // if (shared[stackDir]) {
           //   /* TODO: this is not a very good upper bound guess! */
           //   const stackScaleFactor = findTargetMonotonic(size[stackDir], stackSize, { upperBoundGuess: size[stackDir] });
           // }
 
-          size = {
-            [stackDir]: dims[stackDir].size ?? size[stackDir],
-            [alignDir]: dims[alignDir].size ?? size[alignDir],
-          };
+          // size = {
+          //   [stackDir]: dims[stackDir].size ?? size[stackDir],
+          //   [alignDir]: dims[alignDir].size ?? size[alignDir],
+          // };
 
           const childSizeDomains = children.map((child) =>
-            child.inferSizeDomains(size)
+            child.inferSizeDomains()
           );
           const childSizeDomainsStackDir = childSizeDomains.map(
             (childSizeDomain) => childSizeDomain[stackDir]

@@ -8,10 +8,8 @@ export const wrap = (children: GoFishAST[]) => {
     {
       type: "wrap",
       shared: [false, false],
-      inferSizeDomains: (shared, size, children) => {
-        const childMeasures = children.map((child) =>
-          child.inferSizeDomains(size)
-        );
+      inferSizeDomains: (shared, children) => {
+        const childMeasures = children.map((child) => child.inferSizeDomains());
         return (scaleFactors: Size) => {
           const childSizes = childMeasures.map((childMeasure) =>
             childMeasure(scaleFactors)

@@ -87,14 +87,14 @@ export const ellipse = ({
       //       : undefined,
       //   ];
       // },
-      inferSizeDomains: (shared, size, children) => {
+      inferSizeDomains: (shared, children) => {
         return {
           w: isValue(dims[0].size)
             ? Monotonic.linear(getValue(dims[0].size!), 0)
-            : Monotonic.linear(0, dims[0].size ?? size[0]),
+            : Monotonic.linear(0, dims[0].size ?? 0),
           h: isValue(dims[1].size)
             ? Monotonic.linear(getValue(dims[1].size!), 0)
-            : Monotonic.linear(0, dims[1].size ?? size[1]),
+            : Monotonic.linear(0, dims[1].size ?? 0),
         };
       },
       layout: (
