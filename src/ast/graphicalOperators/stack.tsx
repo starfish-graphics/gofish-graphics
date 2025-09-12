@@ -194,24 +194,24 @@ modes!!!
           }
           const stackPos = computeAesthetic(
             dims[stackDir].min,
-            posScales[stackDir]!,
+            posScales?.[stackDir]!,
             undefined
           );
           const alignPos = computeAesthetic(
             dims[alignDir].min,
-            posScales[alignDir]!,
+            posScales?.[alignDir]!,
             undefined
           );
 
           size = {
             [stackDir]: computeSize(
               dims[stackDir].size,
-              scaleFactors[stackDir]!,
+              scaleFactors?.[stackDir]!,
               size[stackDir]
             ),
             [alignDir]: computeSize(
               dims[alignDir].size,
-              scaleFactors[alignDir]!,
+              scaleFactors?.[alignDir]!,
               size[alignDir]
             ),
           };
