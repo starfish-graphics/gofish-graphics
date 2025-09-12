@@ -73,6 +73,7 @@ export const pairs = <T>(xs: T[]): [T, T][] => {
   return result;
 };
 
+// input is a value, an aesthetic literal, or undefined. behavior differs based on this
 export const computeAesthetic = (
   input: MaybeValue<number> | undefined,
   scale: (x: number) => number,
