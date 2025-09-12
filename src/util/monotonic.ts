@@ -41,6 +41,12 @@ export const isLinear = (x: Monotonic): x is Linear => {
   return x.kind === "linear";
 };
 
+/* TODO: if a function is constant, then the entire subtree isn't data-driven (by monotonicity, the
+slope can never decrease so all contributions to it must be zero) */
+export const isConstant = (x: Monotonic): boolean => {
+  return isLinear(x) && x.slope === 0;
+};
+
 export const unknown = (run: (x: number) => number): Unknown => {
   return {
     kind: "unknown",
