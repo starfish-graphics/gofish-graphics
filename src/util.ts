@@ -1,3 +1,5 @@
+import { getValue, isValue, MaybeValue } from "./ast/data";
+
 export const lerp = (a: number, b: number, t: number): number => {
   return a + t * (b - a);
 };
@@ -69,4 +71,20 @@ export const pairs = <T>(xs: T[]): [T, T][] => {
     result.push([xs[i], xs[i + 1]]);
   }
   return result;
+};
+
+export const computeAesthetic = (
+  input: MaybeValue<number> | undefined,
+  scale: (x: number) => number,
+  provided: number | undefined
+): number | undefined => {
+  return isValue(input) ? scale(getValue(input)!) : (input ?? provided);
+};
+
+export const computeSize = (
+  input: MaybeValue<number> | undefined,
+  scaleFactor: number,
+  size: number
+) => {
+  return computeAesthetic(input, (x) => x * scaleFactor, size);
 };

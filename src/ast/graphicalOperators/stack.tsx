@@ -18,7 +18,7 @@ import {
   Domain,
   unifyContinuousDomains,
 } from "../domain";
-import { findTargetMonotonic } from "../../util";
+import { computeAesthetic, computeSize, findTargetMonotonic } from "../../util";
 import { GoFishAST } from "../_ast";
 import { getScaleContext } from "../gofish";
 import { withGoFish } from "../withGoFish";
@@ -30,22 +30,6 @@ const unwrapLodashArray = function <T>(value: T[] | Collection<T>): T[] {
     return (value as Collection<T>).value() as T[];
   }
   return value as T[];
-};
-
-const computeAesthetic = (
-  input: MaybeValue<number> | undefined,
-  scale: (x: number) => number,
-  provided: number | undefined
-): number | undefined => {
-  return isValue(input) ? scale(getValue(input)!) : (input ?? provided);
-};
-
-const computeSize = (
-  input: MaybeValue<number> | undefined,
-  scaleFactor: number,
-  size: number
-) => {
-  return computeAesthetic(input, (x) => x * scaleFactor, size);
 };
 
 export const stack = withGoFish(

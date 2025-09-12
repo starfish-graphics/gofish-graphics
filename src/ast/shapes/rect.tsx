@@ -29,6 +29,15 @@ import {
 import { aesthetic, continuous, Domain } from "../domain";
 import { scaleContext } from "../gofish";
 import * as Monotonic from "../../util/monotonic";
+import { computeAesthetic, computeSize } from "../../util";
+
+const computeIntrinsicSize = (
+  input: MaybeValue<number> | undefined
+): Monotonic.Monotonic => {
+  return isValue(input)
+    ? Monotonic.linear(getValue(input)!, 0)
+    : Monotonic.linear(0, input ?? 0);
+};
 
 /* TODO: what should default embedding behavior be when all values are aesthetic? */
 export const rect = ({
@@ -94,12 +103,8 @@ export const rect = ({
       // },
       inferSizeDomains: (shared, children) => {
         return {
-          w: isValue(dims[0].size)
-            ? Monotonic.linear(getValue(dims[0].size!), 0) // linear(m, b) := m * scale_factor + b
-            : Monotonic.linear(0, dims[0].size ?? 0),
-          h: isValue(dims[1].size)
-            ? Monotonic.linear(getValue(dims[1].size!), 0)
-            : Monotonic.linear(0, dims[1].size ?? 0),
+          w: computeIntrinsicSize(dims[0].size),
+          h: computeIntrinsicSize(dims[1].size),
         };
       },
       layout: (
@@ -110,18 +115,10 @@ export const rect = ({
         measurement,
         posScales
       ) => {
-        const w = isValue(dims[0].size)
-          ? getValue(dims[0].size!) * scaleFactors[0]!
-          : (dims[0].size ?? size[0]);
-        const h = isValue(dims[1].size)
-          ? getValue(dims[1].size!) * scaleFactors[1]!
-          : (dims[1].size ?? size[1]);
-        const x = isValue(dims[0].min)
-          ? posScales[0]!(getValue(dims[0].min)!)
-          : (dims[0].min ?? undefined);
-        const y = isValue(dims[1].min)
-          ? posScales[1]!(getValue(dims[1].min)!)
-          : (dims[1].min ?? undefined);
+        const w = computeSize(dims[0].size, scaleFactors?.[0]!, size[0]);
+        const h = computeSize(dims[1].size, scaleFactors?.[1]!, size[1]);
+        const x = computeAesthetic(dims[0].min, posScales?.[0]!, undefined);
+        const y = computeAesthetic(dims[1].min, posScales?.[1]!, undefined);
 
         return {
           intrinsicDims: [
