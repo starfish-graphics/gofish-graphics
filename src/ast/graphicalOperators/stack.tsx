@@ -32,6 +32,22 @@ const unwrapLodashArray = function <T>(value: T[] | Collection<T>): T[] {
   return value as T[];
 };
 
+const computeAesthetic = (
+  input: MaybeValue<number> | undefined,
+  scale: (x: number) => number,
+  provided: number | undefined
+): number | undefined => {
+  return isValue(input) ? scale(getValue(input)!) : (input ?? provided);
+};
+
+const computeSize = (
+  input: MaybeValue<number> | undefined,
+  scaleFactor: number,
+  size: number
+) => {
+  return computeAesthetic(input, (x) => x * scaleFactor, size);
+};
+
 export const stack = withGoFish(
   (
     {
@@ -176,20 +192,28 @@ modes!!!
           if (reverse) {
             children = children.reverse();
           }
-          const stackPos = isValue(dims[stackDir].min)
-            ? posScales[stackDir]!(getValue(dims[stackDir].min)!)
-            : (dims[stackDir].min ?? undefined);
-          const alignPos = isValue(dims[alignDir].min)
-            ? posScales[alignDir]!(getValue(dims[alignDir].min)!)
-            : (dims[alignDir].min ?? undefined);
+          const stackPos = computeAesthetic(
+            dims[stackDir].min,
+            posScales[stackDir]!,
+            undefined
+          );
+          const alignPos = computeAesthetic(
+            dims[alignDir].min,
+            posScales[alignDir]!,
+            undefined
+          );
 
           size = {
-            [stackDir]: isValue(dims[stackDir].size)
-              ? getValue(dims[stackDir].size!) * scaleFactors[stackDir]!
-              : (dims[stackDir].size ?? size[stackDir]),
-            [alignDir]: isValue(dims[alignDir].size)
-              ? getValue(dims[alignDir].size!) * scaleFactors[alignDir]!
-              : (dims[alignDir].size ?? size[alignDir]),
+            [stackDir]: computeSize(
+              dims[stackDir].size,
+              scaleFactors[stackDir]!,
+              size[stackDir]
+            ),
+            [alignDir]: computeSize(
+              dims[alignDir].size,
+              scaleFactors[alignDir]!,
+              size[alignDir]
+            ),
           };
 
           if (shared[stackDir]) {

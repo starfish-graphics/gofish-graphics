@@ -121,7 +121,7 @@ export const v2ChartMosaic = () =>
   rect(catchData, { fill: "species", h: "count" })
     .stackY("species", { w: "count" })
     .transform((d) => orderBy(d, "count", "asc"))
-    .spreadX("lake", { alignment: "start" })
+    .spreadX("lake")
     .TEST_render();
 
 /* 
