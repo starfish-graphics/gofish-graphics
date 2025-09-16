@@ -323,6 +323,73 @@ export const render = (
                 </For>
               </g>
             </Show>
+            <Show when={sizeDomains && isConstant(sizeDomains[1])}>
+              {/* Vertical (Y axis) labels */}
+              <g>
+                <For each={child.children ?? []}>
+                  {(value, i) => {
+                    // Only render for GoFishNode (not GoFishRef)
+                    if (!("intrinsicDims" in value) || !("key" in value))
+                      return null;
+                    // Accumulate transforms up the tree for correct label placement
+                    const accumulatedTransform = findPathToRoot(
+                      value as GoFishNode
+                    ).reduce(
+                      (acc, node) => {
+                        return {
+                          x: acc.x + (node.transform?.translate?.[0] ?? 0),
+                          y: acc.y + (node.transform?.translate?.[1] ?? 0),
+                        };
+                      },
+                      { x: 0, y: 0 }
+                    );
+                    const displayDims = [
+                      {
+                        min:
+                          (accumulatedTransform.x ?? 0) +
+                          ((value as GoFishNode).intrinsicDims?.[0]?.min ?? 0),
+                        size:
+                          (value as GoFishNode).intrinsicDims?.[0]?.size ?? 0,
+                        center:
+                          (accumulatedTransform.x ?? 0) +
+                          ((value as GoFishNode).intrinsicDims?.[0]?.center ??
+                            0),
+                        max:
+                          (accumulatedTransform.x ?? 0) +
+                          ((value as GoFishNode).intrinsicDims?.[0]?.max ?? 0),
+                      },
+                      {
+                        min:
+                          (accumulatedTransform.y ?? 0) +
+                          ((value as GoFishNode).intrinsicDims?.[1]?.min ?? 0),
+                        size:
+                          (value as GoFishNode).intrinsicDims?.[1]?.size ?? 0,
+                        center:
+                          (accumulatedTransform.y ?? 0) +
+                          ((value as GoFishNode).intrinsicDims?.[1]?.center ??
+                            0),
+                        max:
+                          (accumulatedTransform.y ?? 0) +
+                          ((value as GoFishNode).intrinsicDims?.[1]?.max ?? 0),
+                      },
+                    ];
+                    return (
+                      <text
+                        transform="scale(1, -1)"
+                        x={displayDims[0].min - 5}
+                        y={-(displayDims[1].center ?? 0)}
+                        text-anchor="end"
+                        dominant-baseline="middle"
+                        font-size="10px"
+                        fill="gray"
+                      >
+                        {(value as GoFishNode).key}
+                      </text>
+                    );
+                  }}
+                </For>
+              </g>
+            </Show>
             {/* legend (discrete color for now) */}
             <g>
               <For each={Array.from(scaleContext.unit.color.entries())}>
