@@ -17,9 +17,8 @@ import {
 import { GoFishNode } from "../_node";
 import { CoordinateTransform } from "../coordinateTransforms/coord";
 import { MaybeValue } from "../data";
-import { List, ValueIteratee } from "lodash";
-
-
+import { Dictionary, List, ValueIteratee } from "lodash";
+import { CatchData, catchData as seafood } from "../../data/catch";
 
 /* Goal syntax:
 
@@ -50,34 +49,238 @@ chart(seafood, spread_by("lake", {dir: "x"}))
 output: new data + 
 */
 
+chart(
+  seafood,
+  spread_by("lake", { dir: "x" }),
+  rect({ h: "count", fill: "species" })
+);
+
+export type Operator<T, U> = (_: Mark<U>) => Mark<T>;
+export type Mark<T> = (d: T) => GoFishNode;
+
+// export function chart<T>(
+//   data: T[],
+//   ...operators: ((chart: _Chart<T>) => _Chart<T>)[],
+//   foo: number,
+// ): _Chart<T> {
+//   let c = new _Chart<T>(data);
+//   for (const op of operators) {
+//     c = op(c);
+//   }
+//   return c;
+// }
+
+// Overloaded pipe type signature for chart with operators in the middle
+// See
+// https://github.com/pbeshai/tidy/blob/c283cd64dd175c179ffd2608f0dbcf1e016ac5ce/packages/tidy/src/tidy.ts#L4
+// https://github.com/microsoft/TypeScript/issues/29904
+// We can do fancier things but I'd rather not...
+export function chart<T>(data: T, mark: Mark<T>): GoFishNode;
+export function chart<T, T1>(
+  data: T,
+  op1: Operator<T, T1>,
+  mark: Mark<T1>
+): GoFishNode;
+export function chart<T, T1, T2>(
+  data: T,
+  op1: Operator<T, T1>,
+  op2: Operator<T1, T2>,
+  mark: Mark<T2>
+): GoFishNode;
+export function chart<T, T1, T2, T3>(
+  data: T,
+  op1: Operator<T, T1>,
+  op2: Operator<T1, T2>,
+  op3: Operator<T2, T3>,
+  mark: Mark<T3>
+): GoFishNode;
+export function chart<T, T1, T2, T3, T4>(
+  data: T,
+  op1: Operator<T, T1>,
+  op2: Operator<T1, T2>,
+  op3: Operator<T2, T3>,
+  op4: Operator<T3, T4>,
+  mark: Mark<T4>
+): GoFishNode;
+export function chart<T, T1, T2, T3, T4, T5>(
+  data: T,
+  op1: Operator<T, T1>,
+  op2: Operator<T1, T2>,
+  op3: Operator<T2, T3>,
+  op4: Operator<T3, T4>,
+  op5: Operator<T4, T5>,
+  mark: Mark<T5>
+): GoFishNode;
+export function chart<T, T1, T2, T3, T4, T5, T6>(
+  data: T,
+  op1: Operator<T, T1>,
+  op2: Operator<T1, T2>,
+  op3: Operator<T2, T3>,
+  op4: Operator<T3, T4>,
+  op5: Operator<T4, T5>,
+  op6: Operator<T5, T6>,
+  mark: Mark<T6>
+): GoFishNode;
+export function chart<T, T1, T2, T3, T4, T5, T6, T7>(
+  data: T,
+  op1: Operator<T, T1>,
+  op2: Operator<T1, T2>,
+  op3: Operator<T2, T3>,
+  op4: Operator<T3, T4>,
+  op5: Operator<T4, T5>,
+  op6: Operator<T5, T6>,
+  op7: Operator<T6, T7>,
+  mark: Mark<T7>
+): GoFishNode;
+export function chart<T, T1, T2, T3, T4, T5, T6, T7, T8>(
+  data: T,
+  op1: Operator<T, T1>,
+  op2: Operator<T1, T2>,
+  op3: Operator<T2, T3>,
+  op4: Operator<T3, T4>,
+  op5: Operator<T4, T5>,
+  op6: Operator<T5, T6>,
+  op7: Operator<T6, T7>,
+  op8: Operator<T7, T8>,
+  mark: Mark<T8>
+): GoFishNode;
+export function chart<T, T1, T2, T3, T4, T5, T6, T7, T8, T9>(
+  data: T,
+  op1: Operator<T, T1>,
+  op2: Operator<T1, T2>,
+  op3: Operator<T2, T3>,
+  op4: Operator<T3, T4>,
+  op5: Operator<T4, T5>,
+  op6: Operator<T5, T6>,
+  op7: Operator<T6, T7>,
+  op8: Operator<T7, T8>,
+  op9: Operator<T8, T9>,
+  mark: Mark<T9>
+): GoFishNode;
+export function chart<T, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>(
+  data: T,
+  op1: Operator<T, T1>,
+  op2: Operator<T1, T2>,
+  op3: Operator<T2, T3>,
+  op4: Operator<T3, T4>,
+  op5: Operator<T4, T5>,
+  op6: Operator<T5, T6>,
+  op7: Operator<T6, T7>,
+  op8: Operator<T7, T8>,
+  op9: Operator<T8, T9>,
+  op10: Operator<T9, T10>,
+  mark: Mark<T10>
+): GoFishNode;
 export function chart<T>(
-  data: T[],
-  ...operators: ((chart: _Chart<T>) => _Chart<T>)[]
-): _Chart<T> {
-  let c = new _Chart<T>(data);
+  data: T,
+  ...args: [...Operator<any, any>[], Mark<any>]
+): GoFishNode {
+  const mark = args[args.length - 1] as Mark<any>;
+  const operators = args.slice(0, -1) as Operator<any, any>[];
+  let elementFn = mark;
   for (const op of operators) {
-    c = op(c);
+    elementFn = op(elementFn);
   }
-  return c;
+  return elementFn(data);
 }
 
-export type ShapeCont<T> = (d: T | T[], key: number | string) => GoFishNode;
-export type DataCont = <T, U>(collection: List<T> | null | undefined) => List<U> | null | undefined;
-export type OperatorCont<T> = (collection: List<T> | null | undefined, cont: ShapeCont<T>) => GoFishNode;
+export function compose<T1, T2>(op1: Operator<T1, T2>): Operator<T1, T2>;
+export function compose<T1, T2, T3>(
+  op1: Operator<T1, T2>,
+  op2: Operator<T2, T3>
+): Operator<T1, T3>;
+export function compose<T1, T2, T3, T4>(
+  op1: Operator<T1, T2>,
+  op2: Operator<T2, T3>,
+  op3: Operator<T3, T4>
+): Operator<T1, T4>;
+export function compose<T1, T2, T3, T4, T5>(
+  op1: Operator<T1, T2>,
+  op2: Operator<T2, T3>,
+  op3: Operator<T3, T4>,
+  op4: Operator<T4, T5>
+): Operator<T1, T5>;
+export function compose<T1, T2, T3, T4, T5, T6>(
+  op1: Operator<T1, T2>,
+  op2: Operator<T2, T3>,
+  op3: Operator<T3, T4>,
+  op4: Operator<T4, T5>,
+  op5: Operator<T5, T6>
+): Operator<T1, T6>;
+export function compose<T1, T2, T3, T4, T5, T6, T7>(
+  op1: Operator<T1, T2>,
+  op2: Operator<T2, T3>,
+  op3: Operator<T3, T4>,
+  op4: Operator<T4, T5>,
+  op5: Operator<T5, T6>,
+  op6: Operator<T6, T7>
+): Operator<T1, T7>;
+export function compose<T1, T2, T3, T4, T5, T6, T7, T8>(
+  op1: Operator<T1, T2>,
+  op2: Operator<T2, T3>,
+  op3: Operator<T3, T4>,
+  op4: Operator<T4, T5>,
+  op5: Operator<T5, T6>,
+  op6: Operator<T6, T7>,
+  op7: Operator<T7, T8>
+): Operator<T1, T8>;
+export function compose<T1, T2, T3, T4, T5, T6, T7, T8, T9>(
+  op1: Operator<T1, T2>,
+  op2: Operator<T2, T3>,
+  op3: Operator<T3, T4>,
+  op4: Operator<T4, T5>,
+  op5: Operator<T5, T6>,
+  op6: Operator<T6, T7>,
+  op7: Operator<T7, T8>,
+  op8: Operator<T8, T9>
+): Operator<T1, T9>;
+export function compose<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>(
+  op1: Operator<T1, T2>,
+  op2: Operator<T2, T3>,
+  op3: Operator<T3, T4>,
+  op4: Operator<T4, T5>,
+  op5: Operator<T5, T6>,
+  op6: Operator<T6, T7>,
+  op7: Operator<T7, T8>,
+  op8: Operator<T8, T9>,
+  op9: Operator<T9, T10>
+): Operator<T1, T10>;
+export function compose<T>(...operators: Operator<any, any>[]) {
+  return (mark: Mark<T>) => {
+    for (const op of operators) {
+      mark = op(mark);
+    }
+    return mark;
+  };
+}
+
+// export type ShapeCont<T> = (d: T | T[], key: number | string) => GoFishNode;
+// export type DataCont = <T, U>(collection: List<T> | null | undefined) => List<U> | null | undefined;
+// export type OperatorCont<T> = (collection: List<T> | null | undefined, cont: ShapeCont<T>) => GoFishNode;
 
 export function group_by<T>(iteratee: ValueIteratee<T>) {
-  return (collection: List<T> | null | undefined): Record<string, T[]> => {
-    return groupBy(collection, iteratee);
+  return (d: T[]): Record<string, T[]> => {
+    return groupBy(d, iteratee);
   };
 }
 
-export function derive<T, U>(fn: (d: T) => U): OperatorCont<U> {
-  return (collection: T, cont: ShapeCont<U>) => {
-    return cont(fn(collection));
+export function derive<T, U>(fn: (d: T) => U): Operator<T, U> {
+  return (mark: Mark<U>) => {
+    return (d: T) => mark(fn(d));
   };
 }
 
-export function rect({
+export function createArrayOperator<T>(
+  fn: (children: GoFishNode[]) => GoFishNode
+): Operator<T[], { item: T; key: number | string }> {
+  return (mark: Mark<{ item: T; key: number | string }>) => {
+    return (d: T[]) => {
+      return fn(For(d, (item, key) => mark({ item, key })));
+    };
+  };
+}
+
+export function rect<T>({
   w,
   h,
   rs,
@@ -95,8 +298,18 @@ export function rect({
   ry?: number;
   fill: string;
   debug?: boolean;
-}): ShapeCont {
-  return <T>(d: T | T[], key: number | string) => {
+}): Mark<T | T[] | { item: T | T[]; key: number | string }> {
+  return (input: T | T[] | { item: T | T[]; key: number | string }) => {
+    let d: T | T[], key: number | string | undefined;
+    if (typeof input === "object" && input !== null && "item" in input) {
+      // @ts-ignore
+      d = input.item;
+      // @ts-ignore
+      key = input.key;
+    } else {
+      d = input;
+      key = undefined;
+    }
     if (debug) console.log("rect", key, d);
     return Rect({
       w: inferSize(w, d) ?? inferSize(ts, d),
@@ -111,11 +324,55 @@ export function rect({
         fill in (Array.isArray(d) ? d[0] : d)
           ? v(Array.isArray(d) ? d[0][fill as keyof T] : d[fill as keyof T])
           : fill,
-    }).name(key.toString());
+    }).name(key?.toString() ?? "");
   };
 }
 
-export function spread(
+export function spread<T>(options: {
+  dir: "x" | "y";
+  x?: number;
+  y?: number;
+  t?: number;
+  r?: number;
+  w?: number | string;
+  h?: number | string;
+  mode?: "edge" | "center";
+  spacing?: number;
+  sharedScale?: boolean;
+  alignment?: "start" | "middle" | "end";
+  debug?: boolean;
+  label?: boolean;
+}): Operator<
+  T[] | Record<string, T> | _.Collection<T> | _.Object<Dictionary<T>>,
+  { item: T; key: number | string }
+> {
+  // Default label to true if not specified
+  const opts = { ...options, label: options?.label ?? true };
+  return (mark: Mark<{ item: T; key: number | string }>) => {
+    return (d) => {
+      return Stack(
+        {
+          dir: opts.dir,
+          x: opts?.x ?? opts?.t,
+          y: opts?.y ?? opts?.r,
+          mode: opts?.mode ? connectXMode[opts?.mode] : undefined,
+          spacing: opts?.spacing ?? 8,
+          sharedScale: opts?.sharedScale,
+          alignment: opts?.alignment,
+          w: inferSize(opts?.w, d),
+          h: inferSize(opts?.h, d),
+        },
+        For(d, (item, key) => {
+          const node = mark({ item, key: `${k}-${key}` });
+          return opts.label ? node.setKey(key) : node;
+        })
+      );
+    };
+  };
+}
+
+export function spread_by<T>(
+  iteratee: ValueIteratee<T>,
   options: {
     dir: "x" | "y";
     x?: number;
@@ -131,28 +388,8 @@ export function spread(
     debug?: boolean;
     label?: boolean;
   }
-) {
-  // Default label to true if not specified
-  const opts = { ...options, label: options?.label ?? true };
-  return <T>(collection: List<T> | null | undefined, cont: ShapeCont): GoFishNode => {
-    return Stack(
-      {
-        dir: opts.dir,
-        x: opts?.x ?? opts?.t,
-        y: opts?.y ?? opts?.r,
-        mode: opts?.mode ? connectXMode[opts?.mode] : undefined,
-        spacing: opts?.spacing ?? 8,
-        sharedScale: opts?.sharedScale,
-        alignment: opts?.alignment,
-        w: inferSize(opts?.w, d),
-        h: inferSize(opts?.h, d),
-      },
-        For(collection ?? [], (item, key) => {
-            const node = cont(item, `${k}-${key}`);
-            return opts.label ? node.setKey(key) : node;
-          })
-    );
-  });
+): Operator<T[], { item: T[]; key: number | string }> {
+  return compose(derive(group_by(iteratee)), spread(options));
 }
 
 /* inference */
