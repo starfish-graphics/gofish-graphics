@@ -310,7 +310,7 @@ export const render = (
                       <text
                         transform="scale(1, -1)"
                         x={displayDims[0].center ?? 0}
-                        y={(displayDims[1].min ?? 0) + 5}
+                        y={-(displayDims[1].min ?? 0) + 5}
                         text-anchor="middle"
                         dominant-baseline="hanging"
                         font-size="10px"
