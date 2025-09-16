@@ -16,6 +16,7 @@ import {
   inferEmbedded,
   isValue,
   MaybeValue,
+  value,
   Value,
 } from "../data";
 import {
@@ -66,20 +67,32 @@ export const rect = ({
       type: "rect",
       color: fill,
       inferPosDomains: (childPosDomains: Size<Domain>[]) => {
-        return [
+        const result = [
           isValue(dims[0].min)
             ? continuous({
-                value: [getValue(dims[0].min)!, getValue(dims[0].min)!],
+                value: [
+                  getValue(dims[0].min)!,
+                  isValue(dims[0].size)
+                    ? getValue(dims[0].min)! + getValue(dims[0].size)!
+                    : getValue(dims[0].min)!,
+                ],
                 measure: getMeasure(dims[0].min),
               })
             : undefined,
           isValue(dims[1].min)
             ? continuous({
-                value: [getValue(dims[1].min)!, getValue(dims[1].min)!],
+                value: [
+                  getValue(dims[1].min)!,
+                  isValue(dims[1].size)
+                    ? getValue(dims[1].min)! + getValue(dims[1].size)!
+                    : getValue(dims[1].min)!,
+                ],
                 measure: getMeasure(dims[1].min),
               })
             : undefined,
         ];
+        // console.log("rect.inferPosDomains", result);
+        return result;
       },
       // inferDomains: () => {
       //   return [
@@ -115,10 +128,37 @@ export const rect = ({
         measurement,
         posScales
       ) => {
-        const w = computeSize(dims[0].size, scaleFactors?.[0]!, size[0]);
-        const h = computeSize(dims[1].size, scaleFactors?.[1]!, size[1]);
+        // console.log(dims[0], dims[1]);
         const x = computeAesthetic(dims[0].min, posScales?.[0]!, undefined);
         const y = computeAesthetic(dims[1].min, posScales?.[1]!, undefined);
+
+        let w: number;
+        if (isValue(dims[0].min) && isValue(dims[0].size)) {
+          // If posScales for x exists, scale min and min+size, then subtract
+          const min = x;
+          const max = computeAesthetic(
+            value(getValue(dims[0].min)! + getValue(dims[0].size)!),
+            posScales[0],
+            undefined
+          );
+          w = max - min;
+        } else {
+          w = computeSize(dims[0].size, scaleFactors?.[0]!, size[0]);
+        }
+
+        let h: number;
+        if (isValue(dims[1].min) && isValue(dims[1].size)) {
+          // If posScales for y exists, scale min and min+size, then subtract
+          const min = y;
+          const max = computeAesthetic(
+            value(getValue(dims[1].min)! + getValue(dims[1].size)!),
+            posScales[1],
+            undefined
+          );
+          h = max - min;
+        } else {
+          h = computeSize(dims[1].size, scaleFactors?.[1]!, size[1]);
+        }
 
         return {
           intrinsicDims: [

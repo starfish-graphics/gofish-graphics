@@ -45,7 +45,7 @@ export const layer = (
               d !== undefined && d.type === "continuous"
           );
 
-        return [
+        const result = [
           filteredXChildDomains.length > 0 &&
           canUnifyDomains(filteredXChildDomains)
             ? unifyContinuousDomains(filteredXChildDomains)
@@ -55,6 +55,12 @@ export const layer = (
             ? unifyContinuousDomains(filteredYChildDomains)
             : undefined,
         ];
+        // console.log("layer.inferPosDomains", {
+        //   filteredXChildDomains,
+        //   filteredYChildDomains,
+        //   result,
+        // });
+        return result;
       },
       inferSizeDomains: (shared, children) => {
         const childMeasures = children.map((child) => child.inferSizeDomains());

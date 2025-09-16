@@ -71,52 +71,55 @@ export const stack = withGoFish(
         shared: [sharedScale, sharedScale],
         inferPosDomains: (childPosDomains: Size<Domain>[]) => {
           // For the stacking dimension, unify domains like in layer
+          // console.log("stack.inferPosDomains", { childPosDomains });
           const filteredStackDirChildDomains = childPosDomains
             .map((childPosDomain) => childPosDomain[stackDir])
             .filter((d) => d !== undefined);
 
-          // const result = [undefined, undefined] as (Domain | undefined)[];
+          const filteredAlignDirChildDomains = childPosDomains
+            .map((childPosDomain) => childPosDomain[alignDir])
+            .filter((d) => d !== undefined);
 
-          // if (
-          //   filteredStackDirChildDomains.length > 0 &&
-          //   canUnifyDomains(filteredStackDirChildDomains)
-          // ) {
-          //   result[stackDir] = unifyContinuousDomains(
-          //     filteredStackDirChildDomains
-          //   );
-          // } else if (isValue(dims[stackDir].min)) {
-          //   result[stackDir] = continuous({
-          //     value: [
-          //       getValue(dims[stackDir].min)!,
-          //       getValue(dims[stackDir].min)!,
-          //     ],
-          //     measure: getMeasure(dims[stackDir].min),
-          //   });
-          // }
+          const result = [undefined, undefined] as (
+            | ContinuousDomain
+            | undefined
+          )[];
 
-          // return result;
-          return [
-            stackDir === 0 &&
+          if (
             filteredStackDirChildDomains.length > 0 &&
             canUnifyDomains(filteredStackDirChildDomains)
-              ? unifyContinuousDomains(filteredStackDirChildDomains)
-              : isValue(dims[0].min)
-                ? continuous({
-                    value: [getValue(dims[0].min)!, getValue(dims[0].min)!],
-                    measure: getMeasure(dims[0].min),
-                  })
-                : undefined,
-            stackDir === 1 &&
-            filteredStackDirChildDomains.length > 0 &&
-            canUnifyDomains(filteredStackDirChildDomains)
-              ? unifyContinuousDomains(filteredStackDirChildDomains)
-              : isValue(dims[1].min)
-                ? continuous({
-                    value: [getValue(dims[1].min)!, getValue(dims[1].min)!],
-                    measure: getMeasure(dims[1].min),
-                  })
-                : undefined,
-          ];
+          ) {
+            result[stackDir] = unifyContinuousDomains(
+              filteredStackDirChildDomains
+            );
+          } else if (isValue(dims[stackDir].min)) {
+            result[stackDir] = continuous({
+              value: [
+                getValue(dims[stackDir].min)!,
+                getValue(dims[stackDir].min)!,
+              ],
+              measure: getMeasure(dims[stackDir].min),
+            });
+          }
+
+          if (
+            filteredAlignDirChildDomains.length > 0 &&
+            canUnifyDomains(filteredAlignDirChildDomains)
+          ) {
+            result[alignDir] = unifyContinuousDomains(
+              filteredAlignDirChildDomains
+            );
+          } else if (isValue(dims[alignDir].min)) {
+            result[alignDir] = continuous({
+              value: [
+                getValue(dims[alignDir].min)!,
+                getValue(dims[alignDir].min)!,
+              ],
+              measure: getMeasure(dims[alignDir].min),
+            });
+          }
+
+          return result;
         },
         /* TODO:
       Nodes are either:

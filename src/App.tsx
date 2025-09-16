@@ -311,6 +311,12 @@ const defs = [
 const App: Component = () => {
   return (
     <div style={{ "margin-left": "20px" }}>
+      <GoFishSolid w={250} h={300} defs={defs}>
+        {testSingletonAreaChart()}
+      </GoFishSolid>
+      <GoFishSolid w={500} h={300} defs={defs} axes={true}>
+        {testBoxWhiskerPlot()}
+      </GoFishSolid>
       <GoFishSolid w={320} h={400} defs={defs} axes={true}>
         {v2ChartBar()}
       </GoFishSolid>
@@ -447,7 +453,7 @@ const App: Component = () => {
       <GoFishSolid w={500} h={300} defs={defs}>
         {testViolinPlot()}
       </GoFishSolid>
-      <GoFishSolid w={500} h={300} defs={defs}>
+      <GoFishSolid w={500} h={300} defs={defs} axes={true}>
         {testBoxWhiskerPlot()}
       </GoFishSolid>
       <GoFishSolid w={500} h={500} defs={defs}>
