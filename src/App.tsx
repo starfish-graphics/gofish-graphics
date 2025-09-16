@@ -108,6 +108,7 @@ import {
   v2ChartPie,
   v2ChartScatterPie,
   v2ChartMosaic,
+  v2ChartBarHorizontal,
   // v2ChartWaffle,
 } from "./tests/chartAPITestV2";
 import {
@@ -310,6 +311,12 @@ const defs = [
 const App: Component = () => {
   return (
     <div style={{ "margin-left": "20px" }}>
+      <GoFishSolid w={320} h={400} defs={defs} axes={true}>
+        {v2ChartBar()}
+      </GoFishSolid>
+      <GoFishSolid w={320} h={400} defs={defs} axes={true}>
+        {v2ChartBarHorizontal()}
+      </GoFishSolid>
       <GoFishSolid w={350} h={300} defs={defs}>
         {testMosaic()}
       </GoFishSolid>

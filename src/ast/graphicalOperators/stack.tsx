@@ -215,6 +215,10 @@ export const stack = withGoFish(
 
           // console.log(size, scaleFactors, posScales);
           const scaleContext = getScaleContext();
+          scaleContext.x = {
+            domain: [0, size[0] / scaleFactors[0]],
+            scaleFactor: scaleFactors[0],
+          };
           scaleContext.y = {
             domain: [0, size[1] / scaleFactors[1]],
             scaleFactor: scaleFactors[1],

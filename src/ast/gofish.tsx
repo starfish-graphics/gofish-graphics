@@ -4,6 +4,7 @@ import { debugNodeTree, findPathToRoot, type GoFishNode } from "./_node";
 import { ScopeContext } from "./scopeContext";
 import { computePosScale } from "./domain";
 import { tickIncrement, ticks, nice } from "d3-array";
+import { isConstant } from "../util/monotonic";
 
 /* scope context */
 let scopeContext: ScopeContext | null = null;
@@ -74,7 +75,7 @@ export const gofish = (
     child.resolveNames();
     child.resolveKeys();
     const [posDomainX, posDomainY] = child.inferPosDomains();
-    child.inferSizeDomains();
+    const sizeDomains = child.inferSizeDomains();
     child.layout(
       [w, h],
       [undefined, undefined],
@@ -93,7 +94,15 @@ export const gofish = (
     solidRender(
       () =>
         render(
-          { width: w, height: h, defs, axes, scaleContext, keyContext },
+          {
+            width: w,
+            height: h,
+            defs,
+            axes,
+            scaleContext,
+            keyContext,
+            sizeDomains,
+          },
           child
         ),
       container
@@ -122,6 +131,7 @@ export const render = (
     axes,
     scaleContext,
     keyContext,
+    sizeDomains,
   }: {
     width: number;
     height: number;
@@ -130,24 +140,32 @@ export const render = (
     axes?: boolean;
     scaleContext: ScaleContext;
     keyContext: KeyContext;
+    sizeDomains?: [any, any];
   },
   child: GoFishNode
 ): JSX.Element => {
   let yTicks: number[] = [];
+  let xTicks: number[] = [];
   if (axes) {
-    // console.log(keyContext);
-    const [min, max] = nice(
+    const [xMin, xMax] = nice(
+      scaleContext.x.domain[0],
+      scaleContext.x.domain[1],
+      10
+    );
+    xTicks = ticks(xMin, xMax, 10);
+
+    const [yMin, yMax] = nice(
       scaleContext.y.domain[0],
       scaleContext.y.domain[1],
       10
     );
-    yTicks = ticks(min, max, 10);
+    yTicks = ticks(yMin, yMax, 10);
   }
 
   return (
     <svg
       width={width + PADDING * 6 + (axes ? 100 : 0)}
-      height={height + PADDING * 6}
+      height={height + PADDING * 6 + (axes ? 100 : 0)}
       xmlns="http://www.w3.org/2000/svg"
     >
       <Show when={defs}>
@@ -171,98 +189,140 @@ export const render = (
               stroke-width="1px"
             /> */}
             {/* y axis (continuous for now) */}
-            <g>
-              <line
-                x1={-PADDING}
-                y1={yTicks[0] * scaleContext.y.scaleFactor - 0.5}
-                x2={-PADDING}
-                y2={
-                  yTicks[yTicks.length - 1] * scaleContext.y.scaleFactor + 0.5
-                }
-                stroke="gray"
-                stroke-width="1px"
-              />
-              <For each={yTicks}>
-                {(tick) => (
-                  <>
-                    <text
-                      transform="scale(1, -1)"
-                      x={-PADDING * 1.75}
-                      y={-tick * scaleContext.y.scaleFactor}
-                      text-anchor="end"
-                      dominant-baseline="middle"
-                      font-size="10px"
-                      fill="gray"
-                    >
-                      {tick}
-                    </text>
-                    <line
-                      x1={-PADDING * 1.5}
-                      y1={tick * scaleContext.y.scaleFactor}
-                      x2={-PADDING}
-                      y2={tick * scaleContext.y.scaleFactor}
-                      stroke="gray"
-                    />
-                  </>
-                )}
-              </For>
-            </g>
+            <Show when={sizeDomains && !isConstant(sizeDomains[1])}>
+              <g>
+                <line
+                  x1={-PADDING}
+                  y1={yTicks[0] * scaleContext.y.scaleFactor - 0.5}
+                  x2={-PADDING}
+                  y2={
+                    yTicks[yTicks.length - 1] * scaleContext.y.scaleFactor + 0.5
+                  }
+                  stroke="gray"
+                  stroke-width="1px"
+                />
+                <For each={yTicks}>
+                  {(tick) => (
+                    <>
+                      <text
+                        transform="scale(1, -1)"
+                        x={-PADDING * 1.75}
+                        y={-tick * scaleContext.y.scaleFactor}
+                        text-anchor="end"
+                        dominant-baseline="middle"
+                        font-size="10px"
+                        fill="gray"
+                      >
+                        {tick}
+                      </text>
+                      <line
+                        x1={-PADDING * 1.5}
+                        y1={tick * scaleContext.y.scaleFactor}
+                        x2={-PADDING}
+                        y2={tick * scaleContext.y.scaleFactor}
+                        stroke="gray"
+                      />
+                    </>
+                  )}
+                </For>
+              </g>
+            </Show>
+            <Show when={sizeDomains && !isConstant(sizeDomains[0])}>
+              <g>
+                <line
+                  x1={xTicks[0] * scaleContext.x.scaleFactor - 0.5}
+                  y1={-PADDING}
+                  x2={
+                    xTicks[xTicks.length - 1] * scaleContext.x.scaleFactor + 0.5
+                  }
+                  y2={-PADDING}
+                  stroke="gray"
+                  stroke-width="1px"
+                />
+                <For each={xTicks}>
+                  {(tick) => (
+                    <>
+                      <text
+                        transform="scale(1, -1)"
+                        x={tick * scaleContext.x.scaleFactor}
+                        y={PADDING * 1.75}
+                        text-anchor="middle"
+                        dominant-baseline="hanging"
+                        font-size="10px"
+                        fill="gray"
+                      >
+                        {tick}
+                      </text>
+                      <line
+                        x1={tick * scaleContext.x.scaleFactor}
+                        y1={-PADDING}
+                        x2={tick * scaleContext.x.scaleFactor}
+                        y2={-PADDING * 1.5}
+                        stroke="gray"
+                      />
+                    </>
+                  )}
+                </For>
+              </g>
+            </Show>
             {/* x axis (discrete for now) */}
-            <g>
-              <For each={Object.entries(keyContext)}>
-                {([key, value]) => {
-                  const pathToRoot = findPathToRoot(value);
-                  const accumulatedTransform = pathToRoot.reduce(
-                    (acc, node) => {
-                      return {
-                        x: acc.x + (node.transform?.translate?.[0] ?? 0),
-                        y: acc.y + (node.transform?.translate?.[1] ?? 0),
-                      };
-                    },
-                    { x: 0, y: 0 }
-                  );
-                  const displayDims = [
-                    {
-                      min:
-                        (accumulatedTransform.x ?? 0) +
-                        (value.intrinsicDims?.[0]?.min ?? 0),
-                      size: value.intrinsicDims?.[0]?.size ?? 0,
-                      center:
-                        (accumulatedTransform.x ?? 0) +
-                        (value.intrinsicDims?.[0]?.center ?? 0),
-                      max:
-                        (accumulatedTransform.x ?? 0) +
-                        (value.intrinsicDims?.[0]?.max ?? 0),
-                    },
-                    {
-                      min:
-                        (accumulatedTransform.y ?? 0) +
-                        (value.intrinsicDims?.[1]?.min ?? 0),
-                      size: value.intrinsicDims?.[1]?.size ?? 0,
-                      center:
-                        (accumulatedTransform.y ?? 0) +
-                        (value.intrinsicDims?.[1]?.center ?? 0),
-                      max:
-                        (accumulatedTransform.y ?? 0) +
-                        (value.intrinsicDims?.[1]?.max ?? 0),
-                    },
-                  ];
-                  return (
-                    <text
-                      transform="scale(1, -1)"
-                      x={displayDims[0].center ?? 0}
-                      y={(displayDims[1].min ?? 0) + 5}
-                      text-anchor="middle"
-                      dominant-baseline="hanging"
-                      font-size="10px"
-                      fill="gray"
-                    >
-                      {key}
-                    </text>
-                  );
-                }}
-              </For>
-            </g>
+            <Show when={sizeDomains && isConstant(sizeDomains[0])}>
+              <g>
+                <For each={Object.entries(keyContext)}>
+                  {([key, value]) => {
+                    const pathToRoot = findPathToRoot(value);
+                    const accumulatedTransform = pathToRoot.reduce(
+                      (acc, node) => {
+                        return {
+                          x: acc.x + (node.transform?.translate?.[0] ?? 0),
+                          y: acc.y + (node.transform?.translate?.[1] ?? 0),
+                        };
+                      },
+                      { x: 0, y: 0 }
+                    );
+                    const displayDims = [
+                      {
+                        min:
+                          (accumulatedTransform.x ?? 0) +
+                          (value.intrinsicDims?.[0]?.min ?? 0),
+                        size: value.intrinsicDims?.[0]?.size ?? 0,
+                        center:
+                          (accumulatedTransform.x ?? 0) +
+                          (value.intrinsicDims?.[0]?.center ?? 0),
+                        max:
+                          (accumulatedTransform.x ?? 0) +
+                          (value.intrinsicDims?.[0]?.max ?? 0),
+                      },
+                      {
+                        min:
+                          (accumulatedTransform.y ?? 0) +
+                          (value.intrinsicDims?.[1]?.min ?? 0),
+                        size: value.intrinsicDims?.[1]?.size ?? 0,
+                        center:
+                          (accumulatedTransform.y ?? 0) +
+                          (value.intrinsicDims?.[1]?.center ?? 0),
+                        max:
+                          (accumulatedTransform.y ?? 0) +
+                          (value.intrinsicDims?.[1]?.max ?? 0),
+                      },
+                    ];
+                    return (
+                      <text
+                        transform="scale(1, -1)"
+                        x={displayDims[0].center ?? 0}
+                        y={(displayDims[1].min ?? 0) + 5}
+                        text-anchor="middle"
+                        dominant-baseline="hanging"
+                        font-size="10px"
+                        fill="gray"
+                      >
+                        {key}
+                      </text>
+                    );
+                  }}
+                </For>
+              </g>
+            </Show>
             {/* legend (discrete color for now) */}
             <g>
               <For each={Array.from(scaleContext.unit.color.entries())}>

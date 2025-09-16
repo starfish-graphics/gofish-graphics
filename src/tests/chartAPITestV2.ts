@@ -19,7 +19,14 @@ export const v2ChartRectSpread = () =>
     .TEST_render();
 
 export const v2ChartBar = () =>
-  rect(catchData, { fill: "lake", h: "count" }).spreadX("lake").TEST_render();
+  rect(catchData, { fill: "lake", h: "count" })
+    .spreadX("lake", { alignment: "middle" })
+    .TEST_render();
+
+export const v2ChartBarHorizontal = () =>
+  rect(catchData, { fill: "lake", w: "count" })
+    .spreadY("lake", { alignment: "start" })
+    .TEST_render();
 
 export const v2ChartScatter = () =>
   rect(catchLocationsArray, {
