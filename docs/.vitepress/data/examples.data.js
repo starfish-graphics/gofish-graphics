@@ -116,6 +116,11 @@ export default {
         description: "A box and whiskers plot",
       },
       {
+        id: "icicle-chart",
+        title: "Icicle Chart",
+        description: "An icicle chart. Useful for tree-like data.",
+      },
+      {
         id: "sankey-tree",
         title: "Sankey Tree",
         description: "A sankey tree diagram",
@@ -150,6 +155,11 @@ export default {
       {
         id: "nested-waffle-chart",
         title: "Nested Waffle Chart",
+      },
+      {
+        id: "layered-area-chart",
+        title: "Layered Area Chart",
+        description: "A layered area chart",
       },
       {
         id: "HIDDEN-bar-chart-get-started",
