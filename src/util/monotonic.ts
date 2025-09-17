@@ -47,6 +47,10 @@ export const isConstant = (x: Monotonic): boolean => {
   return isLinear(x) && x.slope === 0;
 };
 
+export const isZero = (x: Monotonic): boolean => {
+  return isLinear(x) && x.slope === 0 && x.intercept === 0;
+};
+
 export const unknown = (run: (x: number) => number): Unknown => {
   return {
     kind: "unknown",
@@ -97,7 +101,10 @@ export const adds = (fn: Monotonic, scalar: number): Monotonic => {
 };
 
 export const max = (...args: Monotonic[]): Monotonic => {
-  if (
+  args = args.filter((arg) => !isZero(arg));
+  if (args.length === 0) {
+    return linear(0, 0);
+  } else if (
     args.every(isLinear) &&
     args.every((arg) => arg.intercept === args[0].intercept)
   ) {
