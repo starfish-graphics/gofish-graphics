@@ -39,6 +39,9 @@ importers:
       '@storybook/addon-docs':
         specifier: ^9.1.6
         version: 9.1.6(@types/react@19.1.13)(storybook@9.1.6(@testing-library/dom@10.4.1)(prettier@3.6.2)(vite@6.0.0))
+      '@storybook/html':
+        specifier: ^9.1.6
+        version: 9.1.6(storybook@9.1.6(@testing-library/dom@10.4.1)(prettier@3.6.2)(vite@6.0.0))
       '@storybook/react':
         specifier: ^9.1.6
         version: 9.1.6(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(storybook@9.1.6(@testing-library/dom@10.4.1)(prettier@3.6.2)(vite@6.0.0))(typescript@5.7.2)
@@ -456,6 +459,12 @@ packages:
 
   '@storybook/global@5.0.0':
     resolution: {integrity: sha512-FcOqPAXACP0I3oJ/ws6/rrPT9WGhu915Cg8D02a9YxLo0DE9zI+a9A5gRGvmQ09fiWPukqI8ZAEoQEdWUKMQdQ==}
+
+  '@storybook/html@9.1.6':
+    resolution: {integrity: sha512-wU3V27hM4y7FJ/eE9bU0uXhMwjsvgWXINGDND3vCcTkj0JSZe/twRPdE3hdd/pqyCI3I2qOrVp9OwitSgGb7gg==}
+    engines: {node: '>=20.0.0'}
+    peerDependencies:
+      storybook: ^9.1.6
 
   '@storybook/icons@1.6.0':
     resolution: {integrity: sha512-hcFZIjW8yQz8O8//2WTIXylm5Xsgc+lW9ISLgUk1xGmptIJQRdlhVIXCpSyLrQaaRiyhQRaVg7l3BD9S216BHw==}
@@ -1471,6 +1480,12 @@ snapshots:
       unplugin: 1.16.1
 
   '@storybook/global@5.0.0': {}
+
+  '@storybook/html@9.1.6(storybook@9.1.6(@testing-library/dom@10.4.1)(prettier@3.6.2)(vite@6.0.0))':
+    dependencies:
+      '@storybook/global': 5.0.0
+      storybook: 9.1.6(@testing-library/dom@10.4.1)(prettier@3.6.2)(vite@6.0.0)
+      ts-dedent: 2.2.0
 
   '@storybook/icons@1.6.0(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
     dependencies:

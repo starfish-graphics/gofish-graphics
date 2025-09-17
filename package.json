@@ -36,6 +36,7 @@
   },
   "devDependencies": {
     "@storybook/addon-docs": "^9.1.6",
+    "@storybook/html": "^9.1.6",
     "@storybook/react": "^9.1.6",
     "@types/chroma-js": "^3.1.1",
     "@types/lodash": "^4.17.16",
