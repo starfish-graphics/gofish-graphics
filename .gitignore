@@ -11,3 +11,5 @@ yarn-error.log*
 pnpm-debug.log*
 .DS_Store
 *.tsbuildinfo
+*storybook.log
+storybook-static
