@@ -23,6 +23,23 @@ export const Ribbon: StoryObj<Args> = {
   args: { w: 500, h: 500 },
   render: (args: Args) => {
     const container = initializeContainer();
+    return rect(catchData, { w: 24, fill: "species", h: "count" })
+      .stackY("species")
+      .transform((d) => orderBy(d, "count", "asc"))
+      .spreadX("lake", { spacing: 40 })
+      .connectX("species", { over: "lake", opacity: 0.7 })
+      .render(container, {
+        w: args.w,
+        h: args.h,
+        axes: true,
+      });
+  },
+};
+
+export const PolarRibbon: StoryObj<Args> = {
+  args: { w: 500, h: 500 },
+  render: (args: Args) => {
+    const container = initializeContainer();
     return rect(catchData, {
       ts: 0.1,
       fill: "species",

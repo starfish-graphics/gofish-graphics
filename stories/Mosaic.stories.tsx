@@ -38,6 +38,7 @@ export const NestedMosaic: StoryObj<Args> = {
 export const Mosaic: StoryObj<Args> = {
 	args: { w: 500, h: 400 },
 	render: (args: Args) => {
+
 		const container = initializeContainer();
 		rect(catchData, { fill: "species", h: "count" })
 			.stackY("species", { w: "count" })
@@ -46,7 +47,7 @@ export const Mosaic: StoryObj<Args> = {
 			.render(container, {
 				w: args.w,
 				h: args.h,
-				axes: true,
+				// axes: true,
 			});
 		return container;
 	},
