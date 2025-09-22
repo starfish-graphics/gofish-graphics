@@ -49,6 +49,7 @@ export const rect = ({
   strokeWidth = 0,
   rx = 0,
   ry = 0,
+  filter,
   ...fancyDims
 }: {
   key?: string;
@@ -58,6 +59,7 @@ export const rect = ({
   strokeWidth?: number;
   rx?: number;
   ry?: number;
+  filter?: string
 } & FancyDims<MaybeValue<number>>) => {
   const dims = elaborateDims(fancyDims).map(inferEmbedded);
   return new GoFishNode(
@@ -249,6 +251,7 @@ export const rect = ({
               fill={fill}
               stroke={stroke ?? fill ?? "black"}
               stroke-width={strokeWidth ?? 0}
+              filter={filter}
             />
           );
         }
@@ -288,6 +291,7 @@ export const rect = ({
                 fill={fill}
                 stroke={stroke ?? fill ?? "black"}
                 stroke-width={strokeWidth ?? 0}
+                filter={filter}
               />
             );
           }
@@ -317,6 +321,7 @@ export const rect = ({
               stroke={fill}
               stroke-width={thickness + 0.5}
               fill="none"
+              filter={filter}
             />
           );
         }
@@ -350,6 +355,7 @@ export const rect = ({
             fill={fill}
             stroke={stroke ?? fill ?? "black"}
             stroke-width={strokeWidth ?? 0}
+            filter={filter}
           />
         );
       },

@@ -61,6 +61,7 @@ export class _Chart<T> {
     ry,
     fill,
     debug,
+    filter,
   }: {
     w?: number | string;
     h?: number | string;
@@ -70,12 +71,14 @@ export class _Chart<T> {
     ry?: number;
     fill: string;
     debug?: boolean;
+    filter?: string;
   }) {
     return new _Chart(this._data, (d: T[], key: number | string) => {
       if (debug) console.log("rect", key, d);
       return Rect({
         w: inferSize(w, d) ?? inferSize(ts, d),
         h: inferSize(h, d) ?? inferSize(rs, d),
+        filter,
         // rs: inferSize(rs, d),
         // ts: inferSize(ts, d),
         rx,
@@ -407,57 +410,31 @@ export class _Chart<T> {
 
 export const Chart = <T>(data: T[]) => new _Chart(data);
 
+type ChartRect = {
+  w?: number | string;
+  h?: number | string;
+  ts?: number | string;
+  rs?: number | string;
+  rx?: number;
+  ry?: number;
+  fill: string;
+  debug?: boolean;
+  filter?: string;
+};
+
 export const rect = <T>(
-  dataOrOptions?:
-    | T[]
-    | {
-        w?: number | string;
-        h?: number | string;
-        ts?: number | string;
-        rs?: number | string;
-        rx?: number;
-        ry?: number;
-        fill: string;
-        debug?: boolean;
-      },
-  optionsArg?: {
-    w?: number | string;
-    h?: number | string;
-    ts?: number | string;
-    rs?: number | string;
-    rx?: number;
-    ry?: number;
-    fill: string;
-    debug?: boolean;
-  }
+  dataOrOptions?: T[] | ChartRect,
+  optionsArg?: ChartRect
 ) => {
   let data: T[];
-  let options: {
-    w?: number | string;
-    h?: number | string;
-    ts?: number | string;
-    rs?: number | string;
-    rx?: number;
-    ry?: number;
-    fill: string;
-    debug?: boolean;
-  };
+  let options: ChartRect;
 
   if (Array.isArray(dataOrOptions)) {
     data = dataOrOptions;
     options = optionsArg!;
   } else {
     data = [];
-    options = dataOrOptions as {
-      w?: number | string;
-      h?: number | string;
-      ts?: number | string;
-      rs?: number | string;
-      rx?: number;
-      ry?: number;
-      fill: string;
-      debug?: boolean;
-    };
+    options = dataOrOptions as ChartRect;
   }
 
   return Chart(data).rect(options);

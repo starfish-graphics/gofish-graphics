@@ -3,6 +3,7 @@ import { rect } from "../src/ast/marks/chart";
 import { initializeContainer } from "./helper";
 import { catchData } from "../src/data/catch";
 import { orderBy } from "../src/lib";
+import { filter_defs } from "../src/ast/texture/temp_filter";
 
 const meta: Meta = {
   title: "Charts/BarChart",
@@ -24,12 +25,17 @@ export const Vertical: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    return rect(catchData, { fill: "lake", h: "count" })
+    return rect(catchData, {
+      fill: "lake",
+      h: "count",
+      filter: "url(#filter-drop-shadow)",
+    })
       .spreadX("lake")
       .render(container, {
         w: args.w,
         h: args.h,
         axes: true,
+        defs: filter_defs,
       });
   },
 };
