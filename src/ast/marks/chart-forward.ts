@@ -20,6 +20,23 @@ import { MaybeValue } from "../data";
 import { Dictionary, List, ValueIteratee } from "lodash";
 import { CatchData, catchData as seafood } from "../../data/catch";
 
+/* inference */
+const inferSize = <T>(
+  accessor: string | number | undefined,
+  d: T | T[]
+): MaybeValue<number> | undefined => {
+  return typeof accessor === "number"
+    ? accessor
+    : accessor !== undefined
+      ? v(sumBy(d, accessor))
+      : undefined;
+};
+
+const connectXMode = {
+  edge: "edge-to-edge",
+  center: "center-to-center",
+};
+
 /* Goal syntax:
 
 chart(seafood,
@@ -49,14 +66,14 @@ chart(seafood, spread_by("lake", {dir: "x"}))
 output: new data + 
 */
 
-chart(
+export const chartForwardBar = chart(
   seafood,
   spread_by("lake", { dir: "x" }),
   rect({ h: "count", fill: "species" })
 );
 
 export type Operator<T, U> = (_: Mark<U>) => Mark<T>;
-export type Mark<T> = (d: T) => GoFishNode;
+export type Mark<T> = (d: T, key?: string | number) => GoFishNode;
 
 // export function chart<T>(
 //   data: T[],
@@ -266,7 +283,7 @@ export function group_by<T>(iteratee: ValueIteratee<T>) {
 
 export function derive<T, U>(fn: (d: T) => U): Operator<T, U> {
   return (mark: Mark<U>) => {
-    return (d: T) => mark(fn(d));
+    return (d: T, key?: string | number) => mark(fn(d), key);
   };
 }
 
@@ -274,8 +291,12 @@ export function createArrayOperator<T>(
   fn: (children: GoFishNode[]) => GoFishNode
 ): Operator<T[], { item: T; key: number | string }> {
   return (mark: Mark<{ item: T; key: number | string }>) => {
-    return (d: T[]) => {
-      return fn(For(d, (item, key) => mark({ item, key })));
+    return (d: T[], key?: string | number) => {
+      return fn(
+        For(d, (item, k) =>
+          mark({ item, key: key != undefined ? `${key}-${k}` : k })
+        )
+      );
     };
   };
 }
@@ -349,7 +370,10 @@ export function spread<T>(options: {
   // Default label to true if not specified
   const opts = { ...options, label: options?.label ?? true };
   return (mark: Mark<{ item: T; key: number | string }>) => {
-    return (d) => {
+    return (
+      d: T[] | Record<string, T> | _.Collection<T> | _.Object<Dictionary<T>>,
+      key?: string | number
+    ) => {
       return Stack(
         {
           dir: opts.dir,
@@ -362,9 +386,13 @@ export function spread<T>(options: {
           w: inferSize(opts?.w, d),
           h: inferSize(opts?.h, d),
         },
-        For(d, (item, key) => {
-          const node = mark({ item, key: `${k}-${key}` });
-          return opts.label ? node.setKey(key) : node;
+        For(d, (item, k) => {
+          key = key != undefined ? `${key}-${k}` : k;
+          const node = mark({
+            item,
+            key,
+          });
+          return opts.label ? node.setKey(key ?? "") : node;
         })
       );
     };
@@ -391,23 +419,6 @@ export function spread_by<T>(
 ): Operator<T[], { item: T[]; key: number | string }> {
   return compose(derive(group_by(iteratee)), spread(options));
 }
-
-/* inference */
-const inferSize = <T>(
-  accessor: string | number | undefined,
-  d: T | T[]
-): MaybeValue<number> | undefined => {
-  return typeof accessor === "number"
-    ? accessor
-    : accessor !== undefined
-      ? v(sumBy(d, accessor))
-      : undefined;
-};
-
-const connectXMode = {
-  edge: "edge-to-edge",
-  center: "center-to-center",
-};
 
 export class _Chart<T> {
   private _data: T[];

@@ -115,6 +115,12 @@ export const v2ChartPolarRibbon = () =>
     .coord(polar())
     .TEST_render();
 
+export const v2ChartNestedMosaic = () =>
+  rect(titanic, { h: "count", fill: "class" })
+    .stackY("survived", { w: "count" })
+    .spreadX("sex", { h: "count" })
+    .spreadY("class", { spacing: 20 });
+
 // ALMOST A BUMP CHART!!!!!
 export const v2ChartRibbonMessAround = () =>
   rect(catchData, { w: 20, fill: "species", h: 20 })

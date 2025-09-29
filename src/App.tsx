@@ -121,6 +121,7 @@ import {
   tailwindColorComparison,
   tailwindColorComparisonCompact,
 } from "./tests/tailwindColors";
+import { chartForwardBar } from "./ast/marks/chart-forward";
 
 const ditheringTestWidth = 800;
 
@@ -311,6 +312,9 @@ const defs = [
 const App: Component = () => {
   return (
     <div style={{ "margin-left": "20px" }}>
+      {/* <GoFishSolid w={250} h={300} defs={defs}>
+        {chartForwardBar}
+      </GoFishSolid> */}
       <GoFishSolid w={250} h={300} defs={defs}>
         {testSingletonAreaChart()}
       </GoFishSolid>
