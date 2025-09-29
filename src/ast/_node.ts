@@ -29,6 +29,7 @@ import { getValue, isValue, MaybeValue } from "./data";
 import { color6 } from "../color";
 import * as Monotonic from "../util/monotonic";
 import { findTargetMonotonic } from "../util";
+import { UnderlyingSpace } from "./underlyingSpace";
 
 export type ScaleFactorFunction = Monotonic.Monotonic;
 
@@ -87,6 +88,10 @@ export type Render = (
   children: JSX.Element[]
 ) => JSX.Element;
 
+export type ResolveUnderlyingSpace = (
+  childSpaces: UnderlyingSpace[]
+) => UnderlyingSpace;
+
 export class GoFishNode {
   public type: string;
   public key?: string;
@@ -97,6 +102,7 @@ export class GoFishNode {
     childPosDomains: Size<ContinuousDomain>[]
   ) => FancySize<ContinuousDomain | undefined>;
   private _inferSizeDomains: InferSizeDomains;
+  private _resolveUnderlyingSpace: ResolveUnderlyingSpace;
   private _layout: Layout;
   private _render: Render;
   public children: GoFishAST[];
@@ -115,6 +121,7 @@ export class GoFishNode {
       type,
       // inferDomains,
       inferSizeDomains,
+      resolveUnderlyingSpace,
       layout,
       render,
       inferPosDomains,
@@ -127,6 +134,7 @@ export class GoFishNode {
       // inferDomains: (childDomains: Size<Domain>[]) => FancySize<Domain | undefined>;
       /* TODO: I'm not sure whether scale inference and sizeThatFits should be separate or the same pass*/
       inferSizeDomains: InferSizeDomains;
+      resolveUnderlyingSpace: ResolveUnderlyingSpace;
       layout: Layout;
       render: Render;
       inferPosDomains: (
@@ -139,6 +147,7 @@ export class GoFishNode {
   ) {
     // this.inferDomains = inferDomains;
     this._inferSizeDomains = inferSizeDomains;
+    this._resolveUnderlyingSpace = resolveUnderlyingSpace;
     this._layout = layout;
     this._render = render;
     this._inferPosDomains = inferPosDomains;
@@ -189,6 +198,13 @@ export class GoFishNode {
       child.resolveKeys();
     });
   }
+
+  public resolveUnderlyingSpace(): UnderlyingSpace {
+    return this._resolveUnderlyingSpace(
+      this.children.map((child) => child.resolveUnderlyingSpace())
+    );
+  }
+
   public inferPosDomains(): Size<ContinuousDomain | undefined> {
     const posDomains = elaborateSize(
       this._inferPosDomains(

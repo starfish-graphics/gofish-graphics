@@ -19,10 +19,14 @@ import { getScopeContext } from "./gofish";
 import { GoFishNode } from "./_node";
 import { GoFishAST } from "./_ast";
 import { MaybeValue } from "./data";
+import { ORDINAL, UnderlyingSpace } from "./underlyingSpace";
 
 /* TODO: resolveMeasures and layout feel pretty similar... */
 
-export type Placeable = { dims: Dimensions; place: (pos: FancyPosition) => void };
+export type Placeable = {
+  dims: Dimensions;
+  place: (pos: FancyPosition) => void;
+};
 
 export type Measure = (
   shared: Size<boolean>,
@@ -35,7 +39,9 @@ export type Layout = (
   shared: Size<boolean>,
   size: Size,
   scaleFactors: Size<number | undefined>,
-  children: { layout: (size: Size, scaleFactors: Size<number | undefined>) => Placeable }[],
+  children: {
+    layout: (size: Size, scaleFactors: Size<number | undefined>) => Placeable;
+  }[],
   measurement: (scaleFactors: Size) => Size
 ) => { intrinsicDims: FancyDims; transform: FancyTransform };
 
@@ -87,6 +93,10 @@ export class GoFishRef {
     return this.selectedNode?.inferPosDomains() ?? [undefined, undefined];
   }
 
+  public resolveUnderlyingSpace(): UnderlyingSpace {
+    return this.selectedNode?.resolveUnderlyingSpace() ?? ORDINAL;
+  }
+
   /* TODO: I'm not really sure what this should do */
   public measure(size: Size): (scaleFactors: Size) => Size {
     const measurement = (scaleFactors: Size) =>
@@ -120,8 +130,10 @@ export class GoFishRef {
     current = this;
     while (current && current !== lca) {
       if (current.transform) {
-        downwardTransform.translate![0] += current.transform.translate?.[0] ?? 0;
-        downwardTransform.translate![1] += current.transform.translate?.[1] ?? 0;
+        downwardTransform.translate![0] +=
+          current.transform.translate?.[0] ?? 0;
+        downwardTransform.translate![1] +=
+          current.transform.translate?.[1] ?? 0;
       }
       current = current.parent!;
     }
@@ -143,15 +155,27 @@ export class GoFishRef {
     // combine inrinsicDims and transform into a single object
     return [
       {
-        min: (this.intrinsicDims?.[0]?.min ?? 0) + (this.transform?.translate?.[0] ?? 0),
-        center: (this.intrinsicDims?.[0]?.center ?? 0) + (this.transform?.translate?.[0] ?? 0),
-        max: (this.intrinsicDims?.[0]?.max ?? 0) + (this.transform?.translate?.[0] ?? 0),
+        min:
+          (this.intrinsicDims?.[0]?.min ?? 0) +
+          (this.transform?.translate?.[0] ?? 0),
+        center:
+          (this.intrinsicDims?.[0]?.center ?? 0) +
+          (this.transform?.translate?.[0] ?? 0),
+        max:
+          (this.intrinsicDims?.[0]?.max ?? 0) +
+          (this.transform?.translate?.[0] ?? 0),
         size: this.intrinsicDims?.[0]?.size ?? 0,
       },
       {
-        min: (this.intrinsicDims?.[1]?.min ?? 0) + (this.transform?.translate?.[1] ?? 0),
-        center: (this.intrinsicDims?.[1]?.center ?? 0) + (this.transform?.translate?.[1] ?? 0),
-        max: (this.intrinsicDims?.[1]?.max ?? 0) + (this.transform?.translate?.[1] ?? 0),
+        min:
+          (this.intrinsicDims?.[1]?.min ?? 0) +
+          (this.transform?.translate?.[1] ?? 0),
+        center:
+          (this.intrinsicDims?.[1]?.center ?? 0) +
+          (this.transform?.translate?.[1] ?? 0),
+        max:
+          (this.intrinsicDims?.[1]?.max ?? 0) +
+          (this.transform?.translate?.[1] ?? 0),
         size: this.intrinsicDims?.[1]?.size ?? 0,
       },
     ];
@@ -166,7 +190,8 @@ export class GoFishRef {
       if (this.intrinsicDims?.[i]?.min === undefined) {
         this.intrinsicDims![i].min = elabPos[i]!;
       } else {
-        this.transform!.translate![i] = elabPos[i]! - (this.intrinsicDims![i].min ?? 0);
+        this.transform!.translate![i] =
+          elabPos[i]! - (this.intrinsicDims![i].min ?? 0);
       }
     }
   }
@@ -186,7 +211,10 @@ export const findPathToRoot = (node: GoFishAST): GoFishNode[] => {
   return path;
 };
 
-export const findLeastCommonAncestor = (node1: GoFishAST, node2: GoFishAST): GoFishNode => {
+export const findLeastCommonAncestor = (
+  node1: GoFishAST,
+  node2: GoFishAST
+): GoFishNode => {
   const path1 = findPathToRoot(node1);
   const path2 = findPathToRoot(node2);
 
