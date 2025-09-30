@@ -479,6 +479,8 @@ const testFilter2 = <filter  id="testFilter2">
   />
   </filter>
 
+// TODO: Make all the filter definitions into an array
+// then add the filter tags at the end of the array
 
 
   export const filter_defs: JSX.Element[] = [
