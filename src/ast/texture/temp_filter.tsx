@@ -34,36 +34,36 @@ const mossFilter = <filter id="filter-moss">
 </filter>
 
 const watercolorFilter = <filter id="filter-watercolor">
-{/* Generate mossy texture as alpha mask */}
-<feTurbulence
-  baseFrequency=".02 .02"
-  numOctaves="5"
-  type="fractalNoise"
-  result="mossNoise"
-/>
-<feMorphology in="mossNoise" operator="dilate" radius="1" result="mossDilated" />
-<feConvolveMatrix
-  in="mossDilated"
-  kernelMatrix="1 1 1 1 2 1 1 -9 1"
-  preserveAlpha="true"
-  result="mossEdges"
-/>
-{/* Convert moss texture to alpha only, so it acts as a mask */}
-<feColorMatrix
-  in="mossEdges"
-  type="matrix"
-  values="
+  {/* Generate mossy texture as alpha mask */}
+  <feTurbulence
+    baseFrequency=".02 .02"
+    numOctaves="5"
+    type="fractalNoise"
+    result="mossNoise"
+  />
+  <feMorphology in="mossNoise" operator="dilate" radius="1" result="mossDilated" />
+  <feConvolveMatrix
+    in="mossDilated"
+    kernelMatrix="1 1 1 1 2 1 1 -9 1"
+    preserveAlpha="true"
+    result="mossEdges"
+  />
+  {/* Convert moss texture to alpha only, so it acts as a mask */}
+  <feColorMatrix
+    in="mossEdges"
+    type="matrix"
+    values="
     0 0 0 0 0
     0 0 0 0 0
     0 0 0 0 0
     0 0 0 0.5 0
   "
-  result="mossAlpha"
-/>
-{/* Use the alpha mask to let the background show through, making the moss effect mostly transparent */}
-<feComposite in="SourceGraphic" in2="mossAlpha" operator="in" result="masked" />
-{/* Lower the overall opacity for extra subtlety */}
-{/* <feComponentTransfer in="masked" result="finalMoss">
+    result="mossAlpha"
+  />
+  {/* Use the alpha mask to let the background show through, making the moss effect mostly transparent */}
+  <feComposite in="SourceGraphic" in2="mossAlpha" operator="in" result="masked" />
+  {/* Lower the overall opacity for extra subtlety */}
+  {/* <feComponentTransfer in="masked" result="finalMoss">
   <feFuncA type="linear" slope="0.3" />
 </feComponentTransfer> */}
 </filter>
@@ -165,31 +165,43 @@ const softShadowFilter = <filter id="filter-shadow-soft" x="-50%" y="-50%" width
 </filter>
 
 const glassFilter = <filter id="filter-glass" x="-25%" y="-25%" width="150%" height="150%">
-    <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="gBlur" />
-    <feColorMatrix
-      in="gBlur"
-      type="matrix"
-      values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.55 0"
-      result="gTint"
-    />
-    <feSpecularLighting
-      in="SourceAlpha"
-      surfaceScale="1"
-      specularConstant="0.5"
-      specularExponent="15"
-      result="specular"
-    >
-      <fePointLight x="100" y="-50" z="150" />
-    </feSpecularLighting>
-    <feComposite
-      in="specular"
-      in2="SourceAlpha"
-      operator="in"
-      result="specMask"
-    />
-    <feBlend in="gTint" in2="SourceGraphic" mode="screen" />
-  </filter>
+  <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="gBlur" />
+  <feColorMatrix
+    in="gBlur"
+    type="matrix"
+    values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.55 0"
+    result="gTint"
+  />
+  <feSpecularLighting
+    in="SourceAlpha"
+    surfaceScale="1"
+    specularConstant="0.5"
+    specularExponent="15"
+    result="specular"
+  >
+    <fePointLight x="100" y="-50" z="150" />
+  </feSpecularLighting>
+  <feComposite
+    in="specular"
+    in2="SourceAlpha"
+    operator="in"
+    result="specMask"
+  />
+  <feBlend in="gTint" in2="SourceGraphic" mode="screen" />
+</filter>
 
+
+const waterColorSplotchFilter = <filter id="watercolor-splotch" color-interpolation-filters="sRGB">
+  <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="4" result="noise" />
+  <feColorMatrix in="noise" type="matrix"
+    values="
+      0 0 0 0 0
+      0 0 0 0 0
+      0 0 0 0 0
+      0 0 0 -0.9 1.2"
+    result="texture" />
+  <feComposite in="SourceGraphic" in2="texture" operator="in" result="splotch" />
+</filter>
 
 // A soft, fibrous felt-like texture that gently tints and displaces the source
 // Works best applied to filled shapes; use with `filter="url(#filter-felt)"`
@@ -349,6 +361,78 @@ const leatherFilter = (
   </filter>
 );
 
+const testFilter = <filter id="paperPatch" x="-15%" y="-15%" width="130%" height="130%"
+  color-interpolation-filters="sRGB">
+  {/* Crumple heightmap */}
+  <feTurbulence type="fractalNoise" baseFrequency="0.012 0.028"
+    numOctaves="3" seed="2" result="noiseCoarse" />
+  <feTurbulence type="fractalNoise" baseFrequency="0.08"
+    numOctaves="2" seed="9" result="noiseFine" />
+  <feBlend in="noiseCoarse" in2="noiseFine" mode="multiply" result="heightmap" />
+
+  {/* Displace only the source graphic, not a background */}
+  <feDisplacementMap in="SourceGraphic" in2="heightmap" scale="12"
+    xChannelSelector="R" yChannelSelector="G" result="displaced" />
+
+  {/* Lighting for crumple effect */}
+  <feDiffuseLighting in="heightmap" surfaceScale="4" kernelUnitLength="1"
+    lighting-color="#ffffff" result="diffuse">
+    <feDistantLight azimuth="225" elevation="55" />
+  </feDiffuseLighting>
+  <feSpecularLighting in="heightmap" surfaceScale="1.6"
+    specularConstant="0.6" specularExponent="20"
+    lighting-color="#ffffff" result="spec">
+    <feDistantLight azimuth="225" elevation="55" />
+  </feSpecularLighting>
+  <feComposite in="diffuse" in2="spec" operator="arithmetic"
+    k1="0" k2="1" k3="0.35" k4="0" result="light" />
+
+  {/* Paper grain */}
+  <feTurbulence type="fractalNoise" baseFrequency="0.55"
+    numOctaves="3" seed="3" result="grain" />
+  <feColorMatrix in="grain" type="saturate" values="0.7" result="grainSat" />
+
+  {/* Instead of multiply, use 'lighten' to preserve color, then boost saturation and alpha */}
+  <feBlend in="displaced" in2="light" mode="lighten" result="lit" />
+  <feBlend in="lit" in2="grainSat" mode="multiply" result="withGrain" />
+
+  {/* Inner shadow for shape */}
+  <feGaussianBlur in="SourceAlpha" stdDeviation="0" result="shadowBlur" />
+  <feOffset in="shadowBlur" dx="0" dy="0" result="shadowOffset" />
+  <feComposite in="shadowOffset" in2="SourceAlpha" operator="out" result="innerShadow" />
+  <feComposite in="withGrain" in2="innerShadow" operator="arithmetic"
+    k1="0" k2="1" k3="0.7" k4="0" result="paper" />
+
+  {/* White edge ring for highlight */}
+  <feMorphology in="SourceAlpha" operator="dilate" radius="2.5" result="expanded" />
+  <feComposite in="expanded" in2="SourceAlpha" operator="out" result="ring" />
+  <feDisplacementMap in="ring" in2="heightmap" scale="8"
+    xChannelSelector="R" yChannelSelector="G" result="roughRing" />
+  <feFlood flood-color="white" result="whiteFill" />
+  <feComposite in="whiteFill" in2="roughRing" operator="in" result="whiteEdge" />
+
+  {/* Boost color/sat, but mask to original alpha so background is transparent */}
+  <feColorMatrix
+    in="paper"
+    type="matrix"
+    values="
+      1.3 0   0   0 0
+      0   1.3 0   0 0
+      0   0   1.3 0 0
+      0   0   0   0.85 0"
+    result="paperSat"
+  />
+  {/* Mask everything to original alpha to ensure transparent background */}
+  <feComposite in="paperSat" in2="SourceAlpha" operator="in" result="paperSatMasked" />
+  <feComposite in="whiteEdge" in2="SourceAlpha" operator="in" result="whiteEdgeMasked" />
+
+  <feMerge>
+    <feMergeNode in="paperSat" />
+    <feMergeNode in="whiteEdge" />
+  </feMerge>
+</filter>
+
+
 
 export const filter_defs: JSX.Element[] = [
   dropShadowFilter,
@@ -360,6 +444,7 @@ export const filter_defs: JSX.Element[] = [
   strongBlurFilter,
   invertFilter,
   feltFilter,
-  watercolorFilter,
+  waterColorSplotchFilter,
   leatherFilter,
+  testFilter,
 ];
