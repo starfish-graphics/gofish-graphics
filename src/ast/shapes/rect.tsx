@@ -242,8 +242,9 @@ export const rect = ({
 
           return (
             <rect
+               transform={`scale(1, -1)`}
               x={transformedX - width / 2}
-              y={transformedY - height / 2}
+              y={-(transformedY - height / 2) - height}
               rx={rx}
               ry={ry}
               width={width}
@@ -284,8 +285,9 @@ export const rect = ({
 
             return (
               <rect
+                transform={`scale(1, -1)`}
                 x={x}
-                y={y}
+                y={- y - height}
                 width={width}
                 height={height}
                 fill={fill}
@@ -334,7 +336,7 @@ export const rect = ({
           const y = displayDims[1].min ?? 0;
           const width = (displayDims[0].max ?? 0) - x;
           const height = (displayDims[1].max ?? 0) - y;
-          return <rect x={x} y={y} width={width} height={height} fill={fill} />;
+          return <rect transform={`scale(1, -1)`} x={x} y={- y - height} width={width} height={height} fill={fill} />;
         }
 
         const corners = path(

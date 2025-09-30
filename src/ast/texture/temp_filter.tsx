@@ -432,9 +432,57 @@ const testFilter = <filter id="paperPatch" x="-15%" y="-15%" width="130%" height
   </feMerge>
 </filter>
 
+const testFilter2 = <filter  id="testFilter2">
+  {/* Create subtle texture with turbulence (shape-preserving) */}
+  <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="4" seed="3" result="noise" />
+
+  {/* Significantly reduce displacement to preserve element shape */}
+  <feDisplacementMap
+    in="SourceGraphic"
+    in2="noise"
+    scale="4"
+    xChannelSelector="R"
+    yChannelSelector="G"
+    result="displacedPaper"
+  />
+
+  {/* Add light effect with lighting */}
+  <feDiffuseLighting in="noise" surfaceScale="3" diffuseConstant="1" result="diffLight">
+    <feDistantLight azimuth="45" elevation="60" />
+  </feDiffuseLighting>
+
+  {/* Adjust the contrast of the lighting */}
+  <feComposite
+    in="diffLight"
+    in2="displacedPaper"
+    operator="arithmetic"
+    k1="1"
+    k2="0"
+    k3="0"
+    k4="0"
+    result="lightedPaper"
+  />
+
+  {/* Blend the lighting with the displaced image */}
+  <feBlend in="displacedPaper" in2="lightedPaper" mode="multiply" result="crumpledPaper" />
+
+  {/* Add subtle color variation to simulate paper fibers */}
+  <feColorMatrix
+    in="crumpledPaper"
+    type="matrix"
+    values="
+  0.9 0.1 0.1 0 0
+  0.1 0.9 0.1 0 0
+  0.1 0.1 0.9 0 0
+  0   0   0   1 0"
+    result="coloredPaper"
+  />
+  </filter>
 
 
-export const filter_defs: JSX.Element[] = [
+
+  export const filter_defs: JSX.Element[] = [
+    testFilter2,
   dropShadowFilter,
   softShadowFilter,
   glassFilter,
@@ -447,4 +495,4 @@ export const filter_defs: JSX.Element[] = [
   waterColorSplotchFilter,
   leatherFilter,
   testFilter,
-];
+  ];
