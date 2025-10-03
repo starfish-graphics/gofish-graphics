@@ -100,11 +100,11 @@ export const stack = withGoFish(
           ) {
             alignSpace = INTERVAL;
           } else {
-            alignSpace = ORDINAL;
+            alignSpace = UNDEFINED;
           }
 
           /* SPACING RULES */
-          let stackSpace = ORDINAL;
+          let stackSpace = UNDEFINED;
           // if children are all UNDEFINED or POSITION and spacing is 0, return POSITION
           if (
             children.every(
