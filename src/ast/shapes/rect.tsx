@@ -31,7 +31,7 @@ import { aesthetic, continuous, Domain } from "../domain";
 import { scaleContext } from "../gofish";
 import * as Monotonic from "../../util/monotonic";
 import { computeAesthetic, computeSize } from "../../util";
-import { ORDINAL } from "../underlyingSpace";
+import { ORDINAL, POSITION, UNDEFINED } from "../underlyingSpace";
 
 const computeIntrinsicSize = (
   input: MaybeValue<number> | undefined
@@ -70,22 +70,28 @@ export const rect = ({
       type: "rect",
       color: fill,
       resolveUnderlyingSpace: () => {
+        let underlyingSpaceX = ORDINAL;
         if (isValue(dims[0].min)) {
           // position. treat it like a position space w/ a single element
+          underlyingSpaceX = POSITION;
         } else {
           // undefined
+          underlyingSpaceX = UNDEFINED;
         }
 
+        let underlyingSpaceY = ORDINAL;
         if (isValue(dims[1].min)) {
           // position. treat it like a position space w/ a single element
+          underlyingSpaceY = POSITION;
         } else {
           // undefined
+          underlyingSpaceY = UNDEFINED;
         }
 
         const w = computeIntrinsicSize(dims[0].size);
         const h = computeIntrinsicSize(dims[1].size);
 
-        return [ORDINAL, ORDINAL];
+        return [underlyingSpaceX, underlyingSpaceY];
       },
       inferPosDomains: (childPosDomains: Size<Domain>[]) => {
         const result = [

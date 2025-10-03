@@ -71,22 +71,30 @@ export const stack = withGoFish(
         key,
         name,
         shared: [sharedScale, sharedScale],
-        resolveUnderlyingSpace: (children: UnderlyingSpace[]) => {
+        resolveUnderlyingSpace: (children: Size<UnderlyingSpace>[]) => {
           /* ALIGNMENT RULES */
           let alignSpace = UNDEFINED;
+
           // if children are all UNDEFINED or POSITION and alignment is start or end, return POSITION
           if (
             children.every(
-              (child) => child.kind === "undefined" || child.kind === "position"
+              (child) =>
+                child[alignDir].kind === "undefined" ||
+                child[alignDir].kind === "position"
             ) &&
             (alignment === "start" || alignment === "end")
           ) {
+            console.log(
+              "stack.resolveUnderlyingSpace alignment is start or end"
+            );
             alignSpace = POSITION;
           }
           // if children are all UNDEFINED or POSITION and alignment is middle, return INTERVAL
           else if (
             children.every(
-              (child) => child.kind === "undefined" || child.kind === "position"
+              (child) =>
+                child[alignDir].kind === "undefined" ||
+                child[alignDir].kind === "position"
             ) &&
             alignment === "middle"
           ) {
@@ -100,7 +108,9 @@ export const stack = withGoFish(
           // if children are all UNDEFINED or POSITION and spacing is 0, return POSITION
           if (
             children.every(
-              (child) => child.kind === "undefined" || child.kind === "position"
+              (child) =>
+                child[stackDir].kind === "undefined" ||
+                child[stackDir].kind === "position"
             ) &&
             spacing === 0
           ) {
@@ -110,7 +120,9 @@ export const stack = withGoFish(
           // if children are all UNDEFINED or POSITION and spacing is > 0, return ORDINAL
           else if (
             children.every(
-              (child) => child.kind === "undefined" || child.kind === "position"
+              (child) =>
+                child[stackDir].kind === "undefined" ||
+                child[stackDir].kind === "position"
             ) &&
             spacing > 0
           ) {

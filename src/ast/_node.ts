@@ -99,6 +99,7 @@ export class GoFishNode {
   public parent?: GoFishNode;
   // private inferDomains: (childDomains: Size<Domain>[]) => FancySize<Domain | undefined>;
   private _resolveUnderlyingSpace: ResolveUnderlyingSpace;
+  private _underlyingSpace?: Size<UnderlyingSpace> = undefined;
   private _inferPosDomains: (
     childPosDomains: Size<ContinuousDomain>[]
   ) => FancySize<ContinuousDomain | undefined>;
@@ -200,11 +201,15 @@ export class GoFishNode {
   }
 
   public resolveUnderlyingSpace(): Size<UnderlyingSpace> {
-    return elaborateSize(
+    if (this._underlyingSpace) {
+      return this._underlyingSpace;
+    }
+    this._underlyingSpace = elaborateSize(
       this._resolveUnderlyingSpace(
         this.children.map((child) => child.resolveUnderlyingSpace())
       )
     );
+    return this._underlyingSpace;
   }
 
   public inferPosDomains(): Size<ContinuousDomain | undefined> {
