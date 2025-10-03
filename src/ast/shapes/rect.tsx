@@ -31,6 +31,7 @@ import { aesthetic, continuous, Domain } from "../domain";
 import { scaleContext } from "../gofish";
 import * as Monotonic from "../../util/monotonic";
 import { computeAesthetic, computeSize } from "../../util";
+import { ORDINAL } from "../underlyingSpace";
 
 const computeIntrinsicSize = (
   input: MaybeValue<number> | undefined
@@ -59,7 +60,7 @@ export const rect = ({
   strokeWidth?: number;
   rx?: number;
   ry?: number;
-  filter?: string
+  filter?: string;
 } & FancyDims<MaybeValue<number>>) => {
   const dims = elaborateDims(fancyDims).map(inferEmbedded);
   return new GoFishNode(
@@ -68,6 +69,24 @@ export const rect = ({
       key,
       type: "rect",
       color: fill,
+      resolveUnderlyingSpace: () => {
+        if (isValue(dims[0].min)) {
+          // position. treat it like a position space w/ a single element
+        } else {
+          // undefined
+        }
+
+        if (isValue(dims[1].min)) {
+          // position. treat it like a position space w/ a single element
+        } else {
+          // undefined
+        }
+
+        const w = computeIntrinsicSize(dims[0].size);
+        const h = computeIntrinsicSize(dims[1].size);
+
+        return [ORDINAL, ORDINAL];
+      },
       inferPosDomains: (childPosDomains: Size<Domain>[]) => {
         const result = [
           isValue(dims[0].min)
@@ -242,7 +261,7 @@ export const rect = ({
 
           return (
             <rect
-               transform={`scale(1, -1)`}
+              transform={`scale(1, -1)`}
               x={transformedX - width / 2}
               y={-(transformedY - height / 2) - height}
               rx={rx}
@@ -287,7 +306,7 @@ export const rect = ({
               <rect
                 transform={`scale(1, -1)`}
                 x={x}
-                y={- y - height}
+                y={-y - height}
                 width={width}
                 height={height}
                 fill={fill}
@@ -336,7 +355,16 @@ export const rect = ({
           const y = displayDims[1].min ?? 0;
           const width = (displayDims[0].max ?? 0) - x;
           const height = (displayDims[1].max ?? 0) - y;
-          return <rect transform={`scale(1, -1)`} x={x} y={- y - height} width={width} height={height} fill={fill} />;
+          return (
+            <rect
+              transform={`scale(1, -1)`}
+              x={x}
+              y={-y - height}
+              width={width}
+              height={height}
+              fill={fill}
+            />
+          );
         }
 
         const corners = path(

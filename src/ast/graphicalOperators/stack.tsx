@@ -23,6 +23,8 @@ import { GoFishAST } from "../_ast";
 import { getScaleContext } from "../gofish";
 import { withGoFish } from "../withGoFish";
 import * as Monotonic from "../../util/monotonic";
+import { INTERVAL, ORDINAL, POSITION, UNDEFINED } from "../underlyingSpace";
+import { UnderlyingSpace } from "../underlyingSpace";
 
 // Utility function to unwrap lodash wrapped arrays
 const unwrapLodashArray = function <T>(value: T[] | Collection<T>): T[] {
@@ -69,6 +71,59 @@ export const stack = withGoFish(
         key,
         name,
         shared: [sharedScale, sharedScale],
+        resolveUnderlyingSpace: (children: UnderlyingSpace[]) => {
+          /* ALIGNMENT RULES */
+          let alignSpace = UNDEFINED;
+          // if children are all UNDEFINED or POSITION and alignment is start or end, return POSITION
+          if (
+            children.every(
+              (child) => child.kind === "undefined" || child.kind === "position"
+            ) &&
+            (alignment === "start" || alignment === "end")
+          ) {
+            alignSpace = POSITION;
+          }
+          // if children are all UNDEFINED or POSITION and alignment is middle, return INTERVAL
+          else if (
+            children.every(
+              (child) => child.kind === "undefined" || child.kind === "position"
+            ) &&
+            alignment === "middle"
+          ) {
+            alignSpace = INTERVAL;
+          } else {
+            alignSpace = UNDEFINED;
+          }
+
+          /* SPACING RULES */
+          let stackSpace = ORDINAL;
+          // if children are all UNDEFINED or POSITION and spacing is 0, return POSITION
+          if (
+            children.every(
+              (child) => child.kind === "undefined" || child.kind === "position"
+            ) &&
+            spacing === 0
+          ) {
+            stackSpace = POSITION;
+          }
+
+          // if children are all UNDEFINED or POSITION and spacing is > 0, return ORDINAL
+          else if (
+            children.every(
+              (child) => child.kind === "undefined" || child.kind === "position"
+            ) &&
+            spacing > 0
+          ) {
+            stackSpace = ORDINAL;
+          } else {
+            stackSpace = ORDINAL;
+          }
+
+          return {
+            [stackDir]: stackSpace,
+            [alignDir]: alignSpace,
+          };
+        },
         inferPosDomains: (childPosDomains: Size<Domain>[]) => {
           // For the stacking dimension, unify domains like in layer
           // console.log("stack.inferPosDomains", { childPosDomains });

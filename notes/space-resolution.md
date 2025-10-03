@@ -29,18 +29,18 @@ in `stack`
 - children are `position` and spreading (w/ spacing) equals `ordinal` (with each child remaining
   `position`, possibly with shared positions?)
 
-Proposed datatype (naming TBD; using `DataSpace` for now)
+Proposed datatype (naming TBD; using `UnderlyingSpace` for now)
 
 ```ts
 // Core kinds of data space inferred for a channel/axis
-export type DataSpaceKind = "position" | "interval" | "ordinal";
+export type UnderlyingSpaceKind = "position" | "interval" | "ordinal";
 
 // Optional alignment context for operators like `stack`
 export type Alignment = "start" | "middle" | "end";
 
 // Encodes the space semantics carried by a scenegraph node's channel
-export interface DataSpace {
-  kind: DataSpaceKind;
+export interface UnderlyingSpace {
+  kind: UnderlyingSpaceKind;
   // If `ordinal`, spacing > 0 implies spreading; spacing == 0 implies stacking
   // For `position` and `interval`, spacing is ignored
   spacing?: number; // device or normalized units; 0 means none
@@ -50,16 +50,16 @@ export interface DataSpace {
   source?: string; // e.g., 'stack:start', 'stack:middle', 'mark:rect:y'
 }
 
-export const POSITION: DataSpace = { kind: "position" };
-export const INTERVAL: DataSpace = { kind: "interval" };
-export const ORDINAL: DataSpace = { kind: "ordinal" };
+export const POSITION: UnderlyingSpace = { kind: "position" };
+export const INTERVAL: UnderlyingSpace = { kind: "interval" };
+export const ORDINAL: UnderlyingSpace = { kind: "ordinal" };
 
 // Helper: derive combined space for `stack` given children spaces, alignment, and spacing
 export function spaceForStack(
-  childSpaces: DataSpace[],
+  childSpaces: UnderlyingSpace[],
   alignment: Alignment,
   spacing: number
-): DataSpace {
+): UnderlyingSpace {
   // Assumption from notes: children are `position`
   // Rules:
   // - alignment start/end => position
@@ -77,9 +77,9 @@ export function spaceForStack(
 
 // Helper: tag children that participate in an ordinal spread (they themselves stay position)
 export function tagOrdinalChildren(
-  childSpaces: DataSpace[],
+  childSpaces: UnderlyingSpace[],
   ordinalGroupId: string
-): DataSpace[] {
+): UnderlyingSpace[] {
   return childSpaces.map((s) =>
     s.kind === "position" ? { ...s, ordinalGroupId } : s
   );
@@ -91,3 +91,18 @@ Notes
 - `position` corresponds to the current inferPosDomains behavior.
 - `ordinal` corresponds to the current inferSizeDomains behavior when spacing is non-zero.
 - `interval` (e.g., streamgraph) is newly formalized here and used by `stack` with `middle` alignment.
+
+# Refactor Progress
+
+- [x] Add DataSpace types
+- [x] Add resolveUnderlyingSpace method signatures
+- [-] Implement inferSpaces for core operators - (rect, layer, stack)
+  - [x] Stub out resolveUnderlyingSpace
+  - [ ] Split resolveUnderlyingSpace return into two axes
+  - [ ] Test abstract resolution kind on existing examples
+  - [ ] Implement resolved values
+  - [ ] Test specific values on existing examples
+- [ ] Update main layout loop to use unified space resolution instead of the infer calls
+- [ ] Add continuous axes. (And discrete axes if we decide to split ordinal from something else)
+- [ ] Migrate remaining operators
+- [ ] Remove old inferPosDomains/inferSizeDomains methods

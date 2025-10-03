@@ -1,6 +1,11 @@
 import { For, Show, type JSX } from "solid-js";
 import { render as solidRender } from "solid-js/web";
-import { debugNodeTree, findPathToRoot, type GoFishNode } from "./_node";
+import {
+  debugNodeTree,
+  debugUnderlyingSpaceTree,
+  findPathToRoot,
+  type GoFishNode,
+} from "./_node";
 import { ScopeContext } from "./scopeContext";
 import { computePosScale } from "./domain";
 import { tickIncrement, ticks, nice } from "d3-array";
@@ -76,6 +81,13 @@ export const gofish = (
     child.resolveKeys();
     const [posDomainX, posDomainY] = child.inferPosDomains();
     const sizeDomains = child.inferSizeDomains();
+    const [underlyingSpaceX, underlyingSpaceY] = child.resolveUnderlyingSpace();
+    console.log("underlyingSpace", { underlyingSpaceX, underlyingSpaceY });
+
+    // Debug: Print the tree of underlying spaces
+    console.log("🌳 Underlying Space Tree:");
+    debugUnderlyingSpaceTree(child);
+
     child.layout(
       [w, h],
       [undefined, undefined],
