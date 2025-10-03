@@ -70,3 +70,19 @@ export const Stacked: StoryObj<Args> = {
       });
   },
 };
+
+export const StackedWithSpacing: StoryObj<Args> = {
+  args: { w: 420, h: 400 },
+  render: (args: Args) => {
+    const container = initializeContainer();
+    return rect(catchData, { fill: "species", h: "count" })
+      .spreadY("species", { spacing: 4 })
+      .transform((d) => orderBy(d, "count", "asc"))
+      .spreadX("lake", { alignment: "start" })
+      .render(container, {
+        w: args.w,
+        h: args.h,
+        axes: true,
+      });
+  },
+};

@@ -100,7 +100,7 @@ export const stack = withGoFish(
           ) {
             alignSpace = INTERVAL;
           } else {
-            alignSpace = UNDEFINED;
+            alignSpace = ORDINAL;
           }
 
           /* SPACING RULES */
