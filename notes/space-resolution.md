@@ -98,8 +98,8 @@ Notes
 - [x] Add resolveUnderlyingSpace method signatures
 - [-] Implement inferSpaces for core operators - (rect, layer, stack)
   - [x] Stub out resolveUnderlyingSpace
-  - [ ] Split resolveUnderlyingSpace return into two axes
-  - [ ] Test abstract resolution kind on existing examples
+  - [x] Split resolveUnderlyingSpace return into two axes
+  - [x] Test abstract resolution kind on existing examples
   - [ ] Implement resolved values
   - [ ] Test specific values on existing examples
 - [ ] Update main layout loop to use unified space resolution instead of the infer calls
