@@ -13,13 +13,21 @@ export const value = <T>(datum: T, measure?: Measure): Value<any> => ({
   measure,
 });
 
-export const isValue = <T>(value: MaybeValue<T>): value is Value<T> => {
+export const isValue = <T>(
+  value: MaybeValue<T>
+): value is Exclude<Value<T>, undefined> => {
   return (
     typeof value === "object" &&
     value !== null &&
     "type" in value &&
     value.type === "datum"
   );
+};
+
+export const isAesthetic = <T>(
+  value: MaybeValue<T>
+): value is Exclude<T, undefined> => {
+  return !isValue(value) && value !== undefined;
 };
 
 export const getValue = <T>(value: MaybeValue<T>): T => {

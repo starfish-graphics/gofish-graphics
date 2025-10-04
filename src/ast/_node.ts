@@ -30,6 +30,7 @@ import { color6 } from "../color";
 import * as Monotonic from "../util/monotonic";
 import { findTargetMonotonic } from "../util";
 import { UnderlyingSpace } from "./underlyingSpace";
+import { toJSON } from "../util/interval";
 
 export type ScaleFactorFunction = Monotonic.Monotonic;
 
@@ -483,8 +484,18 @@ export const debugUnderlyingSpaceTree = (
     space: UnderlyingSpace | Size<UnderlyingSpace>
   ): string => {
     if (Array.isArray(space)) {
-      return `[${space.map((s) => s.kind).join(", ")}]`;
+      return `[${space
+        .map((s) => {
+          if (s.kind === "position" && s.domain) {
+            return `position(${toJSON(s.domain)})`;
+          }
+          return s.kind;
+        })
+        .join(", ")}]`;
     } else {
+      if (space.kind === "position" && space.domain) {
+        return `position(${toJSON(space.domain)})`;
+      }
       return space.kind;
     }
   };

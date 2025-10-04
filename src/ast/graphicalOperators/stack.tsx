@@ -25,6 +25,7 @@ import { withGoFish } from "../withGoFish";
 import * as Monotonic from "../../util/monotonic";
 import { INTERVAL, ORDINAL, POSITION, UNDEFINED } from "../underlyingSpace";
 import { UnderlyingSpace } from "../underlyingSpace";
+import * as Interval from "../../util/interval";
 
 // Utility function to unwrap lodash wrapped arrays
 const unwrapLodashArray = function <T>(value: T[] | Collection<T>): T[] {
@@ -79,15 +80,15 @@ export const stack = withGoFish(
           if (
             children.every(
               (child) =>
-                child[alignDir].kind === "undefined" ||
+                // child[alignDir].kind === "undefined" ||
                 child[alignDir].kind === "position"
             ) &&
             (alignment === "start" || alignment === "end")
           ) {
-            console.log(
-              "stack.resolveUnderlyingSpace alignment is start or end"
+            const domain = Interval.unionAll(
+              ...children.map((child) => child[alignDir].domain!)
             );
-            alignSpace = POSITION;
+            alignSpace = POSITION([domain.min, domain.max]);
           }
           // if children are all UNDEFINED or POSITION and alignment is middle, return INTERVAL
           else if (
@@ -109,12 +110,19 @@ export const stack = withGoFish(
           if (
             children.every(
               (child) =>
-                child[stackDir].kind === "undefined" ||
+                // child[stackDir].kind === "undefined" ||
                 child[stackDir].kind === "position"
             ) &&
             spacing === 0
           ) {
-            stackSpace = POSITION;
+            // position's domain should be [0, sum(widths of child intervals)] using the interval library
+            const totalWidth = children
+              .map((child) => {
+                const domain = child[stackDir].domain;
+                return domain ? Interval.width(domain) : 0;
+              })
+              .reduce((a, b) => a + b, 0);
+            stackSpace = POSITION([0, totalWidth]);
           }
 
           // if children are all UNDEFINED or POSITION and spacing is > 0, return ORDINAL

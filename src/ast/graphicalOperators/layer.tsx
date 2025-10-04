@@ -48,7 +48,7 @@ export const layer = (
           xChildrenPositionSpaces.length > 0 &&
           xChildrenOrdinalSpaces.length === 0
         ) {
-          xSpace = POSITION;
+          xSpace = POSITION([0, 0]);
         } else if (xChildrenOrdinalSpaces.length > 0) {
           xSpace = ORDINAL;
         }
@@ -65,7 +65,7 @@ export const layer = (
           yChildrenPositionSpaces.length > 0 &&
           yChildrenOrdinalSpaces.length === 0
         ) {
-          ySpace = POSITION;
+          ySpace = POSITION([0, 0]);
         } else if (yChildrenOrdinalSpaces.length > 0) {
           ySpace = ORDINAL;
         }
