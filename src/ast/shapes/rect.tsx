@@ -70,6 +70,10 @@ export const rect = ({
       type: "rect",
       color: fill,
       resolveUnderlyingSpace: () => {
+        /* TODO: maybe it should be INTERVAL if it doesn't have position, but does have data-driven
+        size */
+        // that might not work right b/c then stack will need to turn intervals into positions will
+        // doesn't work if you have a stack of centered-aligned stacks of rectangles
         let underlyingSpaceX = ORDINAL;
         if (isValue(dims[0].min)) {
           // position. treat it like a position space w/ a single element

@@ -20,3 +20,20 @@ between bars) so we can't compute a scale function right away. Instead, we assum
 some linear scale factor (data could be scaled using a non-linear scale function before this) and we have to figure
 out how to scale the shapes that are being placed by creating a function from the scale factor to
 the output size if we use that scale factor. Then we solve.
+
+A shape can have three kinds of sizes:
+
+- fixed (eg, `rect({w: 10})`)
+- inferred (eg, `rect({w: undefined})`)
+- data-driven (eg, `rect({w: 'foo'})`)
+
+These correspond to three kinds of intrinsic sizes
+
+- fixed. constant, non-zero size, no dependency on scale factor
+- inferred. constant, zero size, no dependency on scale factor (this seems a bit weird and may be
+  changed later)
+- data-driven. size depends on scale factor
+
+In truth, data-driven sizes seem to act like the inferred case as well, because they can take on any
+size given to them (although they sometimes have a minimum size, such as a spread operator where
+even if the shapes have 0 size, the spacing between the shapes yields some minimum overall size)
