@@ -2,6 +2,7 @@ import { GoFishNode } from "../_node";
 import { Size, elaborateDims, FancyDims } from "../dims";
 import { Domain, continuous } from "../domain";
 import { getMeasure, getValue, isValue, MaybeValue } from "../data";
+import { POSITION, UNDEFINED, UnderlyingSpace } from "../underlyingSpace";
 
 export const position = (
   childrenOrOptions:
@@ -18,6 +19,12 @@ export const position = (
       type: "position",
       key: options.key,
       shared: [false, false],
+      resolveUnderlyingSpace: (children: Size<UnderlyingSpace>[]) => {
+        return [
+          options.x ? POSITION : UNDEFINED,
+          options.y ? POSITION : UNDEFINED,
+        ];
+      },
       inferPosDomains: (childPosDomains: Size<Domain>[]) => {
         return [
           isValue(options.x)

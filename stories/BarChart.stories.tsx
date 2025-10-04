@@ -55,6 +55,20 @@ export const Horizontal: StoryObj<Args> = {
   },
 };
 
+export const MiddleAligned: StoryObj<Args> = {
+  args: { w: 320, h: 400 },
+  render: (args: Args) => {
+    const container = initializeContainer();
+    return rect(catchData, { fill: "lake", h: "count" })
+      .spreadX("lake", { alignment: "middle" })
+      .render(container, {
+        w: args.w,
+        h: args.h,
+        axes: true,
+      });
+  },
+};
+
 export const Stacked: StoryObj<Args> = {
   args: { w: 420, h: 400 },
   render: (args: Args) => {

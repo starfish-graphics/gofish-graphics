@@ -33,7 +33,7 @@ export const Scatter: StoryObj<Args> = {
       .render(container, {
         w: args.w,
         h: args.h,
-        // axes: true,
+        axes: true,
       });
     return container;
   },

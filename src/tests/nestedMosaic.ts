@@ -45,6 +45,7 @@ export const testNestedMosaic = () =>
         (items, cls) =>
           stack(
             {
+              key: cls,
               h: _(items).sumBy("count") / 10,
               direction: "x",
               spacing: 2,

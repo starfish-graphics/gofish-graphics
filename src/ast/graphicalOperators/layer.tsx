@@ -7,6 +7,12 @@ import {
   unifyContinuousDomains,
   ContinuousDomain,
 } from "../domain";
+import {
+  UNDEFINED,
+  POSITION,
+  UnderlyingSpace,
+  ORDINAL,
+} from "../underlyingSpace";
 
 export const layer = (
   childrenOrOptions:
@@ -29,6 +35,43 @@ export const layer = (
       type: options.box === true ? "box" : "layer",
       key: options.key,
       shared: [false, false],
+      resolveUnderlyingSpace: (children: Size<UnderlyingSpace>[]) => {
+        let xSpace = UNDEFINED;
+        const xChildrenPositionSpaces = children.filter(
+          (child) => child[0].kind === "position"
+        );
+        const xChildrenOrdinalSpaces = children.filter(
+          (child) => child[0].kind === "ordinal"
+        );
+
+        if (
+          xChildrenPositionSpaces.length > 0 &&
+          xChildrenOrdinalSpaces.length === 0
+        ) {
+          xSpace = POSITION;
+        } else if (xChildrenOrdinalSpaces.length > 0) {
+          xSpace = ORDINAL;
+        }
+
+        let ySpace = UNDEFINED;
+        const yChildrenPositionSpaces = children.filter(
+          (child) => child[1].kind === "position"
+        );
+        const yChildrenOrdinalSpaces = children.filter(
+          (child) => child[1].kind === "ordinal"
+        );
+
+        if (
+          yChildrenPositionSpaces.length > 0 &&
+          yChildrenOrdinalSpaces.length === 0
+        ) {
+          ySpace = POSITION;
+        } else if (yChildrenOrdinalSpaces.length > 0) {
+          ySpace = ORDINAL;
+        }
+
+        return [xSpace, ySpace];
+      },
       inferPosDomains: (childPosDomains: Size<Domain>[]) => {
         // unify continuous domains of children for each direction
 

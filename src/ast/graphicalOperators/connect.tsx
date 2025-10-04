@@ -15,6 +15,7 @@ import { getValue, isValue, MaybeValue } from "../data";
 import { scaleContext } from "../gofish";
 import { Domain } from "../domain";
 import * as Monotonic from "../../util/monotonic";
+import { UNDEFINED, UnderlyingSpace } from "../underlyingSpace";
 
 export const connect = (
   {
@@ -46,6 +47,9 @@ export const connect = (
       type: "connect",
       shared: [false, false],
       color: fill,
+      resolveUnderlyingSpace: (children: Size<UnderlyingSpace>[]) => {
+        return [UNDEFINED, UNDEFINED];
+      },
       inferSizeDomains: (shared, children) => {
         return {
           w: Monotonic.linear(0, 0),
