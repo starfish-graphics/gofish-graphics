@@ -188,15 +188,6 @@ export const stack = withGoFish(
 
           return result;
         },
-        /* TODO:
-      Nodes are either:
-      - fixed size
-      - scaled (b/c data-driven) (eg bar chart bar heights). equal scale? shared scale?
-      - (uniform) flexed? or maybe grow to whatever size the parent gives them? (eg bar chart
-        bar widths) equal size? shared size?
-
-      child.size[0].mode = "fixed" | "scaled" | "grow"
-*/
         inferSizeDomains: (shared, children) => {
           const childSizeDomains = children.map((child) =>
             child.inferSizeDomains()

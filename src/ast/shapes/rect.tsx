@@ -78,18 +78,22 @@ export const rect = ({
         if (isValue(dims[0].min)) {
           // position. treat it like a position space w/ a single element
           underlyingSpaceX = POSITION;
+        } else if (isValue(dims[0].size)) {
+          underlyingSpaceX = POSITION;
         } else {
           // undefined
-          underlyingSpaceX = UNDEFINED;
+          underlyingSpaceX = ORDINAL;
         }
 
         let underlyingSpaceY = ORDINAL;
         if (isValue(dims[1].min)) {
           // position. treat it like a position space w/ a single element
           underlyingSpaceY = POSITION;
+        } else if (isValue(dims[1].size)) {
+          underlyingSpaceY = POSITION;
         } else {
           // undefined
-          underlyingSpaceY = UNDEFINED;
+          underlyingSpaceY = ORDINAL;
         }
 
         const w = computeIntrinsicSize(dims[0].size);
