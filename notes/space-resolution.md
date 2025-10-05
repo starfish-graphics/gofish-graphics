@@ -96,13 +96,14 @@ Notes
 
 - [x] Add DataSpace types
 - [x] Add resolveUnderlyingSpace method signatures
-- [-] Implement inferSpaces for core operators - (rect, layer, stack)
+- [-] Implement resolveUnderlyingSpace for all shapes and operators - (rect, layer, stack)
   - [x] Stub out resolveUnderlyingSpace
   - [x] Split resolveUnderlyingSpace return into two axes
   - [x] Test abstract resolution kind on existing examples
   - [ ] Implement resolved values
+  - [ ] replace inferPosDomains completely with resolveUnderlyingSpace
   - [ ] Test specific values on existing examples
-- [ ] Update main layout loop to use unified space resolution instead of the infer calls
-- [ ] Add continuous axes. (And discrete axes if we decide to split ordinal from something else)
-- [ ] Migrate remaining operators
-- [ ] Remove old inferPosDomains/inferSizeDomains methods
+  - [ ] Test continuous axes on all charts that currently have them. (And make sure they no longer
+        appear where they shouldn't be.)
+- [ ] **SHIP PR**
+- [ ] Replace inferSizeDomains with discrete cases in resolveUnderlyingSpace
