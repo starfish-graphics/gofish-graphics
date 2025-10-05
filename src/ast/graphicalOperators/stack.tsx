@@ -23,7 +23,13 @@ import { GoFishAST } from "../_ast";
 import { getScaleContext } from "../gofish";
 import { withGoFish } from "../withGoFish";
 import * as Monotonic from "../../util/monotonic";
-import { INTERVAL, ORDINAL, POSITION, UNDEFINED } from "../underlyingSpace";
+import {
+  INTERVAL,
+  ORDINAL,
+  POSITION,
+  UNDEFINED,
+  isPOSITION,
+} from "../underlyingSpace";
 import { UnderlyingSpace } from "../underlyingSpace";
 import * as Interval from "../../util/interval";
 
@@ -78,11 +84,7 @@ export const stack = withGoFish(
 
           // if children are all UNDEFINED or POSITION and alignment is start or end, return POSITION
           if (
-            children.every(
-              (child) =>
-                // child[alignDir].kind === "undefined" ||
-                child[alignDir].kind === "position"
-            ) &&
+            children.every((child) => isPOSITION(child[alignDir])) &&
             (alignment === "start" || alignment === "end")
           ) {
             const domain = Interval.unionAll(
@@ -92,14 +94,13 @@ export const stack = withGoFish(
           }
           // if children are all UNDEFINED or POSITION and alignment is middle, return INTERVAL
           else if (
-            children.every(
-              (child) =>
-                child[alignDir].kind === "undefined" ||
-                child[alignDir].kind === "position"
-            ) &&
+            children.every((child) => isPOSITION(child[alignDir])) &&
             alignment === "middle"
           ) {
-            alignSpace = INTERVAL;
+            const domain = Interval.unionAll(
+              ...children.map((child) => child[alignDir].domain!)
+            );
+            alignSpace = INTERVAL(Interval.width(domain));
           } else {
             alignSpace = UNDEFINED;
           }
