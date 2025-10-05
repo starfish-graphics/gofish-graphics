@@ -13,6 +13,7 @@ import {
   UnderlyingSpace,
   ORDINAL,
 } from "../underlyingSpace";
+import * as Interval from "../../util/interval";
 
 export const layer = (
   childrenOrOptions:
@@ -48,7 +49,10 @@ export const layer = (
           xChildrenPositionSpaces.length > 0 &&
           xChildrenOrdinalSpaces.length === 0
         ) {
-          xSpace = POSITION([0, 0]);
+          const domain = Interval.unionAll(
+            ...xChildrenPositionSpaces.map((child) => child[0].domain!)
+          );
+          xSpace = POSITION([domain.min, domain.max]);
         } else if (xChildrenOrdinalSpaces.length > 0) {
           xSpace = ORDINAL;
         }
@@ -65,7 +69,10 @@ export const layer = (
           yChildrenPositionSpaces.length > 0 &&
           yChildrenOrdinalSpaces.length === 0
         ) {
-          ySpace = POSITION([0, 0]);
+          const domain = Interval.unionAll(
+            ...yChildrenPositionSpaces.map((child) => child[1].domain!)
+          );
+          ySpace = POSITION([domain.min, domain.max]);
         } else if (yChildrenOrdinalSpaces.length > 0) {
           ySpace = ORDINAL;
         }
