@@ -40,6 +40,32 @@ export const Vertical: StoryObj<Args> = {
   },
 };
 
+export const Negative: StoryObj<Args> = {
+  args: { w: 320, h: 400 },
+  render: (args: Args) => {
+    const container = initializeContainer();
+
+    const testData = [
+      { category: "A", value: -30 },
+      { category: "B", value: 80 },
+      { category: "C", value: 45 },
+      { category: "D", value: 60 },
+      { category: "E", value: 20 },
+    ];
+
+    return rect(testData, {
+      fill: "category",
+      h: "value",
+    })
+      .spreadX("category")
+      .render(container, {
+        w: args.w,
+        h: args.h,
+        axes: true,
+      });
+  },
+};
+
 export const Horizontal: StoryObj<Args> = {
   args: { w: 420, h: 400 },
   render: (args: Args) => {

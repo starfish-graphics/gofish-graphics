@@ -122,7 +122,9 @@ export const stack = withGoFish(
                 return domain ? Interval.width(domain) : 0;
               })
               .reduce((a, b) => a + b, 0);
-            stackSpace = POSITION([0, totalWidth]);
+            stackSpace = POSITION(
+              totalWidth >= 0 ? [0, totalWidth] : [totalWidth, 0]
+            );
           }
 
           // if children are all UNDEFINED or POSITION and spacing is > 0, return ORDINAL
