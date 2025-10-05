@@ -21,8 +21,12 @@ export const position = (
       shared: [false, false],
       resolveUnderlyingSpace: (children: Size<UnderlyingSpace>[]) => {
         return [
-          options.x ? POSITION : UNDEFINED,
-          options.y ? POSITION : UNDEFINED,
+          isValue(options.x)
+            ? POSITION([getValue(options.x)!, getValue(options.x)!])
+            : UNDEFINED,
+          isValue(options.y)
+            ? POSITION([getValue(options.y)!, getValue(options.y)!])
+            : UNDEFINED,
         ];
       },
       inferPosDomains: (childPosDomains: Size<Domain>[]) => {
