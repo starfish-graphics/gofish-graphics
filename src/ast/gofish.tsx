@@ -98,40 +98,38 @@ export const gofish = (
     console.log("🌳 Underlying Space Tree:");
     debugUnderlyingSpaceTree(child);
 
-    child.layout(
-      [w, h],
-      [undefined, undefined],
-      [
-        underlyingSpaceX.kind === "position"
-          ? computePosScale(
-              continuous({
-                value: [
-                  underlyingSpaceX.domain!.min,
-                  underlyingSpaceX.domain!.max,
-                ],
-                measure: "unit",
-              }),
-              w
-            )
-          : posDomainX
-            ? computePosScale(posDomainX, w)
-            : undefined,
-        underlyingSpaceY.kind === "position"
-          ? computePosScale(
-              continuous({
-                value: [
-                  underlyingSpaceY.domain!.min,
-                  underlyingSpaceY.domain!.max,
-                ],
-                measure: "unit",
-              }),
-              h
-            )
-          : posDomainY
-            ? computePosScale(posDomainY, h)
-            : undefined,
-      ]
-    );
+    const posScales = [
+      underlyingSpaceX.kind === "position"
+        ? computePosScale(
+            continuous({
+              value: [
+                underlyingSpaceX.domain!.min,
+                underlyingSpaceX.domain!.max,
+              ],
+              measure: "unit",
+            }),
+            w
+          )
+        : posDomainX
+          ? computePosScale(posDomainX, w)
+          : undefined,
+      underlyingSpaceY.kind === "position"
+        ? computePosScale(
+            continuous({
+              value: [
+                underlyingSpaceY.domain!.min,
+                underlyingSpaceY.domain!.max,
+              ],
+              measure: "unit",
+            }),
+            h
+          )
+        : posDomainY
+          ? computePosScale(posDomainY, h)
+          : undefined,
+    ];
+
+    child.layout([w, h], [undefined, undefined], posScales);
     child.place({ x: x ?? transform?.x ?? 0, y: y ?? transform?.y ?? 0 });
     if (debug) {
       debugNodeTree(child);
@@ -152,6 +150,7 @@ export const gofish = (
             sizeDomains,
             underlyingSpaceX,
             underlyingSpaceY,
+            posScales,
           },
           child
         ),
@@ -184,6 +183,7 @@ export const render = (
     sizeDomains,
     underlyingSpaceX,
     underlyingSpaceY,
+    posScales,
   }: {
     width: number;
     height: number;
@@ -195,6 +195,7 @@ export const render = (
     sizeDomains?: [any, any];
     underlyingSpaceX: UnderlyingSpace;
     underlyingSpaceY: UnderlyingSpace;
+    posScales: [(pos: number) => number, (pos: number) => number];
   },
   child: GoFishNode
 ): JSX.Element => {
@@ -251,18 +252,8 @@ export const render = (
               stroke-width="1px"
             /> */}
             {/* y axis (continuous) */}
-            <Show
-              when={
-                isPOSITION(underlyingSpaceY) &&
-                scaleContext?.y &&
-                "scaleFactor" in scaleContext.y
-              }
-            >
+            <Show when={isPOSITION(underlyingSpaceY)}>
               {(() => {
-                const yScale = scaleContext!.y as {
-                  domain: [number, number];
-                  scaleFactor: number;
-                };
                 const [yMin, yMax] = nice(
                   underlyingSpaceY.domain!.min,
                   underlyingSpaceY.domain!.max,
@@ -273,13 +264,9 @@ export const render = (
                   <g>
                     <line
                       x1={-PADDING}
-                      y1={(yTicks[0] - yTicks[0]) * yScale.scaleFactor - 0.5}
+                      y1={posScales[1](yTicks[0]) - 0.5}
                       x2={-PADDING}
-                      y2={
-                        (yTicks[yTicks.length - 1] - yTicks[0]) *
-                          yScale.scaleFactor +
-                        0.5
-                      }
+                      y2={posScales[1](yTicks[yTicks.length - 1]) + 0.5}
                       stroke="gray"
                       stroke-width="1px"
                     />
@@ -289,7 +276,7 @@ export const render = (
                           <text
                             transform="scale(1, -1)"
                             x={-PADDING * 1.75}
-                            y={-(tick - yTicks[0]) * yScale.scaleFactor}
+                            y={-posScales[1](tick)}
                             text-anchor="end"
                             dominant-baseline="middle"
                             font-size="10px"
@@ -299,9 +286,9 @@ export const render = (
                           </text>
                           <line
                             x1={-PADDING * 1.5}
-                            y1={(tick - yTicks[0]) * yScale.scaleFactor}
+                            y1={posScales[1](tick)}
                             x2={-PADDING}
-                            y2={(tick - yTicks[0]) * yScale.scaleFactor}
+                            y2={posScales[1](tick)}
                             stroke="gray"
                           />
                         </>
@@ -387,25 +374,22 @@ export const render = (
                 );
               })()}
             </Show>
-            <Show
-              when={
-                (underlyingSpaceX.kind === "position" ||
-                  underlyingSpaceX.kind === "interval") &&
-                scaleContext?.x &&
-                "scaleFactor" in scaleContext.x
-              }
-            >
+
+            {/* x axis (position) */}
+            <Show when={isPOSITION(underlyingSpaceX)}>
               {(() => {
-                const xScale = scaleContext!.x as {
-                  domain: [number, number];
-                  scaleFactor: number;
-                };
+                const [xMin, xMax] = nice(
+                  underlyingSpaceX.domain!.min,
+                  underlyingSpaceX.domain!.max,
+                  10
+                );
+                const xTicks = ticks(xMin, xMax, 10);
                 return (
                   <g>
                     <line
-                      x1={xTicks[0] * xScale.scaleFactor - 0.5}
+                      x1={posScales[0](xTicks[0]) - 0.5}
                       y1={-PADDING}
-                      x2={xTicks[xTicks.length - 1] * xScale.scaleFactor + 0.5}
+                      x2={posScales[0](xTicks[xTicks.length - 1]) + 0.5}
                       y2={-PADDING}
                       stroke="gray"
                       stroke-width="1px"
@@ -415,7 +399,7 @@ export const render = (
                         <>
                           <text
                             transform="scale(1, -1)"
-                            x={tick * xScale.scaleFactor}
+                            x={posScales[0](tick)}
                             y={PADDING * 1.75}
                             text-anchor="middle"
                             dominant-baseline="hanging"
@@ -425,14 +409,92 @@ export const render = (
                             {tick}
                           </text>
                           <line
-                            x1={tick * xScale.scaleFactor}
+                            x1={posScales[0](tick)}
                             y1={-PADDING}
-                            x2={tick * xScale.scaleFactor}
+                            x2={posScales[0](tick)}
                             y2={-PADDING * 1.5}
                             stroke="gray"
                           />
                         </>
                       )}
+                    </For>
+                  </g>
+                );
+              })()}
+            </Show>
+
+            {/* x axis (interval) */}
+            <Show
+              when={
+                isINTERVAL(underlyingSpaceX) &&
+                scaleContext?.x &&
+                "scaleFactor" in scaleContext.x
+              }
+            >
+              {(() => {
+                const xScale = scaleContext!.x as {
+                  domain: [number, number];
+                  scaleFactor: number;
+                };
+                const [xMin, xMax] = nice(0, underlyingSpaceX.width, 10);
+                const xTicks = ticks(xMin, xMax, 10);
+                return (
+                  <g>
+                    <line
+                      x1={(xTicks[0] - xTicks[0]) * xScale.scaleFactor - 0.5}
+                      y1={-PADDING}
+                      x2={
+                        (xTicks[xTicks.length - 1] - xTicks[0]) *
+                          xScale.scaleFactor +
+                        0.5
+                      }
+                      y2={-PADDING}
+                      stroke="gray"
+                      stroke-width="1px"
+                    />
+                    <For each={xTicks}>
+                      {(tick) => (
+                        <>
+                          <line
+                            x1={(tick - xTicks[0]) * xScale.scaleFactor}
+                            y1={-PADDING * 1.5}
+                            x2={(tick - xTicks[0]) * xScale.scaleFactor}
+                            y2={-PADDING}
+                            stroke="gray"
+                          />
+                        </>
+                      )}
+                    </For>
+
+                    {/* For each pair of xTicks, put text in between showing the difference */}
+                    <For
+                      each={Array.from(
+                        { length: xTicks.length - 1 },
+                        (_, i) => i
+                      )}
+                    >
+                      {(i) => {
+                        const tick1 = xTicks[i];
+                        const tick2 = xTicks[i + 1];
+                        const diff = tick2 - tick1;
+                        // Position text halfway between the two ticks
+                        const x1 = (tick1 - xTicks[0]) * xScale.scaleFactor;
+                        const x2 = (tick2 - xTicks[0]) * xScale.scaleFactor;
+                        const xMid = (x1 + x2) / 2;
+                        return (
+                          <text
+                            transform="scale(1, -1)"
+                            x={xMid}
+                            y={PADDING * 1.75}
+                            text-anchor="middle"
+                            dominant-baseline="hanging"
+                            font-size="10px"
+                            fill="gray"
+                          >
+                            {diff}
+                          </text>
+                        );
+                      }}
                     </For>
                   </g>
                 );

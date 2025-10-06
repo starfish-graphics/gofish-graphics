@@ -29,7 +29,13 @@ import { getValue, isValue, MaybeValue } from "./data";
 import { color6 } from "../color";
 import * as Monotonic from "../util/monotonic";
 import { findTargetMonotonic } from "../util";
-import { UnderlyingSpace } from "./underlyingSpace";
+import {
+  isINTERVAL,
+  isORDINAL,
+  isPOSITION,
+  isUNDEFINED,
+  UnderlyingSpace,
+} from "./underlyingSpace";
 import { toJSON } from "../util/interval";
 
 export type ScaleFactorFunction = Monotonic.Monotonic;
@@ -486,17 +492,31 @@ export const debugUnderlyingSpaceTree = (
     if (Array.isArray(space)) {
       return `[${space
         .map((s) => {
-          if (s.kind === "position" && s.domain) {
+          if (isPOSITION(s)) {
             return `position(${toJSON(s.domain)})`;
+          } else if (isINTERVAL(s)) {
+            return `interval(${s.width})`;
+          } else if (isORDINAL(s)) {
+            return `ordinal(${s.spacing})`;
+          } else if (isUNDEFINED(s)) {
+            return `undefined`;
+          } else {
+            return s.kind;
           }
-          return s.kind;
         })
         .join(", ")}]`;
     } else {
-      if (space.kind === "position" && space.domain) {
+      if (isPOSITION(space)) {
         return `position(${toJSON(space.domain)})`;
+      } else if (isINTERVAL(space)) {
+        return `interval(${space.width})`;
+      } else if (isORDINAL(space)) {
+        return `ordinal(${space.spacing})`;
+      } else if (isUNDEFINED(space)) {
+        return `undefined`;
+      } else {
+        return space.kind;
       }
-      return space.kind;
     }
   };
 
