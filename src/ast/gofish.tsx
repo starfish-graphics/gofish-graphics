@@ -92,11 +92,12 @@ export const gofish = (
     const [posDomainX, posDomainY] = child.inferPosDomains();
     const sizeDomains = child.inferSizeDomains();
     const [underlyingSpaceX, underlyingSpaceY] = child.resolveUnderlyingSpace();
-    console.log("underlyingSpace", { underlyingSpaceX, underlyingSpaceY });
 
     // Debug: Print the tree of underlying spaces
-    console.log("🌳 Underlying Space Tree:");
-    debugUnderlyingSpaceTree(child);
+    if (debug) {
+      console.log("🌳 Underlying Space Tree:");
+      debugUnderlyingSpaceTree(child);
+    }
 
     const posScales = [
       underlyingSpaceX.kind === "position"
