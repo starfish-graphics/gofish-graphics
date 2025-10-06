@@ -23,6 +23,15 @@ import { GoFishAST } from "../_ast";
 import { getScaleContext } from "../gofish";
 import { withGoFish } from "../withGoFish";
 import * as Monotonic from "../../util/monotonic";
+import {
+  INTERVAL,
+  ORDINAL,
+  POSITION,
+  UNDEFINED,
+  isPOSITION,
+} from "../underlyingSpace";
+import { UnderlyingSpace } from "../underlyingSpace";
+import * as Interval from "../../util/interval";
 
 // Utility function to unwrap lodash wrapped arrays
 const unwrapLodashArray = function <T>(value: T[] | Collection<T>): T[] {
@@ -69,6 +78,75 @@ export const stack = withGoFish(
         key,
         name,
         shared: [sharedScale, sharedScale],
+        resolveUnderlyingSpace: (children: Size<UnderlyingSpace>[]) => {
+          /* ALIGNMENT RULES */
+          let alignSpace = UNDEFINED;
+
+          // if children are all UNDEFINED or POSITION and alignment is start or end, return POSITION
+          if (
+            children.every((child) => isPOSITION(child[alignDir])) &&
+            (alignment === "start" || alignment === "end")
+          ) {
+            const domain = Interval.unionAll(
+              ...children.map((child) => child[alignDir].domain!)
+            );
+            alignSpace = POSITION([domain.min, domain.max]);
+          }
+          // if children are all UNDEFINED or POSITION and alignment is middle, return INTERVAL
+          else if (
+            children.every((child) => isPOSITION(child[alignDir])) &&
+            alignment === "middle"
+          ) {
+            const domain = Interval.unionAll(
+              ...children.map((child) => child[alignDir].domain!)
+            );
+            alignSpace = INTERVAL(Interval.width(domain));
+          } else {
+            alignSpace = UNDEFINED;
+          }
+
+          /* SPACING RULES */
+          let stackSpace = UNDEFINED;
+          // if children are all UNDEFINED or POSITION and spacing is 0, return POSITION
+          if (
+            children.every(
+              (child) =>
+                // child[stackDir].kind === "undefined" ||
+                child[stackDir].kind === "position"
+            ) &&
+            spacing === 0
+          ) {
+            // position's domain should be [0, sum(widths of child intervals)] using the interval library
+            const totalWidth = children
+              .map((child) => {
+                const domain = child[stackDir].domain;
+                return domain ? Interval.width(domain) : 0;
+              })
+              .reduce((a, b) => a + b, 0);
+            stackSpace = POSITION(
+              totalWidth >= 0 ? [0, totalWidth] : [totalWidth, 0]
+            );
+          }
+
+          // if children are all UNDEFINED or POSITION and spacing is > 0, return ORDINAL
+          else if (
+            children.every(
+              (child) =>
+                child[stackDir].kind === "undefined" ||
+                child[stackDir].kind === "position"
+            ) &&
+            spacing > 0
+          ) {
+            stackSpace = ORDINAL;
+          } else {
+            stackSpace = ORDINAL;
+          }
+
+          return {
+            [stackDir]: stackSpace,
+            [alignDir]: alignSpace,
+          };
+        },
         inferPosDomains: (childPosDomains: Size<Domain>[]) => {
           // For the stacking dimension, unify domains like in layer
           // console.log("stack.inferPosDomains", { childPosDomains });
@@ -121,15 +199,6 @@ export const stack = withGoFish(
 
           return result;
         },
-        /* TODO:
-      Nodes are either:
-      - fixed size
-      - scaled (b/c data-driven) (eg bar chart bar heights). equal scale? shared scale?
-      - (uniform) flexed? or maybe grow to whatever size the parent gives them? (eg bar chart
-        bar widths) equal size? shared size?
-
-      child.size[0].mode = "fixed" | "scaled" | "grow"
-*/
         inferSizeDomains: (shared, children) => {
           const childSizeDomains = children.map((child) =>
             child.inferSizeDomains()
@@ -284,13 +353,15 @@ export const stack = withGoFish(
             }
           }
 
+          const alignSize = Math.max(
+            ...childPlaceables.map((child) => child.dims[alignDir].size!)
+          );
           return {
             intrinsicDims: {
               [alignDir]: {
                 min: alignMin,
-                size: Math.max(
-                  ...childPlaceables.map((child) => child.dims[alignDir].size!)
-                ),
+                size: alignSize,
+                max: alignMin + alignSize,
               },
               [stackDir]: {
                 min: 0,

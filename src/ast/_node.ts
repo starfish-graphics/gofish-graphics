@@ -29,6 +29,14 @@ import { getValue, isValue, MaybeValue } from "./data";
 import { color6 } from "../color";
 import * as Monotonic from "../util/monotonic";
 import { findTargetMonotonic } from "../util";
+import {
+  isINTERVAL,
+  isORDINAL,
+  isPOSITION,
+  isUNDEFINED,
+  UnderlyingSpace,
+} from "./underlyingSpace";
+import { toJSON } from "../util/interval";
 
 export type ScaleFactorFunction = Monotonic.Monotonic;
 
@@ -87,12 +95,18 @@ export type Render = (
   children: JSX.Element[]
 ) => JSX.Element;
 
+export type ResolveUnderlyingSpace = (
+  childSpaces: Size<UnderlyingSpace>[]
+) => FancySize<UnderlyingSpace>;
+
 export class GoFishNode {
   public type: string;
   public key?: string;
   public _name?: string;
   public parent?: GoFishNode;
   // private inferDomains: (childDomains: Size<Domain>[]) => FancySize<Domain | undefined>;
+  private _resolveUnderlyingSpace: ResolveUnderlyingSpace;
+  private _underlyingSpace?: Size<UnderlyingSpace> = undefined;
   private _inferPosDomains: (
     childPosDomains: Size<ContinuousDomain>[]
   ) => FancySize<ContinuousDomain | undefined>;
@@ -114,6 +128,7 @@ export class GoFishNode {
       key,
       type,
       // inferDomains,
+      resolveUnderlyingSpace,
       inferSizeDomains,
       layout,
       render,
@@ -126,6 +141,7 @@ export class GoFishNode {
       type: string;
       // inferDomains: (childDomains: Size<Domain>[]) => FancySize<Domain | undefined>;
       /* TODO: I'm not sure whether scale inference and sizeThatFits should be separate or the same pass*/
+      resolveUnderlyingSpace: ResolveUnderlyingSpace;
       inferSizeDomains: InferSizeDomains;
       layout: Layout;
       render: Render;
@@ -138,6 +154,7 @@ export class GoFishNode {
     children: GoFishAST[]
   ) {
     // this.inferDomains = inferDomains;
+    this._resolveUnderlyingSpace = resolveUnderlyingSpace;
     this._inferSizeDomains = inferSizeDomains;
     this._layout = layout;
     this._render = render;
@@ -189,6 +206,19 @@ export class GoFishNode {
       child.resolveKeys();
     });
   }
+
+  public resolveUnderlyingSpace(): Size<UnderlyingSpace> {
+    if (this._underlyingSpace) {
+      return this._underlyingSpace;
+    }
+    this._underlyingSpace = elaborateSize(
+      this._resolveUnderlyingSpace(
+        this.children.map((child) => child.resolveUnderlyingSpace())
+      )
+    );
+    return this._underlyingSpace;
+  }
+
   public inferPosDomains(): Size<ContinuousDomain | undefined> {
     const posDomains = elaborateSize(
       this._inferPosDomains(
@@ -382,9 +412,12 @@ export const debugNodeTree = (
   node: GoFishNode | GoFishAST,
   indent: string = ""
 ): void => {
+  // Get the name for display (handle both GoFishNode and GoFishRef)
+  const nodeName = isGoFishNode(node) ? node._name : node.name;
+
   // Create a group for this node
   console.group(
-    `${indent}Node: ${node.type}${node._name ? ` (${node._name})` : ""}`
+    `${indent}Node: ${node.type}${nodeName ? ` (${nodeName})` : ""}`
   );
 
   // Only print GoFishNode specific properties
@@ -443,4 +476,71 @@ export const debugNodeTree = (
   }
 
   console.groupEnd();
+};
+
+export const debugUnderlyingSpaceTree = (
+  node: GoFishNode | GoFishAST,
+  indent: string = ""
+): void => {
+  // Get the underlying space for this node
+  const underlyingSpace = node.resolveUnderlyingSpace();
+
+  // Format the underlying space for display
+  const formatUnderlyingSpace = (
+    space: UnderlyingSpace | Size<UnderlyingSpace>
+  ): string => {
+    if (Array.isArray(space)) {
+      return `[${space
+        .map((s) => {
+          if (isPOSITION(s)) {
+            return `position(${toJSON(s.domain)})`;
+          } else if (isINTERVAL(s)) {
+            return `interval(${s.width})`;
+          } else if (isORDINAL(s)) {
+            return `ordinal(${s.spacing})`;
+          } else if (isUNDEFINED(s)) {
+            return `undefined`;
+          } else {
+            return s.kind;
+          }
+        })
+        .join(", ")}]`;
+    } else {
+      if (isPOSITION(space)) {
+        return `position(${toJSON(space.domain)})`;
+      } else if (isINTERVAL(space)) {
+        return `interval(${space.width})`;
+      } else if (isORDINAL(space)) {
+        return `ordinal(${space.spacing})`;
+      } else if (isUNDEFINED(space)) {
+        return `undefined`;
+      } else {
+        return space.kind;
+      }
+    }
+  };
+
+  // Get the name for display (handle both GoFishNode and GoFishRef)
+  const nodeName = isGoFishNode(node) ? node._name : node.name;
+  const hasChildren =
+    "children" in node && node.children && node.children.length > 0;
+
+  // Create a group for this node only if it has children
+  if (hasChildren) {
+    console.group(
+      `${indent}${node.type}${nodeName ? ` (${nodeName})` : ""} → ${formatUnderlyingSpace(underlyingSpace)}`
+    );
+  } else {
+    console.log(
+      `${indent}${node.type}${nodeName ? ` (${nodeName})` : ""} → ${formatUnderlyingSpace(underlyingSpace)}`
+    );
+  }
+
+  // Print children
+  if (hasChildren) {
+    node.children.forEach((child) => {
+      debugUnderlyingSpaceTree(child, indent + "  ");
+    });
+    console.groupEnd();
+  }
 };

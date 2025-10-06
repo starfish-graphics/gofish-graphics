@@ -14,6 +14,7 @@ import {
   getMeasure,
   getValue,
   inferEmbedded,
+  isAesthetic,
   isValue,
   MaybeValue,
   value,
@@ -31,6 +32,7 @@ import { aesthetic, continuous, Domain } from "../domain";
 import { scaleContext } from "../gofish";
 import * as Monotonic from "../../util/monotonic";
 import { computeAesthetic, computeSize } from "../../util";
+import { INTERVAL, ORDINAL, POSITION, UNDEFINED } from "../underlyingSpace";
 
 const computeIntrinsicSize = (
   input: MaybeValue<number> | undefined
@@ -59,7 +61,7 @@ export const rect = ({
   strokeWidth?: number;
   rx?: number;
   ry?: number;
-  filter?: string
+  filter?: string;
 } & FancyDims<MaybeValue<number>>) => {
   const dims = elaborateDims(fancyDims).map(inferEmbedded);
   return new GoFishNode(
@@ -68,15 +70,85 @@ export const rect = ({
       key,
       type: "rect",
       color: fill,
+      resolveUnderlyingSpace: () => {
+        /* cases
+        a: aesthetic
+        v: value
+        u: undefined
+
+        
+        min size
+        --------
+        a a: ordinal
+        a v: interval
+        a u: ordinal
+        v a: position([min, min])
+        v v: position([min, min+size])
+        v u: position([min, min])
+        u a: ordinal
+        u v: position([0, size])
+        u u: ordinal
+
+
+        grouped cases
+        -------------
+        a a: ordinal
+        a u: ordinal
+        u a: ordinal
+        u u: ordinal
+
+        a v: interval
+
+        v a: position([min, min])
+        v v: position([min, min+size])
+        v u: position([min, min])
+        u v: position([0, size])
+        */
+
+        let underlyingSpaceX = UNDEFINED;
+        if (!isValue(dims[0].min) && !isValue(dims[0].size)) {
+          // nothing is data-driven
+          underlyingSpaceX = ORDINAL;
+        } else if (isAesthetic(dims[0].min) && isValue(dims[0].size)) {
+          // the best we can do is interval
+          underlyingSpaceX = INTERVAL;
+        } else {
+          const min = isValue(dims[0].min) ? getValue(dims[0].min) : 0;
+          const size = isValue(dims[0].size) ? getValue(dims[0].size) : 0;
+          underlyingSpaceX = POSITION(
+            size >= 0 ? [min, min + size] : [min + size, min]
+          );
+        }
+
+        let underlyingSpaceY = UNDEFINED;
+        if (!isValue(dims[1].min) && !isValue(dims[1].size)) {
+          // nothing is data-driven
+          underlyingSpaceY = ORDINAL;
+        } else if (isAesthetic(dims[1].min) && isValue(dims[1].size)) {
+          // the best we can do is interval
+          underlyingSpaceY = INTERVAL;
+        } else {
+          const min = isValue(dims[1].min) ? getValue(dims[1].min) : 0;
+          const size = isValue(dims[1].size) ? getValue(dims[1].size) : 0;
+          underlyingSpaceY = POSITION(
+            size >= 0 ? [min, min + size] : [min + size, min]
+          );
+        }
+
+        // const w = computeIntrinsicSize(dims[0].size);
+        // const h = computeIntrinsicSize(dims[1].size);
+
+        return [underlyingSpaceX, underlyingSpaceY];
+      },
       inferPosDomains: (childPosDomains: Size<Domain>[]) => {
         const result = [
           isValue(dims[0].min)
             ? continuous({
                 value: [
-                  getValue(dims[0].min)!,
+                  getValue(dims[0].min),
                   isValue(dims[0].size)
-                    ? getValue(dims[0].min)! + getValue(dims[0].size)!
-                    : getValue(dims[0].min)!,
+                    ? getValue(dims[0].min) + getValue(dims[0].size)
+                    : getValue(dims[0].min),
                 ],
                 measure: getMeasure(dims[0].min),
               })
@@ -84,10 +156,10 @@ export const rect = ({
           isValue(dims[1].min)
             ? continuous({
                 value: [
-                  getValue(dims[1].min)!,
+                  getValue(dims[1].min),
                   isValue(dims[1].size)
-                    ? getValue(dims[1].min)! + getValue(dims[1].size)!
-                    : getValue(dims[1].min)!,
+                    ? getValue(dims[1].min) + getValue(dims[1].size)
+                    : getValue(dims[1].min),
                 ],
                 measure: getMeasure(dims[1].min),
               })
@@ -242,7 +314,7 @@ export const rect = ({
 
           return (
             <rect
-               transform={`scale(1, -1)`}
+              transform={`scale(1, -1)`}
               x={transformedX - width / 2}
               y={-(transformedY - height / 2) - height}
               rx={rx}
@@ -287,7 +359,7 @@ export const rect = ({
               <rect
                 transform={`scale(1, -1)`}
                 x={x}
-                y={- y - height}
+                y={-y - height}
                 width={width}
                 height={height}
                 fill={fill}
@@ -336,7 +408,16 @@ export const rect = ({
           const y = displayDims[1].min ?? 0;
           const width = (displayDims[0].max ?? 0) - x;
           const height = (displayDims[1].max ?? 0) - y;
-          return <rect transform={`scale(1, -1)`} x={x} y={- y - height} width={width} height={height} fill={fill} />;
+          return (
+            <rect
+              transform={`scale(1, -1)`}
+              x={x}
+              y={-y - height}
+              width={width}
+              height={height}
+              fill={fill}
+            />
+          );
         }
 
         const corners = path(

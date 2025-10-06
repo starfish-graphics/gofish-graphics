@@ -119,6 +119,7 @@ export class _Chart<T> {
       mode?: "edge" | "center";
       strokeWidth?: number;
       debug?: boolean;
+      mixBlendMode?: "normal" | "multiply";
     }
   ) {
     return new _Chart(this._data, (d: T[], k: number | string) => {
@@ -145,6 +146,7 @@ export class _Chart<T> {
                   opacity: options?.opacity,
                   mode: options?.mode ? connectXMode[options?.mode] : undefined,
                   strokeWidth: options?.strokeWidth,
+                  mixBlendMode: options?.mixBlendMode,
                 },
                 For(groupBy(items, options?.over?.toString()), (item, i) =>
                   Ref(`${k}-${i}-${o}`)
@@ -157,6 +159,7 @@ export class _Chart<T> {
                 opacity: options?.opacity,
                 mode: options?.mode ? connectXMode[options?.mode] : undefined,
                 strokeWidth: options?.strokeWidth,
+                mixBlendMode: options?.mixBlendMode,
               },
               For(groupBy(d, key.toString()), (items, i) => Ref(`${k}-${i}`))
             ),

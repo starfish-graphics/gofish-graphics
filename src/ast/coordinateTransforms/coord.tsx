@@ -6,6 +6,12 @@ import { GoFishNode } from "../_node";
 import { elaborateDims, FancyDims, Interval, Size } from "../dims";
 import { black } from "../../color";
 import { canUnifyDomains, Domain, unifyContinuousDomains } from "../domain";
+import {
+  UnderlyingSpace,
+  UNDEFINED,
+  POSITION,
+  ORDINAL,
+} from "../underlyingSpace";
 
 export type CoordinateTransform = {
   type: string;
@@ -100,6 +106,43 @@ export const coord = (
       type: "coord",
       key,
       name,
+      resolveUnderlyingSpace: (children: Size<UnderlyingSpace>[]) => {
+        let xSpace = UNDEFINED;
+        const xChildrenPositionSpaces = children.filter(
+          (child) => child[0].kind === "position"
+        );
+        const xChildrenOrdinalSpaces = children.filter(
+          (child) => child[0].kind === "ordinal"
+        );
+
+        if (
+          xChildrenPositionSpaces.length > 0 &&
+          xChildrenOrdinalSpaces.length === 0
+        ) {
+          xSpace = POSITION;
+        } else if (xChildrenOrdinalSpaces.length > 0) {
+          xSpace = ORDINAL;
+        }
+
+        let ySpace = UNDEFINED;
+        const yChildrenPositionSpaces = children.filter(
+          (child) => child[1].kind === "position"
+        );
+        const yChildrenOrdinalSpaces = children.filter(
+          (child) => child[1].kind === "ordinal"
+        );
+
+        if (
+          yChildrenPositionSpaces.length > 0 &&
+          yChildrenOrdinalSpaces.length === 0
+        ) {
+          ySpace = POSITION;
+        } else if (yChildrenOrdinalSpaces.length > 0) {
+          ySpace = ORDINAL;
+        }
+
+        return [xSpace, ySpace];
+      },
       inferPosDomains: (childPosDomains: Size<Domain>[]) => {
         // unify continuous domains of children for each direction
         return [

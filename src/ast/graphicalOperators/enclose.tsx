@@ -5,6 +5,7 @@ import { GoFishAST } from "../_ast";
 import { black, gray, tailwindColors } from "../../color";
 import { Domain } from "../domain";
 import * as Monotonic from "../../util/monotonic";
+import { UNDEFINED, UnderlyingSpace } from "../underlyingSpace";
 
 export const enclose = (
   {
@@ -18,6 +19,9 @@ export const enclose = (
     {
       type: "enclose",
       shared: [false, false],
+      resolveUnderlyingSpace: (children: Size<UnderlyingSpace>[]) => {
+        return [UNDEFINED, UNDEFINED];
+      },
       inferPosDomains: (childPosDomains: Size<Domain>[]) => {
         return [undefined, undefined];
       },
