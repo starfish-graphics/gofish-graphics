@@ -126,3 +126,19 @@ export const StackedWithSpacing: StoryObj<Args> = {
       });
   },
 };
+
+export const Grouped: StoryObj<Args> = {
+  args: { w: 420, h: 400 },
+  render: (args: Args) => {
+    const container = initializeContainer();
+    return rect(catchData, { fill: "species", h: "count" })
+      .stackX("species")
+      .transform((d) => orderBy(d, "count", "asc"))
+      .spreadX("lake", { alignment: "start" })
+      .render(container, {
+        w: args.w,
+        h: args.h,
+        axes: true,
+      });
+  },
+};

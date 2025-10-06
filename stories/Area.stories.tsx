@@ -24,8 +24,42 @@ export const Area: StoryObj<Args> = {
     const container = initializeContainer();
 
     return guide(catchData, { h: "count", fill: "species" })
-    .spreadX("lake", { spacing: 60 })
-    .connectX("lake", { opacity: 0.7 })
+      .spreadX("lake", { spacing: 60 })
+      .connectX("lake", { opacity: 0.7 })
+      .render(container, {
+        w: args.w,
+        h: args.h,
+        axes: true,
+      });
+  },
+};
+
+export const Ridgeline: StoryObj<Args> = {
+  args: { w: 320, h: 400 },
+  render: (args: Args) => {
+    const container = initializeContainer();
+
+    return guide(catchData, { h: "count", fill: "species" })
+      .spreadX("lake", { spacing: 80 })
+      .connectX("lake", { mixBlendMode: "normal" })
+      .spreadY("species", { spacing: -16 })
+      .render(container, {
+        w: args.w,
+        h: args.h,
+        axes: true,
+      });
+  },
+};
+
+export const RidgelineNoSpacing: StoryObj<Args> = {
+  args: { w: 320, h: 400 },
+  render: (args: Args) => {
+    const container = initializeContainer();
+
+    return guide(catchData, { h: "count", fill: "species" })
+      .spreadX("lake", { spacing: 80 })
+      .connectX("lake", { mixBlendMode: "normal" })
+      .spreadY("species", { spacing: 0 })
       .render(container, {
         w: args.w,
         h: args.h,

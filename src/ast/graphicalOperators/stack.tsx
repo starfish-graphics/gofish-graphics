@@ -353,13 +353,15 @@ export const stack = withGoFish(
             }
           }
 
+          const alignSize = Math.max(
+            ...childPlaceables.map((child) => child.dims[alignDir].size!)
+          );
           return {
             intrinsicDims: {
               [alignDir]: {
                 min: alignMin,
-                size: Math.max(
-                  ...childPlaceables.map((child) => child.dims[alignDir].size!)
-                ),
+                size: alignSize,
+                max: alignMin + alignSize,
               },
               [stackDir]: {
                 min: 0,
