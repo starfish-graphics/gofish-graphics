@@ -1,5 +1,50 @@
-/* goal syntax */
-// Minimal stubs to make the example typecheck
+import { Dictionary, groupBy, ValueIteratee } from "lodash";
+import { Rect, Stack, sumBy, v } from "../../lib";
+import { GoFishNode } from "../_node";
+import { MaybeValue } from "../data";
+import { For } from "../iterators/for";
+
+/* inference */
+const inferSize = <T>(
+  accessor: string | number | undefined,
+  d: T | T[]
+): MaybeValue<number> | undefined => {
+  return typeof accessor === "number"
+    ? accessor
+    : accessor !== undefined
+      ? v(sumBy(d as T[], accessor))
+      : undefined;
+};
+
+const connectXMode = {
+  edge: "edge-to-edge",
+  center: "center-to-center",
+} as const;
+
+export type Mark<T> = (d: T, key?: string | number) => GoFishNode;
+
+export type Operator<T, U> = (_: Mark<U>) => Mark<T>;
+
+export function derive<T, U>(fn: (d: T) => U): Operator<T, U> {
+  return (mark: Mark<U>) => {
+    return (d: T, key?: string | number) => mark(fn(d), key);
+  };
+}
+
+export function createArrayOperator<T>(
+  fn: (children: GoFishNode[]) => GoFishNode
+): Operator<T[], { item: T; key: number | string }> {
+  return (mark: Mark<{ item: T; key: number | string }>) => {
+    return (d: T[], key?: string | number) => {
+      return fn(
+        For(d, (item, k) =>
+          mark({ item, key: key != undefined ? `${key}-${k}` : k })
+        )
+      );
+    };
+  };
+}
+
 export type ChartOperator<T = unknown> = (
   state: ChartState<T>
 ) => ChartState<T>;
@@ -12,16 +57,42 @@ export interface ChartState<T = unknown> {
 }
 
 export class ChartBuilder<T> {
-  private readonly initialState: ChartState<T>;
+  private readonly data: T;
 
   constructor(data: T) {
-    this.initialState = { data, marks: [] };
+    this.data = data;
   }
 
-  flow(...operators: ChartOperator<T>[]) {
-    let state = this.initialState;
-    for (const op of operators) state = op(state);
-    return new ChartInstance(state);
+  // Overload for better type inference with specific operators
+  flow<TFinal>(op1: Operator<T, TFinal>, mark: Mark<TFinal>): GoFishNode;
+  flow<T1, TFinal>(
+    op1: Operator<T, T1>,
+    op2: Operator<T1, TFinal>,
+    mark: Mark<TFinal>
+  ): GoFishNode;
+  flow<T1, T2, TFinal>(
+    op1: Operator<T, T1>,
+    op2: Operator<T1, T2>,
+    op3: Operator<T2, TFinal>,
+    mark: Mark<TFinal>
+  ): GoFishNode;
+  flow<TFinal>(
+    ...args: [Operator<T, any>, ...Operator<any, any>[], Mark<TFinal>]
+  ): GoFishNode {
+    if (args.length === 0) {
+      throw new Error("flow requires at least one argument (a mark)");
+    }
+
+    const mark = args[args.length - 1] as Mark<TFinal>;
+    const operators = args.slice(0, -1) as Operator<any, any>[];
+
+    // Compose all operators
+    const composedMark = operators.reduce((currentMark, operator) => {
+      return operator(currentMark);
+    }, mark);
+
+    // Apply the composed mark to the data
+    return composedMark(this.data as any);
   }
 }
 
@@ -33,20 +104,140 @@ export function chart<T>(data: T): ChartBuilder<T> {
   return new ChartBuilder<T>(data);
 }
 
-export function spread_by<T = unknown>(
-  _channel: string,
-  _options?: { dir?: ChartDirection }
-): ChartOperator<T> {
-  return (state) => state;
+export function spread<T>(options: {
+  dir: "x" | "y";
+  x?: number;
+  y?: number;
+  t?: number;
+  r?: number;
+  w?: number | keyof T;
+  h?: number | keyof T;
+  mode?: "edge" | "center";
+  spacing?: number;
+  sharedScale?: boolean;
+  alignment?: "start" | "middle" | "end";
+  debug?: boolean;
+  label?: boolean;
+}): Operator<
+  T[] | Record<string, T> | _.Collection<T> | _.Object<Dictionary<T>>,
+  { item: T; key: number | string }
+> {
+  // Default label to true if not specified
+  const opts = { ...options, label: options?.label ?? true };
+  return (mark: Mark<{ item: T; key: number | string }>) => {
+    return (
+      d: T[] | Record<string, T> | _.Collection<T> | _.Object<Dictionary<T>>,
+      key?: string | number
+    ) => {
+      return Stack(
+        {
+          direction: opts.dir === "x" ? 0 : 1,
+          x: opts?.x ?? opts?.t,
+          y: opts?.y ?? opts?.r,
+          mode: opts?.mode ? connectXMode[opts?.mode] : undefined,
+          spacing: opts?.spacing ?? 8,
+          sharedScale: opts?.sharedScale,
+          alignment: opts?.alignment,
+          w: inferSize(opts?.w, Array.isArray(d) ? d : Object.values(d)),
+          h: inferSize(opts?.h, Array.isArray(d) ? d : Object.values(d)),
+        },
+        For(d, (item, k) => {
+          key = key != undefined ? `${key}-${k}` : k;
+          const node = mark({
+            item,
+            key,
+          });
+          return opts.label ? node.setKey(key?.toString() ?? "") : node;
+        })
+      );
+    };
+  };
 }
 
-export function rect<T = unknown>(options?: {
-  h?: string | number;
-  fill?: string;
-}): ChartOperator<T> {
-  return (state) => {
-    state.marks.push({ type: "rect", options });
-    return state;
+export function compose<T>(...operators: Operator<any, any>[]) {
+  return (mark: Mark<T>) => {
+    for (const op of operators) {
+      mark = op(mark);
+    }
+    return mark;
+  };
+}
+
+export function group_by<T>(iteratee: ValueIteratee<T>) {
+  return (d: T[]): Record<string, T[]> => {
+    return groupBy(d, iteratee);
+  };
+}
+
+export function spread_by<T>(
+  iteratee: keyof T | ((item: T) => any),
+  options: {
+    dir: "x" | "y";
+    x?: number;
+    y?: number;
+    t?: number;
+    r?: number;
+    w?: number | keyof T;
+    h?: number | keyof T;
+    mode?: "edge" | "center";
+    spacing?: number;
+    sharedScale?: boolean;
+    alignment?: "start" | "middle" | "end";
+    debug?: boolean;
+    label?: boolean;
+  }
+): Operator<T[], T[]> {
+  return compose(
+    derive(group_by(iteratee as ValueIteratee<T>)),
+    spread(options)
+  );
+}
+
+export function rect<T extends Record<string, any>>({
+  w,
+  h,
+  rs,
+  ts,
+  rx,
+  ry,
+  fill,
+  debug,
+}: {
+  w?: number | keyof T;
+  h?: number | keyof T;
+  rs?: number;
+  ts?: number;
+  rx?: number;
+  ry?: number;
+  fill: keyof T | (string & {});
+  debug?: boolean;
+}): Mark<T | T[] | { item: T | T[]; key: number | string }> {
+  return (input: T | T[] | { item: T | T[]; key: number | string }) => {
+    let d: T | T[], key: number | string | undefined;
+    if (typeof input === "object" && input !== null && "item" in input) {
+      // @ts-ignore
+      d = input.item;
+      // @ts-ignore
+      key = input.key;
+    } else {
+      d = input;
+      key = undefined;
+    }
+    if (debug) console.log("rect", key, d);
+    return Rect({
+      w: inferSize(w, d) ?? inferSize(ts, d),
+      h: inferSize(h, d) ?? inferSize(rs, d),
+      // rs: inferSize(rs, d),
+      // ts: inferSize(ts, d),
+      rx,
+      ry,
+      fill:
+        typeof fill === "string" &&
+        (Array.isArray(d) ? d[0] : d) &&
+        fill in (Array.isArray(d) ? d[0] : d)
+          ? v(Array.isArray(d) ? d[0][fill as keyof T] : d[fill as keyof T])
+          : fill,
+    }).name(key?.toString() ?? "");
   };
 }
 
