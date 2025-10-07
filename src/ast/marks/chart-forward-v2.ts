@@ -140,12 +140,12 @@ export function spread<T>(options: {
           h: inferSize(opts?.h, Array.isArray(d) ? d : Object.values(d)),
         },
         For(d, (item, k) => {
-          key = key != undefined ? `${key}-${k}` : k;
+          const currentKey = key != undefined ? `${key}-${k}` : k;
           const node = mark({
             item,
-            key,
+            key: currentKey,
           });
-          return opts.label ? node.setKey(key?.toString() ?? "") : node;
+          return opts.label ? node.setKey(currentKey?.toString() ?? "") : node;
         })
       );
     };
