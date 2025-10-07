@@ -83,16 +83,14 @@ export class ChartBuilder<T> {
       throw new Error("flow requires at least one argument (a mark)");
     }
 
-    const mark = args[args.length - 1] as Mark<TFinal>;
+    let mark = args[args.length - 1] as Mark<TFinal>;
     const operators = args.slice(0, -1) as Operator<any, any>[];
 
-    // Compose all operators
-    const composedMark = operators.reduce((currentMark, operator) => {
-      return operator(currentMark);
-    }, mark);
+    for (const op of operators.toReversed()) {
+      mark = op(mark);
+    }
 
-    // Apply the composed mark to the data
-    return composedMark(this.data as any);
+    return mark(this.data as any);
   }
 }
 
@@ -156,7 +154,7 @@ export function spread<T>(options: {
 
 export function compose<T>(...operators: Operator<any, any>[]) {
   return (mark: Mark<T>) => {
-    for (const op of operators) {
+    for (const op of operators.toReversed()) {
       mark = op(mark);
     }
     return mark;
@@ -187,10 +185,15 @@ export function spread_by<T>(
     label?: boolean;
   }
 ): Operator<T[], T[]> {
-  return compose(
-    derive(group_by(iteratee as ValueIteratee<T>)),
-    spread(options)
-  );
+  return (mark: Mark<{ item: T; key: number | string }>) => {
+    return (d: T[], key?: string | number) => {
+      // First group the entire array
+      const grouped = groupBy(d, iteratee as ValueIteratee<T>);
+
+      // Then spread the grouped results
+      return spread(options)(mark)(grouped, key);
+    };
+  };
 }
 
 export function rect<T extends Record<string, any>>({

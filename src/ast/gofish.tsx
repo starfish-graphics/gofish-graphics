@@ -93,8 +93,10 @@ export const gofish = (
     const sizeDomains = child.inferSizeDomains();
     const [underlyingSpaceX, underlyingSpaceY] = child.resolveUnderlyingSpace();
 
-    // Debug: Print the tree of underlying spaces
     if (debug) {
+      console.log("🌳 Node Tree:");
+      debugNodeTree(child);
+
       console.log("🌳 Underlying Space Tree:");
       debugUnderlyingSpaceTree(child);
     }
