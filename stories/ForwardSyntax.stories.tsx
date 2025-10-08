@@ -23,16 +23,19 @@ export const BarChart: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    return chart(catchData)
-      .flow(
-        spread_by("lake", { dir: "x" }),
-        rect({ h: "count", fill: "species" })
-      )
-      .render(container, {
-        w: args.w,
-        h: args.h,
-        axes: true,
-        debug: true,
-      });
+    return (
+      chart(catchData)
+        .flow(
+          spread_by("lake", { dir: "x" }),
+          rect({ h: "count", fill: "lake" })
+        )
+        // TODO: remove this... maybe once resolveUnderlyingSpace is fully implemented?
+        .setShared([true, true])
+        .render(container, {
+          w: args.w,
+          h: args.h,
+          axes: true,
+        })
+    );
   },
 };

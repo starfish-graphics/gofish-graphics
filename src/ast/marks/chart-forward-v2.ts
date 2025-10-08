@@ -121,7 +121,11 @@ export function spread<T>(options: {
   { item: T; key: number | string }
 > {
   // Default label to true if not specified
-  const opts = { ...options, label: options?.label ?? true };
+  const opts = {
+    ...options,
+    label: options?.label ?? true,
+    alignment: options?.alignment ?? "start",
+  };
   return (mark: Mark<{ item: T; key: number | string }>) => {
     return (
       d: T[] | Record<string, T> | _.Collection<T> | _.Object<Dictionary<T>>,
