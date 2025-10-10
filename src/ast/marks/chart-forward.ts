@@ -72,6 +72,11 @@ export const chartForwardBar = chart(
   rect({ h: "count", fill: "species" })
 );
 
+export const chartForwardBar2 = chart(seafood).flow(
+  spread_by("lake", { dir: "x" }),
+  rect({ h: "count", fill: "species" })
+);
+
 export type Operator<T, U> = (_: Mark<U>) => Mark<T>;
 export type Mark<T> = (d: T, key?: string | number) => GoFishNode;
 

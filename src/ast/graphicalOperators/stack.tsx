@@ -75,6 +75,17 @@ export const stack = withGoFish(
     return new GoFishNode(
       {
         type: "stack",
+        args: {
+          key,
+          name,
+          direction,
+          spacing,
+          alignment,
+          sharedScale,
+          mode,
+          reverse,
+          dims,
+        },
         key,
         name,
         shared: [sharedScale, sharedScale],

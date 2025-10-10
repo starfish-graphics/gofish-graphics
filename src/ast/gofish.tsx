@@ -1,6 +1,7 @@
 import { For, Show, type JSX } from "solid-js";
 import { render as solidRender } from "solid-js/web";
 import {
+  debugInputSceneGraph,
   debugNodeTree,
   debugUnderlyingSpaceTree,
   findPathToRoot,
@@ -82,6 +83,11 @@ export const gofish = (
   scaleContext = { unit: { color: new Map() } };
   keyContext = {};
   try {
+    if (debug) {
+      console.log("🌳 Input Scene Graph:");
+      debugInputSceneGraph(child);
+    }
+
     // const domainAST = child.inferDomain();
     // const sizeThatFitsAST = domainAST.sizeThatFits();
     // const layoutAST = sizeThatFitsAST.layout();
@@ -93,7 +99,6 @@ export const gofish = (
     const sizeDomains = child.inferSizeDomains();
     const [underlyingSpaceX, underlyingSpaceY] = child.resolveUnderlyingSpace();
 
-    // Debug: Print the tree of underlying spaces
     if (debug) {
       console.log("🌳 Underlying Space Tree:");
       debugUnderlyingSpaceTree(child);
@@ -130,9 +135,15 @@ export const gofish = (
           : undefined,
     ];
 
+    if (debug) {
+      console.log("width and height constraints:", w, h);
+    }
+
     child.layout([w, h], [undefined, undefined], posScales);
     child.place({ x: x ?? transform?.x ?? 0, y: y ?? transform?.y ?? 0 });
+
     if (debug) {
+      console.log("🌳 Node Tree:");
       debugNodeTree(child);
     }
 
