@@ -655,6 +655,7 @@ export const render = (
                     let x = displayDims[0].min - 5;
                     let y = displayDims[1].center ?? 0;
                     let fill = "gray";
+                    let textAnchor: "end" | "middle" | "start" = "end";
                     if (alignment && typeof alignment === "string" && (value as GoFishNode).type === "rect") {
                       
 
@@ -682,7 +683,7 @@ export const render = (
                           // get pixel width of the text
                           const textWidth = (fontSize * 0.6) * (value as GoFishNode).key!.length;
 
-                          x = match[3] === "x-start" ? displayDims[0].min - 5 : match[3] === "x-middle" ? displayDims[0].center : displayDims[0].max + textWidth;
+                          x = match[3] === "x-start" ? displayDims[0].min - 5 : match[3] === "x-middle" ? displayDims[0].center : displayDims[0].max - 5;
                           if (match[4]) {
                             x += parseInt(match[4]);
                           }
@@ -695,21 +696,25 @@ export const render = (
                         const nodeLuminance = getLuminance(nodeBackgroundColor!);
                         console.log(nodeLuminance, valueNode.key, "NODE LUMINANCE LOL");
 
-                        // if (match[5]) {
-                        //   const color = match[6];
-                        //   if (color) {
-                        //     fill = color;
-                        //   }
-                        // } else {
-                        //   fill = gray
-                        // }
+                        if (match[3]) {
+                          if (match[3] === "x-start") {
+                            textAnchor = "end";
+                          } else if (match[3] === "x-middle") {
+                            textAnchor = "middle";
+                          } else if (match[3] === "x-end") {
+                            textAnchor = "end";
+                          }
 
-                        if (nodeLuminance > 0.65) {
-                          fill = mix(nodeBackgroundColor!, black, 0.8);
-                        } else {
-                          fill = mix(nodeBackgroundColor!, white, 0.8);
+                          if (match[3] === "x-middle" || match[3] === "x-end") {
+                            if (nodeLuminance > 0.65) {
+                              fill = mix(nodeBackgroundColor!, black, 0.8);
+                            } else {
+                              fill = mix(nodeBackgroundColor!, white, 0.8);
+                            }
+                          }
                         }
-                        
+
+
                       }
                     }
 
@@ -719,7 +724,7 @@ export const render = (
                         transform="scale(1, -1)"
                         x={x}
                         y={-y}
-                        text-anchor={"end"}
+                        text-anchor={textAnchor}
                         dominant-baseline="middle"
                         font-size="12px"
                         fill={fill}

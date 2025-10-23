@@ -23,7 +23,7 @@ export const Horizontal: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    return rect(catchData, { fill: "lake", w: "count", label: align("x-middle", "y-middle") }) 
+    return rect(catchData, { fill: "lake", w: "count", label: align("x-end", "y-middle") }) 
       .spreadY("lake",) // ex. for title ex
       .render(container, {
         w: args.w,
