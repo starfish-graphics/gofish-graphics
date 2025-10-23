@@ -14,7 +14,6 @@ import { black, gray } from "../color";
 import { mix } from "spectral.js";
 import * as spc from "spectral.js";
 
-console.log(mix, spc)
 import {
   isINTERVAL,
   isPOSITION,
@@ -230,7 +229,6 @@ export const render = (
     );
     yTicks = ticks(yMin, yMax, 10);
   }
-  console.log(child, "CHILD LOL");``
 
   return (
     <svg

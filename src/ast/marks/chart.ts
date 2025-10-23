@@ -259,7 +259,6 @@ export class _Chart<T> {
         },
         iteratee
           ? For(groups, (items, key) => {
-            console.log(key, opts, items);
               const node = this._render(items, `${k}-${key}`);
               return opts.label ? node.setKey(key) : node;
             })
