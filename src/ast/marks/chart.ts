@@ -34,6 +34,17 @@ const connectXMode = {
   center: "center-to-center",
 };
 
+type VerticalAlignment = "bottom" | "top" | "middle";
+type HorizontalAlignment = "left" | "right" | "center";
+
+type LabelAlignment =
+  | `${VerticalAlignment}`
+  | `${HorizontalAlignment}`
+  | `${VerticalAlignment} + ${HorizontalAlignment}`
+  | `${HorizontalAlignment} + ${VerticalAlignment}`
+  | `${VerticalAlignment}${"" | `:${number}`} + ${HorizontalAlignment}${"" | `:${number}`}`
+  | `${HorizontalAlignment}${"" | `:${number}`} + ${VerticalAlignment}${"" | `:${number}`}`;
+
 export class _Chart<T> {
   private _data: T[];
   private _render: (d: T[], key: number | string) => GoFishNode;
@@ -166,6 +177,7 @@ export class _Chart<T> {
       ]);
     });
   }
+
   spreadX(
     iteratee?: string | ((item: T[]) => any),
     options?: {
@@ -180,7 +192,7 @@ export class _Chart<T> {
       sharedScale?: boolean;
       alignment?: "start" | "middle" | "end";
       debug?: boolean;
-      label?: boolean;
+      label?: boolean | LabelAlignment;
     } = {}
   ) {
     // Default label to true if not specified
@@ -230,7 +242,7 @@ export class _Chart<T> {
       sharedScale?: boolean;
       alignment?: "start" | "middle" | "end";
       debug?: boolean;
-      label?: boolean;
+      label?: boolean | LabelAlignment;
       reverse?: boolean;
     } = {}
   ) {
@@ -258,12 +270,13 @@ export class _Chart<T> {
         },
         iteratee
           ? For(groups, (items, key) => {
+            console.log(key, opts, items);
               const node = this._render(items, `${k}-${key}`);
-              return opts.label ? node.setKey(key) : node;
+              return opts.label ? node.setKey(key).setLabelAlignment(opts.label) : node;
             })
           : For(d, (item, key) => {
               const node = this._render(item, `${k}-${key}`);
-              return opts.label ? node.setKey(key) : node;
+              return opts.label ? node.setKey(key).setLabelAlignment(opts.label) : node;
             })
       );
     });
@@ -297,7 +310,7 @@ export class _Chart<T> {
       alignment?: "start" | "middle" | "end";
       debug?: boolean;
       spacing?: number;
-      label?: boolean;
+      label?: boolean | LabelAlignment;
       reverse?: boolean;
     }
   ) {

@@ -28,9 +28,8 @@ export const Vertical: StoryObj<Args> = {
     return rect(catchData, {
       fill: "lake",
       h: "count",
-      filter: "url(#filter-drop-shadow)",
     })
-      .spreadX("lake")
+      .spreadX("lake", {label: "top"})
       .render(container, {
         w: args.w,
         h: args.h,
@@ -72,7 +71,7 @@ export const Horizontal: StoryObj<Args> = {
     const container = initializeContainer();
 
     return rect(catchData, { fill: "lake", w: "count" })
-      .spreadY("lake", { alignment: "start" })
+      .spreadY("lake", { alignment: "start", label: true })
       .render(container, {
         w: args.w,
         h: args.h,
@@ -100,9 +99,9 @@ export const Stacked: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
     return rect(catchData, { fill: "species", h: "count" })
-      .stackY("species")
+      .stackY("species", {label: true})
       .transform((d) => orderBy(d, "count", "asc"))
-      .spreadX("lake", { alignment: "start" })
+      .spreadX("lake", { alignment: "start", label: true })
       .render(container, {
         w: args.w,
         h: args.h,

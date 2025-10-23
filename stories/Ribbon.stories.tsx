@@ -24,9 +24,9 @@ export const Ribbon: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
     return rect(catchData, { w: 24, fill: "species", h: "count" })
-      .stackY("species")
+      .stackY("species", { label: true })
       .transform((d) => orderBy(d, "count", "asc"))
-      .spreadX("lake", { spacing: 40 })
+      .spreadX("lake", { spacing: 40, label: true })
       .connectX("species", { over: "lake", opacity: 0.7 })
       .render(container, {
         w: args.w,

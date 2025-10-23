@@ -503,9 +503,11 @@ export const render = (
             </Show>
             {/* x axis (discrete) */}
             <Show when={underlyingSpaceX.kind === "ordinal" && keyContext}>
+              {/* change some height for the axis labels here */}
               <g>
                 <For each={Object.entries(keyContext ?? {})}>
                   {([key, value]) => {
+                    // console.log(key, value);
                     const pathToRoot = findPathToRoot(value);
                     const accumulatedTransform = pathToRoot.reduce(
                       (acc, node) => {
@@ -564,6 +566,7 @@ export const render = (
               <g>
                 <For each={child.children ?? []}>
                   {(value, i) => {
+                    // console.log(value, "VALUE");
                     // Only render for GoFishNode (not GoFishRef)
                     if (!("intrinsicDims" in value) || !("key" in value))
                       return null;
@@ -609,14 +612,55 @@ export const render = (
                           ((value as GoFishNode).intrinsicDims?.[1]?.max ?? 0),
                       },
                     ];
+
+                    // be able to specfiy what the label should be 
+                    // for example 
+
+                    // try to also support specifying the label text so for example if you want label to all have sum of something
+                    // or label queries
+                    const alignment = (value as GoFishNode).labelAlignment;
+
+                    let x = displayDims[0].min - 5;
+                    let y = displayDims[1].center ?? 0;
+                    if (alignment && typeof alignment === "string") {
+
+
+                      // Capturing groups for type LabelAlignment
+                      // should be able to handle negative numbers
+                      // should be able to handle middle
+                      // should be able to handle center
+                      const labelAlignmentRegex = /^(top|bottom|left|right|middle|center)(?::(-?\d+))?(?: \+ (top|bottom|left|right|middle|center)(?::(-?\d+))?)?$/;
+
+                      const match = alignment.match(labelAlignmentRegex);
+                      if (match) {
+                        if (match[1]) {
+                          y = match[1] === "top" ? displayDims[1].max : match[1] === "middle" ? displayDims[1].center : displayDims[1].min;
+                          if (match[2]) {
+                            y += parseInt(match[2]);
+                          }
+                        }
+                        if (match[3]) {
+                          // get the width of the text using the font size
+                          const fontSize = 10;
+                          // get pixel width of the text
+                          const textWidth = (fontSize * 0.6) * (value as GoFishNode).key!.length;
+
+                          x = match[3] === "left" ? displayDims[0].min - 5 : match[3] === "center" ? displayDims[0].center : displayDims[0].max + textWidth;
+                          if (match[4]) {
+                            x += parseInt(match[4]);
+                          }
+                        }
+                      }
+                    }
+
                     return (
                       <text
                         transform="scale(1, -1)"
-                        x={displayDims[0].min - 5}
-                        y={-(displayDims[1].center ?? 0)}
+                        x={x}
+                        y={-y}
                         text-anchor="end"
                         dominant-baseline="middle"
-                        font-size="10px"
+                        font-size="12px"
                         fill="gray"
                       >
                         {(value as GoFishNode).key}

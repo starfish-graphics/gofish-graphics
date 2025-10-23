@@ -80,6 +80,15 @@ export type Layout = (
   posScales: Size<((pos: number) => number) | undefined>
 ) => { intrinsicDims: FancyDims; transform: FancyTransform; renderData?: any };
 
+export type VerticalAlignment = "bottom" | "top";
+export type HorizontalAlignment = "left" | "right";
+export type LabelAlignment =
+  | boolean
+  | `${VerticalAlignment}`
+  | `${HorizontalAlignment}`
+  | `${VerticalAlignment} + ${HorizontalAlignment}`
+  | `${HorizontalAlignment} + ${VerticalAlignment}`;
+
 export type Render = (
   {
     intrinsicDims,
@@ -122,6 +131,8 @@ export class GoFishNode {
   private renderData?: any;
   public coordinateTransform?: CoordinateTransform;
   public color?: MaybeValue<string>;
+  public labelAlignment?: LabelAlignment;
+
   constructor(
     {
       name,
@@ -369,6 +380,11 @@ export class GoFishNode {
 
   public setKey(key: string): this {
     this.key = key;
+    return this;
+  }
+
+  public setLabelAlignment(alignment: LabelAlignment): this {
+    this.labelAlignment = alignment;
     return this;
   }
 
