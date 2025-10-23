@@ -10,9 +10,11 @@ import { ScopeContext } from "./scopeContext";
 import { computePosScale } from "./domain";
 import { tickIncrement, ticks, nice } from "d3-array";
 import { isConstant } from "../util/monotonic";
-import { black, gray } from "../color";
+import { black, gray, white } from "../color";
 import { mix } from "spectral.js";
 import * as spc from "spectral.js";
+
+
 
 import {
   isINTERVAL,
@@ -57,6 +59,30 @@ export const getKeyContext = (): KeyContext => {
   }
   return keyContext;
 };
+
+// Get luminance of a color using a simple RGB to luminance conversion
+// hack from https://stackoverflow.com/questions/596216/formula-to-determine-perceived-brightness-of-rgb-color
+// https://en.wikipedia.org/wiki/Relative_luminance
+export function getLuminance(color: spc.ColorInput): number {
+  // Convert color to RGB array if it's a string
+  let rgb: [number, number, number];
+  if (typeof color === 'string') {
+    // Parse hex string to RGB
+    const hex = color.replace('#', '');
+    const num = parseInt(hex, 16);
+    rgb = [
+      ((num >> 16) & 255) / 255,
+      ((num >> 8) & 255) / 255,
+      (num & 255) / 255
+    ];
+  } else {
+    rgb = color.slice(0, 3) as [number, number, number];
+  }
+  
+  // Standard RGB to luminance conversion (ITU-R BT.709)
+  return 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2];
+}
+
 
 /* global pass handler */
 export const gofish = (
@@ -637,6 +663,7 @@ export const render = (
                       // should be able to handle middle
                       // should be able to handle center
                       // should be able to handle color:{string}
+                      
 
                       // middle:${number} + center:${number}
                       const labelAlignmentRegex = /^(y-start|y-middle|y-end)(?::(-?\d+))?(?: \+ (x-start|x-middle|x-end)(?::(-?\d+))?)?(?: \+ (color):(.*))?$/;
@@ -662,56 +689,27 @@ export const render = (
                         }
 
                         // mix with light color if background is dark in node color 
-
-                        // mix with dark color if background is light in node color 
-                        // feed into spectral.js mix function and read luminance value
-                        // see if this has a higher luminance value than the background color
-
-                        // const backgroundColor = (value as GoFishNode).color ?? gray;
-                        // fill = isValue(fill)
-                        // ? scaleContext?.unit?.color
-                        //   ? scaleContext.unit.color.get(getValue(fill))
-                        //   : getValue(fill)
-                        // : fill;
                         const valueNode = (value as GoFishNode)
-                        const nodeBackgroundColor = scaleContext.unit.color.get(valueNode.key)
+                        const nodeBackgroundColor = scaleContext!.unit.color.get(valueNode.key)
 
-                        
-                        // parse hex string to array of numbers
-                        // #d45e83 -> [212, 94, 131]
-                        function hexToRgbArray(hex: string): [number, number, number] {
-                          // Remove possible leading '#' character
-                          hex = hex.replace(/^#/, "");
-                          // Handle shorthand hex (e.g. #abc)
-                          if (hex.length === 3) {
-                            hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
-                          }
-                          const num = parseInt(hex, 16);
-                          return [
-                            (num >> 16) & 255,
-                            (num >> 8) & 255,
-                            num & 255
-                          ];
-                        }
-                        const nodeBackgroundColorArray = hexToRgbArray(nodeBackgroundColor!);
-                        // console.log(spectral)
-                        // const parentLuminance = spectral
-                        // const parentLuminance = spectral.luminance(nodeBackgroundColorArray);
-                        // console.log(parentLuminance, "PARENT LUMINANCE LOL");
-                        // if (parentLuminance > 0.5) {
-                        //   fill = spectral.mix((value as GoFishNode).color!, black, 0.5);
+                        const nodeLuminance = getLuminance(nodeBackgroundColor!);
+                        console.log(nodeLuminance, valueNode.key, "NODE LUMINANCE LOL");
+
+                        // if (match[5]) {
+                        //   const color = match[6];
+                        //   if (color) {
+                        //     fill = color;
+                        //   }
                         // } else {
-                        //   fill = spectral.mix((value as GoFishNode).color!, white, 0.5);
+                        //   fill = gray
                         // }
-                        
-                        if (match[5]) {
-                          const color = match[6];
-                          if (color) {
-                            fill = color;
-                          }
+
+                        if (nodeLuminance > 0.65) {
+                          fill = mix(nodeBackgroundColor!, black, 0.8);
                         } else {
-                          fill = gray
+                          fill = mix(nodeBackgroundColor!, white, 0.8);
                         }
+                        
                       }
                     }
 
