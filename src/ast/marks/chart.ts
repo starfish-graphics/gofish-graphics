@@ -16,6 +16,9 @@ import {
 import { GoFishNode } from "../_node";
 import { CoordinateTransform } from "../coordinateTransforms/coord";
 import { MaybeValue } from "../data";
+import { LabelAlignment, ChartRect, VerticalAlignment, HorizontalAlignment } from "./types";
+
+
 
 /* inference */
 const inferSize = <T>(
@@ -34,16 +37,9 @@ const connectXMode = {
   center: "center-to-center",
 };
 
-type VerticalAlignment = "bottom" | "top" | "middle";
-type HorizontalAlignment = "left" | "right" | "center";
-
-type LabelAlignment =
-  | `${VerticalAlignment}`
-  | `${HorizontalAlignment}`
-  | `${VerticalAlignment} + ${HorizontalAlignment}`
-  | `${HorizontalAlignment} + ${VerticalAlignment}`
-  | `${VerticalAlignment}${"" | `:${number}`} + ${HorizontalAlignment}${"" | `:${number}`}`
-  | `${HorizontalAlignment}${"" | `:${number}`} + ${VerticalAlignment}${"" | `:${number}`}`;
+export const align = (horizontal: HorizontalAlignment,vertical: VerticalAlignment) => {
+  return `${vertical} + ${horizontal}` as LabelAlignment;
+};
 
 export class _Chart<T> {
   private _data: T[];
@@ -73,17 +69,8 @@ export class _Chart<T> {
     fill,
     debug,
     filter,
-  }: {
-    w?: number | string;
-    h?: number | string;
-    rs?: number;
-    ts?: number;
-    rx?: number;
-    ry?: number;
-    fill: string;
-    debug?: boolean;
-    filter?: string;
-  }) {
+    label,
+  }: ChartRect) {
     return new _Chart(this._data, (d: T[], key: number | string) => {
       if (debug) console.log("rect", key, d);
       return Rect({
@@ -100,9 +87,11 @@ export class _Chart<T> {
           fill in (Array.isArray(d) ? d[0] : d)
             ? v(Array.isArray(d) ? d[0][fill as keyof T] : d[fill as keyof T])
             : fill,
+        label,
       }).name(key.toString());
     });
   }
+
   guide({
     w = 0,
     h = 0,
@@ -272,11 +261,11 @@ export class _Chart<T> {
           ? For(groups, (items, key) => {
             console.log(key, opts, items);
               const node = this._render(items, `${k}-${key}`);
-              return opts.label ? node.setKey(key).setLabelAlignment(opts.label) : node;
+              return opts.label ? node.setKey(key) : node;
             })
           : For(d, (item, key) => {
               const node = this._render(item, `${k}-${key}`);
-              return opts.label ? node.setKey(key).setLabelAlignment(opts.label) : node;
+              return opts.label ? node.setKey(key) : node;
             })
       );
     });
@@ -290,7 +279,7 @@ export class _Chart<T> {
       alignment?: "start" | "middle" | "end";
       debug?: boolean;
       spacing?: number;
-      label?: boolean;
+      label?: boolean | LabelAlignment;
       reverse?: boolean;
     }
   ) {
@@ -330,6 +319,7 @@ export class _Chart<T> {
   // connectR = this.connectY;
   /* end aliases */
   // TODO: fix!!!
+  
   scatterXY(
     groupKey: string,
     options: {
@@ -352,6 +342,7 @@ export class _Chart<T> {
       );
     });
   }
+
   scatter(
     key: string,
     options: {
@@ -425,18 +416,6 @@ export class _Chart<T> {
 }
 
 export const Chart = <T>(data: T[]) => new _Chart(data);
-
-type ChartRect = {
-  w?: number | string;
-  h?: number | string;
-  ts?: number | string;
-  rs?: number | string;
-  rx?: number;
-  ry?: number;
-  fill: string;
-  debug?: boolean;
-  filter?: string;
-};
 
 export const rect = <T>(
   dataOrOptions?: T[] | ChartRect,

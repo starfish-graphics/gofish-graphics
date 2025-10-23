@@ -29,6 +29,7 @@ import { getValue, isValue, MaybeValue } from "./data";
 import { color6 } from "../color";
 import * as Monotonic from "../util/monotonic";
 import { findTargetMonotonic } from "../util";
+import { LabelAlignment } from "./marks/types";
 import {
   isINTERVAL,
   isORDINAL,
@@ -80,15 +81,6 @@ export type Layout = (
   posScales: Size<((pos: number) => number) | undefined>
 ) => { intrinsicDims: FancyDims; transform: FancyTransform; renderData?: any };
 
-export type VerticalAlignment = "bottom" | "top";
-export type HorizontalAlignment = "left" | "right";
-export type LabelAlignment =
-  | boolean
-  | `${VerticalAlignment}`
-  | `${HorizontalAlignment}`
-  | `${VerticalAlignment} + ${HorizontalAlignment}`
-  | `${HorizontalAlignment} + ${VerticalAlignment}`;
-
 export type Render = (
   {
     intrinsicDims,
@@ -131,7 +123,7 @@ export class GoFishNode {
   private renderData?: any;
   public coordinateTransform?: CoordinateTransform;
   public color?: MaybeValue<string>;
-  public labelAlignment?: LabelAlignment;
+  public label: LabelAlignment | undefined;
 
   constructor(
     {
@@ -146,6 +138,7 @@ export class GoFishNode {
       inferPosDomains,
       shared = [false, false],
       color,
+      label,
     }: {
       name?: string;
       key?: string;
@@ -161,12 +154,15 @@ export class GoFishNode {
       ) => FancySize<ContinuousDomain | undefined>;
       shared?: Size<boolean>;
       color?: MaybeValue<string>;
+      label?: LabelAlignment;
     },
     children: GoFishAST[]
   ) {
+    
     // this.inferDomains = inferDomains;
     this._resolveUnderlyingSpace = resolveUnderlyingSpace;
     this._inferSizeDomains = inferSizeDomains;
+    this.label = label;
     this._layout = layout;
     this._render = render;
     this._inferPosDomains = inferPosDomains;
@@ -384,7 +380,7 @@ export class GoFishNode {
   }
 
   public setLabelAlignment(alignment: LabelAlignment): this {
-    this.labelAlignment = alignment;
+    this.label = alignment;
     return this;
   }
 

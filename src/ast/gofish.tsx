@@ -10,6 +10,11 @@ import { ScopeContext } from "./scopeContext";
 import { computePosScale } from "./domain";
 import { tickIncrement, ticks, nice } from "d3-array";
 import { isConstant } from "../util/monotonic";
+import { black, gray } from "../color";
+import { mix } from "spectral.js";
+import * as spc from "spectral.js";
+
+console.log(mix, spc)
 import {
   isINTERVAL,
   isPOSITION,
@@ -225,6 +230,7 @@ export const render = (
     );
     yTicks = ticks(yMin, yMax, 10);
   }
+  console.log(child, "CHILD LOL");``
 
   return (
     <svg
@@ -618,23 +624,29 @@ export const render = (
 
                     // try to also support specifying the label text so for example if you want label to all have sum of something
                     // or label queries
-                    const alignment = (value as GoFishNode).labelAlignment;
+
+                    const alignment = (value as GoFishNode).label;
+
 
                     let x = displayDims[0].min - 5;
                     let y = displayDims[1].center ?? 0;
-                    if (alignment && typeof alignment === "string") {
-
+                    let fill = "gray";
+                    if (alignment && typeof alignment === "string" && (value as GoFishNode).type === "rect") {
+                      
 
                       // Capturing groups for type LabelAlignment
                       // should be able to handle negative numbers
                       // should be able to handle middle
                       // should be able to handle center
-                      const labelAlignmentRegex = /^(top|bottom|left|right|middle|center)(?::(-?\d+))?(?: \+ (top|bottom|left|right|middle|center)(?::(-?\d+))?)?$/;
+                      // should be able to handle color:{string}
+
+                      // middle:${number} + center:${number}
+                      const labelAlignmentRegex = /^(y-start|y-middle|y-end)(?::(-?\d+))?(?: \+ (x-start|x-middle|x-end)(?::(-?\d+))?)?(?: \+ (color):(.*))?$/;
 
                       const match = alignment.match(labelAlignmentRegex);
                       if (match) {
                         if (match[1]) {
-                          y = match[1] === "top" ? displayDims[1].max : match[1] === "middle" ? displayDims[1].center : displayDims[1].min;
+                          y = match[1] === "y-start" ? displayDims[1].max : match[1] === "y-middle" ? displayDims[1].center : displayDims[1].min;
                           if (match[2]) {
                             y += parseInt(match[2]);
                           }
@@ -645,23 +657,78 @@ export const render = (
                           // get pixel width of the text
                           const textWidth = (fontSize * 0.6) * (value as GoFishNode).key!.length;
 
-                          x = match[3] === "left" ? displayDims[0].min - 5 : match[3] === "center" ? displayDims[0].center : displayDims[0].max + textWidth;
+                          x = match[3] === "x-start" ? displayDims[0].min - 5 : match[3] === "x-middle" ? displayDims[0].center : displayDims[0].max + textWidth;
                           if (match[4]) {
                             x += parseInt(match[4]);
                           }
                         }
+
+                        // mix with light color if background is dark in node color 
+
+                        // mix with dark color if background is light in node color 
+                        // feed into spectral.js mix function and read luminance value
+                        // see if this has a higher luminance value than the background color
+
+                        // const backgroundColor = (value as GoFishNode).color ?? gray;
+                        // fill = isValue(fill)
+                        // ? scaleContext?.unit?.color
+                        //   ? scaleContext.unit.color.get(getValue(fill))
+                        //   : getValue(fill)
+                        // : fill;
+                        const valueNode = (value as GoFishNode)
+                        const nodeBackgroundColor = scaleContext.unit.color.get(valueNode.key)
+
+                        
+                        // parse hex string to array of numbers
+                        // #d45e83 -> [212, 94, 131]
+                        function hexToRgbArray(hex: string): [number, number, number] {
+                          // Remove possible leading '#' character
+                          hex = hex.replace(/^#/, "");
+                          // Handle shorthand hex (e.g. #abc)
+                          if (hex.length === 3) {
+                            hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+                          }
+                          const num = parseInt(hex, 16);
+                          return [
+                            (num >> 16) & 255,
+                            (num >> 8) & 255,
+                            num & 255
+                          ];
+                        }
+                        const nodeBackgroundColorArray = hexToRgbArray(nodeBackgroundColor!);
+                        // console.log(spectral)
+                        // const parentLuminance = spectral
+                        // const parentLuminance = spectral.luminance(nodeBackgroundColorArray);
+                        // console.log(parentLuminance, "PARENT LUMINANCE LOL");
+                        // if (parentLuminance > 0.5) {
+                        //   fill = spectral.mix((value as GoFishNode).color!, black, 0.5);
+                        // } else {
+                        //   fill = spectral.mix((value as GoFishNode).color!, white, 0.5);
+                        // }
+                        
+                        if (match[5]) {
+                          const color = match[6];
+                          if (color) {
+                            fill = color;
+                          }
+                        } else {
+                          fill = gray
+                        }
                       }
                     }
 
+                    
                     return (
                       <text
                         transform="scale(1, -1)"
                         x={x}
                         y={-y}
-                        text-anchor="end"
+                        text-anchor={"end"}
                         dominant-baseline="middle"
                         font-size="12px"
-                        fill="gray"
+                        fill={fill}
+                        font-family="Source Sans Pro,sans-serif"
+                        font-weight={500}
                       >
                         {(value as GoFishNode).key}
                       </text>

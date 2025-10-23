@@ -32,6 +32,7 @@ import { aesthetic, continuous, Domain } from "../domain";
 import { scaleContext } from "../gofish";
 import * as Monotonic from "../../util/monotonic";
 import { computeAesthetic, computeSize } from "../../util";
+import { LabelAlignment } from "../marks/types";
 import { INTERVAL, ORDINAL, POSITION, UNDEFINED } from "../underlyingSpace";
 
 const computeIntrinsicSize = (
@@ -52,6 +53,7 @@ export const rect = ({
   rx = 0,
   ry = 0,
   filter,
+  label,
   ...fancyDims
 }: {
   key?: string;
@@ -62,6 +64,7 @@ export const rect = ({
   rx?: number;
   ry?: number;
   filter?: string;
+  label?: LabelAlignment;
 } & FancyDims<MaybeValue<number>>) => {
   const dims = elaborateDims(fancyDims).map(inferEmbedded);
   return new GoFishNode(
@@ -70,6 +73,7 @@ export const rect = ({
       key,
       type: "rect",
       color: fill,
+      label,
       resolveUnderlyingSpace: () => {
         /* cases
         a: aesthetic
@@ -200,7 +204,8 @@ export const rect = ({
         scaleFactors,
         children,
         measurement,
-        posScales
+        posScales,
+        
       ) => {
         // console.log(dims[0], dims[1]);
         const x = computeAesthetic(dims[0].min, posScales?.[0]!, undefined);
@@ -209,15 +214,15 @@ export const rect = ({
         let w: number;
         if (isValue(dims[0].min) && isValue(dims[0].size)) {
           // If posScales for x exists, scale min and min+size, then subtract
-          const min = x;
+          const min = x!;
           const max = computeAesthetic(
             value(getValue(dims[0].min)! + getValue(dims[0].size)!),
             posScales[0],
             undefined
-          );
+          )!;
           w = max - min;
         } else {
-          w = computeSize(dims[0].size, scaleFactors?.[0]!, size[0]);
+          w = computeSize(dims[0].size, scaleFactors?.[0]!, size[0])!;
         }
 
         let h: number;
