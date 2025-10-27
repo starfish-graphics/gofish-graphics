@@ -1,4 +1,10 @@
-import { Component, onMount, onCleanup, type JSX } from "solid-js";
+import {
+  Component,
+  onMount,
+  onCleanup,
+  type JSX,
+  createEffect,
+} from "solid-js";
 import { render as solidRender } from "solid-js/web";
 import { gofish } from "./gofish";
 import { type GoFishNode } from "./_node";
@@ -18,7 +24,7 @@ interface GoFishComponentProps {
 export const GoFishSolid: Component<GoFishComponentProps> = (props) => {
   let containerRef: HTMLDivElement | undefined;
 
-  onMount(() => {
+  createEffect(() => {
     if (containerRef) {
       // Clear the container first
       containerRef.innerHTML = "";
@@ -39,13 +45,13 @@ export const GoFishSolid: Component<GoFishComponentProps> = (props) => {
         props.children
       );
     }
-  });
 
-  onCleanup(() => {
-    // Clean up any SolidJS renders when component unmounts
-    if (containerRef) {
-      containerRef.innerHTML = "";
-    }
+    onCleanup(() => {
+      // Clean up any SolidJS renders when component unmounts
+      if (containerRef) {
+        containerRef.innerHTML = "";
+      }
+    });
   });
 
   return <div ref={containerRef} />;

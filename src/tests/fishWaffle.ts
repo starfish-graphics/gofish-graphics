@@ -20,7 +20,7 @@ const fishColors = {
   Salmon: color.purple[5],
 };
 
-export const testFishWaffle = () =>
+export const testFishWaffle = (opts) =>
   stackX(
     { spacing: 8, sharedScale: true },
     _(catchData)
@@ -30,7 +30,7 @@ export const testFishWaffle = () =>
           { spacing: 2, alignment: "start" },
           _(d)
             .flatMap((d) => Array(d.count).fill(d))
-            .chunk(3)
+            .chunk(opts.chunkSize)
             .map((d) =>
               stackX(
                 { spacing: 2 },

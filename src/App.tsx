@@ -1,4 +1,9 @@
-import type { Component } from "solid-js";
+import {
+  createEffect,
+  createSignal,
+  onCleanup,
+  type Component,
+} from "solid-js";
 import { testRect } from "./tests/rect";
 import { testBar } from "./tests/bar";
 import { testGroupedBar } from "./tests/groupedBar";
@@ -310,8 +315,21 @@ const defs = [
 ];
 
 const App: Component = () => {
+  const [chunkSize, setChunkSize] = createSignal(12);
+
   return (
     <div style={{ "margin-left": "20px" }}>
+      <input
+        type="range"
+        min={3}
+        max={20}
+        value={chunkSize()}
+        onInput={(e) => setChunkSize(Number(e.target.value))}
+      />
+      {chunkSize()}
+      <GoFishSolid w={500} h={500}>
+        {testFishWaffle({ chunkSize: chunkSize() })}
+      </GoFishSolid>
       {/* <GoFishSolid w={250} h={300} defs={defs}>
         {chartForwardBar}
       </GoFishSolid> */}
@@ -631,7 +649,7 @@ const App: Component = () => {
         >
           <h2>2c. Waffle Chart</h2>
           <GoFishSolid w={500} h={500}>
-            {testFishWaffle()}
+            {testFishWaffle({ chunkSize: 12 })}
           </GoFishSolid>
         </div>
       </div>
