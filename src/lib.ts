@@ -78,3 +78,21 @@ export { wavy as Wavy } from "./ast/coordinateTransforms/wavy";
 
 /* API v3 */
 export { Chart, _Chart, rect, guide } from "./ast/marks/chart";
+
+/* Forward Syntax V3 */
+export {
+  chart,
+  spread,
+  stack as stackForward,
+  scatter,
+  foreach,
+  derive,
+  rect as rectForward,
+  circle,
+} from "./ast/marks/chart-forward-v3";
+export type {
+  Mark,
+  Operator,
+  ChartOptions,
+  ChartBuilder,
+} from "./ast/marks/chart-forward-v3";
