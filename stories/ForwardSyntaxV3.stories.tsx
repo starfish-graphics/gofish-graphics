@@ -1,6 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "./helper";
-import { catchLocationsArray, seafood } from "../src/data/catch";
+import {
+  catchLocations,
+  catchLocationsArray,
+  seafood,
+} from "../src/data/catch";
 import {
   chart,
   spread,
@@ -245,6 +249,41 @@ export const ScatterChart: StoryObj<Args> = {
     chart(catchLocationsArray)
       .flow(scatter("lake", { x: "x", y: "y" }))
       .mark(circle({ r: 5 }))
+      .render(container, {
+        w: args.w,
+        h: args.h,
+        axes: true,
+      });
+
+    return container;
+  },
+};
+
+export const ScatterPieChart: StoryObj<Args> = {
+  args: { w: 400, h: 400 },
+  render: (args: Args) => {
+    const container = initializeContainer();
+
+    const scatterData = _(seafood)
+      .groupBy("lake")
+      .map((lakeData, lake) => ({
+        lake,
+        x: catchLocations[lake as keyof typeof catchLocations].x,
+        y: catchLocations[lake as keyof typeof catchLocations].y,
+        collection: lakeData.map((item) => ({
+          species: item.species,
+          count: item.count,
+        })),
+      }))
+      .value();
+
+    chart(scatterData)
+      .flow(scatter("lake", { x: "x", y: "y" }))
+      .mark((data) =>
+        chart(data[0].collection, { coord: clock() })
+          .flow(stack("species", { dir: "x", h: "count" }))
+          .mark(rect({ w: "count", fill: "species" }))
+      )
       .render(container, {
         w: args.w,
         h: args.h,

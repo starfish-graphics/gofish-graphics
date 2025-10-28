@@ -243,8 +243,8 @@ export function stack<T>(
     dir: "x" | "y";
     x?: number;
     y?: number;
-    w?: number;
-    h?: number;
+    w?: number | keyof T;
+    h?: number | keyof T;
     spacing?: number;
     alignment?: "start" | "middle" | "end";
   }

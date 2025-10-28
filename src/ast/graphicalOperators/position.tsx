@@ -69,6 +69,8 @@ export const position = (
         }
 
         const child = children[0];
+        /* TODO: maybe pass like [10, 10] to this instead of size to do a default think for
+        scattering... but scatter pie is still broken... */
         const childPlaceable = child.layout(size, scaleFactors, posScales);
 
         // Place child at origin first to get its dimensions
