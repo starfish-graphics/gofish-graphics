@@ -8,7 +8,7 @@ import {
   stackForward as stack,
   derive,
 } from "../src/lib";
-import { repeat } from "../src/ast/marks/chart-forward-v3";
+import { log, normalize, repeat } from "../src/ast/marks/chart-forward-v3";
 import _ from "lodash";
 import { clock } from "../src/ast/coordinateTransforms/clock";
 import { nightingale } from "../src/data/nightingale";
@@ -189,6 +189,42 @@ export const RoseChart: StoryObj<Args> = {
         h: args.h,
         axes: true,
         transform: { x: 200, y: 200 },
+      });
+
+    return container;
+  },
+};
+
+export const MosaicChart: StoryObj<Args> = {
+  args: { w: 400, h: 400 },
+  render: (args: Args) => {
+    const container = initializeContainer();
+
+    const data = [
+      { origin: "Europe", cylinders: "4", count: 66 },
+      { origin: "Europe", cylinders: "5", count: 3 },
+      { origin: "Europe", cylinders: "6", count: 4 },
+      { origin: "Japan", cylinders: "3", count: 4 },
+      { origin: "Japan", cylinders: "4", count: 69 },
+      { origin: "Japan", cylinders: "6", count: 6 },
+      { origin: "USA", cylinders: "4", count: 72 },
+      { origin: "USA", cylinders: "6", count: 74 },
+      { origin: "USA", cylinders: "8", count: 108 },
+    ];
+
+    chart(data)
+      .flow(
+        spread("origin", { dir: "x" }),
+        derive((d) => normalize(d, "count")),
+        stack("cylinders", { dir: "y" })
+      )
+      .mark(
+        rect({ h: "count", fill: "origin", stroke: "white", strokeWidth: 2 })
+      )
+      .render(container, {
+        w: args.w,
+        h: args.h,
+        axes: true,
       });
 
     return container;

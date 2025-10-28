@@ -26,6 +26,7 @@ export type Mark<T> = (d: T, key?: string | number) => GoFishNode;
 
 export type Operator<T, U> = (_: Mark<U>) => Mark<T>;
 
+/* Data Transformation Operators */
 export function derive<T, U>(fn: (d: T) => U): Operator<T, U> {
   return (mark: Mark<U>) => {
     return (d: T, key?: string | number) => mark(fn(d), key);
@@ -33,11 +34,40 @@ export function derive<T, U>(fn: (d: T) => U): Operator<T, U> {
 }
 
 // return an array of copies of `d` repeated `d.field` times
-export const repeat = <T>(d: T, field: keyof T) => {
-  return Array.from({ length: d[field] as number }, () => d);
+export const repeat = <T, K extends keyof T>(
+  d: T,
+  field: K & (T[K] extends number ? K : never)
+) => {
+  return Array.from({ length: d[field] as unknown as number }, () => d);
 };
 
 export { chunk } from "lodash";
+
+export const normalize = <T, K extends keyof T>(
+  data: T[],
+  field: K & (T[K] extends number ? K : never)
+): T[] => {
+  const total = sumBy(data, field as string);
+  return data.map((d) => ({
+    ...d,
+    [field]: (d[field] as unknown as number) / total,
+  }));
+};
+
+export function log<T>(label?: string): Operator<T, T> {
+  return (mark: Mark<T>) => {
+    return (d: T, key?: string | number) => {
+      if (label) {
+        console.log(label, d);
+      } else {
+        console.log(d);
+      }
+      return mark(d, key);
+    };
+  };
+}
+
+/* END Data Transformation Operators */
 
 export type ChartOptions = {
   coord?: CoordinateTransform;
@@ -245,6 +275,8 @@ export function rect<T extends Record<string, any>>({
   ry,
   fill,
   debug,
+  stroke,
+  strokeWidth,
 }: {
   emX?: boolean;
   emY?: boolean;
@@ -255,6 +287,8 @@ export function rect<T extends Record<string, any>>({
   rx?: number;
   ry?: number;
   fill?: keyof T | string;
+  stroke?: string;
+  strokeWidth?: number;
   debug?: boolean;
 }): Mark<T | T[] | { item: T | T[]; key: number | string }> {
   return (input: T | T[] | { item: T | T[]; key: number | string }) => {
@@ -288,6 +322,8 @@ export function rect<T extends Record<string, any>>({
         typeof fill === "string" && data.length > 0 && fill in firstItem
           ? v(firstItem[fill as keyof T])
           : fill,
+      stroke,
+      strokeWidth,
     }).name(key?.toString() ?? "");
   };
 }

@@ -20,7 +20,7 @@
 ## Slightly More Complex
 
 - [ ] streamgraph
-- [ ] mosaic
+- [x] mosaic
 - [x] waffle
 - [ ] ribbon
 - [ ] polar ribbon
