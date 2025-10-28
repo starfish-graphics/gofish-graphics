@@ -11,6 +11,7 @@ import {
 import { repeat } from "../src/ast/marks/chart-forward-v3";
 import _ from "lodash";
 import { clock } from "../src/ast/coordinateTransforms/clock";
+import { nightingale } from "../src/data/nightingale";
 
 const meta: Meta = {
   title: "Forward Syntax V3",
@@ -137,6 +138,52 @@ export const PieChart: StoryObj<Args> = {
     chart(seafood, { coord: clock() })
       .flow(stack("species", { dir: "x" }))
       .mark(rect({ w: "count", fill: "species" }))
+      .render(container, {
+        w: args.w,
+        h: args.h,
+        axes: true,
+        transform: { x: 200, y: 200 },
+      });
+
+    return container;
+  },
+};
+
+export const DonutChart: StoryObj<Args> = {
+  args: { w: 400, h: 400 },
+  render: (args: Args) => {
+    const container = initializeContainer();
+
+    chart(seafood, { coord: clock() })
+      .flow(stack("species", { dir: "x", y: 50, h: 50 }))
+      .mark(rect({ w: "count", fill: "species" }))
+      .render(container, {
+        w: args.w,
+        h: args.h,
+        axes: true,
+        transform: { x: 200, y: 200 },
+      });
+
+    return container;
+  },
+};
+
+export const RoseChart: StoryObj<Args> = {
+  args: { w: 400, h: 400 },
+  render: (args: Args) => {
+    const container = initializeContainer();
+
+    chart(nightingale, { coord: clock() })
+      .flow(
+        stack("Month", { dir: "x" }),
+        stack("Type", { dir: "y" }),
+        /* TODO: push this into the h encoding of rect */
+        derive((d) => d.map((d) => ({ ...d, Death: Math.sqrt(d.Death) })))
+      )
+      .mark(
+        /* TODO: remove emX wart */
+        rect({ w: (Math.PI * 2) / 12, emX: true, h: "Death", fill: "Type" })
+      )
       .render(container, {
         w: args.w,
         h: args.h,

@@ -209,6 +209,10 @@ export function stack<T>(
   field: keyof T,
   options: {
     dir: "x" | "y";
+    x?: number;
+    y?: number;
+    w?: number;
+    h?: number;
     spacing?: number;
     alignment?: "start" | "middle" | "end";
   }
@@ -231,6 +235,8 @@ export function foreach<T>(field: keyof T): Operator<T[], T> {
 }
 
 export function rect<T extends Record<string, any>>({
+  emX,
+  emY,
   w,
   h,
   rs,
@@ -240,6 +246,8 @@ export function rect<T extends Record<string, any>>({
   fill,
   debug,
 }: {
+  emX?: boolean;
+  emY?: boolean;
   w?: number | keyof T;
   h?: number | keyof T;
   rs?: number;
@@ -264,6 +272,8 @@ export function rect<T extends Record<string, any>>({
     const data = Array.isArray(d) ? d : [d];
     const firstItem = data[0];
     return Rect({
+      emX,
+      emY,
       w: w
         ? (inferSize(w as string | number, data) ??
           (ts ? inferSize(ts, data) : undefined))

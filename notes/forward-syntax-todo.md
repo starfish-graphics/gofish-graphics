@@ -14,8 +14,8 @@
 - [x] stacked bar chart
 - [x] grouped bar chart
 - [ ] stacked area chart
-- [ ] donut chart
-- [ ] rose chart
+- [x] donut chart
+- [x] rose chart
 
 ## Slightly More Complex
 
