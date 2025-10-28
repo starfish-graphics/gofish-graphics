@@ -1,6 +1,6 @@
 import { Chart, guide, rect } from "../ast/marks/chart";
 import {
-  catchData,
+  seafood,
   catchLocations,
   catchLocationsArray,
   catchDataWithLocations,
@@ -14,17 +14,17 @@ export const v2ChartRect = () =>
   rect({ fill: color.green[5], w: 32, h: 300 }).TEST_render();
 
 export const v2ChartRectSpread = () =>
-  rect(catchData, { fill: color.green[5], w: 32, h: 300 })
+  rect(seafood, { fill: color.green[5], w: 32, h: 300 })
     .spreadX("lake")
     .TEST_render();
 
 export const v2ChartBar = () =>
-  rect(catchData, { fill: "lake", h: "count" })
+  rect(seafood, { fill: "lake", h: "count" })
     .spreadX("lake", { alignment: "middle" })
     .TEST_render();
 
 export const v2ChartBarHorizontal = () =>
-  rect(catchData, { fill: "lake", w: "count" })
+  rect(seafood, { fill: "lake", w: "count" })
     .spreadY("lake", { alignment: "start" })
     .TEST_render();
 
@@ -40,14 +40,14 @@ export const v2ChartScatter = () =>
     .TEST_render();
 
 export const v2ChartStackedBar = () =>
-  rect(catchData, { fill: "species", h: "count" })
+  rect(seafood, { fill: "species", h: "count" })
     .stackY("species" /* , { w: "count" } */)
     .transform((d) => orderBy(d, "count", "asc"))
     .spreadX("lake", { alignment: "start" })
     .TEST_render();
 
 export const v2ChartPies = () =>
-  rect(catchData, { fill: "species", w: "count", h: 40 })
+  rect(seafood, { fill: "species", w: "count", h: 40 })
     .stackX("species")
     .transform((d) => orderBy(d, "count", "asc"))
     .coord(polar())
@@ -55,7 +55,7 @@ export const v2ChartPies = () =>
     .TEST_render();
 
 export const v2ChartPie = () =>
-  rect(catchData, { fill: "species", w: "count", h: 40 })
+  rect(seafood, { fill: "species", w: "count", h: 40 })
     .stackX("species")
     .transform((d) => orderBy(d, "count", "asc"))
     .coord(polar())
@@ -85,13 +85,13 @@ export const v2ChartScatterPie = () =>
 //     .TEST_render();
 
 export const v2ChartArea = () =>
-  guide(catchData, { h: "count", fill: "species" })
+  guide(seafood, { h: "count", fill: "species" })
     .spreadX("lake", { spacing: 60 })
     .connectX("lake", { opacity: 0.7 })
     .TEST_render();
 
 export const v2ChartRibbon = () =>
-  rect(catchData, { w: 24, fill: "species", h: "count" })
+  rect(seafood, { w: 24, fill: "species", h: "count" })
     .stackY("species")
     .transform((d) => orderBy(d, "count", "asc"))
     .spreadX("lake", { spacing: 40 })
@@ -99,7 +99,7 @@ export const v2ChartRibbon = () =>
     .TEST_render();
 
 export const v2ChartPolarRibbon = () =>
-  rect(catchData, {
+  rect(seafood, {
     ts: 0.1,
     fill: "species",
     rs: "count",
@@ -123,7 +123,7 @@ export const v2ChartNestedMosaic = () =>
 
 // ALMOST A BUMP CHART!!!!!
 export const v2ChartRibbonMessAround = () =>
-  rect(catchData, { w: 20, fill: "species", h: 20 })
+  rect(seafood, { w: 20, fill: "species", h: 20 })
     .spreadY("species", { label: false, spacing: 20 })
     .transform((d) => orderBy(d, "count", "asc"))
     .spreadX("lake", { spacing: 40 })
@@ -131,7 +131,7 @@ export const v2ChartRibbonMessAround = () =>
     .TEST_render();
 
 export const v2ChartMosaic = () =>
-  rect(catchData, { fill: "species", h: "count" })
+  rect(seafood, { fill: "species", h: "count" })
     .stackY("species", { w: "count" })
     .transform((d) => orderBy(d, "count", "asc"))
     .spreadX("lake")

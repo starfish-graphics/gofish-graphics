@@ -18,7 +18,7 @@ import { GoFishNode } from "../_node";
 import { CoordinateTransform } from "../coordinateTransforms/coord";
 import { MaybeValue } from "../data";
 import { Dictionary, List, ValueIteratee } from "lodash";
-import { CatchData, catchData as seafood } from "../../data/catch";
+import { CatchData, seafood as seafood } from "../../data/catch";
 
 /* inference */
 const inferSize = <T>(

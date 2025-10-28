@@ -14,7 +14,7 @@ import { layer } from "../ast/graphicalOperators/layer";
 import { petal } from "../ast/shapes/petal";
 import _ from "lodash";
 import { mix } from "spectral.js";
-import { catchData } from "../data/catch";
+import { seafood } from "../data/catch";
 import { catchLocations } from "../data/catch";
 import { polar } from "../ast/coordinateTransforms/polar";
 import { stackX } from "../ast/graphicalOperators/stackX";
@@ -62,7 +62,7 @@ import { frame } from "../ast/graphicalOperators/frame";
 //     )
 //   );
 
-const scatterData = _(catchData)
+const scatterData = _(seafood)
   .groupBy("lake")
   .map((lakeData, lake) => ({
     lake,

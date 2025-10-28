@@ -31,6 +31,13 @@ export function derive<T, U>(fn: (d: T) => U): Operator<T, U> {
   };
 }
 
+// return an array of copies of `d` repeated `d.field` times
+export const repeat = <T>(d: T, field: keyof T) => {
+  return Array.from({ length: d[field] as number }, () => d);
+};
+
+export { chunk } from "lodash";
+
 export type ChartOptions = {
   coord?: any; // CoordinateTransform
 };
@@ -51,16 +58,46 @@ export class ChartBuilder<TInput, TOutput = TInput> {
   }
 
   // flow accumulates operators and returns a new builder for chaining
-  flow<T1>(op1: Operator<TOutput, T1>): ChartBuilder<TInput, T1>;
+  flow<T1>(op1: Operator<TInput, T1>): ChartBuilder<TInput, T1>;
   flow<T1, T2>(
-    op1: Operator<TOutput, T1>,
+    op1: Operator<TInput, T1>,
     op2: Operator<T1, T2>
   ): ChartBuilder<TInput, T2>;
   flow<T1, T2, T3>(
-    op1: Operator<TOutput, T1>,
+    op1: Operator<TInput, T1>,
     op2: Operator<T1, T2>,
     op3: Operator<T2, T3>
   ): ChartBuilder<TInput, T3>;
+  flow<T1, T2, T3, T4>(
+    op1: Operator<TInput, T1>,
+    op2: Operator<T1, T2>,
+    op3: Operator<T2, T3>,
+    op4: Operator<T3, T4>
+  ): ChartBuilder<TInput, T4>;
+  flow<T1, T2, T3, T4, T5>(
+    op1: Operator<TInput, T1>,
+    op2: Operator<T1, T2>,
+    op3: Operator<T2, T3>,
+    op4: Operator<T3, T4>,
+    op5: Operator<T4, T5>
+  ): ChartBuilder<TInput, T5>;
+  flow<T1, T2, T3, T4, T5, T6>(
+    op1: Operator<TInput, T1>,
+    op2: Operator<T1, T2>,
+    op3: Operator<T2, T3>,
+    op4: Operator<T3, T4>,
+    op5: Operator<T4, T5>,
+    op6: Operator<T5, T6>
+  ): ChartBuilder<TInput, T6>;
+  flow<T1, T2, T3, T4, T5, T6, T7>(
+    op1: Operator<TInput, T1>,
+    op2: Operator<T1, T2>,
+    op3: Operator<T2, T3>,
+    op4: Operator<T3, T4>,
+    op5: Operator<T4, T5>,
+    op6: Operator<T5, T6>,
+    op7: Operator<T6, T7>
+  ): ChartBuilder<TInput, T7>;
   flow(...ops: Operator<any, any>[]): ChartBuilder<TInput, any> {
     return new ChartBuilder(this.data, this.options, [
       ...this.operators,
@@ -86,8 +123,24 @@ export function chart<T>(data: T, options?: ChartOptions): ChartBuilder<T, T> {
 }
 
 export function spread<T>(
-  field: keyof T,
-  options: {
+  fieldOrOptions:
+    | keyof T
+    | {
+        dir: "x" | "y";
+        x?: number;
+        y?: number;
+        t?: number;
+        r?: number;
+        w?: number | keyof T;
+        h?: number | keyof T;
+        mode?: "edge" | "center";
+        spacing?: number;
+        sharedScale?: boolean;
+        alignment?: "start" | "middle" | "end";
+        debug?: boolean;
+        label?: boolean;
+      },
+  options?: {
     dir: "x" | "y";
     x?: number;
     y?: number;
@@ -102,34 +155,47 @@ export function spread<T>(
     debug?: boolean;
     label?: boolean;
   }
-): Operator<T[], { item: T[]; key: number | string }> {
-  const opts = {
-    ...options,
-    label: options?.label ?? true,
-    alignment: options?.alignment ?? "start",
+): Operator<T[], T[]> {
+  // Determine if first argument is field or options
+  const field: keyof T | undefined =
+    typeof fieldOrOptions === "object" ? undefined : fieldOrOptions;
+  const opts = (typeof fieldOrOptions === "object" ? fieldOrOptions : options)!;
+
+  const finalOptions = {
+    ...opts,
+    label: opts?.label ?? true,
+    alignment: opts?.alignment ?? "start",
   };
 
-  return (mark: Mark<{ item: T[]; key: number | string }>) => {
+  return (mark: Mark<T[]>) => {
     return (d: T[], key?: string | number) => {
-      // Group by the field
-      const grouped = groupBy(d, field as ValueIteratee<T>);
+      // Group by the field if provided, otherwise iterate over raw data
+      const grouped = field ? groupBy(d, field as ValueIteratee<T>) : d;
 
       return Stack(
         {
-          direction: opts.dir === "x" ? 0 : 1,
-          x: opts?.x ?? opts?.t,
-          y: opts?.y ?? opts?.r,
-          mode: opts?.mode ? connectXMode[opts?.mode] : undefined,
-          spacing: opts?.spacing ?? 8,
-          sharedScale: opts?.sharedScale,
-          alignment: opts?.alignment,
-          w: opts?.w ? inferSize(opts?.w as string | number, d) : undefined,
-          h: opts?.h ? inferSize(opts?.h as string | number, d) : undefined,
+          direction: finalOptions.dir === "x" ? 0 : 1,
+          x: finalOptions?.x ?? finalOptions?.t,
+          y: finalOptions?.y ?? finalOptions?.r,
+          mode: finalOptions?.mode
+            ? connectXMode[finalOptions?.mode]
+            : undefined,
+          spacing: finalOptions?.spacing ?? 8,
+          sharedScale: finalOptions?.sharedScale,
+          alignment: finalOptions?.alignment,
+          w: finalOptions?.w
+            ? inferSize(finalOptions?.w as string | number, d)
+            : undefined,
+          h: finalOptions?.h
+            ? inferSize(finalOptions?.h as string | number, d)
+            : undefined,
         },
         For(grouped, (groupData, k) => {
           const currentKey = key != undefined ? `${key}-${k}` : k;
-          const node = mark({ item: groupData as T[], key: currentKey });
-          return opts.label ? node.setKey(currentKey?.toString() ?? "") : node;
+          const node = mark(groupData, currentKey);
+          return finalOptions.label
+            ? node.setKey(currentKey?.toString() ?? "")
+            : node;
         })
       );
     };
@@ -143,7 +209,7 @@ export function stack<T>(
     spacing?: number;
     alignment?: "start" | "middle" | "end";
   }
-): Operator<T[], { item: T[]; key: number | string }> {
+): Operator<T[], T[]> {
   return spread(field, { ...options, spacing: 0 });
 }
 
@@ -177,7 +243,7 @@ export function rect<T extends Record<string, any>>({
   ts?: number;
   rx?: number;
   ry?: number;
-  fill: keyof T | string;
+  fill?: keyof T | string;
   debug?: boolean;
 }): Mark<T | T[] | { item: T | T[]; key: number | string }> {
   return (input: T | T[] | { item: T | T[]; key: number | string }) => {

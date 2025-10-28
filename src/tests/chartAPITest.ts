@@ -1,5 +1,5 @@
 import { Chart } from "../ast/marks/chart";
-import { catchData } from "../data/catch";
+import { seafood } from "../data/catch";
 import { streamgraphData } from "../data/streamgraphData";
 import { titanic } from "../data/titanic";
 import { For, groupBy, Rect, StackX, v } from "../lib";
@@ -8,13 +8,13 @@ import _ from "lodash";
 export const chartRectBF = () =>
   StackX(
     { spacing: 2, sharedScale: true },
-    For(groupBy(catchData, "species"), (d) =>
+    For(groupBy(seafood, "species"), (d) =>
       Rect({ w: 32, h: v(_.sumBy(d, "count")), fill: v(d[0].species) })
     )
   );
 
 export const chartBar = () => {
-  return Chart(catchData)
+  return Chart(seafood)
     .rect({ w: 32, h: "count", fill: "species" })
     .spreadX("lake", { spacing: 2, sharedScale: true })
     .TEST_render();
@@ -46,7 +46,7 @@ Mark.rect(catchData, { w: 32, h: "count", fill: "species" })
 */
 
 export const chartStackedBar = () => {
-  return Chart(catchData)
+  return Chart(seafood)
     .rect({ w: 32, h: "count", fill: "species" })
     .spreadY("species", { spacing: 2 })
     .spreadX("lake", { spacing: 8, sharedScale: true })
@@ -54,7 +54,7 @@ export const chartStackedBar = () => {
 };
 
 export const chartGroupedBar = () => {
-  return Chart(catchData)
+  return Chart(seafood)
     .rect({ w: 8, h: "count", fill: "species" })
     .spreadX("species", { spacing: 2 })
     .spreadX("lake", { spacing: 4, sharedScale: true })
@@ -63,7 +63,7 @@ export const chartGroupedBar = () => {
 
 export const chartFacetedBar = () => {
   return (
-    Chart(catchData)
+    Chart(seafood)
       .rect({ w: 32, h: "count", fill: "species" })
       .spreadX("lake", { spacing: 2 })
       // .connectX("lake")
@@ -83,7 +83,7 @@ pipe(r, sx, sy);
 */
 
 export const chartFacetedBarHorizontal = () => {
-  return Chart(catchData)
+  return Chart(seafood)
     .rect({ w: 8, h: "count", fill: "species" })
     .spreadX("lake", { spacing: 2 })
     .spreadX("species", { spacing: 8, sharedScale: true })
@@ -91,7 +91,7 @@ export const chartFacetedBarHorizontal = () => {
 };
 
 export const chartWaffle = () => {
-  return Chart(catchData)
+  return Chart(seafood)
     .rect({ w: 8, h: 8, fill: "species" })
     .spreadX(undefined, { spacing: 2 })
     .spreadY(
@@ -119,7 +119,7 @@ Frame([
 */
 
 export const chartArea = () => {
-  return Chart(catchData)
+  return Chart(seafood)
     .rect({ w: 32, h: "count", fill: "species" })
     .spreadX("lake", { spacing: 60, sharedScale: true })
     .connectX("lake", { opacity: 0.7 })
@@ -127,9 +127,9 @@ export const chartArea = () => {
 };
 
 export const chartStackedArea = () => {
-  return Chart(catchData)
+  return Chart(seafood)
     .rect({ w: 32, h: "count", fill: "species" })
-    .spreadY("species", { spacing: 2 })
+    .stackY("species", { spacing: 2 })
     .spreadX("lake", { spacing: 60, sharedScale: true })
     .connectX("species", { over: "lake", opacity: 0.7 })
     .TEST_render();

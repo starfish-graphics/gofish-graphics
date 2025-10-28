@@ -14,7 +14,7 @@ import {
 } from "../color";
 import { titanic } from "../data/titanic";
 import { mix } from "spectral.js";
-import { catchData } from "../data/catch";
+import { seafood } from "../data/catch";
 import { ellipse } from "../ast/shapes/ellipse";
 import { enclose } from "../ast/graphicalOperators/enclose";
 import { StackX, StackY } from "../lib";

@@ -8,7 +8,7 @@ import { gofish } from "../ast/gofish";
 import { rect } from "../ast/shapes/rect";
 import { stack } from "../ast/graphicalOperators/stack";
 import { color, color6, white } from "../color";
-import { catchData } from "../data/catch";
+import { seafood } from "../data/catch";
 import _ from "lodash";
 import { stackX } from "../ast/graphicalOperators/stackX";
 import { frame } from "../ast/graphicalOperators/frame";

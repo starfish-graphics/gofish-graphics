@@ -1,7 +1,15 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "./helper";
-import { catchData } from "../src/data/catch";
-import { chart, spread, rectForward as rect } from "../src/lib";
+import { seafood } from "../src/data/catch";
+import {
+  chart,
+  spread,
+  rectForward as rect,
+  stackForward as stack,
+  derive,
+} from "../src/lib";
+import { repeat } from "../src/ast/marks/chart-forward-v3";
+import _ from "lodash";
 
 const meta: Meta = {
   title: "Forward Syntax V3",
@@ -23,15 +31,98 @@ export const BarChart: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    const node = chart(catchData)
+    chart(seafood)
       .flow(spread("lake", { dir: "x" }))
-      .mark(rect({ h: "count", fill: "species" }));
+      .mark(rect({ h: "count" }))
+      .render(container, {
+        w: args.w,
+        h: args.h,
+        axes: true,
+      });
 
-    node.render(container, {
-      w: args.w,
-      h: args.h,
-      axes: true,
-    });
+    return container;
+  },
+};
+
+export const HorizontalBarChart: StoryObj<Args> = {
+  args: { w: 400, h: 400 },
+  render: (args: Args) => {
+    const container = initializeContainer();
+
+    chart(seafood)
+      .flow(spread("lake", { dir: "y" }))
+      .mark(rect({ w: "count" }))
+      .render(container, {
+        w: args.w,
+        h: args.h,
+        axes: true,
+      });
+
+    return container;
+  },
+};
+
+export const StackedBarChart: StoryObj<Args> = {
+  args: { w: 400, h: 400 },
+  render: (args: Args) => {
+    const container = initializeContainer();
+
+    chart(seafood)
+      .flow(
+        spread("lake", { dir: "x" }), //
+        stack("species", { dir: "y" })
+      )
+      .mark(rect({ h: "count", fill: "species" }))
+      .render(container, {
+        w: args.w,
+        h: args.h,
+        axes: true,
+      });
+
+    return container;
+  },
+};
+
+export const GroupedBarChart: StoryObj<Args> = {
+  args: { w: 400, h: 400 },
+  render: (args: Args) => {
+    const container = initializeContainer();
+
+    chart(seafood)
+      .flow(
+        spread("lake", { dir: "x" }), //
+        stack("species", { dir: "x" })
+      )
+      .mark(rect({ h: "count", fill: "species" }))
+      .render(container, {
+        w: args.w,
+        h: args.h,
+        axes: true,
+      });
+
+    return container;
+  },
+};
+
+export const WaffleChart: StoryObj<Args> = {
+  args: { w: 400, h: 400 },
+  render: (args: Args) => {
+    const container = initializeContainer();
+
+    chart(seafood)
+      .flow(
+        spread("lake", { spacing: 8, dir: "x" }),
+        derive((d) => d.flatMap((d) => repeat(d, "count"))),
+        derive((d) => _.chunk(d, 5)),
+        spread({ spacing: 2, dir: "y" }),
+        spread({ spacing: 2, dir: "x" })
+      )
+      .mark(rect({ w: 8, h: 8, fill: "species" }))
+      .render(container, {
+        w: args.w,
+        h: args.h,
+        axes: true,
+      });
 
     return container;
   },

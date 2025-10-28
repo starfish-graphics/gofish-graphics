@@ -29,7 +29,7 @@ export const catchLocationsArray = Object.entries(catchLocations).map(
   })
 );
 
-export const catchData: CatchData[] = [
+export const seafood: CatchData[] = [
   {
     lake: "Lake A",
     species: "Bass",
@@ -182,7 +182,7 @@ export const catchData: CatchData[] = [
   },
 ];
 
-export const catchDataWithLocations = catchData.map((catchItem) => {
+export const catchDataWithLocations = seafood.map((catchItem) => {
   const location = catchLocationsArray.find(
     (loc) => loc.lake === catchItem.lake
   );

@@ -8,7 +8,7 @@ import { gofish } from "../ast/gofish";
 import { rect } from "../ast/shapes/rect";
 import { stack } from "../ast/graphicalOperators/stack";
 import { color, color6 } from "../color";
-import { catchData } from "../data/catch";
+import { seafood } from "../data/catch";
 import _ from "lodash";
 
 const fishColors = {
@@ -19,7 +19,11 @@ const fishColors = {
   Salmon: color.purple[5],
 };
 
-const waffleY = (data: any[], { y, numRows }: { y: string; numRows: number }, mark: (d: any) => any) =>
+const waffleY = (
+  data: any[],
+  { y, numRows }: { y: string; numRows: number },
+  mark: (d: any) => any
+) =>
   stack(
     { direction: "y", spacing: 2, alignment: "start" },
     _(data)
@@ -27,18 +31,27 @@ const waffleY = (data: any[], { y, numRows }: { y: string; numRows: number }, ma
       .flatMap((d) => Array(d[y]).fill(d))
       .chunk(numRows)
       .reverse()
-      .map((d) => stack({ direction: "x", spacing: 2, alignment: "start" }, d.map(mark)))
+      .map((d) =>
+        stack({ direction: "x", spacing: 2, alignment: "start" }, d.map(mark))
+      )
       .value()
   );
 
-export const testFishWaffleRefactor = (size: { width: number; height: number }) =>
+export const testFishWaffleRefactor = (size: {
+  width: number;
+  height: number;
+}) =>
   gofish(
     { width: size.width, height: size.height },
     stack(
       { direction: "x", spacing: 8, alignment: "end", sharedScale: true },
-      _(catchData)
+      _(seafood)
         .groupBy("lake")
-        .map((d) => waffleY(d, { y: "count", numRows: 4 }, (d) => rect({ w: 8, h: 8, fill: fishColors[d.species] })))
+        .map((d) =>
+          waffleY(d, { y: "count", numRows: 4 }, (d) =>
+            rect({ w: 8, h: 8, fill: fishColors[d.species] })
+          )
+        )
         .value()
     )
   );
