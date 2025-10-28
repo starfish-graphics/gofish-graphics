@@ -1,8 +1,9 @@
 import { Dictionary, groupBy, ValueIteratee } from "lodash";
-import { Rect, Stack, sumBy, v } from "../../lib";
+import { Frame, Rect, Stack, sumBy, v } from "../../lib";
 import { GoFishNode } from "../_node";
 import { MaybeValue } from "../data";
 import { For } from "../iterators/for";
+import { CoordinateTransform } from "../coordinateTransforms/coord";
 
 /* inference */
 const inferSize = <T>(
@@ -39,7 +40,7 @@ export const repeat = <T>(d: T, field: keyof T) => {
 export { chunk } from "lodash";
 
 export type ChartOptions = {
-  coord?: any; // CoordinateTransform
+  coord?: CoordinateTransform;
 };
 
 export class ChartBuilder<TInput, TOutput = TInput> {
@@ -114,7 +115,9 @@ export class ChartBuilder<TInput, TOutput = TInput> {
       finalMark = op(finalMark);
     }
 
-    return finalMark(this.data as any).setShared([true, true]);
+    return Frame({ coord: this.options?.coord }, [
+      finalMark(this.data as any).setShared([true, true]),
+    ]);
   }
 }
 

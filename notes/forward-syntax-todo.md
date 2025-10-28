@@ -7,7 +7,7 @@
 - [ ] scatter plot
 - [ ] line chart
 - [ ] area chart
-- [ ] pie chart
+- [x] pie chart
 
 ## Still Basic
 

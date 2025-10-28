@@ -10,6 +10,7 @@ import {
 } from "../src/lib";
 import { repeat } from "../src/ast/marks/chart-forward-v3";
 import _ from "lodash";
+import { clock } from "../src/ast/coordinateTransforms/clock";
 
 const meta: Meta = {
   title: "Forward Syntax V3",
@@ -122,6 +123,25 @@ export const WaffleChart: StoryObj<Args> = {
         w: args.w,
         h: args.h,
         axes: true,
+      });
+
+    return container;
+  },
+};
+
+export const PieChart: StoryObj<Args> = {
+  args: { w: 400, h: 400 },
+  render: (args: Args) => {
+    const container = initializeContainer();
+
+    chart(seafood, { coord: clock() })
+      .flow(stack("species", { dir: "x" }))
+      .mark(rect({ w: "count", fill: "species" }))
+      .render(container, {
+        w: args.w,
+        h: args.h,
+        axes: true,
+        transform: { x: 200, y: 200 },
       });
 
     return container;
