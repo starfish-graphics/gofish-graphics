@@ -1,5 +1,12 @@
 # Forward Syntax Implementation Todo List
 
+## Feature TODOs
+
+- [ ] scatter operator
+- [ ] line/ribbon?
+- [ ] select?
+- [ ] connect operator?
+
 ## Basic Charts
 
 - [x] bar chart

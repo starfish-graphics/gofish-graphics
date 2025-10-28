@@ -14,6 +14,7 @@ import {
   ORDINAL,
 } from "../underlyingSpace";
 import * as Interval from "../../util/interval";
+import { computeSize } from "../../util";
 
 export const layer = (
   childrenOrOptions:
@@ -137,6 +138,12 @@ export const layer = (
         measurement,
         posScales
       ) => {
+        // Compute size using dims (w and h) before passing to children
+        size = [
+          computeSize(dims[0].size, scaleFactors?.[0]!, size[0]) ?? size[0],
+          computeSize(dims[1].size, scaleFactors?.[1]!, size[1]) ?? size[1],
+        ];
+
         const childPlaceables = [];
 
         for (const child of children) {

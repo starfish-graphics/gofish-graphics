@@ -70,6 +70,8 @@ export function log<T>(label?: string): Operator<T, T> {
 /* END Data Transformation Operators */
 
 export type ChartOptions = {
+  w?: number;
+  h?: number;
   coord?: CoordinateTransform;
 };
 
@@ -145,7 +147,7 @@ export class ChartBuilder<TInput, TOutput = TInput> {
       finalMark = op(finalMark);
     }
 
-    return Frame({ coord: this.options?.coord }, [
+    return Frame(this.options ?? {}, [
       finalMark(this.data as any).setShared([true, true]),
     ]);
   }
