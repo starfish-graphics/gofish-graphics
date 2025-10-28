@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "./helper";
-import { seafood } from "../src/data/catch";
+import { catchLocationsArray, seafood } from "../src/data/catch";
 import {
   chart,
   spread,
@@ -8,7 +8,13 @@ import {
   stackForward as stack,
   derive,
 } from "../src/lib";
-import { log, normalize, repeat } from "../src/ast/marks/chart-forward-v3";
+import {
+  circle,
+  log,
+  normalize,
+  repeat,
+  scatter,
+} from "../src/ast/marks/chart-forward-v3";
 import _ from "lodash";
 import { clock } from "../src/ast/coordinateTransforms/clock";
 import { nightingale } from "../src/data/nightingale";
@@ -221,6 +227,24 @@ export const MosaicChart: StoryObj<Args> = {
       .mark(
         rect({ h: "count", fill: "origin", stroke: "white", strokeWidth: 2 })
       )
+      .render(container, {
+        w: args.w,
+        h: args.h,
+        axes: true,
+      });
+
+    return container;
+  },
+};
+
+export const ScatterChart: StoryObj<Args> = {
+  args: { w: 400, h: 400 },
+  render: (args: Args) => {
+    const container = initializeContainer();
+
+    chart(catchLocationsArray)
+      .flow(scatter("lake", { x: "x", y: "y" }))
+      .mark(circle({ r: 5 }))
       .render(container, {
         w: args.w,
         h: args.h,

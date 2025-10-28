@@ -1,5 +1,5 @@
 import { Dictionary, groupBy, ValueIteratee } from "lodash";
-import { Frame, Rect, Stack, sumBy, v } from "../../lib";
+import { Frame, Rect, Stack, sumBy, v, Position, meanBy } from "../../lib";
 import { GoFishNode } from "../_node";
 import { MaybeValue } from "../data";
 import { For } from "../iterators/for";
@@ -252,13 +252,38 @@ export function stack<T>(
   return spread(field, { ...options, spacing: 0 });
 }
 
-export function scatter<T>(options: {
-  x?: keyof T;
-  y?: keyof T;
-  alignment?: "start" | "middle" | "end";
-}): Operator<T[], T> {
-  // TODO: Implement proper scatter positioning
-  throw new Error("scatter not yet implemented");
+export function scatter<T>(
+  field: keyof T,
+  options: {
+    x: keyof T;
+    y: keyof T;
+    debug?: boolean;
+  }
+): Operator<T[], T[]> {
+  return (mark: Mark<T[]>) => {
+    return (d: T[], key?: string | number) => {
+      // Group by the field
+      const groups = groupBy(d, field as ValueIteratee<T>);
+      if (options?.debug) console.log("scatter groups", groups);
+
+      return Frame(
+        For(groups, (items, groupKey) => {
+          // Calculate average x and y values for this group
+          const avgX = meanBy(items, options.x as string);
+          const avgY = meanBy(items, options.y as string);
+
+          if (options?.debug)
+            console.log(`Group ${groupKey}: avgX=${avgX}, avgY=${avgY}`);
+
+          // Render the group items and wrap in Position operator
+          const currentKey = key != undefined ? `${key}-${groupKey}` : groupKey;
+          return Position({ x: v(avgX), y: v(avgY) }, [
+            mark(items, currentKey),
+          ]);
+        })
+      );
+    };
+  };
 }
 
 export function foreach<T>(field: keyof T): Operator<T[], T> {
@@ -347,9 +372,7 @@ export function circle<T extends Record<string, any>>({
       rx: typeof r === "number" ? r : 5,
       ry: typeof r === "number" ? r : 5,
       fill:
-        typeof fill === "string" && fill in d
-          ? v(d[fill as keyof T])
-          : (fill ?? "blue"),
+        typeof fill === "string" && fill in d ? v(d[fill as keyof T]) : fill,
     }).name(key?.toString() ?? "");
   };
 }

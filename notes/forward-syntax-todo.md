@@ -2,7 +2,7 @@
 
 ## Feature TODOs
 
-- [ ] scatter operator
+- [x] scatter operator
 - [ ] line/ribbon?
 - [ ] select?
 - [ ] connect operator?
@@ -11,7 +11,7 @@
 
 - [x] bar chart
 - [x] horizontal bar chart
-- [ ] scatter plot
+- [x] scatter plot
 - [ ] line chart
 - [ ] area chart
 - [x] pie chart
