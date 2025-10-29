@@ -19,14 +19,16 @@ import {
 } from "../src/lib";
 import {
   circle,
+  foreach,
   log,
   normalize,
   repeat,
   scatter,
 } from "../src/ast/marks/chart-forward-v3";
-import _ from "lodash";
+import _, { groupBy, orderBy } from "lodash";
 import { clock } from "../src/ast/coordinateTransforms/clock";
 import { nightingale } from "../src/data/nightingale";
+import { drivingShifts } from "../src/data/drivingShifts";
 
 const meta: Meta = {
   title: "Forward Syntax V3",
@@ -95,6 +97,78 @@ export const StackedBarChart: StoryObj<Args> = {
         h: args.h,
         axes: true,
       });
+
+    return container;
+  },
+};
+
+export const SortedStackedBarChart: StoryObj<Args> = {
+  args: { w: 400, h: 400 },
+  render: (args: Args) => {
+    const container = initializeContainer();
+
+    chart(seafood)
+      .flow(
+        spread("lake", { dir: "x" }),
+        derive((d) => orderBy(d, "count", "desc")),
+        stack("species", { dir: "y" })
+      )
+      .mark(rect({ h: "count", fill: "species" }))
+      .render(container, {
+        w: args.w,
+        h: args.h,
+        axes: true,
+      });
+
+    return container;
+  },
+};
+
+export const RibbonChart: StoryObj<Args> = {
+  args: { w: 400, h: 400 },
+  render: (args: Args) => {
+    const container = initializeContainer();
+
+    layer([
+      chart(seafood)
+        .flow(
+          spread("lake", { dir: "x", spacing: 64 }),
+          derive((d) => orderBy(d, "count", "desc")),
+          stack("species", { dir: "y" })
+        )
+        .mark(rect({ h: "count", fill: "species" }))
+        .as("bars"),
+      chart(select("bars")).flow(foreach("species")).mark(line()),
+    ]).render(container, {
+      w: args.w,
+      h: args.h,
+      axes: true,
+    });
+
+    return container;
+  },
+};
+
+export const PolarRibbonChart: StoryObj<Args> = {
+  args: { w: 400, h: 400 },
+  render: (args: Args) => {
+    const container = initializeContainer();
+
+    layer([
+      chart(seafood)
+        .flow(
+          spread("lake", { dir: "x", spacing: 60, mode: "center" }),
+          derive((d) => orderBy(d, "count", "desc")),
+          stack("species", { dir: "y" })
+        )
+        .mark(rect({ h: "count", fill: "species" }))
+        .as("bars"),
+      chart(select("bars")).flow(foreach("species")).mark(line()),
+    ]).render(container, {
+      w: args.w,
+      h: args.h,
+      axes: true,
+    });
 
     return container;
   },
@@ -285,6 +359,30 @@ export const LineChart: StoryObj<Args> = {
   },
 };
 
+export const ConnectedScatterChart: StoryObj<Args> = {
+  args: { w: 400, h: 400 },
+  render: (args: Args) => {
+    const container = initializeContainer();
+
+    layer([
+      chart(drivingShifts)
+        .flow(scatter("year", { x: "miles", y: "gas" }))
+        .mark(circle({ r: 4, fill: "white", stroke: "black", strokeWidth: 2 }))
+        .as("points"),
+      chart(select("points")).mark(line({ stroke: "black", strokeWidth: 2 })),
+      chart(drivingShifts)
+        .flow(scatter("year", { x: "miles", y: "gas" }))
+        .mark(circle({ r: 4, fill: "white", stroke: "black", strokeWidth: 2 })),
+    ]).render(container, {
+      w: args.w,
+      h: args.h,
+      axes: true,
+    });
+
+    return container;
+  },
+};
+
 export const ScatterPieChart: StoryObj<Args> = {
   args: { w: 400, h: 400 },
   render: (args: Args) => {
@@ -307,7 +405,7 @@ export const ScatterPieChart: StoryObj<Args> = {
       .flow(scatter("lake", { x: "x", y: "y" }))
       .mark((data) =>
         chart(data[0].collection, { coord: clock() })
-          .flow(stack("species", { dir: "x", h: "count" }))
+          .flow(stack("species", { dir: "x", /* h: "count" */ h: 20 }))
           .mark(rect({ w: "count", fill: "species" }))
       )
       .render(container, {

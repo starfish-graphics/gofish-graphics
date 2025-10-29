@@ -1,18 +1,24 @@
 # Forward Syntax Implementation Todo List
 
-## Feature TODOs
+## Immediate TODOs
 
-- [x] scatter operator
-- [ ] line/ribbon?
-- [ ] select?
-- [ ] connect operator?
+- [ ] area/ribbon mark
+- [ ] sorting needs to preserve mark selection
+- [ ] layer needs to allow coordinate transform
+
+## Eventually
+
+- [ ] Fast next-layer for when you are just selecting the previous layer
+- [ ] control over scatter pie radii
+- [ ] z-indexing
+- [ ] position using center?
 
 ## Basic Charts
 
 - [x] bar chart
 - [x] horizontal bar chart
 - [x] scatter plot
-- [ ] line chart
+- [x] line chart
 - [ ] area chart
 - [x] pie chart
 
@@ -29,12 +35,14 @@
 - [ ] streamgraph
 - [x] mosaic
 - [x] waffle
-- [ ] ribbon
+- [-] ribbon (need ribbon/area instead of line. need data to get sorted to match refs or else have
+  some other way to track them...)
 - [ ] polar ribbon
 - [ ] ridgeline
 - [ ] layered area
-- [-] scatter pie
-- [ ] connected scatter plot
+- [-] scatter pie (needs more control over variable radii)
+- [-] connected scatter plot (needs z-index control. also a bug when replacing circle w/ scaffold
+  that seems like it's not getting placed in the center but at some other place)
 - [ ] flower chart
 - [ ] balloon
 

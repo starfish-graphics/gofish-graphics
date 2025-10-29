@@ -329,9 +329,22 @@ export function scatter<T>(
   };
 }
 
-export function foreach<T>(field: keyof T): Operator<T[], T> {
-  // TODO: Implement foreach
-  throw new Error("foreach not yet implemented");
+export function foreach<T>(field: keyof T): Operator<T[], T[]> {
+  return (mark: Mark<T[]>) => {
+    return (d: T[], key?: string | number) => {
+      // Group by the field
+      const groups = groupBy(d, field as ValueIteratee<T>);
+
+      return Frame(
+        {},
+        For(groups, (items, groupKey) => {
+          // Apply mark to each group
+          const currentKey = key != undefined ? `${key}-${groupKey}` : groupKey;
+          return mark(items, currentKey);
+        })
+      );
+    };
+  };
 }
 
 export function rect<T extends Record<string, any>>({
@@ -403,10 +416,14 @@ export function rect<T extends Record<string, any>>({
 export function circle<T extends Record<string, any>>({
   r,
   fill,
+  stroke,
+  strokeWidth,
   debug,
 }: {
   r?: number;
   fill?: string | keyof T;
+  stroke?: string;
+  strokeWidth?: number;
   debug?: boolean;
 }): Mark<T> {
   return (d: T, key?: string | number) => {
@@ -418,6 +435,8 @@ export function circle<T extends Record<string, any>>({
       ry: typeof r === "number" ? r : 5,
       fill:
         typeof fill === "string" && fill in d ? v(d[fill as keyof T]) : fill,
+      stroke,
+      strokeWidth,
     }).name(key?.toString() ?? "");
   };
 }
