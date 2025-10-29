@@ -15,32 +15,18 @@ import {
 } from "../underlyingSpace";
 import * as Interval from "../../util/interval";
 import { computeSize } from "../../util";
+import { CoordinateTransform } from "../coordinateTransforms/coord";
+import { coord } from "../coordinateTransforms/coord";
+import { getLayerContext, resetLayerContext } from "./frame";
 
-/* layer context */
-type LayerContext = {
-  [name: string]: {
-    data: any[];
-    nodes: GoFishNode[];
-  };
-};
-
-let layerContext: LayerContext | null = null;
-
-export const getLayerContext = (): LayerContext => {
-  if (!layerContext) {
-    layerContext = {};
-  }
-  return layerContext;
-};
-
-export const resetLayerContext = (): void => {
-  layerContext = null;
-};
+// Re-export layer context functions for backward compatibility
+export { getLayerContext, resetLayerContext };
 
 export const layer = (
   childrenOrOptions:
     | ({
         key?: string;
+        coord?: CoordinateTransform;
         transform?: { scale?: { x?: number; y?: number } };
         box?: boolean;
       } & FancyDims)
@@ -51,6 +37,26 @@ export const layer = (
   const children = Array.isArray(childrenOrOptions)
     ? childrenOrOptions
     : maybeChildren || [];
+
+  // If coord is provided, delegate to coord transform (similar to frame but without transform/box)
+  if (!Array.isArray(childrenOrOptions) && options.coord !== undefined) {
+    const {
+      coord: coordTransform,
+      key,
+      transform: _transform,
+      box: _box,
+      ...restDims
+    } = options;
+    return coord(
+      {
+        key,
+        transform: coordTransform,
+        ...restDims,
+      },
+      children
+    );
+  }
+
   const dims = elaborateDims(options);
 
   return new GoFishNode(

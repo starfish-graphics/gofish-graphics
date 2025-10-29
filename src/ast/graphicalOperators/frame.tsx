@@ -5,6 +5,27 @@ import { coord } from "../coordinateTransforms/coord";
 import { layer } from "./layer";
 import { withGoFish } from "../withGoFish";
 import { GoFishAST } from "../_ast";
+
+/* layer context */
+type LayerContext = {
+  [name: string]: {
+    data: any[];
+    nodes: GoFishNode[];
+  };
+};
+
+let layerContext: LayerContext | null = null;
+
+export const getLayerContext = (): LayerContext => {
+  if (!layerContext) {
+    layerContext = {};
+  }
+  return layerContext;
+};
+
+export const resetLayerContext = (): void => {
+  layerContext = null;
+};
 export const frame = withGoFish(
   (
     options: {

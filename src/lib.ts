@@ -17,11 +17,11 @@ export { ref } from "./ast/shapes/ref";
 export { stack } from "./ast/graphicalOperators/stack";
 export { stackX } from "./ast/graphicalOperators/stackX";
 export { stackY } from "./ast/graphicalOperators/stackY";
+export { layer } from "./ast/graphicalOperators/layer";
 export {
-  layer,
   getLayerContext,
   resetLayerContext,
-} from "./ast/graphicalOperators/layer";
+} from "./ast/graphicalOperators/frame";
 export { wrap } from "./ast/graphicalOperators/wrap";
 export { connect } from "./ast/graphicalOperators/connect";
 export { connectX } from "./ast/graphicalOperators/connectX";

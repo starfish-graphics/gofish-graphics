@@ -111,7 +111,7 @@ export const SortedStackedBarChart: StoryObj<Args> = {
     chart(seafood)
       .flow(
         spread("lake", { dir: "x" }),
-        derive((d) => orderBy(d, "count", "desc")),
+        derive((d) => orderBy(d, "count", "asc")),
         stack("species", { dir: "y" })
       )
       .mark(rect({ h: "count", fill: "species" }))
@@ -134,7 +134,7 @@ export const RibbonChart: StoryObj<Args> = {
       chart(seafood)
         .flow(
           spread("lake", { dir: "x", spacing: 64 }),
-          derive((d) => orderBy(d, "count", "desc")),
+          derive((d) => orderBy(d, "count", "asc")),
           stack("species", { dir: "y" })
         )
         .mark(rect({ h: "count", fill: "species" }))
@@ -157,19 +157,28 @@ export const PolarRibbonChart: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    layer([
+    layer({ coord: clock() }, [
       chart(seafood)
         .flow(
-          spread("lake", { dir: "x", spacing: 60, mode: "center" }),
-          derive((d) => orderBy(d, "count", "desc")),
-          stack("species", { dir: "y" })
+          spread("lake", {
+            dir: "x",
+            spacing: (2 * Math.PI) / 6,
+            mode: "center",
+            y: 50,
+            label: false,
+          }),
+          derive((d) => orderBy(d, "count", "asc")),
+          stack("species", { dir: "y", label: false })
         )
-        .mark(rect({ h: "count", fill: "species" }))
+        .mark(rect({ w: 0.1, h: "count", fill: "species" }))
         .as("bars"),
-      chart(select("bars")).flow(foreach("species")).mark(line()),
+      chart(select("bars"))
+        .flow(foreach("species"))
+        .mark(area({ opacity: 0.8 })),
     ]).render(container, {
       w: args.w,
       h: args.h,
+      transform: { x: 200, y: 200 },
       axes: true,
     });
 
