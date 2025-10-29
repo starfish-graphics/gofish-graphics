@@ -183,9 +183,9 @@ export class ChartBuilder<TInput, TOutput = TInput> {
 
       const leafNodes = collectLeafNodes(rootNode);
 
-      // Store layer data and leaf nodes
+      // Store layer data taken from node-attached datum and leaf nodes
       layerContext[name] = {
-        data: Array.isArray(data) ? data : [data],
+        data: leafNodes.map((n) => (n as any).datum),
         nodes: leafNodes,
       };
 
@@ -268,7 +268,7 @@ export function spread<T>(
             ? inferSize(finalOptions?.h as string | number, d)
             : undefined,
         },
-        For(grouped, (groupData, k) => {
+        For(grouped as any, (groupData: T[], k) => {
           const currentKey = key != undefined ? `${key}-${k}` : k;
           const node = mark(groupData, currentKey);
           return finalOptions.label
@@ -388,7 +388,7 @@ export function rect<T extends Record<string, any>>({
     if (debug) console.log("rect", key, d);
     const data = Array.isArray(d) ? d : [d];
     const firstItem = data[0];
-    return Rect({
+    const node = Rect({
       emX,
       emY,
       w:
@@ -410,6 +410,8 @@ export function rect<T extends Record<string, any>>({
       stroke,
       strokeWidth,
     }).name(key?.toString() ?? "");
+    (node as any).datum = d;
+    return node;
   };
 }
 
@@ -428,7 +430,7 @@ export function circle<T extends Record<string, any>>({
 }): Mark<T> {
   return (d: T, key?: string | number) => {
     if (debug) console.log("circle", key, d);
-    return Rect({
+    const node = Rect({
       w: typeof r === "number" ? r * 2 : inferSize(r, d),
       h: typeof r === "number" ? r * 2 : inferSize(r, d),
       rx: typeof r === "number" ? r : 5,
@@ -438,6 +440,8 @@ export function circle<T extends Record<string, any>>({
       stroke,
       strokeWidth,
     }).name(key?.toString() ?? "");
+    (node as any).datum = d;
+    return node;
   };
 }
 
@@ -452,12 +456,16 @@ export function select<T>(layerName: string): Array<T & { __ref: GoFishNode }> {
     );
   }
 
-  // Return data enriched with refs to nodes
-  // Each data item gets a reference to its corresponding node
-  return layer.data.map((item: T, i: number) => ({
-    ...item,
-    __ref: layer.nodes[i],
-  })) as Array<T & { __ref: GoFishNode }>;
+  // Return node-attached data enriched with refs to nodes
+  return layer.nodes.map((node: GoFishNode) => {
+    const datum: any = (node as any).datum;
+    if (datum && typeof datum === "object") {
+      // (datum as any).__ref = node;
+      const datumHack = { ...datum[0], __ref: node };
+      return datumHack as T & { __ref: GoFishNode };
+    }
+    return { item: datum, __ref: node } as unknown as T & { __ref: GoFishNode };
+  });
 }
 
 // line() mark connects data points using center-to-center mode
@@ -485,6 +493,40 @@ export function line<T extends Record<string, any>>(options?: {
         strokeWidth: options?.strokeWidth ?? 1,
         opacity: options?.opacity,
         interpolation: options?.interpolation ?? "linear",
+      },
+      refs
+    );
+  };
+}
+
+// area() mark connects data points using edge-to-edge mode
+export function area<T extends Record<string, any>>(options?: {
+  stroke?: string;
+  strokeWidth?: number;
+  opacity?: number;
+  mixBlendMode?: "normal" | "multiply";
+  dir?: "x" | "y";
+  interpolation?: "linear" | "bezier";
+}): Mark<Array<T & { __ref?: GoFishNode }>> {
+  return (d: Array<T & { __ref?: GoFishNode }>, key?: string | number) => {
+    // Use refs from enriched data if available
+    const refs = d.map((item) => {
+      if ("__ref" in item && item.__ref) {
+        return Ref(item.__ref);
+      }
+      // Fallback to name-based ref if no __ref
+      return Ref(`${key}`);
+    });
+
+    return Connect(
+      {
+        direction: options?.dir ?? "x",
+        mode: "edge-to-edge",
+        mixBlendMode: options?.mixBlendMode ?? "normal",
+        stroke: options?.stroke,
+        strokeWidth: options?.strokeWidth ?? 0,
+        opacity: options?.opacity,
+        interpolation: options?.interpolation ?? "bezier",
       },
       refs
     );

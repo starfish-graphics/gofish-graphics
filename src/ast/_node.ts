@@ -107,6 +107,7 @@ export class GoFishNode {
   public key?: string;
   public _name?: string;
   public parent?: GoFishNode;
+  public datum?: any;
   // private inferDomains: (childDomains: Size<Domain>[]) => FancySize<Domain | undefined>;
   private _resolveUnderlyingSpace: ResolveUnderlyingSpace;
   private _underlyingSpace?: Size<UnderlyingSpace> = undefined;

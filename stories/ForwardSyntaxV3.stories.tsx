@@ -18,6 +18,7 @@ import {
   scaffold,
 } from "../src/lib";
 import {
+  area,
   circle,
   foreach,
   log,
@@ -138,7 +139,9 @@ export const RibbonChart: StoryObj<Args> = {
         )
         .mark(rect({ h: "count", fill: "species" }))
         .as("bars"),
-      chart(select("bars")).flow(foreach("species")).mark(line()),
+      chart(select("bars"))
+        .flow(foreach("species"))
+        .mark(area({ opacity: 0.8 })),
     ]).render(container, {
       w: args.w,
       h: args.h,
