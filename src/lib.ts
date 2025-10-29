@@ -14,7 +14,7 @@ export { petal } from "./ast/shapes/petal";
 export { ref } from "./ast/shapes/ref";
 
 // Graphical Operators
-export { stack } from "./ast/graphicalOperators/stack";
+// export { stack } from "./ast/graphicalOperators/stack";
 export { stackX } from "./ast/graphicalOperators/stackX";
 export { stackY } from "./ast/graphicalOperators/stackY";
 export { layer } from "./ast/graphicalOperators/layer";
@@ -80,26 +80,23 @@ export { arcLengthPolar as ArcLengthPolar } from "./ast/coordinateTransforms/arc
 export { bipolar as Bipolar } from "./ast/coordinateTransforms/bipolar";
 export { wavy as Wavy } from "./ast/coordinateTransforms/wavy";
 
-/* API v3 */
-export { Chart, _Chart, rect, guide } from "./ast/marks/chart";
-
-/* Forward Syntax V3 */
+/* Chart Syntax */
 export {
   chart,
   spread,
-  stack as stackForward,
+  stack,
   scatter,
   foreach,
   derive,
-  rect as rectForward,
+  rect,
   circle,
   select,
   line,
   scaffold,
-} from "./ast/marks/chart-forward-v3";
+} from "./ast/marks/chart";
 export type {
   Mark,
   Operator,
   ChartOptions,
   ChartBuilder,
-} from "./ast/marks/chart-forward-v3";
+} from "./ast/marks/chart";

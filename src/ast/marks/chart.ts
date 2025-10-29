@@ -1,58 +1,570 @@
-import { JSX } from "solid-js/jsx-runtime";
+import { Dictionary, groupBy, ValueIteratee } from "lodash";
 import {
-  ConnectX,
-  For,
   Frame,
-  groupBy,
-  Position,
   Rect,
-  Ref,
-  StackX,
-  StackY,
-  v,
+  Stack,
   sumBy,
+  v,
+  Position,
   meanBy,
+  getLayerContext,
+  Connect,
+  Ref,
 } from "../../lib";
 import { GoFishNode } from "../_node";
-import { CoordinateTransform } from "../coordinateTransforms/coord";
 import { MaybeValue } from "../data";
+import { For } from "../iterators/for";
+import { CoordinateTransform } from "../coordinateTransforms/coord";
 
 /* inference */
 const inferSize = <T>(
   accessor: string | number | undefined,
-  d: T[]
+  d: T | T[]
 ): MaybeValue<number> | undefined => {
   return typeof accessor === "number"
     ? accessor
     : accessor !== undefined
-      ? v(sumBy(d, accessor))
+      ? v(sumBy(d as T[], accessor))
       : undefined;
 };
 
 const connectXMode = {
   edge: "edge-to-edge",
   center: "center-to-center",
+} as const;
+
+export type Mark<T> = (d: T, key?: string | number) => GoFishNode;
+
+export type Operator<T, U> = (_: Mark<U>) => Mark<T>;
+
+/* Data Transformation Operators */
+export function derive<T, U>(fn: (d: T) => U): Operator<T, U> {
+  return (mark: Mark<U>) => {
+    return (d: T, key?: string | number) => mark(fn(d), key);
+  };
+}
+
+// return an array of copies of `d` repeated `d.field` times
+export const repeat = <T, K extends keyof T>(
+  d: T,
+  field: K & (T[K] extends number ? K : never)
+) => {
+  return Array.from({ length: d[field] as unknown as number }, () => d);
 };
 
-export class _Chart<T> {
-  private _data: T[];
-  private _render: (d: T[], key: number | string) => GoFishNode;
+export { chunk } from "lodash";
+
+export const normalize = <T, K extends keyof T>(
+  data: T[],
+  field: K & (T[K] extends number ? K : never)
+): T[] => {
+  const total = sumBy(data, field as string);
+  return data.map((d) => ({
+    ...d,
+    [field]: (d[field] as unknown as number) / total,
+  }));
+};
+
+export function log<T>(label?: string): Operator<T, T> {
+  return (mark: Mark<T>) => {
+    return (d: T, key?: string | number) => {
+      if (label) {
+        console.log(label, d);
+      } else {
+        console.log(d);
+      }
+      return mark(d, key);
+    };
+  };
+}
+
+/* END Data Transformation Operators */
+
+export type ChartOptions = {
+  w?: number;
+  h?: number;
+  coord?: CoordinateTransform;
+};
+
+export class ChartBuilder<TInput, TOutput = TInput> {
+  private readonly data: TInput;
+  private readonly options?: ChartOptions;
+  private readonly operators: Operator<any, any>[] = [];
 
   constructor(
-    data: T[],
-    render?: (d: T[], key: number | string) => GoFishNode
+    data: TInput,
+    options?: ChartOptions,
+    operators: Operator<any, any>[] = []
   ) {
-    this._data = data;
-    this._render = render ?? (() => Rect({ w: 0, h: 0, fill: "transparent" }));
+    this.data = data;
+    this.options = options;
+    this.operators = operators;
   }
 
-  transform(fn: (d: T[]) => T[]) {
-    return new _Chart(this._data, (d: T[], key: number | string) =>
-      this._render(fn(d), key)
+  // flow accumulates operators and returns a new builder for chaining
+  flow<T1>(op1: Operator<TInput, T1>): ChartBuilder<TInput, T1>;
+  flow<T1, T2>(
+    op1: Operator<TInput, T1>,
+    op2: Operator<T1, T2>
+  ): ChartBuilder<TInput, T2>;
+  flow<T1, T2, T3>(
+    op1: Operator<TInput, T1>,
+    op2: Operator<T1, T2>,
+    op3: Operator<T2, T3>
+  ): ChartBuilder<TInput, T3>;
+  flow<T1, T2, T3, T4>(
+    op1: Operator<TInput, T1>,
+    op2: Operator<T1, T2>,
+    op3: Operator<T2, T3>,
+    op4: Operator<T3, T4>
+  ): ChartBuilder<TInput, T4>;
+  flow<T1, T2, T3, T4, T5>(
+    op1: Operator<TInput, T1>,
+    op2: Operator<T1, T2>,
+    op3: Operator<T2, T3>,
+    op4: Operator<T3, T4>,
+    op5: Operator<T4, T5>
+  ): ChartBuilder<TInput, T5>;
+  flow<T1, T2, T3, T4, T5, T6>(
+    op1: Operator<TInput, T1>,
+    op2: Operator<T1, T2>,
+    op3: Operator<T2, T3>,
+    op4: Operator<T3, T4>,
+    op5: Operator<T4, T5>,
+    op6: Operator<T5, T6>
+  ): ChartBuilder<TInput, T6>;
+  flow<T1, T2, T3, T4, T5, T6, T7>(
+    op1: Operator<TInput, T1>,
+    op2: Operator<T1, T2>,
+    op3: Operator<T2, T3>,
+    op4: Operator<T3, T4>,
+    op5: Operator<T4, T5>,
+    op6: Operator<T5, T6>,
+    op7: Operator<T6, T7>
+  ): ChartBuilder<TInput, T7>;
+  flow(...ops: Operator<any, any>[]): ChartBuilder<TInput, any> {
+    return new ChartBuilder(this.data, this.options, [
+      ...this.operators,
+      ...ops,
+    ]);
+  }
+
+  // mark applies all accumulated operators and the final mark
+  mark(mark: Mark<TOutput>): GoFishNode & { as: (name: string) => GoFishNode } {
+    let finalMark = mark as Mark<any>;
+    const operators = this.operators;
+    const data = this.data;
+
+    for (const op of operators.toReversed()) {
+      finalMark = op(finalMark);
+    }
+
+    const node = Frame(this.options ?? {}, [
+      finalMark(data as any).setShared([true, true]),
+    ]);
+
+    // Add .as() method to the returned node
+    (node as any).as = (name: string) => {
+      const layerContext = getLayerContext();
+      // Use the actual child node from the Frame, not a new tree
+      const rootNode = node.children[0] as GoFishNode;
+
+      // Collect only leaf nodes (nodes with no children)
+      const collectLeafNodes = (n: GoFishNode): GoFishNode[] => {
+        if (n.children && n.children.length > 0) {
+          const leaves: GoFishNode[] = [];
+          for (const child of n.children) {
+            leaves.push(...collectLeafNodes(child as GoFishNode));
+          }
+          return leaves;
+        }
+        return [n];
+      };
+
+      const leafNodes = collectLeafNodes(rootNode);
+
+      // Store layer data taken from node-attached datum and leaf nodes
+      layerContext[name] = {
+        data: leafNodes.map((n) => (n as any).datum),
+        nodes: leafNodes,
+      };
+
+      return node;
+    };
+
+    return node as GoFishNode & { as: (name: string) => GoFishNode };
+  }
+}
+
+export function chart<T>(data: T, options?: ChartOptions): ChartBuilder<T, T> {
+  return new ChartBuilder<T, T>(data, options);
+}
+
+export function spread<T>(
+  fieldOrOptions:
+    | keyof T
+    | {
+        dir: "x" | "y";
+        x?: number;
+        y?: number;
+        t?: number;
+        r?: number;
+        w?: number | keyof T;
+        h?: number | keyof T;
+        mode?: "edge" | "center";
+        spacing?: number;
+        sharedScale?: boolean;
+        alignment?: "start" | "middle" | "end";
+        debug?: boolean;
+        label?: boolean;
+      },
+  options?: {
+    dir: "x" | "y";
+    x?: number;
+    y?: number;
+    t?: number;
+    r?: number;
+    w?: number | keyof T;
+    h?: number | keyof T;
+    mode?: "edge" | "center";
+    spacing?: number;
+    sharedScale?: boolean;
+    alignment?: "start" | "middle" | "end";
+    debug?: boolean;
+    label?: boolean;
+  }
+): Operator<T[], T[]> {
+  // Determine if first argument is field or options
+  const field: keyof T | undefined =
+    typeof fieldOrOptions === "object" ? undefined : fieldOrOptions;
+  const opts = (typeof fieldOrOptions === "object" ? fieldOrOptions : options)!;
+
+  const finalOptions = {
+    ...opts,
+    label: opts?.label ?? true,
+    alignment: opts?.alignment ?? "start",
+  };
+
+  return (mark: Mark<T[]>) => {
+    return (d: T[], key?: string | number) => {
+      // Group by the field if provided, otherwise iterate over raw data
+      const grouped = field ? groupBy(d, field as ValueIteratee<T>) : d;
+
+      return Stack(
+        {
+          direction: finalOptions.dir === "x" ? 0 : 1,
+          x: finalOptions?.x ?? finalOptions?.t,
+          y: finalOptions?.y ?? finalOptions?.r,
+          mode: finalOptions?.mode
+            ? connectXMode[finalOptions?.mode]
+            : undefined,
+          spacing: finalOptions?.spacing ?? 8,
+          sharedScale: finalOptions?.sharedScale,
+          alignment: finalOptions?.alignment,
+          w: finalOptions?.w
+            ? inferSize(finalOptions?.w as string | number, d)
+            : undefined,
+          h: finalOptions?.h
+            ? inferSize(finalOptions?.h as string | number, d)
+            : undefined,
+        },
+        For(grouped as any, (groupData: T[], k) => {
+          const currentKey = key != undefined ? `${key}-${k}` : k;
+          const node = mark(groupData, currentKey);
+          return finalOptions.label
+            ? node.setKey(currentKey?.toString() ?? "")
+            : node;
+        })
+      );
+    };
+  };
+}
+
+export function stack<T>(
+  field: keyof T,
+  options: {
+    dir: "x" | "y";
+    x?: number;
+    y?: number;
+    w?: number | keyof T;
+    h?: number | keyof T;
+    spacing?: number;
+    alignment?: "start" | "middle" | "end";
+  }
+): Operator<T[], T[]> {
+  return spread(field, { ...options, spacing: 0 });
+}
+
+export function scatter<T>(
+  field: keyof T,
+  options: {
+    x: keyof T;
+    y: keyof T;
+    debug?: boolean;
+  }
+): Operator<T[], T[]> {
+  return (mark: Mark<T[]>) => {
+    return (d: T[], key?: string | number) => {
+      // Group by the field
+      const groups = groupBy(d, field as ValueIteratee<T>);
+      if (options?.debug) console.log("scatter groups", groups);
+
+      return Frame(
+        For(groups, (items, groupKey) => {
+          // Calculate average x and y values for this group
+          const avgX = meanBy(items, options.x as string);
+          const avgY = meanBy(items, options.y as string);
+
+          if (options?.debug)
+            console.log(`Group ${groupKey}: avgX=${avgX}, avgY=${avgY}`);
+
+          // Render the group items and wrap in Position operator
+          const currentKey = key != undefined ? `${key}-${groupKey}` : groupKey;
+          return Position({ x: v(avgX), y: v(avgY) }, [
+            mark(items, currentKey),
+          ]);
+        })
+      );
+    };
+  };
+}
+
+export function foreach<T>(field: keyof T): Operator<T[], T[]> {
+  return (mark: Mark<T[]>) => {
+    return (d: T[], key?: string | number) => {
+      // Group by the field
+      const groups = groupBy(d, field as ValueIteratee<T>);
+
+      return Frame(
+        {},
+        For(groups, (items, groupKey) => {
+          // Apply mark to each group
+          const currentKey = key != undefined ? `${key}-${groupKey}` : groupKey;
+          return mark(items, currentKey);
+        })
+      );
+    };
+  };
+}
+
+export function rect<T extends Record<string, any>>({
+  emX,
+  emY,
+  w,
+  h,
+  rs,
+  ts,
+  rx,
+  ry,
+  fill,
+  debug,
+  stroke,
+  strokeWidth,
+}: {
+  emX?: boolean;
+  emY?: boolean;
+  w?: number | keyof T;
+  h?: number | keyof T;
+  rs?: number;
+  ts?: number;
+  rx?: number;
+  ry?: number;
+  fill?: keyof T | string;
+  stroke?: string;
+  strokeWidth?: number;
+  debug?: boolean;
+}): Mark<T | T[] | { item: T | T[]; key: number | string }> {
+  return (input: T | T[] | { item: T | T[]; key: number | string }) => {
+    let d: T | T[], key: number | string | undefined;
+    if (typeof input === "object" && input !== null && "item" in input) {
+      // @ts-ignore
+      d = input.item;
+      // @ts-ignore
+      key = input.key;
+    } else {
+      d = input;
+      key = undefined;
+    }
+    if (debug) console.log("rect", key, d);
+    const data = Array.isArray(d) ? d : [d];
+    const firstItem = data[0];
+    const node = Rect({
+      emX,
+      emY,
+      w:
+        w !== undefined
+          ? (inferSize(w as string | number, data) ??
+            (ts ? inferSize(ts, data) : undefined))
+          : undefined,
+      h:
+        h !== undefined
+          ? (inferSize(h as string | number, data) ??
+            (rs ? inferSize(rs, data) : undefined))
+          : undefined,
+      rx,
+      ry,
+      fill:
+        typeof fill === "string" && data.length > 0 && fill in firstItem
+          ? v(firstItem[fill as keyof T])
+          : fill,
+      stroke,
+      strokeWidth,
+    }).name(key?.toString() ?? "");
+    (node as any).datum = d;
+    return node;
+  };
+}
+
+export function circle<T extends Record<string, any>>({
+  r,
+  fill,
+  stroke,
+  strokeWidth,
+  debug,
+}: {
+  r?: number;
+  fill?: string | keyof T;
+  stroke?: string;
+  strokeWidth?: number;
+  debug?: boolean;
+}): Mark<T> {
+  return (d: T, key?: string | number) => {
+    if (debug) console.log("circle", key, d);
+    const node = Rect({
+      w: typeof r === "number" ? r * 2 : inferSize(r, d),
+      h: typeof r === "number" ? r * 2 : inferSize(r, d),
+      rx: typeof r === "number" ? r : 5,
+      ry: typeof r === "number" ? r : 5,
+      fill:
+        typeof fill === "string" && fill in d ? v(d[fill as keyof T]) : fill,
+      stroke,
+      strokeWidth,
+    }).name(key?.toString() ?? "");
+    (node as any).datum = d;
+    return node;
+  };
+}
+
+// select() retrieves enriched data from a named layer
+export function select<T>(layerName: string): Array<T & { __ref: GoFishNode }> {
+  const layerContext = getLayerContext();
+  const layer = layerContext[layerName];
+
+  if (!layer) {
+    throw new Error(
+      `Layer "${layerName}" not found. Make sure to call .as("${layerName}") first.`
     );
   }
 
-  rect({
+  // Return node-attached data enriched with refs to nodes
+  return layer.nodes.map((node: GoFishNode) => {
+    const datum: any = (node as any).datum;
+    if (datum && typeof datum === "object") {
+      // (datum as any).__ref = node;
+      const datumHack = { ...datum[0], __ref: node };
+      return datumHack as T & { __ref: GoFishNode };
+    }
+    return { item: datum, __ref: node } as unknown as T & { __ref: GoFishNode };
+  });
+}
+
+// line() mark connects data points using center-to-center mode
+export function line<T extends Record<string, any>>(options?: {
+  stroke?: string;
+  strokeWidth?: number;
+  opacity?: number;
+  interpolation?: "linear" | "bezier";
+}): Mark<Array<T & { __ref?: GoFishNode }>> {
+  return (d: Array<T & { __ref?: GoFishNode }>, key?: string | number) => {
+    // Use refs from enriched data if available
+    const refs = d.map((item) => {
+      if ("__ref" in item && item.__ref) {
+        return Ref(item.__ref);
+      }
+      // Fallback to name-based ref if no __ref
+      return Ref(`${key}`);
+    });
+
+    return Connect(
+      {
+        direction: 0, // x direction
+        mode: "center-to-center",
+        stroke: options?.stroke,
+        strokeWidth: options?.strokeWidth ?? 1,
+        opacity: options?.opacity,
+        interpolation: options?.interpolation ?? "linear",
+      },
+      refs
+    );
+  };
+}
+
+// area() mark connects data points using edge-to-edge mode
+export function area<T extends Record<string, any>>(options?: {
+  stroke?: string;
+  strokeWidth?: number;
+  opacity?: number;
+  mixBlendMode?: "normal" | "multiply";
+  dir?: "x" | "y";
+  interpolation?: "linear" | "bezier";
+}): Mark<Array<T & { __ref?: GoFishNode }>> {
+  return (d: Array<T & { __ref?: GoFishNode }>, key?: string | number) => {
+    // Use refs from enriched data if available
+    const refs = d.map((item) => {
+      if ("__ref" in item && item.__ref) {
+        return Ref(item.__ref);
+      }
+      // Fallback to name-based ref if no __ref
+      return Ref(`${key}`);
+    });
+
+    return Connect(
+      {
+        direction: options?.dir ?? "x",
+        mode: "edge-to-edge",
+        mixBlendMode: options?.mixBlendMode ?? "normal",
+        stroke: options?.stroke,
+        strokeWidth: options?.strokeWidth ?? 0,
+        opacity: options?.opacity,
+        interpolation: options?.interpolation ?? "bezier",
+      },
+      refs
+    );
+  };
+}
+
+// scaffold() mark creates invisible guides for positioning
+export function scaffold<T extends Record<string, any>>({
+  emX,
+  emY,
+  w = 0,
+  h = 0,
+  rs,
+  ts,
+  rx,
+  ry,
+  fill,
+  debug,
+  stroke,
+  strokeWidth,
+}: {
+  emX?: boolean;
+  emY?: boolean;
+  w?: number | keyof T;
+  h?: number | keyof T;
+  rs?: number;
+  ts?: number;
+  rx?: number;
+  ry?: number;
+  fill?: keyof T | string;
+  stroke?: string;
+  strokeWidth?: number;
+  debug?: boolean;
+} = {}): Mark<T | T[] | { item: T | T[]; key: number | string }> {
+  // scaffold is essentially a transparent/zero-size rect
+  return rect({
+    emX,
+    emY,
     w,
     h,
     rs,
@@ -61,394 +573,7 @@ export class _Chart<T> {
     ry,
     fill,
     debug,
-    filter,
-  }: {
-    w?: number | string;
-    h?: number | string;
-    rs?: number;
-    ts?: number;
-    rx?: number;
-    ry?: number;
-    fill: string;
-    debug?: boolean;
-    filter?: string;
-  }) {
-    return new _Chart(this._data, (d: T[], key: number | string) => {
-      if (debug) console.log("rect", key, d);
-      return Rect({
-        w: inferSize(w, d) ?? inferSize(ts, d),
-        h: inferSize(h, d) ?? inferSize(rs, d),
-        filter,
-        // rs: inferSize(rs, d),
-        // ts: inferSize(ts, d),
-        rx,
-        ry,
-        fill:
-          typeof fill === "string" &&
-          (Array.isArray(d) ? d[0] : d) &&
-          fill in (Array.isArray(d) ? d[0] : d)
-            ? v(Array.isArray(d) ? d[0][fill as keyof T] : d[fill as keyof T])
-            : fill,
-      }).name(key.toString());
-    });
-  }
-  guide({
-    w = 0,
-    h = 0,
-    fill,
-    debug,
-  }: {
-    w?: number;
-    h?: number | string;
-    fill: string;
-    debug?: boolean;
-  }) {
-    return this.rect({ w, h, fill, debug });
-  }
-  /* TODO: I think the for/groupby needs to go outside the connectX and then there's another for
-  inside that iterates over all the items.
-  
-  Then I have to grab the keys in a more clever way.
-  */
-  connectX(
-    key: number | string,
-    options?: {
-      over?: number | string;
-      interpolation?: "linear" | "bezier";
-      opacity?: number;
-      mode?: "edge" | "center";
-      strokeWidth?: number;
-      debug?: boolean;
-      mixBlendMode?: "normal" | "multiply";
-    }
-  ) {
-    return new _Chart(this._data, (d: T[], k: number | string) => {
-      if (options?.debug)
-        console.log(
-          "connectX",
-          k,
-          groupBy(d, key?.toString()),
-          For(groupBy(d, key?.toString()), (items, i) => `${k}-${i}`)
-        );
-      if (options?.debug)
-        console.log(
-          "connectX",
-          options?.over,
-          groupBy(d, options?.over?.toString() ?? "")
-        );
-      return Frame([
-        this._render(d, k).setShared([true, true]),
-        options?.over
-          ? For(groupBy(d, key.toString()), (items, o) =>
-              ConnectX(
-                {
-                  interpolation: options?.interpolation,
-                  opacity: options?.opacity,
-                  mode: options?.mode ? connectXMode[options?.mode] : undefined,
-                  strokeWidth: options?.strokeWidth,
-                  mixBlendMode: options?.mixBlendMode,
-                },
-                For(groupBy(items, options?.over?.toString()), (item, i) =>
-                  Ref(`${k}-${i}-${o}`)
-                )
-              )
-            )
-          : ConnectX(
-              {
-                interpolation: options?.interpolation,
-                opacity: options?.opacity,
-                mode: options?.mode ? connectXMode[options?.mode] : undefined,
-                strokeWidth: options?.strokeWidth,
-                mixBlendMode: options?.mixBlendMode,
-              },
-              For(groupBy(d, key.toString()), (items, i) => Ref(`${k}-${i}`))
-            ),
-      ]);
-    });
-  }
-  spreadX(
-    iteratee?: string | ((item: T[]) => any),
-    options?: {
-      x?: number;
-      y?: number;
-      t?: number;
-      r?: number;
-      w?: number | string;
-      h?: number | string;
-      mode?: "edge" | "center";
-      spacing?: number;
-      sharedScale?: boolean;
-      alignment?: "start" | "middle" | "end";
-      debug?: boolean;
-      label?: boolean;
-    } = {}
-  ) {
-    // Default label to true if not specified
-    const opts = { ...options, label: options?.label ?? true };
-    return new _Chart(this._data, (d: T[], k: number | string) => {
-      let groups;
-      if (typeof iteratee === "function") {
-        groups = iteratee(d).value();
-      } else if (typeof iteratee === "string") {
-        groups = groupBy(d, iteratee);
-      }
-      if (opts?.debug) console.log("stackX groups", groups);
-      return StackX(
-        {
-          x: opts?.x ?? opts?.t,
-          y: opts?.y ?? opts?.r,
-          mode: opts?.mode ? connectXMode[opts?.mode] : undefined,
-          spacing: opts?.spacing ?? 8,
-          sharedScale: opts?.sharedScale,
-          alignment: opts?.alignment,
-          w: inferSize(opts?.w, d),
-          h: inferSize(opts?.h, d),
-        },
-        iteratee
-          ? For(groups, (items, key) => {
-              const node = this._render(items, `${k}-${key}`);
-              return opts.label ? node.setKey(key) : node;
-            })
-          : For(d, (item, key) => {
-              const node = this._render(item, `${k}-${key}`);
-              return opts.label ? node.setKey(key) : node;
-            })
-      );
-    });
-  }
-  spreadY(
-    iteratee?: string | ((item: T[]) => any),
-    options?: {
-      x?: number;
-      y?: number;
-      t?: number;
-      r?: number;
-      w?: number | string;
-      h?: number | string;
-      mode?: "edge" | "center";
-      spacing?: number;
-      sharedScale?: boolean;
-      alignment?: "start" | "middle" | "end";
-      debug?: boolean;
-      label?: boolean;
-      reverse?: boolean;
-    } = {}
-  ) {
-    // Default label to true if not specified
-    const opts = { ...options, label: options?.label ?? true };
-    return new _Chart(this._data, (d: T[], k: number | string) => {
-      let groups;
-      if (typeof iteratee === "function") {
-        groups = iteratee(d).value();
-      } else if (typeof iteratee === "string") {
-        groups = groupBy(d, iteratee);
-      }
-      if (opts?.debug) console.log("stackY groups", groups);
-      return StackY(
-        {
-          x: opts?.x ?? opts?.t,
-          y: opts?.y ?? opts?.r,
-          mode: opts?.mode ? connectXMode[opts?.mode] : undefined,
-          spacing: opts?.spacing ?? 8,
-          sharedScale: opts?.sharedScale,
-          alignment: opts?.alignment,
-          reverse: opts?.reverse,
-          w: inferSize(opts?.w, d),
-          h: inferSize(opts?.h, d),
-        },
-        iteratee
-          ? For(groups, (items, key) => {
-              const node = this._render(items, `${k}-${key}`);
-              return opts.label ? node.setKey(key) : node;
-            })
-          : For(d, (item, key) => {
-              const node = this._render(item, `${k}-${key}`);
-              return opts.label ? node.setKey(key) : node;
-            })
-      );
-    });
-  }
-  stackX(
-    iteratee?: string | ((item: T[]) => any),
-    options?: {
-      sharedScale?: boolean;
-      w?: number | string;
-      h?: number | string;
-      alignment?: "start" | "middle" | "end";
-      debug?: boolean;
-      spacing?: number;
-      label?: boolean;
-      reverse?: boolean;
-    }
-  ) {
-    return this.spreadX(iteratee, {
-      ...options,
-      spacing: options?.spacing ?? 0,
-      label: options?.label ?? false,
-      reverse: options?.reverse ?? false,
-    });
-  }
-  stackY(
-    iteratee?: string | ((item: T[]) => any),
-    options?: {
-      sharedScale?: boolean;
-      w?: number | string;
-      h?: number | string;
-      alignment?: "start" | "middle" | "end";
-      debug?: boolean;
-      spacing?: number;
-      label?: boolean;
-      reverse?: boolean;
-    }
-  ) {
-    return this.spreadY(iteratee, {
-      ...options,
-      spacing: options?.spacing ?? 0,
-      label: options?.label ?? false,
-      reverse: options?.reverse ?? false,
-    });
-  }
-  /* theta, r aliases */
-  stackT = this.stackX;
-  stackR = this.stackY;
-  spreadT = this.spreadX;
-  spreadR = this.spreadY;
-  connectT = this.connectX;
-  // connectR = this.connectY;
-  /* end aliases */
-  // TODO: fix!!!
-  scatterXY(
-    groupKey: string,
-    options: {
-      x: (d: T, i: number | string) => number;
-      y: (d: T, i: number | string) => number;
-    }
-  ) {
-    return new _Chart(this._data, (d: T[], k: number | string) => {
-      const groups = groupBy(d, groupKey);
-      return Frame(
-        For(groups, (items, key) =>
-          For(items, (item, i) =>
-            Rect({
-              ...this._render([item], `${k}-${key}-${i}`),
-              x: options.x(item, i),
-              y: options.y(item, i),
-            }).name(`${k}-${key}-${i}`)
-          )
-        )
-      );
-    });
-  }
-  scatter(
-    key: string,
-    options: {
-      x: string;
-      y: string;
-      debug?: boolean;
-    }
-  ) {
-    return new _Chart(this._data, (d: T[], k: number | string) => {
-      const groups = groupBy(d, key);
-      if (options?.debug) console.log("scatter groups", groups);
-
-      return Frame(
-        For(groups, (items, groupKey) => {
-          // Calculate average x and y values for this group
-          const avgX = meanBy(items, options.x);
-          const avgY = meanBy(items, options.y);
-
-          if (options?.debug)
-            console.log(`Group ${groupKey}: avgX=${avgX}, avgY=${avgY}`);
-
-          // Render the group items and wrap in Position operator
-          return Position({ x: v(avgX), y: v(avgY) }, [
-            this._render(items, `${k}-${groupKey}`),
-          ]);
-        })
-      );
-    });
-  }
-
-  coord(coord: CoordinateTransform) {
-    return new _Chart(this._data, (d: T[], k: number | string) => {
-      return Frame({ coord }, [this._render(d, k).setShared([true, true])]);
-    });
-  }
-
-  render(
-    container: HTMLElement,
-    {
-      w,
-      h,
-      transform,
-      debug = false,
-      defs,
-      axes = false,
-    }: {
-      w: number;
-      h: number;
-      transform?: { x?: number; y?: number };
-      debug?: boolean;
-      defs?: JSX.Element[];
-      axes?: boolean;
-    }
-  ) {
-    return this._render(this._data, "root")
-      .setShared([true, true])
-      .render(container, {
-        w: w,
-        h: h,
-        transform,
-        debug,
-        defs,
-        axes,
-      });
-  }
-
-  TEST_render(debug?: boolean) {
-    if (debug) console.log("TEST_render", this._render(this._data, "root"));
-    return this._render(this._data, "root").setShared([true, true]);
-  }
+    stroke,
+    strokeWidth,
+  });
 }
-
-export const Chart = <T>(data: T[]) => new _Chart(data);
-
-type ChartRect = {
-  w?: number | string;
-  h?: number | string;
-  ts?: number | string;
-  rs?: number | string;
-  rx?: number;
-  ry?: number;
-  fill: string;
-  debug?: boolean;
-  filter?: string;
-};
-
-export const rect = <T>(
-  dataOrOptions?: T[] | ChartRect,
-  optionsArg?: ChartRect
-) => {
-  let data: T[];
-  let options: ChartRect;
-
-  if (Array.isArray(dataOrOptions)) {
-    data = dataOrOptions;
-    options = optionsArg!;
-  } else {
-    data = [];
-    options = dataOrOptions as ChartRect;
-  }
-
-  return Chart(data).rect(options);
-};
-
-export const guide = <T>(
-  data: T[],
-  {
-    w = 0,
-    h = 0,
-    fill,
-    debug,
-  }: { w?: number; h?: number | string; fill: string; debug?: boolean }
-) => Chart(data).guide({ w, h, fill, debug });

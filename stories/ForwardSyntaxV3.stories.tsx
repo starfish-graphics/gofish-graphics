@@ -9,8 +9,8 @@ import {
 import {
   chart,
   spread,
-  rectForward as rect,
-  stackForward as stack,
+  rect,
+  stack,
   derive,
   layer,
   select,
@@ -25,7 +25,7 @@ import {
   normalize,
   repeat,
   scatter,
-} from "../src/ast/marks/chart-forward-v3";
+} from "../src/ast/marks/chart";
 import _, { groupBy, orderBy } from "lodash";
 import { clock } from "../src/ast/coordinateTransforms/clock";
 import { nightingale } from "../src/data/nightingale";
