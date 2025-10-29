@@ -34,8 +34,28 @@ layer([
     .flow(scatter({ x: "lakeLocX" }))
     .mark(scaffold())
     .as("points"),
-  chart(select("points")).mark(line()),
+  chart(select("points")).flow(connect()).mark(line()),
 ]);
+```
+
+```ts
+chart(seafood)
+  .flow(scatter("lake", { x: "lakeLocX" }), connect())
+  .mark(line());
+```
+
+```ts
+chart(seafood)
+  .flow(scatter("lake", { x: "lakeLocX" }))
+  .mark(scaffold())
+  .layer(connect(), line());
+```
+
+```ts
+chart(seafood)
+  .flow(scatter("lake", { x: "lakeLocX" }))
+  .mark(scaffold())
+  .layer(chart().flow(connect()).mark(line()));
 ```
 
 **area chart**

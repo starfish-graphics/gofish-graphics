@@ -1,5 +1,16 @@
 import { Dictionary, groupBy, ValueIteratee } from "lodash";
-import { Frame, Rect, Stack, sumBy, v, Position, meanBy } from "../../lib";
+import {
+  Frame,
+  Rect,
+  Stack,
+  sumBy,
+  v,
+  Position,
+  meanBy,
+  getLayerContext,
+  Connect,
+  Ref,
+} from "../../lib";
 import { GoFishNode } from "../_node";
 import { MaybeValue } from "../data";
 import { For } from "../iterators/for";
@@ -139,17 +150,48 @@ export class ChartBuilder<TInput, TOutput = TInput> {
   }
 
   // mark applies all accumulated operators and the final mark
-  mark(mark: Mark<TOutput>): GoFishNode {
+  mark(mark: Mark<TOutput>): GoFishNode & { as: (name: string) => GoFishNode } {
     let finalMark = mark as Mark<any>;
     const operators = this.operators;
+    const data = this.data;
 
     for (const op of operators.toReversed()) {
       finalMark = op(finalMark);
     }
 
-    return Frame(this.options ?? {}, [
-      finalMark(this.data as any).setShared([true, true]),
+    const node = Frame(this.options ?? {}, [
+      finalMark(data as any).setShared([true, true]),
     ]);
+
+    // Add .as() method to the returned node
+    (node as any).as = (name: string) => {
+      const layerContext = getLayerContext();
+      const rootNode = finalMark(data as any);
+
+      // Collect only leaf nodes (nodes with no children)
+      const collectLeafNodes = (n: GoFishNode): GoFishNode[] => {
+        if (n.children && n.children.length > 0) {
+          const leaves: GoFishNode[] = [];
+          for (const child of n.children) {
+            leaves.push(...collectLeafNodes(child as GoFishNode));
+          }
+          return leaves;
+        }
+        return [n];
+      };
+
+      const leafNodes = collectLeafNodes(rootNode);
+
+      // Store layer data and leaf nodes
+      layerContext[name] = {
+        data: Array.isArray(data) ? data : [data],
+        nodes: leafNodes,
+      };
+
+      return node;
+    };
+
+    return node as GoFishNode & { as: (name: string) => GoFishNode };
   }
 }
 
@@ -375,4 +417,99 @@ export function circle<T extends Record<string, any>>({
         typeof fill === "string" && fill in d ? v(d[fill as keyof T]) : fill,
     }).name(key?.toString() ?? "");
   };
+}
+
+// select() retrieves enriched data from a named layer
+export function select<T>(layerName: string): Array<T & { __ref: GoFishNode }> {
+  const layerContext = getLayerContext();
+  const layer = layerContext[layerName];
+
+  if (!layer) {
+    throw new Error(
+      `Layer "${layerName}" not found. Make sure to call .as("${layerName}") first.`
+    );
+  }
+
+  // Return data enriched with refs to nodes
+  // Each data item gets a reference to its corresponding node
+  return layer.data.map((item: T, i: number) => ({
+    ...item,
+    __ref: layer.nodes[i],
+  })) as Array<T & { __ref: GoFishNode }>;
+}
+
+// line() mark connects data points using center-to-center mode
+export function line<T extends Record<string, any>>(options?: {
+  stroke?: string;
+  strokeWidth?: number;
+  opacity?: number;
+  interpolation?: "linear" | "bezier";
+}): Mark<Array<T & { __ref?: GoFishNode }>> {
+  return (d: Array<T & { __ref?: GoFishNode }>, key?: string | number) => {
+    // Use refs from enriched data if available
+    const refs = d.map((item) => {
+      if ("__ref" in item && item.__ref) {
+        return Ref(item.__ref);
+      }
+      // Fallback to name-based ref if no __ref
+      return Ref(`${key}`);
+    });
+
+    return Connect(
+      {
+        direction: 0, // x direction
+        mode: "center-to-center",
+        stroke: options?.stroke,
+        strokeWidth: options?.strokeWidth,
+        opacity: options?.opacity,
+        interpolation: options?.interpolation ?? "linear",
+      },
+      refs
+    );
+  };
+}
+
+// scaffold() mark creates invisible guides for positioning
+export function scaffold<T extends Record<string, any>>({
+  emX,
+  emY,
+  w = 0,
+  h = 0,
+  rs,
+  ts,
+  rx,
+  ry,
+  fill,
+  debug,
+  stroke,
+  strokeWidth,
+}: {
+  emX?: boolean;
+  emY?: boolean;
+  w?: number | keyof T;
+  h?: number | keyof T;
+  rs?: number;
+  ts?: number;
+  rx?: number;
+  ry?: number;
+  fill?: keyof T | string;
+  stroke?: string;
+  strokeWidth?: number;
+  debug?: boolean;
+} = {}): Mark<T | T[] | { item: T | T[]; key: number | string }> {
+  // scaffold is essentially a transparent/zero-size rect
+  return rect({
+    emX,
+    emY,
+    w,
+    h,
+    rs,
+    ts,
+    rx,
+    ry,
+    fill: fill || "transparent",
+    debug,
+    stroke,
+    strokeWidth,
+  });
 }

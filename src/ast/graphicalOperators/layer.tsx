@@ -16,6 +16,27 @@ import {
 import * as Interval from "../../util/interval";
 import { computeSize } from "../../util";
 
+/* layer context */
+type LayerContext = {
+  [name: string]: {
+    data: any[];
+    nodes: GoFishNode[];
+  };
+};
+
+let layerContext: LayerContext | null = null;
+
+export const getLayerContext = (): LayerContext => {
+  if (!layerContext) {
+    layerContext = {};
+  }
+  return layerContext;
+};
+
+export const resetLayerContext = (): void => {
+  layerContext = null;
+};
+
 export const layer = (
   childrenOrOptions:
     | ({

@@ -17,7 +17,11 @@ export { ref } from "./ast/shapes/ref";
 export { stack } from "./ast/graphicalOperators/stack";
 export { stackX } from "./ast/graphicalOperators/stackX";
 export { stackY } from "./ast/graphicalOperators/stackY";
-export { layer } from "./ast/graphicalOperators/layer";
+export {
+  layer,
+  getLayerContext,
+  resetLayerContext,
+} from "./ast/graphicalOperators/layer";
 export { wrap } from "./ast/graphicalOperators/wrap";
 export { connect } from "./ast/graphicalOperators/connect";
 export { connectX } from "./ast/graphicalOperators/connectX";
@@ -89,6 +93,9 @@ export {
   derive,
   rect as rectForward,
   circle,
+  select,
+  line,
+  scaffold,
 } from "./ast/marks/chart-forward-v3";
 export type {
   Mark,

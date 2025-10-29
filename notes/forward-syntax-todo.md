@@ -33,7 +33,7 @@
 - [ ] polar ribbon
 - [ ] ridgeline
 - [ ] layered area
-- [ ] scatter pie
+- [-] scatter pie
 - [ ] connected scatter plot
 - [ ] flower chart
 - [ ] balloon

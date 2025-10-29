@@ -4,6 +4,7 @@ import {
   catchLocations,
   catchLocationsArray,
   seafood,
+  catchDataWithLocations,
 } from "../src/data/catch";
 import {
   chart,
@@ -11,6 +12,10 @@ import {
   rectForward as rect,
   stackForward as stack,
   derive,
+  layer,
+  select,
+  line,
+  scaffold,
 } from "../src/lib";
 import {
   circle,
@@ -254,6 +259,30 @@ export const ScatterChart: StoryObj<Args> = {
         h: args.h,
         axes: true,
       });
+
+    return container;
+  },
+};
+
+export const LineChart: StoryObj<Args> = {
+  args: { w: 400, h: 400 },
+  render: (args: Args) => {
+    const container = initializeContainer();
+
+    layer([
+      chart(catchLocationsArray)
+        .flow(scatter("lake", { x: "x", y: "y" }))
+        // .mark(scaffold())
+        .mark(rect({ w: 5, h: 5 }))
+        .as("points"),
+      chart(select("points"))
+        .flow(log("points"))
+        .mark(line({ strokeWidth: 1 })),
+    ]).render(container, {
+      w: args.w,
+      h: args.h,
+      axes: true,
+    });
 
     return container;
   },
