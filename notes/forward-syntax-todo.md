@@ -1,12 +1,6 @@
 # Forward Syntax Implementation Todo List
 
-## Immediate TODOs
-
-- [ ] area/ribbon mark
-- [ ] sorting needs to preserve mark selection
-- [ ] layer needs to allow coordinate transform
-
-## Eventually
+## Eventually TODO
 
 - [ ] Fast next-layer for when you are just selecting the previous layer
 - [ ] control over scatter pie radii
