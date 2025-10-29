@@ -166,7 +166,8 @@ export class ChartBuilder<TInput, TOutput = TInput> {
     // Add .as() method to the returned node
     (node as any).as = (name: string) => {
       const layerContext = getLayerContext();
-      const rootNode = finalMark(data as any);
+      // Use the actual child node from the Frame, not a new tree
+      const rootNode = node.children[0] as GoFishNode;
 
       // Collect only leaf nodes (nodes with no children)
       const collectLeafNodes = (n: GoFishNode): GoFishNode[] => {
@@ -377,14 +378,16 @@ export function rect<T extends Record<string, any>>({
     return Rect({
       emX,
       emY,
-      w: w
-        ? (inferSize(w as string | number, data) ??
-          (ts ? inferSize(ts, data) : undefined))
-        : undefined,
-      h: h
-        ? (inferSize(h as string | number, data) ??
-          (rs ? inferSize(rs, data) : undefined))
-        : undefined,
+      w:
+        w !== undefined
+          ? (inferSize(w as string | number, data) ??
+            (ts ? inferSize(ts, data) : undefined))
+          : undefined,
+      h:
+        h !== undefined
+          ? (inferSize(h as string | number, data) ??
+            (rs ? inferSize(rs, data) : undefined))
+          : undefined,
       rx,
       ry,
       fill:
@@ -460,7 +463,7 @@ export function line<T extends Record<string, any>>(options?: {
         direction: 0, // x direction
         mode: "center-to-center",
         stroke: options?.stroke,
-        strokeWidth: options?.strokeWidth,
+        strokeWidth: options?.strokeWidth ?? 1,
         opacity: options?.opacity,
         interpolation: options?.interpolation ?? "linear",
       },
@@ -507,7 +510,7 @@ export function scaffold<T extends Record<string, any>>({
     ts,
     rx,
     ry,
-    fill: fill || "transparent",
+    fill,
     debug,
     stroke,
     strokeWidth,

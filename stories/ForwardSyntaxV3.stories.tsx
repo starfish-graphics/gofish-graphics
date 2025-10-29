@@ -272,12 +272,9 @@ export const LineChart: StoryObj<Args> = {
     layer([
       chart(catchLocationsArray)
         .flow(scatter("lake", { x: "x", y: "y" }))
-        // .mark(scaffold())
-        .mark(rect({ w: 5, h: 5 }))
+        .mark(scaffold())
         .as("points"),
-      chart(select("points"))
-        .flow(log("points"))
-        .mark(line({ strokeWidth: 1 })),
+      chart(select("points")).mark(line()),
     ]).render(container, {
       w: args.w,
       h: args.h,

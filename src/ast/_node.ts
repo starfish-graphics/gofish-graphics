@@ -100,6 +100,8 @@ export type ResolveUnderlyingSpace = (
 ) => FancySize<UnderlyingSpace>;
 
 export class GoFishNode {
+  public readonly uid: string;
+  private static uidCounter = 0;
   public type: string;
   public args?: any;
   public key?: string;
@@ -156,6 +158,8 @@ export class GoFishNode {
     },
     children: GoFishAST[]
   ) {
+    // Generate unique ID
+    this.uid = `node-${GoFishNode.uidCounter++}`;
     // this.inferDomains = inferDomains;
     this._resolveUnderlyingSpace = resolveUnderlyingSpace;
     this._inferSizeDomains = inferSizeDomains;

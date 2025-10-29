@@ -182,6 +182,8 @@ export const seafood: CatchData[] = [
   },
 ];
 
+export const catchData = seafood;
+
 export const catchDataWithLocations = seafood.map((catchItem) => {
   const location = catchLocationsArray.find(
     (loc) => loc.lake === catchItem.lake
