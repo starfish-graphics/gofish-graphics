@@ -32,12 +32,11 @@
 
 ## Slightly More Complex
 
-- [ ] streamgraph
+- [x] streamgraph
 - [x] mosaic
 - [x] waffle
-- [-] ribbon (need ribbon/area instead of line. need data to get sorted to match refs or else have
-  some other way to track them...)
-- [ ] polar ribbon
+- [x] ribbon
+- [x] polar ribbon
 - [ ] ridgeline
 - [ ] layered area
 - [-] scatter pie (needs more control over variable radii)

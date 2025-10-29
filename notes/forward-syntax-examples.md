@@ -34,7 +34,7 @@ layer([
     .flow(scatter({ x: "lakeLocX" }))
     .mark(scaffold())
     .as("points"),
-  chart(select("points")).flow(connect()).mark(line()),
+  chart(select("points")).mark(line()),
 ]);
 ```
 

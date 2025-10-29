@@ -2,6 +2,7 @@ import {
   createEffect,
   createSignal,
   onCleanup,
+  onMount,
   type Component,
 } from "solid-js";
 import { testRect } from "./tests/rect";
@@ -77,7 +78,7 @@ import { testFishRibbonChartTextured } from "./tests/fishRibbonChartTextured";
 import { testFishPolarRibbonChartTextured } from "./tests/fishPolarRibbonChartTextured";
 import { GoFishSolid } from "./ast";
 import { DitheringConfig, generateDithering } from "./tests/density";
-import { For, frame, Rect, rect, StackX, StackY, stackY } from "./lib";
+import { For, frame, Rect, StackX, StackY, stackY } from "./lib";
 import { testRidgeline } from "./tests/ridgeline";
 import {
   chartBar,
@@ -127,6 +128,29 @@ import {
   tailwindColorComparisonCompact,
 } from "./tests/tailwindColors";
 import { chartForwardBar } from "./ast/marks/chart-forward";
+
+// Forward Syntax V3 imports for testing
+import {
+  chart,
+  spread,
+  rectForward as rect,
+  stackForward as stack,
+  derive,
+  layer,
+  select,
+  line,
+  scaffold,
+} from "./lib";
+import {
+  area,
+  circle,
+  foreach,
+  normalize,
+  repeat,
+  scatter,
+} from "./ast/marks/chart-forward-v3";
+import { seafood } from "./data/catch";
+import { clock } from "./ast/coordinateTransforms/clock";
 
 const ditheringTestWidth = 800;
 
@@ -317,8 +341,52 @@ const defs = [
 const App: Component = () => {
   const [chunkSize, setChunkSize] = createSignal(12);
 
+  // ============================================================================
+  // FORWARD SYNTAX V3 TESTING SECTION
+  // Write your forward syntax code here, similar to ForwardSyntaxV3.stories.tsx
+  // ============================================================================
+  onMount(() => {
+    const testContainer = document.getElementById("forward-syntax-test");
+    if (testContainer) {
+      // Uncomment and modify the code below to test forward syntax charts:
+      // Example: Bar Chart
+      // chart(seafood)
+      //   .flow(spread("lake", { dir: "x" }))
+      //   .mark(rectForward({ h: "count" }))
+      //   .render(testContainer, {
+      //     w: 400,
+      //     h: 400,
+      //     axes: true,
+      //   });
+      // Add your forward syntax code here:
+      chart(seafood)
+        .flow(spread("lake", { dir: "x" }), stack("species", { dir: "y" }))
+        .mark(rect({ h: "count", fill: "species" }))
+        .render(testContainer, {
+          w: 400,
+          h: 400,
+          axes: true,
+        });
+    }
+  });
+
   return (
     <div style={{ "margin-left": "20px" }}>
+      {/* Forward Syntax V3 Testing Area */}
+      <div
+        id="forward-syntax-test"
+        style={{
+          margin: "20px 0",
+          padding: "20px",
+          border: "1px dashed #ccc",
+          "min-height": "400px",
+        }}
+      >
+        <h2>GoFish Live Coding</h2>
+      </div>
+      {[...Array(30)].map((_, i) => (
+        <br />
+      ))}
       <input
         type="range"
         min={3}
