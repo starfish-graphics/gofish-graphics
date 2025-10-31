@@ -1,5 +1,5 @@
 import { rect } from "../ast/marks/chart";
-import { catchData } from "../data/catch";
+import { seafood } from "../data/catch";
 
 export const renderBarChart = () => {
   // Create container element
@@ -8,7 +8,7 @@ export const renderBarChart = () => {
   document.body.appendChild(container);
 
   // Create the bar chart from v2 API
-  rect(catchData, { fill: "lake", h: "count" })
+  rect(seafood, { fill: "lake", h: "count" })
     .spreadX("lake")
     .render(container, {
       w: 320,

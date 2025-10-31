@@ -14,11 +14,19 @@ import {
   ORDINAL,
 } from "../underlyingSpace";
 import * as Interval from "../../util/interval";
+import { computeSize } from "../../util";
+import { CoordinateTransform } from "../coordinateTransforms/coord";
+import { coord } from "../coordinateTransforms/coord";
+import { getLayerContext, resetLayerContext } from "./frame";
+
+// Re-export layer context functions for backward compatibility
+export { getLayerContext, resetLayerContext };
 
 export const layer = (
   childrenOrOptions:
     | ({
         key?: string;
+        coord?: CoordinateTransform;
         transform?: { scale?: { x?: number; y?: number } };
         box?: boolean;
       } & FancyDims)
@@ -29,6 +37,26 @@ export const layer = (
   const children = Array.isArray(childrenOrOptions)
     ? childrenOrOptions
     : maybeChildren || [];
+
+  // If coord is provided, delegate to coord transform (similar to frame but without transform/box)
+  if (!Array.isArray(childrenOrOptions) && options.coord !== undefined) {
+    const {
+      coord: coordTransform,
+      key,
+      transform: _transform,
+      box: _box,
+      ...restDims
+    } = options;
+    return coord(
+      {
+        key,
+        transform: coordTransform,
+        ...restDims,
+      },
+      children
+    );
+  }
+
   const dims = elaborateDims(options);
 
   return new GoFishNode(
@@ -137,6 +165,12 @@ export const layer = (
         measurement,
         posScales
       ) => {
+        // Compute size using dims (w and h) before passing to children
+        size = [
+          computeSize(dims[0].size, scaleFactors?.[0]!, size[0]) ?? size[0],
+          computeSize(dims[1].size, scaleFactors?.[1]!, size[1]) ?? size[1],
+        ];
+
         const childPlaceables = [];
 
         for (const child of children) {

@@ -8,7 +8,7 @@ import { gofish } from "../ast/gofish";
 import { rect } from "../ast/shapes/rect";
 import { stack } from "../ast/graphicalOperators/stack";
 import { color, color6 } from "../color";
-import { catchData } from "../data/catch";
+import { seafood } from "../data/catch";
 import _ from "lodash";
 import { layer } from "../ast/graphicalOperators/layer";
 import { connect } from "../ast/graphicalOperators/connect";
@@ -36,11 +36,22 @@ const fishColors = {
 };
 
 const defs = [
-  <pattern id="noFill" fill="white" width="1" height="1" patternUnits="userSpaceOnUse">
+  <pattern
+    id="noFill"
+    fill="white"
+    width="1"
+    height="1"
+    patternUnits="userSpaceOnUse"
+  >
     <rect width="1" height="1" />
   </pattern>,
 
-  <pattern id="solidGrayFill" width="1" height="1" patternUnits="userSpaceOnUse">
+  <pattern
+    id="solidGrayFill"
+    width="1"
+    height="1"
+    patternUnits="userSpaceOnUse"
+  >
     <rect width="1" height="1" fill="#808080" />
   </pattern>,
 
@@ -59,24 +70,65 @@ const defs = [
     />
   </pattern>,
 
-  <pattern id="denseDottedFill" width="2.5mm" height="2.5mm" patternUnits="userSpaceOnUse">
+  <pattern
+    id="denseDottedFill"
+    width="2.5mm"
+    height="2.5mm"
+    patternUnits="userSpaceOnUse"
+  >
     <circle cx="1.25mm" cy="1.25mm" r="0.6mm" fill="black" />
   </pattern>,
 
-  <pattern id="verticalFill" width="5mm" height="0.5mm" patternUnits="userSpaceOnUse">
-    <line x1="1.25mm" y1="-1mm" x2="1.25mm" y2="1.5mm" stroke="black" stroke-width="1.3mm" />
+  <pattern
+    id="verticalFill"
+    width="5mm"
+    height="0.5mm"
+    patternUnits="userSpaceOnUse"
+  >
+    <line
+      x1="1.25mm"
+      y1="-1mm"
+      x2="1.25mm"
+      y2="1.5mm"
+      stroke="black"
+      stroke-width="1.3mm"
+    />
   </pattern>,
 
-  <pattern id="horizontalFill" width="0.5mm" height="5mm" patternUnits="userSpaceOnUse">
-    <line x1="-1mm" y1="1.25mm" x2="1.5mm" y2="1.25mm" stroke="black" stroke-width="1.3mm" />
+  <pattern
+    id="horizontalFill"
+    width="0.5mm"
+    height="5mm"
+    patternUnits="userSpaceOnUse"
+  >
+    <line
+      x1="-1mm"
+      y1="1.25mm"
+      x2="1.5mm"
+      y2="1.25mm"
+      stroke="black"
+      stroke-width="1.3mm"
+    />
   </pattern>,
 
-  <pattern id="dottedFill" width="5mm" height="5mm" patternUnits="userSpaceOnUse" fill="black" stroke="none">
+  <pattern
+    id="dottedFill"
+    width="5mm"
+    height="5mm"
+    patternUnits="userSpaceOnUse"
+    fill="black"
+    stroke="none"
+  >
     <circle cx="1.25mm" cy="1.25mm" r="1mm" />
     <circle cx="6.25mm" cy="6.25mm" r="1mm" />
   </pattern>,
 
-  <pattern id="crossFill" width="5.08mm" height="5.08mm" patternUnits="userSpaceOnUse">
+  <pattern
+    id="crossFill"
+    width="5.08mm"
+    height="5.08mm"
+    patternUnits="userSpaceOnUse"
+  >
     <line
       x1="2.54mm"
       y1="0mm"
@@ -88,18 +140,59 @@ const defs = [
     />
   </pattern>,
 
-  <pattern id="diagonalLeftFill" width="5.08mm" height="5.08mm" patternUnits="userSpaceOnUse">
-    <line x1="-0.5mm" y1="-1.27mm" x2="7.12mm" y2="6.35mm" stroke="black" stroke-width="0.8mm" />
-    <line x1="-1.77mm" y1="2.54mm" x2="2.04mm" y2="-1.27mm" stroke="black" stroke-width="0.8mm" />
+  <pattern
+    id="diagonalLeftFill"
+    width="5.08mm"
+    height="5.08mm"
+    patternUnits="userSpaceOnUse"
+  >
+    <line
+      x1="-0.5mm"
+      y1="-1.27mm"
+      x2="7.12mm"
+      y2="6.35mm"
+      stroke="black"
+      stroke-width="0.8mm"
+    />
+    <line
+      x1="-1.77mm"
+      y1="2.54mm"
+      x2="2.04mm"
+      y2="-1.27mm"
+      stroke="black"
+      stroke-width="0.8mm"
+    />
   </pattern>,
 
-  <pattern id="diagonalRightFill" width="5.08mm" height="5.08mm" patternUnits="userSpaceOnUse">
-    <line x1="7.12mm" y1="-1.27mm" x2="-0.5mm" y2="6.35mm" stroke="black" stroke-width="0.8mm" />
-    <line x1="2.04mm" y1="-1.27mm" x2="-1.77mm" y2="2.54mm" stroke="black" stroke-width="0.8mm" />
+  <pattern
+    id="diagonalRightFill"
+    width="5.08mm"
+    height="5.08mm"
+    patternUnits="userSpaceOnUse"
+  >
+    <line
+      x1="7.12mm"
+      y1="-1.27mm"
+      x2="-0.5mm"
+      y2="6.35mm"
+      stroke="black"
+      stroke-width="0.8mm"
+    />
+    <line
+      x1="2.04mm"
+      y1="-1.27mm"
+      x2="-1.77mm"
+      y2="2.54mm"
+      stroke="black"
+      stroke-width="0.8mm"
+    />
   </pattern>,
 ];
 /* TODO: I need to redo the coordinate system so that it start from the bottom left corner... */
-export const testFishPolarRibbonChartTextured = (container: HTMLElement, size: { width: number; height: number }) =>
+export const testFishPolarRibbonChartTextured = (
+  container: HTMLElement,
+  size: { width: number; height: number }
+) =>
   gofish(
     container,
     { w: size.width, h: size.height, transform: { x: 500, y: 500 }, defs },
@@ -113,7 +206,7 @@ export const testFishPolarRibbonChartTextured = (container: HTMLElement, size: {
           sharedScale: true,
           mode: "center-to-center",
         },
-        Object.entries(_.groupBy(catchData, "lake")).map(([lake, items]) =>
+        Object.entries(_.groupBy(seafood, "lake")).map(([lake, items]) =>
           stackY(
             { spacing: 8, reverse: true },
             _(items)
@@ -135,7 +228,7 @@ export const testFishPolarRibbonChartTextured = (container: HTMLElement, size: {
           )
         )
       ),
-      ..._(catchData)
+      ..._(seafood)
         .groupBy("species")
         .map((items, species) =>
           connectX(

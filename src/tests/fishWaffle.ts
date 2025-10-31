@@ -7,7 +7,7 @@ import { value } from "../ast/data";
 import { rect } from "../ast/shapes/rect";
 import { stack } from "../ast/graphicalOperators/stack";
 import { color, color6 } from "../color";
-import { catchData } from "../data/catch";
+import { seafood } from "../data/catch";
 import _ from "lodash";
 import { stackX } from "../ast/graphicalOperators/stackX";
 import { stackY } from "../ast/graphicalOperators/stackY";
@@ -20,17 +20,17 @@ const fishColors = {
   Salmon: color.purple[5],
 };
 
-export const testFishWaffle = () =>
+export const testFishWaffle = (opts) =>
   stackX(
     { spacing: 8, sharedScale: true },
-    _(catchData)
+    _(seafood)
       .groupBy("lake")
       .map((d) =>
         stackY(
           { spacing: 2, alignment: "start" },
           _(d)
             .flatMap((d) => Array(d.count).fill(d))
-            .chunk(3)
+            .chunk(opts.chunkSize)
             .map((d) =>
               stackX(
                 { spacing: 2 },
@@ -46,7 +46,7 @@ export const testFishWaffle = () =>
 export const testFishWaffleAPIv2 = () =>
   StackX(
     { spacing: 8, sharedScale: true },
-    For(groupBy(catchData, "lake"), (d) =>
+    For(groupBy(seafood, "lake"), (d) =>
       StackY(
         { spacing: 2, alignment: "start" },
         For(

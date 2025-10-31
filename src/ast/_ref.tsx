@@ -54,29 +54,40 @@ export class GoFishRef {
   private transform?: Transform;
   public shared: Size<boolean>;
   private measurement: (scaleFactors: Size) => Size;
-  private selection: string;
+  private selection?: string;
+  private directNode?: GoFishNode;
   private selectedNode?: GoFishNode;
   public color?: MaybeValue<string>;
   constructor({
     name,
     selection,
+    node,
     shared = [false, false],
   }: {
     name?: string;
-    selection: string;
+    selection?: string;
+    node?: GoFishNode;
     shared?: Size<boolean>;
   }) {
+    if (!selection && !node) {
+      throw new Error("Ref must have either selection or node");
+    }
     this.name = name;
     this.shared = shared;
     this.selection = selection;
+    this.directNode = node;
   }
 
   public resolveNames(): void {
-    this.selectedNode = getScopeContext().get(this.selection);
-    if (this.selectedNode === undefined) {
-      throw new Error(
-        `Can't find "${this.selection}". Available nodes: ${Array.from(getScopeContext().keys()).join(", ")}`
-      );
+    if (this.directNode) {
+      this.selectedNode = this.directNode;
+    } else if (this.selection) {
+      this.selectedNode = getScopeContext().get(this.selection);
+      if (this.selectedNode === undefined) {
+        throw new Error(
+          `Can't find "${this.selection}". Available nodes: ${Array.from(getScopeContext().keys()).join(", ")}`
+        );
+      }
     }
     this.color = this.selectedNode?.color;
   }

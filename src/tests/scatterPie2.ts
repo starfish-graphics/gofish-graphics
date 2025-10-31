@@ -16,10 +16,10 @@ import _ from "lodash";
 import { mix } from "spectral.js";
 import { polar } from "../ast/coordinateTransforms/polar";
 import { stackX } from "../ast/graphicalOperators/stackX";
-import { catchData, catchLocations } from "../data/catch";
+import { seafood, catchLocations } from "../data/catch";
 import { frame } from "../ast/graphicalOperators/frame";
 
-const scatterData = _(catchData)
+const scatterData = _(seafood)
   .groupBy("lake")
   .map((lakeData, lake) => ({
     lake,
@@ -44,7 +44,12 @@ export const testScatterPie2 = () =>
         },
         [
           stackX(
-            { h: _(sample.collection).sumBy("count") / 7, spacing: 0, alignment: "start", sharedScale: true },
+            {
+              h: _(sample.collection).sumBy("count") / 7,
+              spacing: 0,
+              alignment: "start",
+              sharedScale: true,
+            },
             sample.collection.map((d, i) =>
               rect({
                 w: value(d.count),

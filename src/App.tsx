@@ -1,4 +1,10 @@
-import type { Component } from "solid-js";
+import {
+  createEffect,
+  createSignal,
+  onCleanup,
+  onMount,
+  type Component,
+} from "solid-js";
 import { testRect } from "./tests/rect";
 import { testBar } from "./tests/bar";
 import { testGroupedBar } from "./tests/groupedBar";
@@ -72,21 +78,8 @@ import { testFishRibbonChartTextured } from "./tests/fishRibbonChartTextured";
 import { testFishPolarRibbonChartTextured } from "./tests/fishPolarRibbonChartTextured";
 import { GoFishSolid } from "./ast";
 import { DitheringConfig, generateDithering } from "./tests/density";
-import { For, frame, Rect, rect, StackX, StackY, stackY } from "./lib";
+import { For, frame, orderBy, Rect, StackX, StackY, stackY } from "./lib";
 import { testRidgeline } from "./tests/ridgeline";
-import {
-  chartBar,
-  chartFacetedBar,
-  chartFacetedBarHorizontal,
-  chartGroupedBar,
-  chartRectBF,
-  chartWaffle,
-  chartStackedBar,
-  chartArea,
-  chartSankeyIcicle,
-  chartStackedArea,
-  chartRidgeline,
-} from "./tests/chartAPITest";
 import { testOlympicMedalsStackedBars } from "./tests/olympicMedalsStackedBars";
 import { testRoseChart } from "./tests/testRoseChart";
 import { testConnectedScatterplot } from "./tests/connectedScatterplot";
@@ -94,23 +87,6 @@ import { testStringLine } from "./tests/stringline";
 import { testBumpChart } from "./tests/bump";
 import { testBoxWhiskerPlot } from "./tests/boxwhisker";
 import { testViolinPlot } from "./tests/violin";
-import {
-  v2ChartArea,
-  v2ChartBar,
-  v2ChartPolarRibbon,
-  v2ChartRect,
-  v2ChartRectSpread,
-  v2ChartRibbon,
-  v2ChartRibbonMessAround,
-  v2ChartScatter,
-  v2ChartStackedBar,
-  v2ChartPies,
-  v2ChartPie,
-  v2ChartScatterPie,
-  v2ChartMosaic,
-  v2ChartBarHorizontal,
-  // v2ChartWaffle,
-} from "./tests/chartAPITestV2";
 import {
   tailwindColorGrid,
   tailwindColorGridCompact,
@@ -121,7 +97,30 @@ import {
   tailwindColorComparison,
   tailwindColorComparisonCompact,
 } from "./tests/tailwindColors";
-import { chartForwardBar } from "./ast/marks/chart-forward";
+
+// Forward Syntax V3 imports for testing
+import {
+  chart,
+  spread,
+  rect,
+  stack,
+  derive,
+  layer,
+  select,
+  line,
+  scaffold,
+} from "./lib";
+import {
+  area,
+  circle,
+  foreach,
+  normalize,
+  repeat,
+  scatter,
+} from "./ast/marks/chart";
+import { catchLocations, catchLocationsArray, seafood } from "./data/catch";
+import { clock } from "./ast/coordinateTransforms/clock";
+import _ from "lodash";
 
 const ditheringTestWidth = 800;
 
@@ -310,8 +309,118 @@ const defs = [
 ];
 
 const App: Component = () => {
+  const [chunkSize, setChunkSize] = createSignal(12);
+
+  // ============================================================================
+  // FORWARD SYNTAX V3 TESTING SECTION
+  // Write your forward syntax code here, similar to ForwardSyntaxV3.stories.tsx
+  // ============================================================================
+  onMount(() => {
+    const testContainer = document.getElementById("forward-syntax-test");
+    if (testContainer) {
+      // Uncomment and modify the code below to test forward syntax charts:
+      // Example: Bar Chart
+      // chart(seafood)
+      //   .flow(spread("lake", { dir: "x" }))
+      //   .mark(rectForward({ h: "count" }))
+      //   .render(testContainer, {
+      //     w: 400,
+      //     h: 400,
+      //     axes: true,
+      //   });
+      // Add your forward syntax code here:
+      // function bar(data, { x, y, fill }) {
+      //   return chart(data)
+      //     .flow(spread(x, { dir: "x" }))
+      //     .mark(rect({ h: y, fill }));
+      // }
+
+      /* layer({ coord: clock() }, [
+        chart(seafood)
+          .flow(
+            spread("lake", {
+              dir: "x",
+              spacing: (2 * Math.PI) / 6,
+              mode: "center",
+              y: 50,
+            }),
+            derive((d) => orderBy(d, "count", "asc")),
+            // derive((d) => normalize(d, "count")),
+            stack("species", { dir: "y", label: false })
+          )
+          .mark(rect({ h: "count", fill: "species" }))
+          .as("bars"),
+        chart(select("bars"))
+          .flow(foreach("species"))
+          .mark(area({ opacity: 0.8 })),
+      ]) */
+      /* chart(catchLocationsArray)
+        .flow(scatter("lake", { x: "x", y: "y" }))
+        .mark(circle({ r: 5 })) */
+      /* chart(seafood, { coord: clock() })
+        .flow(stack("species", { dir: "x" }))
+        .mark(rect({ w: "count", fill: "species" })) */
+      const scatterData = _(seafood)
+        .groupBy("lake")
+        .map((lakeData, lake) => ({
+          lake,
+          x: catchLocations[lake as keyof typeof catchLocations].x,
+          y: catchLocations[lake as keyof typeof catchLocations].y,
+          collection: lakeData.map((item) => ({
+            species: item.species,
+            count: item.count,
+          })),
+        }))
+        .value();
+
+      // console.log(scatterData);
+
+      // chart(seafood, { coord: clock() })
+      //   .flow(stack("species", { dir: "x" }))
+      //   .mark(rect({ w: "count", fill: "species" }))
+      chart(scatterData)
+        .flow(scatter("lake", { x: "x", y: "y" }))
+        .mark((data) =>
+          chart(data[0].collection, { coord: clock() })
+            .flow(stack("species", { dir: "x", h: 20 }))
+            .mark(rect({ w: "count", fill: "species" }))
+        )
+        .render(testContainer, {
+          w: 400,
+          h: 400,
+          axes: true,
+        });
+    }
+  });
+
   return (
     <div style={{ "margin-left": "20px" }}>
+      {/* Forward Syntax V3 Testing Area */}
+      <div
+        id="forward-syntax-test"
+        style={{
+          margin: "20px 0",
+          padding: "20px",
+          border: "1px dashed #ccc",
+          "min-height": "400px",
+        }}
+      >
+        <h2>GoFish Live Coding</h2>
+      </div>
+      {[...Array(30)].map((_, i) => (
+        <br />
+      ))}
+      <input
+        type="range"
+        min={3}
+        max={20}
+        value={chunkSize()}
+        onInput={(e) => setChunkSize(Number(e.target.value))}
+      />
+      {chunkSize()}
+      <GoFishSolid w={500} h={500}>
+        {testFishWaffle({ chunkSize: chunkSize() })}
+      </GoFishSolid>
       {/* <GoFishSolid w={250} h={300} defs={defs}>
         {chartForwardBar}
       </GoFishSolid> */}
@@ -321,19 +430,10 @@ const App: Component = () => {
       <GoFishSolid w={500} h={300} defs={defs} axes={true}>
         {testBoxWhiskerPlot()}
       </GoFishSolid>
-      <GoFishSolid w={320} h={400} defs={defs} axes={true}>
-        {v2ChartBar()}
-      </GoFishSolid>
-      <GoFishSolid w={320} h={400} defs={defs} axes={true}>
-        {v2ChartBarHorizontal()}
-      </GoFishSolid>
       <GoFishSolid w={350} h={300} defs={defs}>
         {testMosaic()}
       </GoFishSolid>
       <br />
-      <GoFishSolid w={320} h={400} defs={defs} axes={false}>
-        {v2ChartMosaic()}
-      </GoFishSolid>
       <h1>Tailwind Color Palette Variants</h1>
 
       <h2>Color Comparison (Compact)</h2>
@@ -381,39 +481,6 @@ const App: Component = () => {
       </div>
       <br />
       <br />
-      <GoFishSolid w={500} h={300} x={200} y={200} defs={defs} axes={false}>
-        {v2ChartPie()}
-      </GoFishSolid>
-      <GoFishSolid w={320} h={400} defs={defs} axes={false}>
-        {v2ChartScatterPie()}
-      </GoFishSolid>
-      <GoFishSolid w={320} h={400} defs={defs} axes={true}>
-        {v2ChartRibbonMessAround()}
-      </GoFishSolid>
-      <GoFishSolid w={320} h={400} defs={defs} axes={false}>
-        {v2ChartScatter()}
-      </GoFishSolid>
-      <GoFishSolid w={320} h={400} defs={defs} axes={false}>
-        {v2ChartRect()}
-      </GoFishSolid>
-      <GoFishSolid w={320} h={400} defs={defs} axes={false}>
-        {v2ChartRectSpread()}
-      </GoFishSolid>
-      <GoFishSolid w={320} h={400} defs={defs} axes={true}>
-        {v2ChartBar()}
-      </GoFishSolid>
-      <GoFishSolid w={320} h={400} defs={defs} axes={true}>
-        {v2ChartStackedBar()}
-      </GoFishSolid>
-      <GoFishSolid w={320} h={400} defs={defs} axes={true}>
-        {v2ChartRibbon()}
-      </GoFishSolid>
-      <GoFishSolid w={320} h={400} x={150} y={150} defs={defs} axes={false}>
-        {v2ChartPolarRibbon()}
-      </GoFishSolid>
-      <GoFishSolid w={320} h={400} defs={defs} axes={true}>
-        {v2ChartArea()}
-      </GoFishSolid>
       <GoFishSolid w={500} h={500} defs={defs}>
         {StackX(
           { spacing: 60 },
@@ -444,15 +511,6 @@ const App: Component = () => {
             )
           )
         )}
-      </GoFishSolid>
-      <GoFishSolid w={500} h={500} defs={defs}>
-        {chartArea()}
-      </GoFishSolid>
-      <GoFishSolid w={500} h={500} defs={defs}>
-        {chartStackedArea()}
-      </GoFishSolid>
-      <GoFishSolid w={500} h={500} defs={defs}>
-        {chartRidgeline()}
       </GoFishSolid>
       <GoFishSolid w={500} h={300} defs={defs}>
         {testViolinPlot()}
@@ -485,9 +543,6 @@ const App: Component = () => {
         {testFishStackedBar()}
       </GoFishSolid>
       <GoFishSolid w={500} h={500} defs={defs}>
-        {chartSankeyIcicle()}
-      </GoFishSolid>
-      <GoFishSolid w={500} h={500} defs={defs}>
         {testSankeyIcicleAPIv2()}
       </GoFishSolid>
       <GoFishSolid w={500} h={500} defs={defs}>
@@ -500,27 +555,6 @@ const App: Component = () => {
         {testFishWaffleAPIv2()}
       </GoFishSolid>
       <GoFishSolid w={500} h={500} defs={defs}>
-        {chartWaffle()}
-      </GoFishSolid>
-      <GoFishSolid w={500} h={250} defs={defs}>
-        {chartFacetedBarHorizontal()}
-      </GoFishSolid>
-      <GoFishSolid w={250} h={500} defs={defs}>
-        {chartFacetedBar()}
-      </GoFishSolid>
-      <GoFishSolid w={500} h={300} defs={defs}>
-        {chartGroupedBar()}
-      </GoFishSolid>
-      <GoFishSolid w={250} h={300} defs={defs}>
-        {chartStackedBar()}
-      </GoFishSolid>
-      <GoFishSolid w={250} h={300} defs={defs}>
-        {chartBar()}
-      </GoFishSolid>
-      <GoFishSolid w={250} h={300} defs={defs}>
-        {chartRectBF()}
-      </GoFishSolid>
-      <GoFishSolid w={250} h={300} defs={defs}>
         {testRidgeline()}
       </GoFishSolid>
       <GoFishSolid w={250} h={300} defs={defs}>
@@ -631,7 +665,7 @@ const App: Component = () => {
         >
           <h2>2c. Waffle Chart</h2>
           <GoFishSolid w={500} h={500}>
-            {testFishWaffle()}
+            {testFishWaffle({ chunkSize: 12 })}
           </GoFishSolid>
         </div>
       </div>

@@ -8,7 +8,7 @@ import { gofish } from "../ast/gofish";
 import { rect } from "../ast/shapes/rect";
 import { stack } from "../ast/graphicalOperators/stack";
 import { color, color6 } from "../color";
-import { catchData } from "../data/catch";
+import { seafood } from "../data/catch";
 import _ from "lodash";
 import { layer } from "../ast/graphicalOperators/layer";
 import { connect } from "../ast/graphicalOperators/connect";
@@ -41,7 +41,7 @@ export const testFishPolarRibbonChart = () =>
         sharedScale: true,
         mode: "center-to-center",
       },
-      Object.entries(_.groupBy(catchData, "lake")).map(([lake, items]) =>
+      Object.entries(_.groupBy(seafood, "lake")).map(([lake, items]) =>
         stackY(
           { spacing: 0 },
           _(items)
@@ -59,7 +59,7 @@ export const testFishPolarRibbonChart = () =>
         )
       )
     ),
-    ..._(catchData)
+    ..._(seafood)
       .groupBy("species")
       .map((items, species) =>
         connectX(

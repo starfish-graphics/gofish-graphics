@@ -7,7 +7,7 @@ import { value } from "../ast/data";
 import { rect } from "../ast/shapes/rect";
 import { stack } from "../ast/graphicalOperators/stack";
 import { color, color6 } from "../color";
-import { catchData } from "../data/catch";
+import { seafood } from "../data/catch";
 import _ from "lodash";
 import { stackX } from "../ast/graphicalOperators/stackX";
 
@@ -19,7 +19,7 @@ const fishColors = {
   Salmon: color.purple[5],
 };
 console.log(
-  _(catchData)
+  _(seafood)
     .groupBy("lake")
     .map((d) => _(d).sumBy("count"))
     .value()
@@ -27,7 +27,7 @@ console.log(
 export const testFishBar = () =>
   stackX(
     { spacing: 8, sharedScale: true },
-    _(catchData)
+    _(seafood)
       .groupBy("lake")
       .map((d, key) => rect({ key, w: 32, h: value(_(d).sumBy("count")) }))
       .value()

@@ -100,10 +100,14 @@ export type ResolveUnderlyingSpace = (
 ) => FancySize<UnderlyingSpace>;
 
 export class GoFishNode {
+  public readonly uid: string;
+  private static uidCounter = 0;
   public type: string;
+  public args?: any;
   public key?: string;
   public _name?: string;
   public parent?: GoFishNode;
+  public datum?: any;
   // private inferDomains: (childDomains: Size<Domain>[]) => FancySize<Domain | undefined>;
   private _resolveUnderlyingSpace: ResolveUnderlyingSpace;
   private _underlyingSpace?: Size<UnderlyingSpace> = undefined;
@@ -127,6 +131,7 @@ export class GoFishNode {
       name,
       key,
       type,
+      args,
       // inferDomains,
       resolveUnderlyingSpace,
       inferSizeDomains,
@@ -139,6 +144,7 @@ export class GoFishNode {
       name?: string;
       key?: string;
       type: string;
+      args?: any;
       // inferDomains: (childDomains: Size<Domain>[]) => FancySize<Domain | undefined>;
       /* TODO: I'm not sure whether scale inference and sizeThatFits should be separate or the same pass*/
       resolveUnderlyingSpace: ResolveUnderlyingSpace;
@@ -153,6 +159,8 @@ export class GoFishNode {
     },
     children: GoFishAST[]
   ) {
+    // Generate unique ID
+    this.uid = `node-${GoFishNode.uidCounter++}`;
     // this.inferDomains = inferDomains;
     this._resolveUnderlyingSpace = resolveUnderlyingSpace;
     this._inferSizeDomains = inferSizeDomains;
@@ -166,6 +174,7 @@ export class GoFishNode {
     this._name = name;
     this.key = key;
     this.type = type;
+    this.args = args;
     this.shared = shared;
     this.color = color;
   }
@@ -540,6 +549,78 @@ export const debugUnderlyingSpaceTree = (
   if (hasChildren) {
     node.children.forEach((child) => {
       debugUnderlyingSpaceTree(child, indent + "  ");
+    });
+    console.groupEnd();
+  }
+};
+
+export const debugInputSceneGraph = (
+  node: GoFishNode | GoFishAST,
+  indent: string = ""
+): void => {
+  // Get the name for display (handle both GoFishNode and GoFishRef)
+  const nodeName = isGoFishNode(node) ? node._name : node.name;
+  const hasChildren =
+    "children" in node && node.children && node.children.length > 0;
+
+  // Format args for display
+  const formatArgs = (args: any): string => {
+    if (args === undefined || args === null) {
+      return "";
+    }
+
+    const formatValue = (val: any): string => {
+      if (
+        typeof val === "object" &&
+        val !== null &&
+        "type" in val &&
+        val.type === "datum"
+      ) {
+        return `v(${JSON.stringify(val.datum)})`;
+      } else if (Array.isArray(val)) {
+        const formattedArray = val.map(formatValue);
+        return `[${formattedArray.join(", ")}]`;
+      } else if (typeof val === "object" && val !== null) {
+        const formattedObj = Object.entries(val).map(
+          ([key, nestedVal]) => `${key}: ${formatValue(nestedVal)}`
+        );
+        return `{${formattedObj.join(", ")}}`;
+      }
+      return JSON.stringify(val);
+    };
+
+    try {
+      if (Array.isArray(args)) {
+        const formattedArray = args.map(formatValue);
+        return ` [${formattedArray.join(", ")}]`;
+      } else if (typeof args === "object") {
+        const formattedObj = Object.entries(args).map(
+          ([key, val]) => `${key}: ${formatValue(val)}`
+        );
+        return ` {${formattedObj.join(", ")}}`;
+      } else {
+        return ` ${formatValue(args)}`;
+      }
+    } catch {
+      return ` [Object]`;
+    }
+  };
+
+  // Create a group for this node only if it has children
+  if (hasChildren) {
+    console.group(
+      `${indent}${node.type}${nodeName ? ` (${nodeName})` : ""}${isGoFishNode(node) ? formatArgs(node.args) : ""}`
+    );
+  } else {
+    console.log(
+      `${indent}${node.type}${nodeName ? ` (${nodeName})` : ""}${isGoFishNode(node) ? formatArgs(node.args) : ""}`
+    );
+  }
+
+  // Print children
+  if (hasChildren) {
+    node.children.forEach((child) => {
+      debugInputSceneGraph(child, indent + "  ");
     });
     console.groupEnd();
   }

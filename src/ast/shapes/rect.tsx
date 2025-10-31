@@ -69,6 +69,17 @@ export const rect = ({
       name,
       key,
       type: "rect",
+      args: {
+        key,
+        name,
+        fill,
+        stroke,
+        strokeWidth,
+        rx,
+        ry,
+        filter,
+        dims,
+      },
       color: fill,
       resolveUnderlyingSpace: () => {
         /* cases
@@ -165,29 +176,8 @@ export const rect = ({
               })
             : undefined,
         ];
-        // console.log("rect.inferPosDomains", result);
         return result;
       },
-      // inferDomains: () => {
-      //   return [
-      //     isValue(dims[0].size)
-      //       ? continuous({
-      //           value: [0, getValue(dims[0].size)],
-      //           dataType: getDataType(dims[0].size),
-      //         })
-      //       : dims[0].size
-      //       ? aesthetic(dims[0].size)
-      //       : undefined,
-      //     isValue(dims[1].size)
-      //       ? continuous({
-      //           value: [0, getValue(dims[1].size)],
-      //           dataType: getDataType(dims[1].size),
-      //         })
-      //       : dims[1].size
-      //       ? aesthetic(dims[1].size)
-      //       : undefined,
-      //   ];
-      // },
       inferSizeDomains: (shared, children) => {
         return {
           w: computeIntrinsicSize(dims[0].size),
@@ -202,7 +192,6 @@ export const rect = ({
         measurement,
         posScales
       ) => {
-        // console.log(dims[0], dims[1]);
         const x = computeAesthetic(dims[0].min, posScales?.[0]!, undefined);
         const y = computeAesthetic(dims[1].min, posScales?.[1]!, undefined);
 

@@ -16,7 +16,7 @@ import _ from "lodash";
 import { mix } from "spectral.js";
 import { balloon } from "./balloon";
 import { wavy } from "../ast/coordinateTransforms/wavy";
-import { catchData } from "../data/catch";
+import { seafood } from "../data/catch";
 import { catchLocations } from "../data/catch";
 import { frame } from "../ast/graphicalOperators/frame";
 const baseData = [
@@ -310,7 +310,7 @@ const colorMap = {
   5: color.orange,
 };
 
-const scatterData = _(catchData)
+const scatterData = _(seafood)
   .groupBy("lake")
   .map((lakeData, lake) => ({
     lake,

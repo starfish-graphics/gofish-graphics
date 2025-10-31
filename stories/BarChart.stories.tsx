@@ -101,6 +101,21 @@ export const Stacked: StoryObj<Args> = {
     const container = initializeContainer();
     return rect(catchData, { fill: "species", h: "count" })
       .stackY("species")
+      .spreadX("lake", { alignment: "start" })
+      .render(container, {
+        w: args.w,
+        h: args.h,
+        axes: true,
+      });
+  },
+};
+
+export const StackedSorted: StoryObj<Args> = {
+  args: { w: 420, h: 400 },
+  render: (args: Args) => {
+    const container = initializeContainer();
+    return rect(catchData, { fill: "species", h: "count" })
+      .stackY("species")
       .transform((d) => orderBy(d, "count", "asc"))
       .spreadX("lake", { alignment: "start" })
       .render(container, {
