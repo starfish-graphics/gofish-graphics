@@ -18,7 +18,21 @@ import { CoordinateTransform } from "../coordinateTransforms/coord";
 import { MaybeValue } from "../data";
 import { LabelAlignment, ChartRect, VerticalAlignment, HorizontalAlignment } from "./types";
 
-
+type SpreadOptions = {
+  x?: number;
+  y?: number;
+  t?: number;
+  r?: number;
+  w?: number | string;
+  h?: number | string;
+  mode?: "edge" | "center";
+  spacing?: number;
+  sharedScale?: boolean;
+  alignment?: "start" | "middle" | "end";
+  debug?: boolean;
+  label?: boolean | LabelAlignment;
+  reverse?: boolean;
+}
 
 /* inference */
 const inferSize = <T>(
@@ -37,8 +51,11 @@ const connectXMode = {
   center: "center-to-center",
 };
 
-export const align = (horizontal: HorizontalAlignment,vertical: VerticalAlignment) => {
-  return `${vertical} + ${horizontal}` as LabelAlignment;
+export const align: (
+  horizontal: HorizontalAlignment,
+  vertical: VerticalAlignment
+) => LabelAlignment = (horizontal, vertical) => {
+  return { x: horizontal, y: vertical };
 };
 
 export class _Chart<T> {
@@ -83,8 +100,8 @@ export class _Chart<T> {
         ry,
         fill:
           typeof fill === "string" &&
-          (Array.isArray(d) ? d[0] : d) &&
-          fill in (Array.isArray(d) ? d[0] : d)
+            (Array.isArray(d) ? d[0] : d) &&
+            fill in (Array.isArray(d) ? d[0] : d)
             ? v(Array.isArray(d) ? d[0][fill as keyof T] : d[fill as keyof T])
             : fill,
         label,
@@ -140,20 +157,7 @@ export class _Chart<T> {
         this._render(d, k).setShared([true, true]),
         options?.over
           ? For(groupBy(d, key.toString()), (items, o) =>
-              ConnectX(
-                {
-                  interpolation: options?.interpolation,
-                  opacity: options?.opacity,
-                  mode: options?.mode ? connectXMode[options?.mode] : undefined,
-                  strokeWidth: options?.strokeWidth,
-                  mixBlendMode: options?.mixBlendMode,
-                },
-                For(groupBy(items, options?.over?.toString()), (item, i) =>
-                  Ref(`${k}-${i}-${o}`)
-                )
-              )
-            )
-          : ConnectX(
+            ConnectX(
               {
                 interpolation: options?.interpolation,
                 opacity: options?.opacity,
@@ -161,8 +165,21 @@ export class _Chart<T> {
                 strokeWidth: options?.strokeWidth,
                 mixBlendMode: options?.mixBlendMode,
               },
-              For(groupBy(d, key.toString()), (items, i) => Ref(`${k}-${i}`))
-            ),
+              For(groupBy(items, options?.over?.toString()), (item, i) =>
+                Ref(`${k}-${i}-${o}`)
+              )
+            )
+          )
+          : ConnectX(
+            {
+              interpolation: options?.interpolation,
+              opacity: options?.opacity,
+              mode: options?.mode ? connectXMode[options?.mode] : undefined,
+              strokeWidth: options?.strokeWidth,
+              mixBlendMode: options?.mixBlendMode,
+            },
+            For(groupBy(d, key.toString()), (items, i) => Ref(`${k}-${i}`))
+          ),
       ]);
     });
   }
@@ -207,33 +224,19 @@ export class _Chart<T> {
         },
         iteratee
           ? For(groups, (items, key) => {
-              const node = this._render(items, `${k}-${key}`);
-              return opts.label ? node.setKey(key) : node;
-            })
+            const node = this._render(items, `${k}-${key}`);
+            return opts.label ? node.setKey(key) : node;
+          })
           : For(d, (item, key) => {
-              const node = this._render(item, `${k}-${key}`);
-              return opts.label ? node.setKey(key) : node;
-            })
+            const node = this._render(item, `${k}-${key}`);
+            return opts.label ? node.setKey(key) : node;
+          })
       );
     });
   }
   spreadY(
     iteratee?: string | ((item: T[]) => any),
-    options?: {
-      x?: number;
-      y?: number;
-      t?: number;
-      r?: number;
-      w?: number | string;
-      h?: number | string;
-      mode?: "edge" | "center";
-      spacing?: number;
-      sharedScale?: boolean;
-      alignment?: "start" | "middle" | "end";
-      debug?: boolean;
-      label?: boolean | LabelAlignment;
-      reverse?: boolean;
-    } = {}
+    options: SpreadOptions = {}
   ) {
     // Default label to true if not specified
     const opts = { ...options, label: options?.label ?? true };
@@ -245,6 +248,7 @@ export class _Chart<T> {
         groups = groupBy(d, iteratee);
       }
       if (opts?.debug) console.log("stackY groups", groups);
+
       return StackY(
         {
           x: opts?.x ?? opts?.t,
@@ -256,16 +260,17 @@ export class _Chart<T> {
           reverse: opts?.reverse,
           w: inferSize(opts?.w, d),
           h: inferSize(opts?.h, d),
+          label: opts?.label,
         },
         iteratee
           ? For(groups, (items, key) => {
-              const node = this._render(items, `${k}-${key}`);
-              return opts.label ? node.setKey(key) : node;
-            })
+            const node = this._render(items, `${k}-${key}`)
+            return opts.label ? node.setKey(key) : node;
+          })
           : For(d, (item, key) => {
-              const node = this._render(item, `${k}-${key}`);
-              return opts.label ? node.setKey(key) : node;
-            })
+            const node = this._render(item, `${k}-${key}`)
+            return opts.label ? node.setKey(key) : node;
+          })
       );
     });
   }
@@ -318,7 +323,7 @@ export class _Chart<T> {
   // connectR = this.connectY;
   /* end aliases */
   // TODO: fix!!!
-  
+
   scatterXY(
     groupKey: string,
     options: {

@@ -537,6 +537,8 @@ export const render = (
               <g>
                 <For each={Object.entries(keyContext ?? {})}>
                   {([key, value]) => {
+                    // const valueNode = value as GoFishNode;
+                    // console.log(valueNode.label, "VALUE NODE LABEL");
                     // console.log(key, value);
                     const pathToRoot = findPathToRoot(value);
                     const accumulatedTransform = pathToRoot.reduce(
@@ -650,13 +652,13 @@ export const render = (
                     // or label queries
 
                     const alignment = (value as GoFishNode).label;
-
-
+                    console.log(alignment, "ALIGNMENT");
                     let x = displayDims[0].min - 5;
                     let y = displayDims[1].center ?? 0;
                     let fill = "gray";
                     let textAnchor: "end" | "middle" | "start" = "end";
-                    if (alignment && typeof alignment === "string" && (value as GoFishNode).type === "rect") {
+                    let dominantBaseline: "hanging" | "middle" | "alphabetic" = "middle";
+                    if (alignment && typeof alignment != "boolean" && (value as GoFishNode).type === "rect") {
                       
 
                       // Capturing groups for type LabelAlignment
@@ -667,27 +669,88 @@ export const render = (
                       
 
                       // middle:${number} + center:${number}
-                      const labelAlignmentRegex = /^(y-start|y-middle|y-end)(?::(-?\d+))?(?: \+ (x-start|x-middle|x-end)(?::(-?\d+))?)?(?: \+ (color):(.*))?$/;
+                      // const labelAlignmentRegex = /^(y-start|y-middle|y-end)(?::(-?\d+))?(?: \+ (x-start|x-middle|x-end)(?::(-?\d+))?)?(?: \+ (color):(.*))?$/;
+                      
+                      const match_horizontal = alignment.x.split(":")[0];
+                      const match_vertical = alignment.y.split(":")[0];
 
-                      const match = alignment.match(labelAlignmentRegex);
-                      if (match) {
-                        if (match[1]) {
-                          y = match[1] === "y-start" ? displayDims[1].max : match[1] === "y-middle" ? displayDims[1].center : displayDims[1].min;
-                          if (match[2]) {
-                            y += parseInt(match[2]);
+                      if (alignment.y) {
+                        const offset = alignment.y.includes(":") ? parseInt(alignment.y.split(":")[1]) : match_vertical === "middle" ? 0 : 4;
+                        if (match_vertical === "start-inset") {
+                          y = displayDims[1].min + offset;
+                        } else if (match_vertical === "start-outset") {
+                          y = displayDims[1].min - offset;
+                        } else if (match_vertical === "middle") {
+                          y = displayDims[1].center + offset;
+                        } else if (match_vertical === "end-inset") {
+                          y = displayDims[1].max - offset;
+                        } else if (match_vertical === "end-outset") {
+                          y = displayDims[1].max + offset;
+                        }
+
+                        // y = match_vertical === "start" ? displayDims[1].max : match_vertical === "middle" ? displayDims[1].center : displayDims[1].min;
+                        // if (alignment.y.includes(":")) {
+                        //   y += parseInt(alignment.y.split(":")[1]);
+                        // }
+
+                        if (match_vertical) {
+                          if (match_vertical === "start-inset") {
+                            dominantBaseline = "alphabetic";
+                          } else if (match_vertical === "start-outset") {
+                            dominantBaseline = "hanging";
+                          } else if (match_vertical === "middle") {
+                            dominantBaseline = "middle";
+                          } else if (match_vertical === "end-inset") {
+                            dominantBaseline = "hanging";
+                          } else if (match_vertical === "end-outset") {
+                            dominantBaseline = "alphabetic";
                           }
                         }
-                        if (match[3]) {
-                          // get the width of the text using the font size
-                          const fontSize = 10;
-                          // get pixel width of the text
-                          const textWidth = (fontSize * 0.6) * (value as GoFishNode).key!.length;
+                      }
 
-                          x = match[3] === "x-start" ? displayDims[0].min - 5 : match[3] === "x-middle" ? displayDims[0].center : displayDims[0].max - 5;
-                          if (match[4]) {
-                            x += parseInt(match[4]);
-                          }
+                      if (alignment.x) {
+                        const fontSize = 10;
+                        const textWidth = (fontSize * 0.6) * (value as GoFishNode).key!.length;
+                        // x = match_horizontal ===  "start" ? displayDims[0].min - 5 : match_horizontal === "middle" ? displayDims[0].center : displayDims[0].max - 5;
+                        // if (match_horizontal === "start-inset") {
+                        //   x = displayDims[0].min - 5;
+                        // } else if (match_horizontal === "start-outset") {
+                        //   x = displayDims[0].min + 5;
+                        // } else if (match_horizontal === "middle") {
+                        //   x = displayDims[0].center;
+                        // } else if (match_horizontal === "end-inset") {
+                        //   x = displayDims[0].max - 5;
+                        // } else if (match_horizontal === "end-outset") {
+                        //   x = displayDims[0].max + 5;
+                        // }
+                        const match_horizontal = alignment.x.split(":")[0];
+
+                        if (alignment.x) {
+                          const offset = alignment.x.includes(":") ? parseInt(alignment.x.split(":")[1]) : match_horizontal === "middle" ? 0 : 4;
+                          if (match_horizontal === "start-inset") {
+                            x = displayDims[0].min + offset;
+                          } else if (match_horizontal === "start-outset") {
+                            x = displayDims[0].min - offset;
+                          } else if (match_horizontal === "middle") {
+                            x = displayDims[0].center + offset;
+                          } else if (match_horizontal === "end-inset") {
+                            x = displayDims[0].max - offset;
+                          } else if (match_horizontal === "end-outset") {
+                            x = displayDims[0].max + offset;
+                          } 
                         }
+
+                        // if (match[3]) {
+                        //   // get the width of the text using the font size
+                        //   const fontSize = 10;
+                        //   // get pixel width of the text
+                        //   const textWidth = (fontSize * 0.6) * (value as GoFishNode).key!.length;
+
+                        //   x = match[3] === "x-start" ? displayDims[0].min - 5 : match[3] === "x-middle" ? displayDims[0].center : displayDims[0].max - 5;
+                        //   if (match[4]) {
+                        //     x += parseInt(match[4]);
+                        //   }
+                        // }
 
                         // mix with light color if background is dark in node color 
                         const valueNode = (value as GoFishNode)
@@ -696,16 +759,24 @@ export const render = (
                         const nodeLuminance = getLuminance(nodeBackgroundColor!);
                         console.log(nodeLuminance, valueNode.key, "NODE LUMINANCE LOL");
 
-                        if (match[3]) {
-                          if (match[3] === "x-start") {
+                        if (match_horizontal) {
+                          if (match_horizontal === "start-inset") {
+                            textAnchor = "start";
+                          } else if (match_horizontal === "start-outset") {
                             textAnchor = "end";
-                          } else if (match[3] === "x-middle") {
+                          } else if (match_horizontal === "middle") {
                             textAnchor = "middle";
-                          } else if (match[3] === "x-end") {
+                          } else if (match_horizontal === "end-inset") {
                             textAnchor = "end";
+                          } else if (match_horizontal === "end-outset") {
+                            textAnchor = "start";
                           }
 
-                          if (match[3] === "x-middle" || match[3] === "x-end") {
+                          // Set fill for inset (start-inset, end-inset) and middle both horizontally and vertically
+                          if (
+                            ["middle", "start-inset", "end-inset"].includes(match_horizontal) &&
+                            ["middle", "start-inset", "end-inset"].includes(match_vertical)
+                          ) {
                             if (nodeLuminance > 0.65) {
                               fill = mix(nodeBackgroundColor!, black, 0.8);
                             } else {
@@ -713,23 +784,19 @@ export const render = (
                             }
                           }
                         }
-
-
                       }
                     }
-
-                    
                     return (
                       <text
                         transform="scale(1, -1)"
                         x={x}
                         y={-y}
                         text-anchor={textAnchor}
-                        dominant-baseline="middle"
+                        dominant-baseline={dominantBaseline}
                         font-size="12px"
                         fill={fill}
                         font-family="Source Sans Pro,sans-serif"
-                        font-weight={500}
+                        font-weight={550}
                       >
                         {(value as GoFishNode).key}
                       </text>

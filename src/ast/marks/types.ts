@@ -12,11 +12,9 @@ export type ChartRect = {
 };
 
 
-export type VerticalAlignment = `${"y-start" | "y-middle" | "y-end"}${"" | `:${number}`}`;
-export type HorizontalAlignment = `${"x-start" | "x-middle" | "x-end"}${"" | `:${number}`}`;
+export type BaseLabelAlignment = `${"start-inset" | "start-outset" | "middle" | "end-outset" | "end-inset"}${"" | `:${number}`}`;
 
-export type LabelAlignment =
-    | `${VerticalAlignment}`
-    | `${HorizontalAlignment}`
-    | `${VerticalAlignment} + ${HorizontalAlignment}`
-    | `${HorizontalAlignment} + ${VerticalAlignment}`
+export type LabelAlignment = {
+    y: BaseLabelAlignment;
+    x: BaseLabelAlignment;
+}
