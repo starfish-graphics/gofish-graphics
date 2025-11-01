@@ -23,10 +23,10 @@ export const StartInsetCuston: StoryObj<
   args: {
     w: 420,
     h: 400,
-    labelX: "middle",
-    labelY: "middle",
-    offsetX: -10,
-    offsetY: 10,
+    labelX: "start-inset",
+    labelY: "end-inset",
+    offsetX: 4,
+    offsetY: 4,
   },
   argTypes: {
     labelX: {
