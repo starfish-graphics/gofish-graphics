@@ -38,6 +38,16 @@ pnpm build
 pnpm serve
 ```
 
+## Publish
+
+```bash
+# update version number
+pnpm version patch
+
+# publish to npm
+pnpm publish
+```
+
 ## License
 
 MIT
