@@ -34,6 +34,7 @@ export { position } from "./ast/graphicalOperators/position";
 export { coord } from "./ast/coordinateTransforms/coord";
 export { linear } from "./ast/coordinateTransforms/linear";
 export { polar } from "./ast/coordinateTransforms/polar";
+export { clock } from "./ast/coordinateTransforms/clock";
 export { polar_DEPRECATED } from "./ast/coordinateTransforms/polar_DEPRECATED";
 export { polarTransposed } from "./ast/coordinateTransforms/polarTransposed";
 export { arcLengthPolar } from "./ast/coordinateTransforms/arcLengthPolar";
@@ -93,6 +94,10 @@ export {
   select,
   line,
   scaffold,
+  area,
+  normalize,
+  repeat,
+  log,
 } from "./ast/marks/chart";
 export type {
   Mark,
