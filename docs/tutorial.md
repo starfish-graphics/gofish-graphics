@@ -21,18 +21,22 @@ Rect({ x: 0, y: 0, w: 32, h: 300, fill: color.green[5] }).render(root, {
 });
 ``` -->
 
-::: starfish-live {template=vanilla-ts rtl lightTheme=aquaBlue darkTheme=atomDark previewHeight=400 coderHeight=768}
+::: starfish-live {template=vanilla-ts rtl lightTheme=aquaBlue darkTheme=atomDark previewHeight=400 coderHeight=500}
 
 ```ts index.ts
-import { rect, color, orderBy, guide } from "gofish-graphics";
+import { chart, rect, color, spread } from "gofish-graphics";
 import { seafood } from "./dataset";
 
-const root = document.getElementById("app");
+const container = document.getElementById("app");
 
-rect({ x: 0, y: 0, w: 32, h: 300, fill: color.green[5] }).render(root, {
-  w: 500,
-  h: 300,
-});
+chart(seafood)
+  .flow(spread("lake", { dir: "x" }))
+  .mark(rect({ h: "count" }))
+  .render(container, {
+    w: 500,
+    h: 300,
+    axes: true,
+  });
 ```
 
 ```ts dataset.ts
@@ -253,7 +257,7 @@ Let's take a look at the starter code. First, we grab a DOM element that will se
 we render into:
 
 ```ts
-const root = document.getElementById("app");
+const container = document.getElementById("app");
 ```
 
 Next, we render a rectangle into it!
@@ -261,19 +265,28 @@ Next, we render a rectangle into it!
 :::starfish
 
 ```ts
-Rect({ x: 0, y: 0, w: 32, h: 300, fill: color.green[5] }).render(root, {
-  w: 500,
-  h: 300,
-});
+const container = document.getElementById("app");
+
+chart(seafood)
+  .flow(spread("lake", { dir: "x" }))
+  .mark(rect({ h: "count", fill: color.green[5] }))
+  .render(container, {
+    w: 500,
+    h: 300,
+    axes: true,
+  });
+
 ```
 
 :::
 
-`Rect` creates a shape. `x`, `y`, `w`, and `h` specify the position and size of the rectangle. The
-`fill` parameter specifies the color. We are using a green from GoFish's default color palette for
-this chart. Try changing `green` to `red` or changing `5` to a higher or lower number.
+`chart()` creates a chart from data. We pass an array with a single object containing the rectangle's
+position and size. Then we use `.mark()` to specify that we want to render `rect` shapes. The `x`, `y`,
+`w`, and `h` fields in the mark spec map to the data fields. The `fill` parameter specifies the color.
+We are using a green from GoFish's default color palette for this chart. Try changing `green` to `red`
+or changing `5` to a higher or lower number.
 
-Finally, we call `.render` to render the shape to the DOM, specifying a width and height for the
+Finally, we call `.render` to render the chart to the DOM, specifying a width and height for the
 entire graphic.
 
 ## Bar Chart
@@ -286,30 +299,37 @@ each lake in the dataset:
 :::starfish
 
 ```ts
-rect(seafood, { w: 32, h: 300, fill: color.green[5] })
-  .spreadX("lake")
-  .render(root, { w: 500, h: 300 });
+import { chart, spread, rect, color } from "gofish-graphics";
+
+chart(seafood)
+  .flow(spread("lake", { dir: "x" }))
+  .mark(rect({ w: 32, h: 300, fill: color.green[5] }))
+  .render(container, { w: 500, h: 300 });
 ```
 
 :::
 
 ### The `spread` operator
 
-We've introduced a `StackX` _graphical operator_ that spaces its children 8 pixels apart. The `For`
-function maps over its input dataset, and calls the anonymous function on each one. In this case,
-we've grouped our dataset by lake so that we'll call the `Rect` shape six times.
+We've introduced a `spread` _graphical operator_ in the `.flow()` method that spaces its children apart.
+The `spread` operator groups the data by the field we specify (in this case, "lake") and creates one
+shape for each group. Here, we're spreading along the x direction with `dir: "x"`, which will create
+six rectangles (one for each lake).
 
 ### Data-Driven Fields
 
-To turn this into a bar chart, we'll change the `h` encoding of the `Rect` shape to a data-driven
+To turn this into a bar chart, we'll change the `h` encoding of the `rect` shape to a data-driven
 quantity.
 
 :::starfish
 
 ```ts
-rect(seafood, { w: 32, h: "count", fill: color.green[5] })
-  .spreadX("lake")
-  .render(root, { w: 500, h: 300 });
+import { chart, spread, rect, color } from "gofish-graphics";
+
+chart(seafood)
+  .flow(spread("lake", { dir: "x" }))
+  .mark(rect({ w: 32, h: "count", fill: color.green[5] }))
+  .render(container, { w: 500, h: 300 });
 ```
 
 :::
@@ -317,15 +337,18 @@ rect(seafood, { w: 32, h: "count", fill: color.green[5] })
 ### Inferred Fields
 
 We remove the `w` field from our spec to have GoFish infer it for us. GoFish uses the overall size
-of the chart we gave to `render` as well as the sizing information in `spreadX` to determine the
+of the chart we gave to `render` as well as the sizing information in `spread` to determine the
 width of each rectangle.
 
 :::starfish
 
 ```ts
-rect(seafood, { h: "count", fill: color.green[5] })
-  .spreadX("lake")
-  .render(root, { w: 500, h: 300 });
+import { chart, spread, rect, color } from "gofish-graphics";
+
+chart(seafood)
+  .flow(spread("lake", { dir: "x" }))
+  .mark(rect({ h: "count", fill: color.green[5] }))
+  .render(container, { w: 500, h: 300 });
 ```
 
 :::
@@ -338,9 +361,12 @@ your spec as long as you put `axes: true` in the `render` method like so:
 :::starfish
 
 ```ts
-rect(seafood, { h: "count", fill: color.green[5] })
-  .spreadX("lake")
-  .render(root, { w: 500, h: 300, axes: true });
+import { chart, spread, rect, color } from "gofish-graphics";
+
+chart(seafood)
+  .flow(spread("lake", { dir: "x" }))
+  .mark(rect({ h: "count", fill: color.green[5] }))
+  .render(container, { w: 500, h: 300, axes: true });
 ```
 
 :::
@@ -375,24 +401,18 @@ like a normal bar chart, except instead of a line of rectangles, it's a line of 
 :::starfish
 
 ```ts
-rect(seafood, { h: "count", fill: color.green[5] })
-  .stackY("species")
-  .spreadX("lake")
-  .render(root, { w: 500, h: 300, axes: true });
+import { chart, spread, stack, rect, color } from "gofish-graphics";
+
+chart(seafood)
+  .flow(
+    spread("lake", { dir: "x" }),
+    stack("species", { dir: "y" })
+  )
+  .mark(rect({ h: "count", fill: color.green[5] }))
+  .render(container, { w: 500, h: 300, axes: true });
 ```
 
 :::
-
-<!-- We've added a `StackY` in between the `StackX` and the `Rect`. This creates a vertical stack that
-iterates over every species in each lake. Notice we've also changed `Rect`'s encoding from a sum
-over all the species in the lake to the direct count.
-
-::: info
-
-Note: We've moved the key to the `StackY` from the `Rect` to keep the label on the elements produced
-by the `For` loop.
-
-::: -->
 
 Now we have a rectangle for each species in each lake. But we can't tell the fish apart! Let's add a
 color encoding so that each rectangle's color corresponds to the species of fish.
@@ -400,10 +420,15 @@ color encoding so that each rectangle's color corresponds to the species of fish
 :::starfish
 
 ```ts
-rect(seafood, { h: "count", fill: "species" })
-  .stackY("species")
-  .spreadX("lake")
-  .render(root, { w: 500, h: 300, axes: true });
+import { chart, spread, stack, rect } from "gofish-graphics";
+
+chart(seafood)
+  .flow(
+    spread("lake", { dir: "x" }),
+    stack("species", { dir: "y" })
+  )
+  .mark(rect({ h: "count", fill: "species" }))
+  .render(container, { w: 500, h: 300, axes: true });
 ```
 
 :::
@@ -427,11 +452,18 @@ their counts:
 :::starfish
 
 ```ts
-rect(seafood, { h: "count", fill: "species" })
-  .stackY("species")
-  .transform((d) => orderBy(d, "count", "desc"))
-  .spreadX("lake")
-  .render(root, { w: 500, h: 300, axes: true });
+import { chart, spread, stack, derive, rect } from "gofish-graphics";
+import { orderBy } from "lodash";
+import { seafood } from "./dataset";
+
+chart(seafood)
+  .flow(
+    spread("lake", { dir: "x" }),
+    derive((d) => orderBy(d, "count", "desc")),
+    stack("species", { dir: "y" })
+  )
+  .mark(rect({ h: "count", fill: "species" }))
+  .render(container, { w: 500, h: 300, axes: true });
 ```
 
 :::
@@ -473,12 +505,27 @@ Frame([
 :::starfish
 
 ```ts
-rect(seafood, { h: "count", fill: "species" })
-  .stackY("species")
-  .transform((d) => orderBy(d, "count", "desc"))
-  .spreadX("lake")
-  .connectX("species", { over: "lake" })
-  .render(root, { w: 500, h: 300, axes: true });
+import { chart, spread, stack, derive, layer, select, rect, area, foreach } from "gofish-graphics";
+import { orderBy } from "lodash";
+import { seafood } from "./dataset";
+
+layer([
+  chart(seafood)
+    .flow(
+      spread("lake", { dir: "x" }),
+      derive((d) => orderBy(d, "count", "desc")),
+      stack("species", { dir: "y" })
+    )
+    .mark(rect({ h: "count", fill: "species" }))
+    .as("bars"),
+  chart(select("bars"))
+    .flow(foreach("species"))
+    .mark(area({ opacity: 0.8 })),
+]).render(container, {
+  w: 500,
+  h: 300,
+  axes: true,
+});
 ```
 
 :::
@@ -486,23 +533,38 @@ rect(seafood, { h: "count", fill: "species" })
 Great! This is already a ribbon chart but it's a little funky. We'll fix the funkiness in a second,
 but first let's understand what's going on.
 
-First, we've added a `Frame` operator that lets us layer on multiple elements in the same space.
-Next, we've added a `name` to the `Rect` shapes so that we can refer to them later. Finally, we've
-added `ConnectX` operators that connect the `Rect`s horizontally. To refer to the existing `Rect`s
-we're using `Ref` shapes. These shapes act as "pointers" to existing shapes.
+First, we've added a `layer` operator that lets us layer on multiple elements in the same space.
+We create the bars with the first `chart` and use `.as("bars")` to give them a name so we can refer
+to them later. Then we use `select("bars")` in a second chart to reference those bars. Finally,
+we use `foreach("species")` to group by species and `area()` to connect the bars horizontally.
 
 To make this look more like a traditional ribbon chart, all we have to do is change the spacing of
-the `StackX` and the width of each `Rect`.
+the `spread` operator.
 
 :::starfish
 
 ```ts
-rect(seafood, { h: "count", fill: "species" })
-  .stackY("species")
-  .transform((d) => orderBy(d, "count", "desc"))
-  .spreadX("lake", { spacing: 64 })
-  .connectX("species", { over: "lake", opacity: 0.8 })
-  .render(root, { w: 500, h: 300, axes: true });
+import { chart, spread, stack, derive, layer, select, rect, area, foreach } from "gofish-graphics";
+import { orderBy } from "lodash";
+import { seafood } from "./dataset";
+
+layer([
+  chart(seafood)
+    .flow(
+      spread("lake", { dir: "x", spacing: 64 }),
+      derive((d) => orderBy(d, "count", "desc")),
+      stack("species", { dir: "y" })
+    )
+    .mark(rect({ h: "count", fill: "species" }))
+    .as("bars"),
+  chart(select("bars"))
+    .flow(foreach("species"))
+    .mark(area({ opacity: 0.8 })),
+]).render(container, {
+  w: 500,
+  h: 300,
+  axes: true,
+});
 ```
 
 :::
@@ -537,26 +599,41 @@ Frame([
 
 ## Polar Ribbon Chart
 
-Finally it's time to make our polar ribbon chart! To do so, we'll add a `Polar` coordinate transform
-to the `Frame`, adjust the parameters to `StackX`, the width of the `Rect`, and reverse the `StackY`
+Finally it's time to make our polar ribbon chart! To do so, we'll add a `clock` coordinate transform
+to the `layer`, adjust the parameters to `spread`, the width of the `rect`, and reverse the `stack`
 so that it appears in the proper direction.
 
 :::starfish
 
 ```ts
-rect(seafood, { h: "count", fill: "species" })
-  .stackY("species", { reverse: true })
-  .transform((d) => orderBy(d, "count", "desc"))
-  .spreadX("lake", {
-    y: 50,
-    x: (-3 * Math.PI) / 6,
-    spacing: (2 * Math.PI) / 6,
-    alignment: "start",
-    mode: "center",
-  })
-  .connectX("species", { over: "lake", opacity: 0.8 })
-  .coord(polar())
-  .render(root, { w: 500, h: 300, transform: { x: 200, y: 150 } });
+import { chart, spread, stack, derive, layer, select, rect, area, foreach, clock } from "gofish-graphics";
+import { orderBy } from "lodash";
+import { seafood } from "./dataset";
+
+layer({ coord: clock() }, [
+  chart(seafood)
+    .flow(
+      spread("lake", {
+        dir: "x",
+        spacing: (2 * Math.PI) / 6,
+        mode: "center",
+        y: 50,
+        label: false,
+      }),
+      derive((d) => orderBy(d, "count", "asc")),
+      stack("species", { dir: "y", label: false })
+    )
+    .mark(rect({ w: 0.1, h: "count", fill: "species" }))
+    .as("bars"),
+  chart(select("bars"))
+    .flow(foreach("species"))
+    .mark(area({ opacity: 0.8 })),
+]).render(container, {
+  w: 500,
+  h: 300,
+  transform: { x: 200, y: 200 },
+  axes: true,
+});
 ```
 
 :::

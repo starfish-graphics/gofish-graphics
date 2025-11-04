@@ -33,17 +33,40 @@ onMounted(() => {
 <style scoped>
 .gallery-grid {
   display: grid;
-  grid-template-columns: repeat(8, 1fr);
-  gap: 12px;
-  margin-top: -20px;
+  grid-template-columns: repeat(6, 1fr);
+  /* gap: 12px; */
+  /* margin-top: -20px; */
+  width: 85vw;
+  /* align content of grid block to center */
+  justify-content: center;
+  /* center the entire grid block */
+  /* margin-left: auto; */
+  /* margin-right: auto; */
+  /* width: 100%; */
+  /* max-width: 1400px; */
+  border: 1px solid #4cb05e;
+  border-radius: 8px;
+}
+
+/* on mobile, make the grid a single column and remove magins */
+@media (max-width: 768px) {
+  .gallery-grid {
+    grid-template-columns: 1fr;
+    margin-top: 500px !important;
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+    width: 70vw !important;
+  }
 }
 
 .example-card {
-  border: 1px solid var(--vp-c-border);
-  border-radius: 8px;
+  /* border-bottom: 1px solid var(--vp-c-border); */
+  /* border-right: 1px solid #4cb05e; */
+  /* border-radius: 8px; */
   overflow: hidden;
-  background: var(--vp-c-bg);
+  /* background: var(--vp-c-bg); */
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  /* important to override the margin-left: 0; padding-left: 0; in the GoFishVue component */
 }
 
 .example-card:hover {
@@ -62,7 +85,8 @@ onMounted(() => {
   position: relative;
   aspect-ratio: 16/10;
   overflow: hidden;
-  background: var(--vp-c-bg-soft);
+  /* background: var(--vp-c-bg-soft); */
+  background: #4cb05e08;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -82,7 +106,7 @@ onMounted(() => {
 }
 
 .card-content {
-  padding: 16px;
+  padding: 8px;
   font-weight: 400;
 }
 

@@ -222,6 +222,7 @@ const aspectRatioTransform = 16 / 10 / (688 / 400);
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
+  display: block;
 }
 
 .gallery-controls {
@@ -322,6 +323,7 @@ const aspectRatioTransform = 16 / 10 / (688 / 400);
 
 .card-thumbnail {
   position: relative;
+  margin-left: 0px;
   aspect-ratio: 16/10;
   overflow: hidden;
   background: var(--vp-c-bg-soft);

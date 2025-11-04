@@ -1,4 +1,9 @@
-rect(seafood, { w: "count", fill: "species" })
-  .stackX("species")
-  .coord(polar())
-  .render(root, { w: 500, h: 300, transform: { x: 300 } });
+chart(seafood, { coord: clock() })
+  .flow(stack("species", { dir: "x" }))
+  .mark(rect({ w: "count", fill: "species" }))
+  .render(root, {
+    w: 400,
+    h: 300,
+    axes: true,
+    transform: { x: 200, y: 200 },
+  });

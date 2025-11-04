@@ -1,29 +1,13 @@
-StackX(
-  { spacing: 8, sharedScale: true },
-  For(groupBy(seafood, "lake"), (d) =>
-    StackY(
-      { spacing: 2, alignment: "start" },
-      For(
-        _(d)
-          .reverse()
-          .flatMap((d) => Array(d.count).fill(d))
-          .chunk(5)
-          .reverse(),
-        (d) =>
-          StackX(
-            { spacing: 2 },
-            For(d, (d) => Rect({ w: 8, h: 8, fill: v(d.species) }))
-          )
-      )
-    )
+chart(seafood)
+  .flow(
+    spread("lake", { spacing: 8, dir: "x" }),
+    derive((d) => d.flatMap((d) => repeat(d, "count"))),
+    derive((d) => _.chunk(d, 5)),
+    spread({ spacing: 2, dir: "y" }),
+    spread({ spacing: 2, dir: "x" })
   )
-).render(root, { w: 500, h: 300 });
-
-/* TODO?
-rect(seafood, { w: 8, h: 8, fill: "species" })
-  .stackX(undefined)
-  .stackY("chunks")
-  .derive((d) => d.reverse().flatMap((d) => Array(d.count).fill(d)).chunk(5).reverse())
-  .spreadX("lake")
-  .render(root, { w: 500, h: 300, axes: true });
-*/
+  .mark(rect({ w: 8, h: 8, fill: "species" }))
+  .render(root, {
+    w: 500,
+    h: 300,
+  });

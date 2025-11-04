@@ -1,26 +1,28 @@
 # Stacked Bar Chart
 
-::: starfish example:stacked-bar-chart
+<!-- ::: starfish example:stacked-bar-chart -->
 
 **Live Editor**
 
 ::: starfish-live {template=vanilla-ts rtl lightTheme=aquaBlue darkTheme=atomDark previewHeight=400 coderHeight=512}
 
 ```ts index.ts
-import { StackX, StackY, Rect, For, v, groupBy } from "gofish-graphics";
+import { chart, spread, stack, rect } from "gofish-graphics";
 import { seafood } from "./dataset";
 
-const root = document.getElementById("app");
+const container = document.getElementById("app");
 
-StackX(
-  { spacing: 8, sharedScale: true },
-  For(groupBy(seafood, "lake"), (lake, key) =>
-    StackY(
-      { key, spacing: 0 },
-      For(lake, (d) => Rect({ w: 32, h: v(d.count), fill: v(d.species) }))
-    )
+chart(seafood)
+  .flow(
+    spread("lake", { dir: "x" }), //
+    stack("species", { dir: "y" })
   )
-).render(root, { width: 500, height: 300, axes: true });
+  .mark(rect({ h: "count", fill: "species" }))
+  .render(container, {
+    w: 500,
+    h: 300,
+    axes: true,
+  });
 ```
 
 ```ts dataset.ts
@@ -32,13 +34,13 @@ export type Lakes =
   | "Lake E"
   | "Lake F";
 
-export type Seafood = {
+export type SeafoodData = {
   lake: Lakes;
   species: "Bass" | "Trout" | "Catfish" | "Perch" | "Salmon";
   count: number;
 };
 
-export const catchLocations: Record<Lakes, { x: number; y: number }> = {
+export const lakeLocations: Record<Lakes, { x: number; y: number }> = {
   "Lake A": { x: 5.26, y: 22.64 },
   "Lake B": { x: 30.87, y: 120.75 },
   "Lake C": { x: 50.01, y: 60.94 },

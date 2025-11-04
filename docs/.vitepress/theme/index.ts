@@ -9,11 +9,14 @@ import HomeGallery from "../../../components/HomeGallery.vue";
 import { Sandbox } from "vitepress-plugin-sandpack";
 import "vitepress-plugin-sandpack/dist/style.css";
 import { StarfishLive } from "../../../components/StarfishLive";
+import HeroCode from './components/HeroCode.vue'
 export default {
   extends: DefaultTheme,
   Layout: () => {
     return h(DefaultTheme.Layout, null, {
-      // https://vitepress.dev/guide/extending-default-theme#layout-slots
+      // Put code snippet in the hero's image slot
+      'home-hero-image': () => h(HeroCode),
+      
     });
   },
   enhanceApp({ app, router }) {

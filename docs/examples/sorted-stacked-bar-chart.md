@@ -1,43 +1,30 @@
-# Polar Ribbon Chart
+# Sorted Stacked Bar Chart
 
-<!-- ::: starfish example:polar-ribbon-chart -->
+<!-- ::: starfish example:sorted-stacked-bar-chart -->
 
 **Live Editor**
 
 ::: starfish-live {template=vanilla-ts rtl lightTheme=aquaBlue darkTheme=atomDark previewHeight=400 coderHeight=512}
 
 ```ts index.ts
-import { chart, spread, stack, derive, layer, select, rect, area, foreach } from "gofish-graphics";
-import { clock } from "gofish-graphics";
+import { chart, spread, stack, derive, rect } from "gofish-graphics";
 import { orderBy } from "lodash";
 import { seafood } from "./dataset";
 
 const container = document.getElementById("app");
 
-layer({ coord: clock() }, [
-  chart(seafood)
-    .flow(
-      spread("lake", {
-        dir: "x",
-        spacing: (2 * Math.PI) / 6,
-        mode: "center",
-        y: 50,
-        label: false,
-      }),
-      derive((d) => orderBy(d, "count", "asc")),
-      stack("species", { dir: "y", label: false })
-    )
-    .mark(rect({ w: 0.1, h: "count", fill: "species" }))
-    .as("bars"),
-  chart(select("bars"))
-    .flow(foreach("species"))
-    .mark(area({ opacity: 0.8 })),
-]).render(container, {
-  w: 500,
-  h: 300,
-  transform: { x: 200, y: 200 },
-  axes: true,
-});
+chart(seafood)
+  .flow(
+    spread("lake", { dir: "x" }),
+    derive((d) => orderBy(d, "count", "asc")),
+    stack("species", { dir: "y" })
+  )
+  .mark(rect({ h: "count", fill: "species" }))
+  .render(container, {
+    w: 400,
+    h: 400,
+    axes: true,
+  });
 ```
 
 ```ts dataset.ts
@@ -219,3 +206,4 @@ export const seafood: SeafoodData[] = [
 ```
 
 :::
+

@@ -1,5 +1,12 @@
-guide(seafood, { h: "count", fill: "species" })
-  .spreadX("lake", { spacing: 80 })
-  .connectX("lake", { mixBlendMode: "normal" })
-  .spreadY("species", { spacing: -16 })
-  .render(root, { w: 500, h: 300, axes: true });
+layer([
+  chart(seafood)
+    .flow(
+      spread("lake", { dir: "x", spacing: 80 }),
+      spread("species", { dir: "y", spacing: -16 })
+    )
+    .mark(scaffold({ h: "count", fill: "species" }))
+    .as("points"),
+  chart(select("points"))
+    .flow(foreach("species"))
+    .mark(area({ opacity: 0.8, mixBlendMode: "normal" })),
+]).render(root, { w: 500, h: 300, axes: true });

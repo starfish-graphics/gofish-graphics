@@ -28,9 +28,14 @@ const alphabet = [
 
 const root = document.createElement("div");
 
-rect(alphabet, { h: "frequency" })
-  .spreadX("letter")
-  .render(root, { w: 500, h: 300, axes: true });
+chart(seafood)
+  .flow(spread("letter", { dir: "x" }))
+  .mark(rect({ h: "frequency" }))
+  .render(root, {
+    w: 500,
+    h: 300,
+    axes: true,
+  });
 ```
 
 ::: info Note
@@ -80,17 +85,22 @@ automatically with `axes: true`.
 
 Go through [our tutorial](/tutorial), check out [some examples](/examples/index), or play with the live editor below!
 
-::: starfish-live {template=vanilla-ts rtl lightTheme=aquaBlue darkTheme=atomDark previewHeight=400 coderHeight=512}
+::: starfish-live {template=vanilla-ts rtl lightTheme=aquaBlue darkTheme=atomDark previewHeight=400 coderHeight=400}
 
 ```ts index.ts
-import { rect } from "gofish-graphics";
+import { chart, spread, rect } from "gofish-graphics";
 import { alphabet } from "./dataset";
 
 const root = document.getElementById("app");
 
-rect(alphabet, { h: "frequency" })
-  .spreadX("letter")
-  .render(root, { w: 500, h: 300, axes: true });
+chart(alphabet)
+  .flow(spread("letter", { dir: "x" }))
+  .mark(rect({ h: "frequency" }))
+  .render(root, {
+    w: 500,
+    h: 300,
+    axes: true,
+  });
 ```
 
 ```ts dataset.ts

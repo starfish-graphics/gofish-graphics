@@ -35,11 +35,25 @@ import {
   Petal,
   sumBy,
   orderBy,
-  guide,
   polar,
   gray,
   neutral,
   Enclose,
+  // New API exports used by examples
+  chart,
+  spread,
+  derive,
+  layer,
+  select,
+  line,
+  scaffold,
+  area,
+  circle,
+  foreach,
+  normalize,
+  repeat,
+  scatter,
+  clock,
 } from "gofish-graphics";
 import { mix } from "spectral.js";
 import _ from "lodash";
@@ -77,7 +91,6 @@ onMounted(() => {
       "StackX",
       "StackY",
       "rect",
-      "guide",
       "Rect",
       "For",
       "v",
@@ -113,6 +126,22 @@ onMounted(() => {
       "gray",
       "neutral",
       "Enclose",
+      // New API symbols available to example code
+      "chart",
+      "spread",
+      "stack",
+      "derive",
+      "layer",
+      "select",
+      "line",
+      "scaffold",
+      "area",
+      "circle",
+      "foreach",
+      "normalize",
+      "repeat",
+      "scatter",
+      "clock",
       props.code
     );
     const root = document.createElement("div");
@@ -144,7 +173,6 @@ onMounted(() => {
       StackX,
       StackY,
       rect,
-      guide,
       Rect,
       For,
       v,
@@ -179,7 +207,23 @@ onMounted(() => {
       polar,
       gray,
       neutral,
-      Enclose
+      Enclose,
+      // New API symbol values
+      chart,
+      spread,
+      stack,
+      derive,
+      layer,
+      select,
+      line,
+      scaffold,
+      area,
+      circle,
+      foreach,
+      normalize,
+      repeat,
+      scatter,
+      clock
     );
     container.value.append(root);
   } catch (err) {

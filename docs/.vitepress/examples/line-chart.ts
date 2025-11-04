@@ -1,31 +1,15 @@
-Frame([
-  _(streamgraphData)
-    .groupBy("c")
-    .flatMap((items, c) =>
-      items.map((d, i) =>
-        Ellipse({
-          name: `${c}-${i}`,
-          x: v(d.x),
-          y: v(d.y),
-          w: 2,
-          h: 2,
-          fill: v(c),
-        })
-      )
-    )
-    .value(),
-  _(streamgraphData)
-    .groupBy("c")
-    .map((items, c) =>
-      ConnectX(
-        {
-          interpolation: "linear",
-          // opacity: 0.7,
-          mode: "center-to-center",
-          strokeWidth: 3,
-        },
-        items.map((d) => Ref(`${c}-${d.x}`))
-      )
-    )
-    .value(),
-]).render(root, { w: 500, h: 300 });
+const catchLocationsArray = Object.entries(lakeLocations).map(
+  ([lake, { x, y }]) => ({ lake, x, y })
+);
+
+layer([
+  chart(catchLocationsArray)
+    .flow(scatter("lake", { x: "x", y: "y" }))
+    .mark(scaffold())
+    .as("points"),
+  chart(select("points")).mark(line()),
+]).render(root, {
+  w: 500,
+  h: 300,
+  axes: true,
+});

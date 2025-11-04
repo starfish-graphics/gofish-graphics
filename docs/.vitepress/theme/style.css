@@ -125,6 +125,75 @@
   }
 }
 
+/* Make the home hero banner full-bleed and full-height */
+.VPHome .VPHero,
+.VPHomeHero,
+.VPHero {
+  margin: 0 !important;
+  padding: 0 !important;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+}
+
+/* Place GoFish logo above hero title */
+.VPHero .main .name {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.VPHero .main .name::before {
+  content: "";
+  display: block;
+  width: 300px;
+  height: 300px;
+  margin-bottom: 12px;
+  background-image: url('/gofish-logo.png');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  /* Remove animation by default */
+}
+
+/* .VPHero .main .name:hover::before {
+  animation: tiltXOscillate 2.5s infinite ease-in-out alternate;
+} */
+.VPHero .main .name::before {
+  animation: tiltXOscillate 2.5s infinite ease-in-out alternate;
+}
+
+@keyframes tiltXOscillate {
+  0% {
+    transform: rotateX(10deg) rotateY(30deg);
+  }
+  100% {
+    transform: rotateX(-10deg) rotateY(-30deg);
+  }
+}
+
+@media (max-width: 640px) {
+  .VPHero .main .name::before {
+    width: 64px;
+    height: 64px;
+  }
+}
+
+.VPHero .container {
+  max-width: none !important;
+  width: 100vw !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Remove default page paddings around the hero on the home page */
+.VPHome .VPContent,
+.VPHome .container {
+  padding: 0px !important;
+  padding-left: 100px !important;
+  padding-right: 100px !important;
+  margin: 0 !important;
+}
+
 /**
  * Component: Custom Block
  * -------------------------------------------------------------------------- */
@@ -170,5 +239,20 @@ a.starfish-codepen:hover {
 @media (max-width: 820px) {
   a.starfish-codepen {
     display: none;
+  }
+}
+
+/* Ensure hero image (our code snippet) stacks BELOW the buttons on mobile */
+@media (max-width: 820px) {
+  .VPHero .container {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  .VPHero .main {
+    order: 1 !important; /* title + description + buttons */
+  }
+  .VPHero .image {
+    order: 2 !important; /* HeroCode.vue content */
+    margin-top: 16px;
   }
 }

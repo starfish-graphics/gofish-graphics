@@ -5,9 +5,6 @@ hero:
   name: GoFish Graphics
   text: "JavaScript Charts Without the Headache"
   tagline: More simple. More beautiful. More expressive. More.
-  image:
-    src: /gofish-logo.png
-    alt: GoFish
   actions:
     - theme: brand
       text: Get Started!

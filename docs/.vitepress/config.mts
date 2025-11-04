@@ -26,6 +26,8 @@ export default defineConfig({
         href: "https://fonts.googleapis.com/css2?family=Balsamiq+Sans:ital,wght@0,400;0,700;1,400;1,700&family=Comic+Neue:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&family=Fira+Code:wght@300..700&family=Source+Sans+3:ital,wght@0,200..900;1,200..900&display=swap",
       },
     ],
+    ['link', { rel: 'icon', href: '/gofish-logo.png' }]
+
   ],
   markdown: {
     config: (md) => {

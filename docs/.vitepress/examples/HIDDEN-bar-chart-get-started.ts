@@ -10,6 +10,11 @@ const alphabet = [
   { letter: "I", frequency: 52 },
 ];
 
-rect(alphabet, { h: "frequency" })
-  .spreadX("letter")
-  .render(root, { w: 500, h: 300, axes: true });
+chart(alphabet)
+  .flow(spread("letter", { dir: "x" }))
+  .mark(rect({ h: "frequency" }))
+  .render(root, {
+    w: 500,
+    h: 300,
+    axes: true,
+  });

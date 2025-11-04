@@ -10,36 +10,15 @@ const data = [
   { origin: "USA", cylinders: "8", count: 108 },
 ];
 
-StackX(
-  { spacing: 4, alignment: "end" },
-  // TODO: I could probably make the width be uniform flexible basically
-  For(groupBy(data, "origin"), (items, origin) =>
-    StackY(
-      {
-        w: _(items).sumBy("count") / 2,
-        spacing: 2,
-        alignment: "middle",
-        sharedScale: true,
-      },
-      For(items.toReversed(), (d) =>
-        Rect({
-          h: v(d.count),
-          fill:
-            d.origin === "Europe"
-              ? gf.color.red[5]
-              : d.origin === "Japan"
-              ? gf.color.blue[5]
-              : gf.color.green[5],
-        })
-      )
-    )
+chart(data)
+  .flow(
+    spread("origin", { dir: "x" }),
+    derive((d) => normalize(d, "count")),
+    stack("cylinders", { dir: "y" })
   )
-).render(root, { w: 500, h: 300 });
-
-/* 
-// TODO: need some kind of normalization...
-
-rect(data, {h: "count", fill: "origin"})
-  .stackY("cylinders", { w: "count" })
-  .stackX("origin")
-*/
+  .mark(rect({ h: "count", fill: "origin", stroke: "white", strokeWidth: 2 }))
+  .render(root, {
+    w: 500,
+    h: 300,
+    axes: true,
+  });
