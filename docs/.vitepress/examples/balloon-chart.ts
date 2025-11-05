@@ -24,9 +24,11 @@ const Balloon = (options) =>
   Frame(
     {
       x: options?.x - 15 * (options?.scale ?? 1),
-      y: options?.y - 25 * (options?.scale ?? 1),
+      y: options?.y + 27 * (options?.scale ?? 1),
       box: true,
-      transform: { scale: { x: options?.scale ?? 1, y: options?.scale ?? 1 } },
+      transform: {
+        scale: { x: options?.scale ?? 1, y: (options?.scale ?? 1) * -1 },
+      },
     },
     [
       Ellipse({
@@ -66,17 +68,32 @@ const Balloon = (options) =>
 
 Frame(
   { coord: Wavy(), x: 0, y: 0 },
-  For(scatterData, (data, i) =>
-    Frame([
+  scatterData.map((data, i) =>
+    Frame({ x: data.x }, [
       Rect({
-        x: data.x,
+        x: 0,
+        y: 0,
+        // x: data.x,
+        // y: data.y,
         w: 1,
-        y: data.y,
-        h: size.height - data.y,
+        h: data.y,
         emY: true,
         fill: black,
       }),
-      Balloon({ scale: 1, x: data.x, y: data.y, color: colorMap[i % 6] }),
+      Balloon({
+        scale: 1,
+        x: 0,
+        y: data.y,
+        color: /* colorMap[i % 6] */ [
+          null,
+          null,
+          null,
+          mix(color6[i % 6], white, 0.5),
+          color6[i % 6],
+          mix(color6[i % 6], black, 0.1),
+          mix(color6[i % 6], black, 0.35),
+        ],
+      }),
     ])
   )
 ).render(root, { w: 500, h: 300 });

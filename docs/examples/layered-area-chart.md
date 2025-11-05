@@ -7,7 +7,15 @@
 ::: starfish-live {template=vanilla-ts rtl lightTheme=aquaBlue darkTheme=atomDark previewHeight=400 coderHeight=512}
 
 ```ts index.ts
-import { chart, spread, layer, select, scaffold, area, foreach } from "gofish-graphics";
+import {
+  chart,
+  spread,
+  layer,
+  select,
+  scaffold,
+  area,
+  group,
+} from "gofish-graphics";
 import { streamgraphData } from "./dataset";
 
 const container = document.getElementById("app");
@@ -18,7 +26,7 @@ layer([
     .mark(scaffold({ h: "y", fill: "c" }))
     .as("points"),
   chart(select("points"))
-    .flow(foreach("c"))
+    .flow(group("c"))
     .mark(area({ opacity: 0.7 })),
 ]).render(container, {
   w: 500,

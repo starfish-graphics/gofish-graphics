@@ -4,7 +4,7 @@ layer([
     .mark(scaffold({ h: "y", fill: "c" }))
     .as("points"),
   chart(select("points"))
-    .flow(foreach("c"))
+    .flow(group("c"))
     .mark(area({ opacity: 0.7 })),
 ]).render(root, {
   w: 500,

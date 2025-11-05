@@ -25,7 +25,7 @@ Rect({ x: 0, y: 0, w: 32, h: 300, fill: color.green[5] }).render(root, {
 
 ```ts index.ts
 // prettier-ignore
-import { chart, rect, color, spread, orderBy, derive, stack, layer, select, area, foreach } from "gofish-graphics";
+import { chart, rect, color, spread, orderBy, derive, stack, layer, select, area, group } from "gofish-graphics";
 import { seafood } from "./dataset";
 
 const root = document.getElementById("app");
@@ -465,7 +465,7 @@ layer([
     .mark(rect({ h: "count", fill: "species" }))
     .as("bars"),
   chart(select("bars"))
-    .flow(foreach("species"))
+    .flow(group("species"))
     .mark(area({ opacity: 0.8 })),
 ]).render(root, {
   w: 500,
@@ -481,12 +481,12 @@ but first let's understand what's going on.
 
 To add some ribbons, we first created a `layer` so we can add the ribbons as a second layer. Then
 we name the marks in the first layer using `as("bars")` and `select` those marks in the second
-layer. We group them by species using `foreach("species")`, and finally draw an `area` mark for each group.
+layer. We group them by species using `group("species")`, and finally draw an `area` mark for each group.
 
 <!-- First, we've added a `layer` operator that lets us layer on multiple elements in the same space.
 We create the bars with the first `chart` and use `.as("bars")` to give them a name so we can refer
 to them later. Then we use `select("bars")` in a second chart to reference those bars. Finally,
-we use `foreach("species")` to group by species and `area()` to connect the bars horizontally. -->
+we use `group("species")` to group by species and `area()` to connect the bars horizontally. -->
 
 To make this look more like a traditional ribbon chart, all we have to do is change the spacing of
 the `spread` operator.
@@ -504,7 +504,7 @@ layer([
     .mark(rect({ h: "count", fill: "species" }))
     .as("bars"),
   chart(select("bars"))
-    .flow(foreach("species"))
+    .flow(group("species"))
     .mark(area({ opacity: 0.8 })),
 ]).render(root, {
   w: 500,
@@ -562,13 +562,13 @@ layer({ coord: clock() }, [
         y: 50,
         label: false,
       }),
-      derive((d) => orderBy(d, "count", "asc")),
+      derive((d) => orderBy(d, "count")),
       stack("species", { dir: "y", label: false })
     )
     .mark(rect({ h: "count", fill: "species" }))
     .as("bars"),
   chart(select("bars"))
-    .flow(foreach("species"))
+    .flow(group("species"))
     .mark(area({ opacity: 0.8 })),
 ]).render(root, {
   w: 500,

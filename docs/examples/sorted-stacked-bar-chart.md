@@ -16,7 +16,7 @@ const container = document.getElementById("app");
 chart(seafood)
   .flow(
     spread("lake", { dir: "x" }),
-    derive((d) => orderBy(d, "count", "asc")),
+    derive((d) => orderBy(d, "count")),
     stack("species", { dir: "y" })
   )
   .mark(rect({ h: "count", fill: "species" }))
@@ -206,4 +206,3 @@ export const seafood: SeafoodData[] = [
 ```
 
 :::
-

@@ -43,11 +43,11 @@ export default {
         title: "Stacked Area Chart",
         // description: "A stacked area chart",
       },
-      {
-        id: "ridgeline-chart",
-        title: "Ridgeline Chart",
-        description: "A faceted area chart",
-      },
+      // {
+      //   id: "ridgeline-chart",
+      //   title: "Ridgeline Chart",
+      //   description: "A faceted area chart",
+      // },
       {
         id: "area-chart",
         title: "Area Chart",

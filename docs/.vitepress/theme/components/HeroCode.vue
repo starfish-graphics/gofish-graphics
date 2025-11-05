@@ -9,7 +9,7 @@ import {
   select,
   rect,
   area,
-  foreach,
+  group,
   clock,
 } from "gofish-graphics";
 import _ from "lodash";
@@ -64,13 +64,13 @@ const code = `layer({ coord: clock() }, [
         y: 50,
         label: false,
       }),
-      derive((d) => orderBy(d, "count", "asc")),
+      derive((d) => orderBy(d, "count")),
       stack("species", { dir: "y", label: false })
     )
-    .mark(rect({ w: 0.1, h: "count", fill: "species" }))
+    .mark(rect({ h: "count", fill: "species" }))
     .as("bars"),
   chart(select("bars"))
-    .flow(foreach("species"))
+    .flow(group("species"))
     .mark(area({ opacity: 0.8 })),
 ]).render(root, { w: 500, h: 300, transform: { x: 200, y: 200 }, axes: true });`;
 
@@ -143,13 +143,13 @@ function updateChartDimensions() {
           y: 50,
           label: false,
         }),
-        derive((d) => orderBy(d, "count", "asc")),
+        derive((d) => orderBy(d, "count")),
         stack("species", { dir: "y", label: false })
       )
       .mark(rect({ h: "count", fill: "species" }))
       .as("bars"),
     chart(select("bars"))
-      .flow(foreach("species"))
+      .flow(group("species"))
       .mark(area({ opacity: 0.8 })),
   ]).render(root, {
     w: chartWidth.value,

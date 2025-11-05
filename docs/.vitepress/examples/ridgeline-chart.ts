@@ -7,6 +7,6 @@ layer([
     .mark(scaffold({ h: "count", fill: "species" }))
     .as("points"),
   chart(select("points"))
-    .flow(foreach("species"))
+    .flow(group("species"))
     .mark(area({ opacity: 0.8, mixBlendMode: "normal" })),
 ]).render(root, { w: 500, h: 300, axes: true });

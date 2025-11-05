@@ -8,13 +8,13 @@ layer({ coord: clock() }, [
         y: 50,
         label: false,
       }),
-      derive((d) => orderBy(d, "count", "asc")),
+      derive((d) => orderBy(d, "count")),
       stack("species", { dir: "y", label: false })
     )
     .mark(rect({ h: "count", fill: "species" }))
     .as("bars"),
   chart(select("bars"))
-    .flow(foreach("species"))
+    .flow(group("species"))
     .mark(area({ opacity: 0.8 })),
 ]).render(root, {
   w: 500,

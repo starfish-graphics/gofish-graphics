@@ -16,7 +16,7 @@ chart(data)
   .flow(
     spread("origin", { dir: "x" }),
     derive((d) => normalize(d, "count")),
-    stack("cylinders", { dir: "y" })
+    stack("cylinders", { dir: "y", label: false })
   )
   .mark(rect({ h: "count", fill: "origin", stroke: "white", strokeWidth: 2 }))
   .render(container, {

@@ -1,7 +1,7 @@
 chart(seafood)
   .flow(
     spread("lake", { dir: "x" }), //
-    stack("species", { dir: "x" })
+    stack("species", { dir: "x", label: false })
   )
   .mark(rect({ h: "count", fill: "species" }))
   .render(root, {

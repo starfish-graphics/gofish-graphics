@@ -7,7 +7,16 @@
 ::: starfish-live {template=vanilla-ts rtl lightTheme=aquaBlue darkTheme=atomDark previewHeight=400 coderHeight=512}
 
 ```ts index.ts
-import { chart, spread, stack, layer, select, scaffold, area, foreach } from "gofish-graphics";
+import {
+  chart,
+  spread,
+  stack,
+  layer,
+  select,
+  scaffold,
+  area,
+  group,
+} from "gofish-graphics";
 import { seafood } from "./dataset";
 
 const container = document.getElementById("app");
@@ -16,12 +25,12 @@ layer([
   chart(seafood)
     .flow(
       spread("lake", { dir: "x", spacing: 64, alignment: "middle" }),
-      stack("species", { dir: "y" })
+      stack("species", { dir: "y", label: false })
     )
     .mark(scaffold({ h: "count", fill: "species" }))
     .as("bars"),
   chart(select("bars"))
-    .flow(foreach("species"))
+    .flow(group("species"))
     .mark(area({ opacity: 0.8 })),
 ]).render(container, {
   w: 500,
