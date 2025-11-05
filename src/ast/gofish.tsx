@@ -570,10 +570,10 @@ export const render = (
                 </For>
               </g>
             </Show>
-            <Show when={underlyingSpaceY.kind === "ordinal"}>
+            <Show when={underlyingSpaceY.kind === "ordinal" && keyContext}>
               {/* Vertical (Y axis) labels */}
               <g>
-                <For each={child.children ?? []}>
+                <For each={Object.values(keyContext ?? {})}>
                   {(value, i) => {
                     // Only render for GoFishNode (not GoFishRef)
                     if (!("intrinsicDims" in value) || !("key" in value))
