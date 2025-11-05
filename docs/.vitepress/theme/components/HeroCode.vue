@@ -1,47 +1,58 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, computed } from 'vue'
-import { chart, spread, stack, derive, layer, select, rect, area, foreach, clock } from 'gofish-graphics'
-import _ from 'lodash'
-const { orderBy } = _
+import { onMounted, onUnmounted, ref, computed } from "vue";
+import {
+  chart,
+  spread,
+  stack,
+  derive,
+  layer,
+  select,
+  rect,
+  area,
+  foreach,
+  clock,
+} from "gofish-graphics";
+import _ from "lodash";
+const { orderBy } = _;
 
-const rootEl = ref<HTMLElement | null>(null)
-const copied = ref(false)
-const installCmd = 'npm install gofish-graphics'
-const chartWidth = ref(500)
-const chartHeight = ref(300)
+const rootEl = ref<HTMLElement | null>(null);
+const copied = ref(false);
+const installCmd = "npm install gofish-graphics";
+const chartWidth = ref(500);
+const chartHeight = ref(300);
 
 const seafood = [
-  { lake: 'Lake A', species: 'Bass', count: 23 },
-  { lake: 'Lake A', species: 'Trout', count: 31 },
-  { lake: 'Lake A', species: 'Catfish', count: 29 },
-  { lake: 'Lake A', species: 'Perch', count: 12 },
-  { lake: 'Lake A', species: 'Salmon', count: 8 },
-  { lake: 'Lake B', species: 'Bass', count: 25 },
-  { lake: 'Lake B', species: 'Trout', count: 34 },
-  { lake: 'Lake B', species: 'Catfish', count: 41 },
-  { lake: 'Lake B', species: 'Perch', count: 21 },
-  { lake: 'Lake B', species: 'Salmon', count: 16 },
-  { lake: 'Lake C', species: 'Bass', count: 15 },
-  { lake: 'Lake C', species: 'Trout', count: 25 },
-  { lake: 'Lake C', species: 'Catfish', count: 31 },
-  { lake: 'Lake C', species: 'Perch', count: 22 },
-  { lake: 'Lake C', species: 'Salmon', count: 31 },
-  { lake: 'Lake D', species: 'Bass', count: 12 },
-  { lake: 'Lake D', species: 'Trout', count: 17 },
-  { lake: 'Lake D', species: 'Catfish', count: 23 },
-  { lake: 'Lake D', species: 'Perch', count: 23 },
-  { lake: 'Lake D', species: 'Salmon', count: 41 },
-  { lake: 'Lake E', species: 'Bass', count: 7 },
-  { lake: 'Lake E', species: 'Trout', count: 9 },
-  { lake: 'Lake E', species: 'Catfish', count: 13 },
-  { lake: 'Lake E', species: 'Perch', count: 20 },
-  { lake: 'Lake E', species: 'Salmon', count: 40 },
-  { lake: 'Lake F', species: 'Bass', count: 4 },
-  { lake: 'Lake F', species: 'Trout', count: 7 },
-  { lake: 'Lake F', species: 'Catfish', count: 9 },
-  { lake: 'Lake F', species: 'Perch', count: 21 },
-  { lake: 'Lake F', species: 'Salmon', count: 47 }
-]
+  { lake: "Lake A", species: "Bass", count: 23 },
+  { lake: "Lake A", species: "Trout", count: 31 },
+  { lake: "Lake A", species: "Catfish", count: 29 },
+  { lake: "Lake A", species: "Perch", count: 12 },
+  { lake: "Lake A", species: "Salmon", count: 8 },
+  { lake: "Lake B", species: "Bass", count: 25 },
+  { lake: "Lake B", species: "Trout", count: 34 },
+  { lake: "Lake B", species: "Catfish", count: 41 },
+  { lake: "Lake B", species: "Perch", count: 21 },
+  { lake: "Lake B", species: "Salmon", count: 16 },
+  { lake: "Lake C", species: "Bass", count: 15 },
+  { lake: "Lake C", species: "Trout", count: 25 },
+  { lake: "Lake C", species: "Catfish", count: 31 },
+  { lake: "Lake C", species: "Perch", count: 22 },
+  { lake: "Lake C", species: "Salmon", count: 31 },
+  { lake: "Lake D", species: "Bass", count: 12 },
+  { lake: "Lake D", species: "Trout", count: 17 },
+  { lake: "Lake D", species: "Catfish", count: 23 },
+  { lake: "Lake D", species: "Perch", count: 23 },
+  { lake: "Lake D", species: "Salmon", count: 41 },
+  { lake: "Lake E", species: "Bass", count: 7 },
+  { lake: "Lake E", species: "Trout", count: 9 },
+  { lake: "Lake E", species: "Catfish", count: 13 },
+  { lake: "Lake E", species: "Perch", count: 20 },
+  { lake: "Lake E", species: "Salmon", count: 40 },
+  { lake: "Lake F", species: "Bass", count: 4 },
+  { lake: "Lake F", species: "Trout", count: 7 },
+  { lake: "Lake F", species: "Catfish", count: 9 },
+  { lake: "Lake F", species: "Perch", count: 21 },
+  { lake: "Lake F", species: "Salmon", count: 47 },
+];
 
 const code = `layer({ coord: clock() }, [
   chart(seafood)
@@ -61,149 +72,167 @@ const code = `layer({ coord: clock() }, [
   chart(select("bars"))
     .flow(foreach("species"))
     .mark(area({ opacity: 0.8 })),
-]).render(root, { w: 500, h: 300, transform: { x: 200, y: 200 }, axes: true });`
+]).render(root, { w: 500, h: 300, transform: { x: 200, y: 200 }, axes: true });`;
 
 function escapeHtml(src: string): string {
-  return src
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
+  return src.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
 function highlightTs(src: string): string {
-  let s = escapeHtml(src)
+  let s = escapeHtml(src);
 
   // Strings
-  s = s.replace(/("[^"]*"|'[^']*'|`[^`]*`)/g, '<span class="tok-str">$1</span>')
+  s = s.replace(
+    /("[^"]*"|'[^']*'|`[^`]*`)/g,
+    '<span class="tok-str">$1</span>'
+  );
   // Keywords
-  s = s.replace(/\b(import|from|const|let|return|new|export|function|if|else|await|async)\b/g, '<span class="tok-kw">$1</span>')
+  s = s.replace(
+    /\b(import|from|const|let|return|new|export|function|if|else|await|async)\b/g,
+    '<span class="tok-kw">$1</span>'
+  );
   // Numbers
-  s = s.replace(/\b(0x[\da-fA-F]+|\d+)(?![\w])/g, '<span class="tok-num">$1</span>')
+  s = s.replace(
+    /\b(0x[\da-fA-F]+|\d+)(?![\w])/g,
+    '<span class="tok-num">$1</span>'
+  );
   // Methods (simple heuristic: dot followed by ident)
-  s = s.replace(/\.(\w+)\b/g, '.<span class="tok-fn">$1</span>')
+  s = s.replace(/\.(\w+)\b/g, '.<span class="tok-fn">$1</span>');
   // Object keys inside { } (heuristic)
   s = s.replace(/\{([^}]+)\}/g, (m, inner) => {
-    const highlighted = inner.replace(/\b([a-zA-Z_][\w]*)\b(?=\s*:)/g, '<span class="tok-prop">$1</span>')
-    return '{' + highlighted + '}'
-  })
-  return s
+    const highlighted = inner.replace(
+      /\b([a-zA-Z_][\w]*)\b(?=\s*:)/g,
+      '<span class="tok-prop">$1</span>'
+    );
+    return "{" + highlighted + "}";
+  });
+  return s;
 }
 
-const highlighted = computed(() => highlightTs(code))
+const highlighted = computed(() => highlightTs(code));
 
 function updateChartDimensions() {
-  const root = rootEl.value
-  if (!root) return
-  
+  const root = rootEl.value;
+  if (!root) return;
+
   // Get the actual container width, including padding
-  const container = root.parentElement
-  const containerWidth = container 
+  const container = root.parentElement;
+  const containerWidth = container
     ? Math.min(container.clientWidth - 16, 640) // Subtract padding
-    : Math.min(window.innerWidth - 32, 640) // Fallback with margin
-  
+    : Math.min(window.innerWidth - 32, 640); // Fallback with margin
+
   // Use container width, ensuring it's at least 300px for very small screens
-  const availableWidth = Math.max(containerWidth, 300)
-  
+  const availableWidth = Math.max(containerWidth, 300);
+
   // Maintain aspect ratio (500:300 = 5:3)
-  chartWidth.value = availableWidth
-  chartHeight.value = (availableWidth * 300) * 0.8 / 500
-  
+  chartWidth.value = availableWidth;
+  chartHeight.value = (availableWidth * 300 * 0.8) / 500;
+
   // Re-render chart with new dimensions
-  root.innerHTML = ''
-  const centerX = chartWidth.value / 2
-  const centerY = chartHeight.value / 2
-  
+  root.innerHTML = "";
+  const centerX = chartWidth.value / 2;
+  const centerY = chartHeight.value / 2;
+
   layer({ coord: clock() }, [
     chart(seafood)
       .flow(
-        spread('lake', {
-          dir: 'x',
+        spread("lake", {
+          dir: "x",
           spacing: (2 * Math.PI) / 6,
-          mode: 'center',
+          mode: "center",
           y: 50,
           label: false,
         }),
-        derive((d) => orderBy(d, 'count', 'asc')),
-        stack('species', { dir: 'y', label: false })
+        derive((d) => orderBy(d, "count", "asc")),
+        stack("species", { dir: "y", label: false })
       )
-      .mark(rect({ w: 0.1, h: 'count', fill: 'species' }))
-      .as('bars'),
-    chart(select('bars'))
-      .flow(foreach('species'))
+      .mark(rect({ h: "count", fill: "species" }))
+      .as("bars"),
+    chart(select("bars"))
+      .flow(foreach("species"))
       .mark(area({ opacity: 0.8 })),
-  ]).render(root, { 
-    w: chartWidth.value, 
-    h: chartHeight.value, 
-    transform: { x: centerX, y: centerY }, 
-    axes: true 
-  })
-  
+  ]).render(root, {
+    w: chartWidth.value,
+    h: chartHeight.value,
+    transform: { x: centerX, y: centerY },
+    axes: true,
+  });
+
   // Ensure SVG is constrained to container width
-  const svg = root.querySelector('svg')
+  const svg = root.querySelector("svg");
   if (svg) {
-    svg.style.width = '100%'
-    svg.style.height = 'auto'
-    svg.style.maxWidth = `${chartWidth.value}px`
+    svg.style.width = "100%";
+    svg.style.height = "auto";
+    svg.style.maxWidth = `${chartWidth.value}px`;
   }
 }
 
-let resizeObserver: ResizeObserver | null = null
+let resizeObserver: ResizeObserver | null = null;
 
 onMounted(() => {
   // Wait for next tick to ensure container is properly sized
   setTimeout(() => {
-    updateChartDimensions()
-    
+    updateChartDimensions();
+
     // Observe container size changes - observe parent container for better width detection
-    const container = rootEl.value?.parentElement
+    const container = rootEl.value?.parentElement;
     if (container && window.ResizeObserver) {
       resizeObserver = new ResizeObserver(() => {
-        updateChartDimensions()
-      })
-      resizeObserver.observe(container)
+        updateChartDimensions();
+      });
+      resizeObserver.observe(container);
     }
-    
+
     // Fallback for browsers without ResizeObserver
-    window.addEventListener('resize', updateChartDimensions)
-  }, 0)
-})
+    window.addEventListener("resize", updateChartDimensions);
+  }, 0);
+});
 
 onUnmounted(() => {
   if (resizeObserver) {
-    resizeObserver.disconnect()
+    resizeObserver.disconnect();
   }
-  window.removeEventListener('resize', updateChartDimensions)
-})
+  window.removeEventListener("resize", updateChartDimensions);
+});
 
 async function copyInstall() {
   try {
-    await navigator.clipboard.writeText(installCmd)
-    copied.value = true
-    setTimeout(() => (copied.value = false), 1500)
+    await navigator.clipboard.writeText(installCmd);
+    copied.value = true;
+    setTimeout(() => (copied.value = false), 1500);
   } catch (_) {
-    const ta = document.createElement('textarea')
-    ta.value = installCmd
-    ta.setAttribute('readonly', '')
-    ta.style.position = 'absolute'
-    ta.style.left = '-9999px'
-    document.body.appendChild(ta)
-    ta.select()
-    document.execCommand('copy')
-    document.body.removeChild(ta)
-    copied.value = true
-    setTimeout(() => (copied.value = false), 1500)
+    const ta = document.createElement("textarea");
+    ta.value = installCmd;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "absolute";
+    ta.style.left = "-9999px";
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    document.body.removeChild(ta);
+    copied.value = true;
+    setTimeout(() => (copied.value = false), 1500);
   }
 }
 </script>
 
 <template>
   <div class="hero-snippet">
-    <div class="install-pill" role="button" aria-label="Copy install command" @click="copyInstall">
-      <code class="cmd">npm install <span class="gofish-graphics">gofish-graphics</span></code>
-      <span class="copy">{{ copied ? 'Copied' : 'Copy' }}</span>
+    <div
+      class="install-pill"
+      role="button"
+      aria-label="Copy install command"
+      @click="copyInstall"
+    >
+      <code class="cmd"
+        >npm install <span class="gofish-graphics">gofish-graphics</span></code
+      >
+      <span class="copy">{{ copied ? "Copied" : "Copy" }}</span>
     </div>
     <div ref="rootEl" class="viz"></div>
-    <pre class="code"><code class="language-ts" v-html="highlighted"></code></pre>
+    <pre
+      class="code"
+    ><code class="language-ts" v-html="highlighted"></code></pre>
   </div>
 </template>
 
@@ -286,7 +315,7 @@ async function copyInstall() {
     height: auto;
     max-width: 100%;
   }
-  
+
   .viz :deep(svg) {
     width: 100% !important;
     max-width: 100% !important;

@@ -3,6 +3,9 @@
 import * as Plot from "gofish-graphics";
 import { h, withDirectives } from "vue";
 
+const DEFAULT_WIDTH = 500;
+const DEFAULT_HEIGHT = 300;
+
 class Event {}
 
 class Document {
@@ -162,7 +165,7 @@ export default {
     const options = {
       ...(method === "plot" && {
         marks: this.mark == null ? [] : [this.mark],
-        width: 688, // better default for VitePress
+        width: DEFAULT_WIDTH, // better default for VitePress
       }),
       ...this.options,
       className: "plot",
@@ -204,7 +207,7 @@ export default {
           this._idling = undefined;
         }
       };
-      const { height = 400 } = this.options;
+      const { height = DEFAULT_HEIGHT } = this.options;
       return withDirectives(
         h(
           "span",
@@ -213,8 +216,8 @@ export default {
                 h("div", {
                   style: {
                     maxWidth: "100%",
-                    width: `688px`,
-                    aspectRatio: `688 / ${height}`,
+                    width: `${DEFAULT_WIDTH}px`,
+                    aspectRatio: `${DEFAULT_WIDTH} / ${height}`,
                   },
                 }),
               ]

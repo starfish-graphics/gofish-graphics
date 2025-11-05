@@ -11,7 +11,7 @@ layer({ coord: clock() }, [
       derive((d) => orderBy(d, "count", "asc")),
       stack("species", { dir: "y", label: false })
     )
-    .mark(rect({ w: 0.1, h: "count", fill: "species" }))
+    .mark(rect({ h: "count", fill: "species" }))
     .as("bars"),
   chart(select("bars"))
     .flow(foreach("species"))
