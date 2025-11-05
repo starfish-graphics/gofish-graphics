@@ -104,7 +104,7 @@ layer([
     .flow(scatter({ x: "lakeLocX" }), stack("species", { dir: "y" }))
     .mark(scaffold({ h: "count" }))
     .as("points"),
-  chart(select("points")).mark(foreach("species"), connect()),
+  chart(select("points")).mark(group("species"), connect()),
 ]);
 ```
 
@@ -138,7 +138,7 @@ layer([
     )
     .mark(scaffold({ h: "count" }))
     .as("points"),
-  chart(select("points")).mark(foreach("species"), connect()),
+  chart(select("points")).mark(group("species"), connect()),
 ]);
 ```
 
@@ -184,7 +184,7 @@ layer([
   // an array of data with key and mark ref
   chart(select("bars")) // pair up data values?
     // array is now grouped by species with one mark produced for each one
-    .flow(foreach("species"))
+    .flow(group("species"))
     // species array is passed as children(?) to connect
     .mark(connect({ dir: "x", opacity: 0.8 })),
 ]);
@@ -205,7 +205,7 @@ plot({ coord: clock() }).mark([
   // an array of data with key and mark ref
   plot(select("bars"))
     // array is now grouped by species with one mark produced for each one
-    .flow(foreach("species"))
+    .flow(group("species"))
     // species array is passed as children(?) to connect
     .mark(connect({ dir: "x", opacity: 0.8 })),
 ]);
@@ -243,7 +243,7 @@ const area = createMark((data, { x, y }) =>
 );
 
 chart(seafood)
-  .flow(foreach("species"))
+  .flow(group("species"))
   .mark(area({ x: "lakeLocX", y: "count" }));
 ```
 
@@ -303,7 +303,7 @@ layer([
     )
     .mark(circle({ fill: (d) => d.Color }))
     .as("points"),
-  chart(select("points"), foreach("Color"))
+  chart(select("points"), group("Color"))
     .mark(line(/* { z: -1 } */))
     .zIndex(-1),
 ]);

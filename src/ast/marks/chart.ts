@@ -329,7 +329,7 @@ export function scatter<T>(
   };
 }
 
-export function foreach<T>(field: keyof T): Operator<T[], T[]> {
+export function group<T>(field: keyof T): Operator<T[], T[]> {
   return (mark: Mark<T[]>) => {
     return (d: T[], key?: string | number) => {
       // Group by the field

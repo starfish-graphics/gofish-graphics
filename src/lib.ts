@@ -87,7 +87,7 @@ export {
   spread,
   stack,
   scatter,
-  foreach,
+  group,
   derive,
   rect,
   circle,

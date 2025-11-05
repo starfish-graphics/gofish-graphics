@@ -113,7 +113,7 @@ import {
 import {
   area,
   circle,
-  foreach,
+  group,
   normalize,
   repeat,
   scatter,
@@ -351,7 +351,7 @@ const App: Component = () => {
           .mark(rect({ h: "count", fill: "species" }))
           .as("bars"),
         chart(select("bars"))
-          .flow(foreach("species"))
+          .flow(group("species"))
           .mark(area({ opacity: 0.8 })),
       ]) */
       /* chart(catchLocationsArray)

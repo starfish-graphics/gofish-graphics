@@ -20,7 +20,7 @@ import {
 import {
   area,
   circle,
-  foreach,
+  group,
   log,
   normalize,
   repeat,
@@ -140,7 +140,7 @@ export const RibbonChart: StoryObj<Args> = {
         .mark(rect({ h: "count", fill: "species" }))
         .as("bars"),
       chart(select("bars"))
-        .flow(foreach("species"))
+        .flow(group("species"))
         .mark(area({ opacity: 0.8 })),
     ]).render(container, {
       w: args.w,
@@ -166,7 +166,7 @@ export const StackedAreaChart: StoryObj<Args> = {
         .mark(scaffold({ h: "count", fill: "species" }))
         .as("bars"),
       chart(select("bars"))
-        .flow(foreach("species"))
+        .flow(group("species"))
         .mark(area({ opacity: 0.8 })),
     ]).render(container, {
       w: args.w,
@@ -192,7 +192,7 @@ export const Streamgraph: StoryObj<Args> = {
         .mark(scaffold({ h: "count", fill: "species" }))
         .as("bars"),
       chart(select("bars"))
-        .flow(foreach("species"))
+        .flow(group("species"))
         .mark(area({ opacity: 0.8 })),
     ]).render(container, {
       w: args.w,
@@ -225,7 +225,7 @@ export const PolarRibbonChart: StoryObj<Args> = {
         .mark(rect({ w: 0.1, h: "count", fill: "species" }))
         .as("bars"),
       chart(select("bars"))
-        .flow(foreach("species"))
+        .flow(group("species"))
         .mark(area({ opacity: 0.8 })),
     ]).render(container, {
       w: args.w,
