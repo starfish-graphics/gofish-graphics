@@ -38,15 +38,50 @@ chart(seafood)
   });
 ```
 
-::: info Note
+<!-- ::: info Note
 
 Make sure to create or select a DOM element to render your chart to!
 
-:::
+::: -->
 
 ## 3. Anatomy of a GoFish specification
 
-### Shapes
+A basic GoFish spec has four pieces: `chart`, `flow`, `mark`, and `render`.
+
+### `chart`: Data
+
+The `chart` function is how you start your specification. It's where you put your data.
+
+```ts
+chart(alphabet);
+```
+
+### `flow`: Graphical Operators
+
+The `flow` method is where you specify _graphical operators_. Graphical operators transform your
+dataset (usually by applying a `groupBy`) and specify layout.
+
+```ts
+.flow(spread("letter", { dir: "x" }))
+```
+
+Here we're using the `spread` operator to create one group per `letter` and we arrange them
+horizontally thanks the `dir: x` option.
+
+### `mark`: Shapes
+
+Lastly we call the `mark` method to specify the shapes we place in each of the regions created by
+the `spread` operator.
+
+```ts
+.mark(rect({ h: "frequency" }))
+```
+
+In this case, we created some rectangles whose heights correspond to the `frequency` values of the
+different letters. Since we didn't define the width of the rectangle, the `spread` operator and
+`rect` shape work together to infer it for us!
+
+<!-- ### Shapes
 
 ```ts
 rect(alphabet, { h: "frequency" });
@@ -68,12 +103,12 @@ The `rect` shape describes the size and color of each rectangle, but it doesn't 
 rectangles should be arranged. That's what _graphical operators_ are for.
 
 We use the `spreadX` operator to spread out rectangles horizontally. It also makes one rectangle per
-`letter` in the `alphabet` dataset.
+`letter` in the `alphabet` dataset. -->
 
 ### Rendering
 
 ```ts
-  .render(root, { w: 688, h: 400, axes: true });
+  .render(root, { w: 500, h: 300, axes: true });
 ```
 
 The `render` method draws our chart to the screen! We give it a DOM container to render into (`root`
@@ -83,7 +118,8 @@ automatically with `axes: true`.
 
 ## 4. Next steps
 
-Go through [our tutorial](/tutorial), check out [some examples](/examples/index), or play with the live editor below!
+Go through [our tutorial](/tutorial), check out [some examples](/examples/index), or play with the
+live editor below!
 
 ::: starfish-live {template=vanilla-ts rtl lightTheme=aquaBlue darkTheme=atomDark previewHeight=400 coderHeight=400}
 
@@ -93,6 +129,8 @@ import { alphabet } from "./dataset";
 
 const root = document.getElementById("app");
 
+// - Try changing `dir` to `y` and use `rect`'s `w` channel instead of `h`.
+// - What happens when you map both `w` and `h` to "frequency"?
 chart(alphabet)
   .flow(spread("letter", { dir: "x" }))
   .mark(rect({ h: "frequency" }))
