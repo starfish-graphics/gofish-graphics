@@ -46,6 +46,9 @@ pnpm version patch
 
 # publish to npm
 pnpm publish
+
+# push new version to github
+git push
 ```
 
 ## License
