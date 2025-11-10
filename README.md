@@ -1,6 +1,10 @@
-# GoFish Graphics
-
-A library for creating charts and graphics in JavaScript.
+<div align="center" style="display:flex;flex-direction:column;">
+  <a href="https://gofish.graphics/">
+    <img src="https://gofish.graphics/gofish-logo.png" alt="GoFish" width="20%">
+  </a>
+  <br />
+  <b>GoFish:</b> JavaScript charts without the headache (TM)
+</div>
 
 ## Installation
 
