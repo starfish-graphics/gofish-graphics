@@ -45,6 +45,8 @@ jobs:
         uses: actions/configure-pages@v4
       - name: Install dependencies
         run: pnpm install # or pnpm install / yarn install / bun install
+      - name: Build gofish-graphics library
+        run: pnpm --filter gofish-graphics build
       - name: Build with VitePress
         run: pnpm --filter docs docs:build
       - name: Upload artifact
