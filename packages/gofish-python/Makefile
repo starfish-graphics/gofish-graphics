@@ -11,6 +11,9 @@ help:
 	@echo "  make version     - Show current version"
 
 install:
+	uv sync --group dev
+
+install-basic:
 	uv sync
 
 build:

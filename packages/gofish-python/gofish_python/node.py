@@ -61,8 +61,8 @@ class GoFishNode:
         Example:
             >>> chart(data).mark(rect(...)).as_layer("bars")
         """
-        # Call JS .as() method
-        self._js_node = self._js_node.as(name)
+        # Call JS .as() method (as is a Python keyword, so use getattr)
+        self._js_node = getattr(self._js_node, 'as')(name)
         return self
     
     @property

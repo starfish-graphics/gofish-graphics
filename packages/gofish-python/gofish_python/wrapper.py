@@ -21,7 +21,7 @@ class ChartBuilder:
     All actual computation and rendering happens in JavaScript.
     """
     
-    def __init__(self, data: Any, options: Optional[dict] = None, js_builder: Any = None):
+    def __init__(self, data: Any, options: Optional[dict] = None, js_builder: Any = None, pending_ops: Optional[list] = None):
         """
         Initialize a ChartBuilder.
         
@@ -29,17 +29,33 @@ class ChartBuilder:
             data: Python data (list, dict, pandas DataFrame, etc.)
             options: Optional chart options (w, h, coord, etc.)
             js_builder: Internal JS ChartBuilder instance (for chaining)
+            pending_ops: Internal: pending operators to apply when JS is available
         """
         self._data = data
         self._options = options or {}
         self._js_builder = js_builder
-        self._gofish = get_gofish()
+        if pending_ops is not None:
+            self._pending_ops = pending_ops
+        
+        # Get GoFish JS module (may be None if loading failed)
+        try:
+            self._gofish = get_gofish()
+        except Exception as e:
+            self._gofish = None
+            self._gofish_error = str(e)
         
         # Create JS builder if not provided (initial chart() call)
         if js_builder is None:
-            js_data = to_js(ensure_list(data))
-            js_options = convert_options(options)
-            self._js_builder = self._gofish.chart(js_data, js_options)
+            if self._gofish is None:
+                # JavaScript module not available - store Python data for later
+                # This allows the API structure to work even without JS execution
+                self._js_builder = None
+                self._pending_js_data = to_js(ensure_list(data))
+                self._pending_js_options = convert_options(options)
+            else:
+                js_data = to_js(ensure_list(data))
+                js_options = convert_options(options)
+                self._js_builder = self._gofish.chart(js_data, js_options)
     
     def flow(self, *ops: Any) -> 'ChartBuilder':
         """
@@ -51,6 +67,34 @@ class ChartBuilder:
         Returns:
             New ChartBuilder with operators applied (for chaining)
         """
+        # Check if JS builder is available
+        if self._js_builder is None:
+            if self._gofish is None:
+                # JS module not loaded - provide helpful error
+                error_msg = getattr(self, '_gofish_error', 
+                    "ES module loading not yet fully supported. The GoFish bundle uses ES module "
+                    "syntax with external dependencies (solid-js) which requires proper module loading.")
+                raise RuntimeError(
+                    f"Cannot execute flow: JavaScript module not loaded.\n"
+                    f"Error: {error_msg}\n\n"
+                    "The Python API structure works, but JavaScript execution requires:\n"
+                    "  1. A build configuration change (UMD/CommonJS bundle with dependencies bundled)\n"
+                    "  2. Or a JavaScript runtime that supports ES modules with external dependencies\n"
+                    "  3. Or loading solid-js separately before loading GoFish\n\n"
+                    "For now, you can build the chart structure, but rendering won't work until "
+                    "this limitation is resolved."
+                )
+            else:
+                # Try to initialize now if we have pending data
+                if hasattr(self, '_pending_js_data'):
+                    js_data = self._pending_js_data
+                    js_options = self._pending_js_options
+                    self._js_builder = self._gofish.chart(js_data, js_options)
+                    delattr(self, '_pending_js_data')
+                    delattr(self, '_pending_js_options')
+                else:
+                    raise RuntimeError("Cannot chain operations: JS builder not initialized")
+        
         # Convert Python operators to JS operators
         js_ops = [self._convert_operator(op) for op in ops]
         

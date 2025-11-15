@@ -2,13 +2,8 @@
 requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
-[tool.uv]
-dev-dependencies = [
-  "pytest>=7.0",
-  "pytest-cov>=4.0",
-  "black>=23.0",
-  "mypy>=1.0",
-]
+[dependency-groups]
+dev = ["pytest>=7.0", "pytest-cov>=4.0", "black>=23.0", "mypy>=1.0"]
 
 [project]
 name = "gofish-graphics"
@@ -34,8 +29,8 @@ classifiers = [
 
 [project.optional-dependencies]
 pythonmonkey = ["pythonmonkey"]
-jspybridge = ["jsbridge"]
-dev = ["pytest>=7.0", "pytest-cov>=4.0", "black>=23.0", "mypy>=1.0"]
+# Note: jsbridge removed due to build issues - use pythonmonkey instead
+# jspybridge = ["jsbridge"]  # Disabled - has known build issues
 jupyter = ["ipython>=8.0", "jupyter>=1.0"]
 data = ["numpy>=1.20", "pandas>=1.3"]
 

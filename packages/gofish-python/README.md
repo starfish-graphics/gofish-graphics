@@ -124,6 +124,8 @@ node = chart(data).flow(spread("x", dir="x")).mark(rect(h="y"))
 display_jupyter(node, w=500, h=300, axes=True)
 ```
 
+**Test Notebook**: See `test_notebook.ipynb` for a comprehensive test notebook with examples.
+
 ## API Reference
 
 ### Core Functions
@@ -166,12 +168,19 @@ cd packages/gofish-python
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Install in development mode with all dependencies
-uv sync
+uv sync --group dev
 
 # This installs:
 # - Package in editable mode
 # - Dev dependencies (pytest, black, mypy)
 # - Optional dependencies available via extras
+
+# To sync without dev dependencies:
+uv sync
+
+# To install with a JavaScript bridge:
+uv sync --extra pythonmonkey  # Recommended
+# Note: jsbridge has known build issues - use pythonmonkey instead
 ```
 
 ### Setup with pip (Alternative)
