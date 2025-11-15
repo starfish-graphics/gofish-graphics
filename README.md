@@ -26,32 +26,66 @@ import /* your exported functions */ "gofish-graphics";
 
 ## Development
 
-This project uses [pnpm](https://pnpm.io) for package management.
+This project uses [pnpm](https://pnpm.io) workspaces for monorepo management.
+
+### Monorepo Structure
+
+- `packages/gofish-graphics/` - Main library package
+- `apps/docs/` - VitePress documentation site
+
+### Getting Started
 
 ```bash
-# Install dependencies
+# Install all dependencies
 pnpm install
 
-# Start development server
+# Start library development server
 pnpm dev
 
 # Build the library
 pnpm build
 
-# Preview the build
-pnpm serve
+# Start docs development server
+pnpm docs:dev
+
+# Build docs
+pnpm docs:build
+
+# Preview docs build
+pnpm docs:preview
+
+# Run Storybook
+pnpm storybook
+
+# Build Storybook
+pnpm build-storybook
+```
+
+### Working with Individual Packages
+
+You can also run commands in specific packages:
+
+```bash
+# Run commands in the library package
+pnpm --filter gofish-graphics <command>
+
+# Run commands in the docs app
+pnpm --filter docs <command>
 ```
 
 ## Publish
 
 ```bash
-# update version number
+# Navigate to the library package
+cd packages/gofish-graphics
+
+# Update version number
 pnpm version patch
 
-# publish to npm
+# Publish to npm
 pnpm publish
 
-# push new version to github
+# Push new version to github
 git push
 ```
 
