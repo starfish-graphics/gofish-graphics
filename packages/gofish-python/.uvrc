@@ -1,0 +1,10 @@
+# uv configuration
+# This file is optional - uv will work with pyproject.toml alone
+
+# Example: Custom index URL (uncomment if needed)
+# [index]
+# url = "https://pypi.org/simple"
+
+# Example: Custom cache directory (uncomment if needed)
+# [cache]
+# dir = "~/.cache/uv"
