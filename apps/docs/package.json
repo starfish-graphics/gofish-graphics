@@ -1,5 +1,5 @@
 {
-  "name": "starfish-graphics",
+  "name": "docs",
   "version": "1.0.0",
   "description": "wacky graphics. more graphics",
   "license": "MIT",
@@ -23,7 +23,7 @@
     "@codesandbox/sandpack-themes": "^2.0.21",
     "@types/lodash": "^4.17.17",
     "fast-kde": "^0.2.2",
-    "gofish-graphics": "^0.0.21",
+    "gofish-graphics": "workspace:*",
     "lodash": "^4.17.21",
     "markdown-it-container": "^4.0.0",
     "monaco-editor": "^0.52.2",
