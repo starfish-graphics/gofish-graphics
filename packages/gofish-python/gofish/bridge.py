@@ -6,10 +6,48 @@ import subprocess
 import sys
 import tempfile
 import base64
+import uuid
+import threading
+import io
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
-from .arrow_utils import dataframe_to_arrow
+from .arrow_utils import dataframe_to_arrow, arrow_to_dataframe
+
+
+# Global lambda registry for storing derive functions by ID
+_lambda_registry: Dict[str, Callable] = {}
+_registry_lock = threading.Lock()
+
+
+def register_lambda(fn: Callable) -> str:
+    """
+    Register a lambda function and return its unique ID.
+    
+    Args:
+        fn: The lambda function to register
+        
+    Returns:
+        Unique ID string for the lambda
+    """
+    lambda_id = str(uuid.uuid4())
+    with _registry_lock:
+        _lambda_registry[lambda_id] = fn
+    return lambda_id
+
+
+def get_lambda(lambda_id: str) -> Optional[Callable]:
+    """
+    Retrieve a lambda function by ID.
+    
+    Args:
+        lambda_id: The unique ID of the lambda
+        
+    Returns:
+        The lambda function, or None if not found
+    """
+    with _registry_lock:
+        return _lambda_registry.get(lambda_id)
 
 
 def find_js_bridge_script() -> Path:
@@ -96,6 +134,7 @@ def render_chart(
 ) -> str:
     """
     Render a GoFish chart by communicating with Node.js.
+    Supports bidirectional communication for derive operators.
 
     Args:
         data: Input data (DataFrame, will be converted to Arrow if needed)
@@ -145,35 +184,137 @@ def render_chart(
     node_cmd = find_node_executable()
     render_js = find_js_bridge_script()
     
-    # Execute Node.js script
+    # Execute Node.js script with bidirectional communication
     try:
         process = subprocess.Popen(
             [node_cmd, str(render_js)],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            text=False,  # Use binary mode
+            text=True,  # Use text mode for line-based protocol
+            bufsize=1,  # Line buffered
         )
         
-        # Send input
+        # Send initial input (JSON on a single line)
         input_json = json.dumps(input_data)
-        stdout, stderr = process.communicate(
-            input=input_json.encode("utf-8"),
-            timeout=30,  # 30 second timeout
-        )
+        process.stdin.write(input_json + "\n")
+        process.stdin.flush()
+        
+        # Read responses line by line
+        final_output = None
+        while True:
+            line = process.stdout.readline()
+            if not line:
+                break
+            
+            line = line.strip()
+            if not line:
+                continue
+            
+            try:
+                message = json.loads(line)
+                
+                # Check if it's a derive execution request
+                if message.get("type") == "derive_execute":
+                    # Handle derive request
+                    lambda_id = message.get("lambdaId")
+                    arrow_data_b64 = message.get("arrowData")
+                    
+                    if not lambda_id or not arrow_data_b64:
+                        response = {
+                            "type": "error",
+                            "error": "Missing lambdaId or arrowData in derive_execute request"
+                        }
+                        process.stdin.write(json.dumps(response) + "\n")
+                        process.stdin.flush()
+                        continue
+                    
+                    # Get lambda from registry
+                    fn = get_lambda(lambda_id)
+                    if fn is None:
+                        response = {
+                            "type": "error",
+                            "error": f"Lambda with ID {lambda_id} not found in registry"
+                        }
+                        process.stdin.write(json.dumps(response) + "\n")
+                        process.stdin.flush()
+                        continue
+                    
+                    try:
+                        # Convert Arrow to DataFrame
+                        arrow_bytes = base64.b64decode(arrow_data_b64)
+                        df = arrow_to_dataframe(arrow_bytes)
+                        
+                        # Debug: Print DataFrame information
+                        print(f"[DEBUG] Executing derive lambda {lambda_id}")
+                        print(f"[DEBUG] DataFrame shape: {df.shape}")
+                        print(f"[DEBUG] DataFrame columns: {list(df.columns)}")
+                        print(f"[DEBUG] DataFrame dtypes:\n{df.dtypes}")
+                        print(f"[DEBUG] DataFrame head:\n{df.head()}")
+                        buf = io.StringIO()
+                        df.info(buf=buf)
+                        print(f"[DEBUG] DataFrame info:\n{buf.getvalue()}")
+                        
+                        # Execute lambda
+                        result_df = fn(df)
+                        
+                        # Debug: Print result DataFrame information
+                        print(f"[DEBUG] Result DataFrame shape: {result_df.shape}")
+                        print(f"[DEBUG] Result DataFrame columns: {list(result_df.columns)}")
+                        print(f"[DEBUG] Result DataFrame head:\n{result_df.head()}")
+                        
+                        # Convert result back to Arrow
+                        result_arrow = dataframe_to_arrow(result_df)
+                        result_b64 = base64.b64encode(result_arrow).decode("utf-8")
+                        
+                        # Send response
+                        response = {
+                            "type": "response",
+                            "arrowData": result_b64
+                        }
+                        process.stdin.write(json.dumps(response) + "\n")
+                        process.stdin.flush()
+                        
+                    except Exception as e:
+                        # Send error response
+                        response = {
+                            "type": "error",
+                            "error": str(e)
+                        }
+                        process.stdin.write(json.dumps(response) + "\n")
+                        process.stdin.flush()
+                
+                # Check if it's the final output
+                elif "success" in message:
+                    final_output = message
+                    break
+                
+                # Unknown message type - ignore or log
+                else:
+                    # Might be final output in different format
+                    if "html" in message:
+                        final_output = message
+                        break
+                        
+            except json.JSONDecodeError:
+                # Not JSON, might be error output
+                continue
+        
+        # Wait for process to finish
+        process.wait()
         
         if process.returncode != 0:
-            error_msg = stderr.decode("utf-8") if stderr else "Unknown error"
-            raise RuntimeError(f"Node.js rendering failed: {error_msg}")
+            stderr_output = process.stderr.read() if process.stderr else "Unknown error"
+            raise RuntimeError(f"Node.js rendering failed: {stderr_output}")
         
-        # Parse output
-        output = json.loads(stdout.decode("utf-8"))
+        if final_output is None:
+            raise RuntimeError("No output received from Node.js process")
         
-        if not output.get("success"):
-            error_msg = output.get("error", "Unknown error")
+        if not final_output.get("success"):
+            error_msg = final_output.get("error", "Unknown error")
             raise RuntimeError(f"Rendering failed: {error_msg}")
         
-        return output["html"]
+        return final_output["html"]
         
     except subprocess.TimeoutExpired:
         process.kill()

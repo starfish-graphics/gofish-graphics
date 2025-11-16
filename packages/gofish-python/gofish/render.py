@@ -6,7 +6,6 @@ from typing import Any, Dict, List, Optional
 
 from .bridge import render_chart
 from .arrow_utils import dataframe_to_arrow
-from .operators import DeriveOperator
 
 
 def _is_jupyter() -> bool:
@@ -47,23 +46,11 @@ def render_chart_spec(
     """
     import pandas as pd
     
-    # Process derive operators - execute Python functions
+    # Convert initial data to Arrow (derive operators will be handled in JS pipeline)
     current_data = data.copy() if isinstance(data, pd.DataFrame) else pd.DataFrame(data)
-    arrow_data = None
+    arrow_data = dataframe_to_arrow(current_data)
     
-    # Apply derive operators in sequence
-    for op in operators:
-        if isinstance(op, DeriveOperator):
-            # Execute Python function
-            current_data = op.execute(current_data)
-            # Convert to Arrow after transformation
-            arrow_data = dataframe_to_arrow(current_data)
-    
-    # If no derive operators were applied, convert initial data
-    if arrow_data is None:
-        arrow_data = dataframe_to_arrow(current_data)
-    
-    # Render chart via Node.js bridge
+    # Render chart via Node.js bridge (all operators, including derive, are passed through)
     html = render_chart(
         current_data,
         operators,

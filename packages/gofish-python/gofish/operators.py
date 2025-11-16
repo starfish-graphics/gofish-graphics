@@ -3,6 +3,11 @@
 from typing import Any, Callable, Dict, Optional, TypeVar, Union
 import pandas as pd
 
+# Import registry functions (avoid circular import)
+def _get_registry():
+    from .bridge import register_lambda
+    return register_lambda
+
 T = TypeVar("T")
 
 
@@ -44,8 +49,10 @@ class DeriveOperator(Operator):
         return self.fn(data)
 
     def to_dict(self) -> dict:
-        """Convert to dict - note that function is not serializable."""
-        return {"type": "derive", "python_function": True}
+        """Convert to dict - register lambda and return ID."""
+        register_lambda = _get_registry()
+        lambda_id = register_lambda(self.fn)
+        return {"type": "derive", "lambdaId": lambda_id}
 
 
 def spread(
