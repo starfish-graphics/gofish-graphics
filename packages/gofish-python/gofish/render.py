@@ -74,10 +74,9 @@ def render_chart_spec(
     
     # Display or save
     if _is_jupyter():
-        # Display in Jupyter
+        # Display in Jupyter - return HTML object, Jupyter will auto-display it
         try:
-            from IPython.display import HTML, display
-            display(HTML(html))
+            from IPython.display import HTML
             return HTML(html)
         except ImportError:
             # Fallback: print HTML (won't render but shows structure)
