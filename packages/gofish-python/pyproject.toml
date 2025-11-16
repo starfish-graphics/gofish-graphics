@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gofish-python"
+version = "0.0.1"
+description = "Python wrapper for GoFish graphics library"
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "pyarrow>=10.0.0",
+    "pandas>=1.5.0",
+]
+[project.optional-dependencies]
+jupyter = ["ipython>=8.0.0"]
+all = ["ipython>=8.0.0"]
+
+[tool.setuptools]
+packages = ["gofish"]
+
+[tool.setuptools.package-data]
+gofish = ["js/*.js", "js/package.json"]
+

@@ -1,0 +1,14 @@
+{
+  "name": "gofish-python-js-bridge",
+  "version": "0.0.1",
+  "description": "Node.js bridge for GoFish Python wrapper",
+  "type": "module",
+  "main": "render.js",
+  "dependencies": {
+    "apache-arrow": "^14.0.0",
+    "gofish-graphics": "file:../../../gofish-graphics",
+    "jsdom": "^23.0.0",
+    "solid-js": "^1.9.5"
+  }
+}
+
