@@ -1,4 +1,4 @@
-import { For, Show, type JSX } from "solid-js";
+import { For, Show, Suspense, type JSX } from "solid-js";
 import { render as solidRender } from "solid-js/web";
 import {
   debugInputSceneGraph,
@@ -150,22 +150,26 @@ export const gofish = (
     // Render to the provided container
     // console.log(scaleContext);
     solidRender(
-      () =>
-        render(
-          {
-            width: w,
-            height: h,
-            defs,
-            axes,
-            scaleContext,
-            keyContext,
-            sizeDomains,
-            underlyingSpaceX,
-            underlyingSpaceY,
-            posScales,
-          },
-          child
-        ),
+      () => (
+        // used to handle async rendering of derived data
+        <Suspense fallback={<div>Loading...</div>}>
+          {render(
+            {
+              width: w,
+              height: h,
+              defs,
+              axes,
+              scaleContext,
+              keyContext,
+              sizeDomains,
+              underlyingSpaceX,
+              underlyingSpaceY,
+              posScales,
+            },
+            child
+          )}
+        </Suspense>
+      ),
       container
     );
     return container;

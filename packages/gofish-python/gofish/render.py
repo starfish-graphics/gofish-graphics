@@ -61,14 +61,37 @@ def render_chart_spec(
     
     # Display or save
     if _is_jupyter():
-        # Display in Jupyter - return HTML object, Jupyter will auto-display it
+        # Display in Jupyter - use IFrame with data URI to allow JavaScript execution
+        # Jupyter sanitizes HTML and removes script tags, so we use an iframe
         try:
-            from IPython.display import HTML
-            return HTML(html)
-        except ImportError:
-            # Fallback: print HTML (won't render but shows structure)
-            print(html)
-            return None
+            from IPython.display import IFrame
+            import base64
+            
+            # Use data URI to embed HTML directly
+            # Base64 encode the HTML
+            html_b64 = base64.b64encode(html.encode('utf-8')).decode('ascii')
+            data_uri = f"data:text/html;base64,{html_b64}"
+            
+            # Use IFrame with data URI
+            # This avoids the warning and allows JavaScript to execute
+            return IFrame(src=data_uri, width='100%', height=600)
+        except Exception as e:
+            # Fallback: try using HTML with srcdoc if IFrame doesn't work
+            try:
+                from IPython.display import HTML
+                # Escape HTML for srcdoc attribute
+                escaped_html = html.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;').replace("'", '&#39;')
+                iframe_html = f"""<iframe 
+srcdoc="{escaped_html}" 
+style="width: 100%; min-height: 600px; border: none;"
+sandbox="allow-scripts allow-same-origin"
+></iframe>"""
+                return HTML(iframe_html)
+            except ImportError:
+                # Final fallback: print HTML (won't render but shows structure)
+                print(f"Error displaying chart: {e}")
+                print(html)
+                return None
     else:
         # Standalone mode
         if filename:

@@ -14,6 +14,7 @@ import { JSDOM } from "jsdom";
 import * as Arrow from "apache-arrow";
 import * as GoFish from "gofish-graphics";
 import readline from "readline";
+import { createResource } from "solid-js";
 
 // Helper function to convert Arrow table to array of objects
 function arrowTableToArray(table) {
@@ -271,8 +272,14 @@ async function executeDerive(data, lambdaId) {
         // Create derive operator that calls Python kernel
         // The derive function will be called with data during pipeline execution
         // We need to handle async properly - create a derive that awaits executeDerive
-        reconstructedOp = derive(async (d) => {
-          return await executeDerive(d, lambdaId);
+        // reconstructedOp = derive(async (d) => {
+        //   return await executeDerive(d, lambdaId);
+        // });
+        reconstructedOp = derive((d) => {
+          const [result] = createResource(
+            async () => await executeDerive(d, lambdaId)
+          );
+          return result();
         });
       } else if (op.type === "spread") {
         const { field, ...opts } = op;

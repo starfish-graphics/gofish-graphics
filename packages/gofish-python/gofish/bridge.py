@@ -102,27 +102,225 @@ def ensure_js_dependencies() -> None:
             f"Could not find package.json at {package_json}"
         )
     
-    # Check if node_modules exists
-    if not node_modules.exists() or not any(node_modules.iterdir()):
-        # Try to install dependencies
-        node_cmd = find_node_executable()
+    # Check if node_modules exists and if vite-plugin-solid is installed
+    vite_plugin_installed = (
+        node_modules.exists() and 
+        (node_modules / "vite-plugin-solid").exists()
+    )
+    
+    if not node_modules.exists() or not any(node_modules.iterdir()) or not vite_plugin_installed:
+        # Try to install dependencies (including devDependencies)
+        npm_cmd = find_npm_executable()
         try:
-            subprocess.run(
-                [node_cmd, "npm", "install"],
+            result = subprocess.run(
+                [npm_cmd, "install"],
                 cwd=js_dir,
                 check=True,
                 capture_output=True,
+                text=True,
                 timeout=300,  # 5 minutes timeout
             )
         except subprocess.CalledProcessError as e:
+            error_msg = e.stderr if e.stderr else e.stdout if e.stdout else "Unknown error"
             raise RuntimeError(
-                f"Failed to install Node.js dependencies: {e.stderr.decode()}"
+                f"Failed to install Node.js dependencies: {error_msg}"
             ) from e
         except subprocess.TimeoutExpired:
             raise RuntimeError(
                 "Timeout while installing Node.js dependencies. "
                 "Please run 'npm install' manually in the js/ directory."
             )
+
+
+def find_npm_executable() -> str:
+    """Find the npm executable."""
+    # Try common locations
+    npm_candidates = ["npm", "npm.cmd"]  # .cmd for Windows
+    
+    for npm_cmd in npm_candidates:
+        try:
+            result = subprocess.run(
+                [npm_cmd, "--version"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+            )
+            if result.returncode == 0:
+                return npm_cmd
+        except (FileNotFoundError, subprocess.TimeoutExpired):
+            continue
+    
+    raise RuntimeError(
+        "npm not found. Please install Node.js (https://nodejs.org/) "
+        "which includes npm, and make sure it's in your PATH."
+    )
+
+
+def ensure_gofish_graphics_built() -> None:
+    """Ensure gofish-graphics is built before bundling."""
+    current_file = Path(__file__).resolve()
+    # current_file is at packages/gofish-python/gofish/bridge.py
+    # So we need to go: gofish -> gofish-python -> packages -> packages/gofish-graphics
+    gofish_graphics_dir = current_file.parent.parent.parent / "gofish-graphics"
+    dist_file = gofish_graphics_dir / "dist" / "index.js"
+    
+    if not dist_file.exists():
+        # Try to build gofish-graphics
+        npm_cmd = find_npm_executable()
+        try:
+            result = subprocess.run(
+                [npm_cmd, "run", "build"],
+                cwd=gofish_graphics_dir,
+                check=True,
+                capture_output=True,
+                text=True,
+                timeout=300,
+            )
+        except subprocess.CalledProcessError as e:
+            error_msg = e.stderr if e.stderr else e.stdout if e.stdout else "Unknown error"
+            raise RuntimeError(
+                f"gofish-graphics is not built. Failed to build: {error_msg}\n"
+                f"Please run 'npm run build' (or 'pnpm run build') in {gofish_graphics_dir}"
+            ) from e
+        except subprocess.TimeoutExpired:
+            raise RuntimeError(
+                f"Timeout while building gofish-graphics. "
+                f"Please run 'npm run build' manually in {gofish_graphics_dir}"
+            )
+
+
+def find_client_bundle() -> Path:
+    """Find the path to the bundled client JavaScript."""
+    current_file = Path(__file__).resolve()
+    package_dir = current_file.parent
+    js_dir = package_dir / "js"
+    dist_dir = js_dir / "dist"
+    
+    # Vite generates gofish-client.iife.js when using iife format
+    bundle_path = dist_dir / "gofish-client.iife.js"
+    
+    # Also check for the non-iife version in case config changes
+    if not bundle_path.exists():
+        bundle_path = dist_dir / "gofish-client.js"
+    
+    if not bundle_path.exists():
+        # Ensure gofish-graphics is built first
+        ensure_gofish_graphics_built()
+        
+        # Try to build the client bundle
+        ensure_js_dependencies()
+        npm_cmd = find_npm_executable()
+        try:
+            result = subprocess.run(
+                [npm_cmd, "run", "build:client"],
+                cwd=js_dir,
+                check=True,
+                capture_output=True,
+                text=True,
+                timeout=300,
+            )
+            # Check for the actual file that was generated
+            # Vite generates gofish-client.iife.js when using iife format
+            bundle_path = dist_dir / "gofish-client.iife.js"
+            if not bundle_path.exists():
+                bundle_path = dist_dir / "gofish-client.js"
+            
+            # Verify the file was created
+            if not bundle_path.exists():
+                # List what files were actually created
+                dist_files = list(dist_dir.glob("gofish-client*")) if dist_dir.exists() else []
+                raise RuntimeError(
+                    f"Build completed but bundle file not found. "
+                    f"Expected: gofish-client.iife.js or gofish-client.js. "
+                    f"Found in dist: {[f.name for f in dist_files]}. "
+                    f"Build output: {result.stdout}"
+                )
+        except subprocess.CalledProcessError as e:
+            error_msg = e.stderr if e.stderr else e.stdout if e.stdout else "Unknown error"
+            raise RuntimeError(
+                f"Failed to build client bundle: {error_msg}\n"
+                f"Please run 'npm run build:client' manually in {js_dir}"
+            ) from e
+        except subprocess.TimeoutExpired:
+            raise RuntimeError(
+                "Timeout while building client bundle. "
+                f"Please run 'npm run build:client' manually in {js_dir}"
+            )
+    
+    return bundle_path
+
+
+def setup_jupyter_comm():
+    """Set up Jupyter comm for browser-Python communication."""
+    try:
+        from IPython import get_ipython
+        ipython = get_ipython()
+        if ipython is None:
+            return False
+        
+        # Register comm target
+        def handle_comm(comm, msg):
+            """Handle messages from browser."""
+            @comm.on_msg
+            def _recv(msg):
+                data = msg['content']['data']
+                if data.get('type') == 'derive_execute':
+                    lambda_id = data.get('lambdaId')
+                    arrow_data_b64 = data.get('arrowData')
+                    request_id = data.get('requestId')
+                    
+                    if not lambda_id or not arrow_data_b64:
+                        comm.send({
+                            'type': 'response',
+                            'requestId': request_id,
+                            'error': 'Missing lambdaId or arrowData'
+                        })
+                        return
+                    
+                    # Get lambda from registry
+                    fn = get_lambda(lambda_id)
+                    if fn is None:
+                        comm.send({
+                            'type': 'response',
+                            'requestId': request_id,
+                            'error': f'Lambda with ID {lambda_id} not found in registry'
+                        })
+                        return
+                    
+                    try:
+                        # Convert Arrow to DataFrame
+                        arrow_bytes = base64.b64decode(arrow_data_b64)
+                        df = arrow_to_dataframe(arrow_bytes)
+                        
+                        # Execute lambda
+                        result_df = fn(df)
+                        
+                        # Convert result back to Arrow
+                        result_arrow = dataframe_to_arrow(result_df)
+                        result_b64 = base64.b64encode(result_arrow).decode('utf-8')
+                        
+                        # Send response
+                        comm.send({
+                            'type': 'response',
+                            'requestId': request_id,
+                            'arrowData': result_b64
+                        })
+                    except Exception as e:
+                        comm.send({
+                            'type': 'response',
+                            'requestId': request_id,
+                            'error': str(e)
+                        })
+        
+        # Register comm target - this will be called when browser creates a comm
+        ipython.kernel.comm_manager.register_target('gofish_derive', handle_comm)
+        return True
+    except Exception as e:
+        # Not in Jupyter or comm setup failed
+        import traceback
+        print(f"[DEBUG] Failed to setup Jupyter comm: {e}")
+        print(traceback.format_exc())
+        return False
 
 
 def render_chart(
@@ -133,8 +331,9 @@ def render_chart(
     arrow_data: Optional[bytes] = None,
 ) -> str:
     """
-    Render a GoFish chart by communicating with Node.js.
-    Supports bidirectional communication for derive operators.
+    Render a GoFish chart using client-side rendering.
+    Generates HTML with bundled JavaScript that renders in the browser.
+    Supports bidirectional communication for derive operators via Jupyter comms.
 
     Args:
         data: Input data (DataFrame, will be converted to Arrow if needed)
@@ -147,10 +346,14 @@ def render_chart(
         HTML string
 
     Raises:
-        RuntimeError: If Node.js is not available or rendering fails
+        RuntimeError: If bundle cannot be built or rendering fails
     """
-    # Ensure dependencies are installed
+    # Ensure dependencies are installed and bundle is built
     ensure_js_dependencies()
+    bundle_path = find_client_bundle()
+    
+    # Set up Jupyter comm if in Jupyter
+    setup_jupyter_comm()
     
     # Convert data to Arrow if not already provided
     if arrow_data is None:
@@ -170,158 +373,224 @@ def render_chart(
         "options": {},
     }
     
-    # Encode Arrow data as base64 for JSON transmission
+    # Encode Arrow data as base64 for embedding in HTML
     arrow_b64 = base64.b64encode(arrow_data).decode("utf-8")
     
-    # Prepare input
-    input_data = {
-        "spec": spec,
-        "arrowData": arrow_b64,
-        "options": options,
-    }
+    # Read bundled JavaScript
+    with open(bundle_path, 'r', encoding='utf-8') as f:
+        bundle_js = f.read()
     
-    # Find Node.js and script
-    node_cmd = find_node_executable()
-    render_js = find_js_bridge_script()
+    # Generate unique container ID
+    container_id = f"gofish-chart-{uuid.uuid4().hex[:8]}"
     
-    # Execute Node.js script with bidirectional communication
-    try:
-        process = subprocess.Popen(
-            [node_cmd, str(render_js)],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,  # Use text mode for line-based protocol
-            bufsize=1,  # Line buffered
-        )
-        
-        # Send initial input (JSON on a single line)
-        input_json = json.dumps(input_data)
-        process.stdin.write(input_json + "\n")
-        process.stdin.flush()
-        
-        # Read responses line by line
-        final_output = None
-        while True:
-            line = process.stdout.readline()
-            if not line:
-                break
-            
-            line = line.strip()
-            if not line:
-                continue
-            
-            try:
-                message = json.loads(line)
-                
-                # Check if it's a derive execution request
-                if message.get("type") == "derive_execute":
-                    # Handle derive request
-                    lambda_id = message.get("lambdaId")
-                    arrow_data_b64 = message.get("arrowData")
-                    
-                    if not lambda_id or not arrow_data_b64:
-                        response = {
-                            "type": "error",
-                            "error": "Missing lambdaId or arrowData in derive_execute request"
-                        }
-                        process.stdin.write(json.dumps(response) + "\n")
-                        process.stdin.flush()
-                        continue
-                    
-                    # Get lambda from registry
-                    fn = get_lambda(lambda_id)
-                    if fn is None:
-                        response = {
-                            "type": "error",
-                            "error": f"Lambda with ID {lambda_id} not found in registry"
-                        }
-                        process.stdin.write(json.dumps(response) + "\n")
-                        process.stdin.flush()
-                        continue
-                    
-                    try:
-                        # Convert Arrow to DataFrame
-                        arrow_bytes = base64.b64decode(arrow_data_b64)
-                        df = arrow_to_dataframe(arrow_bytes)
-                        
-                        # Debug: Print DataFrame information
-                        print(f"[DEBUG] Executing derive lambda {lambda_id}")
-                        print(f"[DEBUG] DataFrame shape: {df.shape}")
-                        print(f"[DEBUG] DataFrame columns: {list(df.columns)}")
-                        print(f"[DEBUG] DataFrame dtypes:\n{df.dtypes}")
-                        print(f"[DEBUG] DataFrame head:\n{df.head()}")
-                        buf = io.StringIO()
-                        df.info(buf=buf)
-                        print(f"[DEBUG] DataFrame info:\n{buf.getvalue()}")
-                        
-                        # Execute lambda
-                        result_df = fn(df)
-                        
-                        # Debug: Print result DataFrame information
-                        print(f"[DEBUG] Result DataFrame shape: {result_df.shape}")
-                        print(f"[DEBUG] Result DataFrame columns: {list(result_df.columns)}")
-                        print(f"[DEBUG] Result DataFrame head:\n{result_df.head()}")
-                        
-                        # Convert result back to Arrow
-                        result_arrow = dataframe_to_arrow(result_df)
-                        result_b64 = base64.b64encode(result_arrow).decode("utf-8")
-                        
-                        # Send response
-                        response = {
-                            "type": "response",
-                            "arrowData": result_b64
-                        }
-                        process.stdin.write(json.dumps(response) + "\n")
-                        process.stdin.flush()
-                        
-                    except Exception as e:
-                        # Send error response
-                        response = {
-                            "type": "error",
-                            "error": str(e)
-                        }
-                        process.stdin.write(json.dumps(response) + "\n")
-                        process.stdin.flush()
-                
-                # Check if it's the final output
-                elif "success" in message:
-                    final_output = message
-                    break
-                
-                # Unknown message type - ignore or log
-                else:
-                    # Might be final output in different format
-                    if "html" in message:
-                        final_output = message
-                        break
-                        
-            except json.JSONDecodeError:
-                # Not JSON, might be error output
-                continue
-        
-        # Wait for process to finish
-        process.wait()
-        
-        if process.returncode != 0:
-            stderr_output = process.stderr.read() if process.stderr else "Unknown error"
-            raise RuntimeError(f"Node.js rendering failed: {stderr_output}")
-        
-        if final_output is None:
-            raise RuntimeError("No output received from Node.js process")
-        
-        if not final_output.get("success"):
-            error_msg = final_output.get("error", "Unknown error")
-            raise RuntimeError(f"Rendering failed: {error_msg}")
-        
-        return final_output["html"]
-        
-    except subprocess.TimeoutExpired:
-        process.kill()
-        raise RuntimeError("Rendering timed out after 30 seconds")
-    except json.JSONDecodeError as e:
-        raise RuntimeError(f"Failed to parse Node.js output: {e}")
-    except Exception as e:
-        raise RuntimeError(f"Failed to render chart: {e}") from e
+    # Generate HTML
+    html = f"""<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {{
+      margin: 0;
+      padding: 20px;
+      font-family: sans-serif;
+    }}
+    svg {{
+      display: block;
+    }}
+    #loading {{
+      text-align: center;
+      padding: 20px;
+      color: #666;
+    }}
+    #debug {{
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: rgba(0,0,0,0.9);
+      color: #0f0;
+      padding: 10px;
+      font-size: 11px;
+      font-family: monospace;
+      max-width: 500px;
+      max-height: 400px;
+      overflow: auto;
+      z-index: 10000;
+      border: 2px solid #0f0;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0,255,0,0.5);
+    }}
+    #debug-header {{
+      background: #0f0;
+      color: #000;
+      padding: 5px;
+      margin: -10px -10px 10px -10px;
+      font-weight: bold;
+      cursor: pointer;
+    }}
+    #debug-content {{
+      max-height: 350px;
+      overflow-y: auto;
+    }}
+    #debug-entry {{
+      margin-bottom: 3px;
+      padding: 2px 5px;
+      border-left: 2px solid transparent;
+    }}
+    #debug-entry.error {{
+      color: #f00;
+      border-left-color: #f00;
+      background: rgba(255,0,0,0.1);
+    }}
+    #debug-entry.log {{
+      color: #0f0;
+    }}
+    #debug-toggle {{
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: #0f0;
+      color: #000;
+      border: none;
+      padding: 5px 10px;
+      cursor: pointer;
+      z-index: 10001;
+      font-weight: bold;
+      border-radius: 3px;
+    }}
+  </style>
+</head>
+<body>
+  <button id="debug-toggle" onclick="document.getElementById('debug').style.display = document.getElementById('debug').style.display === 'none' ? 'block' : 'none';">🔍 Debug</button>
+  <div id="debug" style="display: block;">
+    <div id="debug-header" onclick="this.parentElement.style.display='none';">GoFish Debug Log (click to hide)</div>
+    <div id="debug-content">
+      <div id="debug-entry" class="log">[Initializing...]</div>
+    </div>
+  </div>
+  <div id="{container_id}">
+    <div id="loading">Loading chart... <span id="js-test" style="color: red; font-weight: bold;">(JS not running)</span></div>
+  </div>
+  <script>
+    // Debug logging
+    const debugDiv = document.getElementById('debug');
+    const debugContent = document.getElementById('debug-content');
+    const originalLog = console.log;
+    const originalError = console.error;
+    const originalWarn = console.warn;
+    
+    function addDebugLog(level, ...args) {{
+      const msg = args.map(a => {{
+        if (typeof a === 'object') {{
+          try {{
+            return JSON.stringify(a, null, 2);
+          }} catch (e) {{
+            return String(a);
+          }}
+        }}
+        return String(a);
+      }}).join(' ');
+      
+      const entry = document.createElement('div');
+      entry.id = 'debug-entry';
+      entry.className = level;
+      const timestamp = new Date().toLocaleTimeString();
+      entry.textContent = `[${{timestamp}}] [${{level.toUpperCase()}}] ${{msg}}`;
+      debugContent.appendChild(entry);
+      debugContent.scrollTop = debugContent.scrollHeight;
+      
+      // Keep only last 100 entries
+      while (debugContent.children.length > 100) {{
+        debugContent.removeChild(debugContent.firstChild);
+      }}
+    }}
+    
+    console.log = function(...args) {{
+      originalLog.apply(console, args);
+      addDebugLog('log', ...args);
+    }};
+    
+    console.error = function(...args) {{
+      originalError.apply(console, args);
+      addDebugLog('error', ...args);
+    }};
+    
+    console.warn = function(...args) {{
+      originalWarn.apply(console, args);
+      addDebugLog('warn', ...args);
+    }};
+    
+    // Immediate test - is JavaScript running at all?
+    const jsTest = document.getElementById('js-test');
+    if (jsTest) {{
+      jsTest.textContent = '(JS IS RUNNING!)';
+      jsTest.style.color = 'green';
+    }}
+    
+    console.log('[GoFish] ===== SCRIPT STARTING =====');
+    console.log('[GoFish] Document ready state:', document.readyState);
+    console.log('[GoFish] Window object exists:', typeof window !== 'undefined');
+    
+    // Make chart spec available to client renderer
+    console.log('[GoFish] Setting up chart spec');
+    window.gofishChartSpec = {{
+      spec: {json.dumps(spec)},
+      arrowData: {json.dumps(arrow_b64)},
+      options: {json.dumps(options)},
+      containerId: {json.dumps(container_id)}
+    }};
+    console.log('[GoFish] Chart spec set, containerId:', {json.dumps(container_id)});
+    console.log('[GoFish] Spec operators count:', {len(spec.get('operators', []))});
+    console.log('[GoFish] Arrow data length:', {len(arrow_b64)});
+    console.log('[GoFish] Container element exists:', !!document.getElementById({json.dumps(container_id)}));
+    
+    // Try to remove loading message after a delay
+    setTimeout(function() {{
+      const loadingEl = document.getElementById('loading');
+      if (loadingEl) {{
+        console.log('[GoFish] Removing loading message');
+        loadingEl.textContent = 'JavaScript is running but chart not rendered yet...';
+      }}
+    }}, 1000);
+  </script>
+  <script>
+    console.log('[GoFish] ===== LOADING BUNDLE SCRIPT =====');
+    console.log('[GoFish] Bundle script length:', {len(bundle_js)});
+    try {{
+      {bundle_js}
+      console.log('[GoFish] ===== BUNDLE SCRIPT LOADED =====');
+      console.log('[GoFish] window.renderChart exists:', typeof window.renderChart !== 'undefined');
+      console.log('[GoFish] window.gofishChartSpec exists:', typeof window.gofishChartSpec !== 'undefined');
+      
+      // Force immediate render attempt
+      setTimeout(function() {{
+        console.log('[GoFish] ===== FORCING RENDER ATTEMPT =====');
+        if (window.renderChart && window.gofishChartSpec) {{
+          console.log('[GoFish] Calling renderChart directly...');
+          try {{
+            const {{ spec, arrowData, options, containerId }} = window.gofishChartSpec;
+            window.renderChart(spec, arrowData, options, containerId);
+          }} catch (e) {{
+            console.error('[GoFish] Error in forced render:', e);
+          }}
+        }} else {{
+          console.error('[GoFish] Cannot render - renderChart:', typeof window.renderChart, 'spec:', typeof window.gofishChartSpec);
+        }}
+      }}, 100);
+    }} catch (e) {{
+      console.error('[GoFish] ===== ERROR LOADING BUNDLE =====');
+      console.error('[GoFish] Error:', e);
+      console.error('[GoFish] Error message:', e.message);
+      console.error('[GoFish] Error stack:', e.stack);
+      const container = document.getElementById({json.dumps(container_id)});
+      if (container) {{
+        container.innerHTML = '<div style="color: red; padding: 20px;"><strong>Error loading bundle:</strong><br/>' + e.message + '<br/><pre>' + e.stack + '</pre></div>';
+      }}
+    }}
+  </script>
+</body>
+</html>"""
+    
+    return html
 
 

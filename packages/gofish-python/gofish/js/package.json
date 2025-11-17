@@ -4,11 +4,18 @@
   "description": "Node.js bridge for GoFish Python wrapper",
   "type": "module",
   "main": "render.js",
+  "scripts": {
+    "build:client": "vite build"
+  },
   "dependencies": {
     "apache-arrow": "^14.0.0",
     "gofish-graphics": "file:../../../gofish-graphics",
     "jsdom": "^23.0.0",
     "solid-js": "^1.9.5"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0",
+    "vite-plugin-solid": "^2.8.0"
   }
 }
 
