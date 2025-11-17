@@ -20,7 +20,7 @@ export default defineConfig({
       entry: resolve(__dirname, "client-render.js"),
       name: "GoFishClient",
       fileName: "gofish-client",
-      formats: ["iife"], // Immediately Invoked Function Expression for browser
+      formats: ["iife", "es"], // IIFE for standalone, ESM for anywidget
     },
     rollupOptions: {
       external: [], // Bundle everything - no dynamic loading

@@ -159,12 +159,12 @@ def find_client_bundle() -> Path:
     js_dir = package_dir / "js"
     dist_dir = js_dir / "dist"
     
-    # Vite generates gofish-client.iife.js when using iife format
-    bundle_path = dist_dir / "gofish-client.iife.js"
+    # For anywidget, prefer ESM format
+    bundle_path = dist_dir / "gofish-client.js"  # ESM format
     
-    # Also check for the non-iife version in case config changes
+    # Fallback to IIFE if ESM doesn't exist
     if not bundle_path.exists():
-        bundle_path = dist_dir / "gofish-client.js"
+        bundle_path = dist_dir / "gofish-client.iife.js"
     
     if not bundle_path.exists():
         # Ensure gofish-graphics is built first

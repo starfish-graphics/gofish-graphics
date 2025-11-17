@@ -99,7 +99,7 @@ function arrayToArrow(data) {
 // For Jupyter, use the widget-based rendering which handles derive via anywidget.
 
 // Main render function
-export function renderChart(spec, arrowData, options, containerId) {
+function renderChart(spec, arrowData, options, containerId) {
   const container = document.getElementById(containerId);
   if (!container) {
     throw new Error(`Container with id "${containerId}" not found`);
@@ -248,3 +248,9 @@ if (typeof window !== "undefined") {
   // Also expose renderChart globally for manual calling
   window.renderChart = renderChart;
 }
+
+// Export individual modules for ESM usage (e.g., in anywidget)
+export { renderChart };
+export * as GoFish from "gofish-graphics";
+export * as Arrow from "apache-arrow";
+export { createResource } from "solid-js";

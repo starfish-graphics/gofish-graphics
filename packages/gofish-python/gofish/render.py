@@ -71,6 +71,7 @@ def render_chart_spec(
         }
         
         # Create and return widget
+        # Jupyter will automatically display the widget when it's returned from a cell
         widget = GoFishChartWidget(
             spec=spec,
             arrow_data=arrow_data,
@@ -80,6 +81,7 @@ def render_chart_spec(
             axes=options.get("axes", False),
             debug=options.get("debug", False),
         )
+        
         return widget
     else:
         # Standalone mode - use HTML rendering
