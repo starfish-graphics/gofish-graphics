@@ -7,47 +7,10 @@ import sys
 import tempfile
 import base64
 import uuid
-import threading
-import io
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from .arrow_utils import dataframe_to_arrow, arrow_to_dataframe
-
-
-# Global lambda registry for storing derive functions by ID
-_lambda_registry: Dict[str, Callable] = {}
-_registry_lock = threading.Lock()
-
-
-def register_lambda(fn: Callable) -> str:
-    """
-    Register a lambda function and return its unique ID.
-    
-    Args:
-        fn: The lambda function to register
-        
-    Returns:
-        Unique ID string for the lambda
-    """
-    lambda_id = str(uuid.uuid4())
-    with _registry_lock:
-        _lambda_registry[lambda_id] = fn
-    return lambda_id
-
-
-def get_lambda(lambda_id: str) -> Optional[Callable]:
-    """
-    Retrieve a lambda function by ID.
-    
-    Args:
-        lambda_id: The unique ID of the lambda
-        
-    Returns:
-        The lambda function, or None if not found
-    """
-    with _registry_lock:
-        return _lambda_registry.get(lambda_id)
 
 
 def find_js_bridge_script() -> Path:
@@ -250,79 +213,6 @@ def find_client_bundle() -> Path:
     return bundle_path
 
 
-def setup_jupyter_comm():
-    """Set up Jupyter comm for browser-Python communication."""
-    try:
-        from IPython import get_ipython
-        ipython = get_ipython()
-        if ipython is None:
-            return False
-        
-        # Register comm target
-        def handle_comm(comm, msg):
-            """Handle messages from browser."""
-            @comm.on_msg
-            def _recv(msg):
-                data = msg['content']['data']
-                if data.get('type') == 'derive_execute':
-                    lambda_id = data.get('lambdaId')
-                    arrow_data_b64 = data.get('arrowData')
-                    request_id = data.get('requestId')
-                    
-                    if not lambda_id or not arrow_data_b64:
-                        comm.send({
-                            'type': 'response',
-                            'requestId': request_id,
-                            'error': 'Missing lambdaId or arrowData'
-                        })
-                        return
-                    
-                    # Get lambda from registry
-                    fn = get_lambda(lambda_id)
-                    if fn is None:
-                        comm.send({
-                            'type': 'response',
-                            'requestId': request_id,
-                            'error': f'Lambda with ID {lambda_id} not found in registry'
-                        })
-                        return
-                    
-                    try:
-                        # Convert Arrow to DataFrame
-                        arrow_bytes = base64.b64decode(arrow_data_b64)
-                        df = arrow_to_dataframe(arrow_bytes)
-                        
-                        # Execute lambda
-                        result_df = fn(df)
-                        
-                        # Convert result back to Arrow
-                        result_arrow = dataframe_to_arrow(result_df)
-                        result_b64 = base64.b64encode(result_arrow).decode('utf-8')
-                        
-                        # Send response
-                        comm.send({
-                            'type': 'response',
-                            'requestId': request_id,
-                            'arrowData': result_b64
-                        })
-                    except Exception as e:
-                        comm.send({
-                            'type': 'response',
-                            'requestId': request_id,
-                            'error': str(e)
-                        })
-        
-        # Register comm target - this will be called when browser creates a comm
-        ipython.kernel.comm_manager.register_target('gofish_derive', handle_comm)
-        return True
-    except Exception as e:
-        # Not in Jupyter or comm setup failed
-        import traceback
-        print(f"[DEBUG] Failed to setup Jupyter comm: {e}")
-        print(traceback.format_exc())
-        return False
-
-
 def render_chart(
     data: Any,
     operators: List[Any],
@@ -333,7 +223,7 @@ def render_chart(
     """
     Render a GoFish chart using client-side rendering.
     Generates HTML with bundled JavaScript that renders in the browser.
-    Supports bidirectional communication for derive operators via Jupyter comms.
+    Note: For Jupyter, use the widget-based rendering in render.py instead.
 
     Args:
         data: Input data (DataFrame, will be converted to Arrow if needed)
@@ -351,9 +241,6 @@ def render_chart(
     # Ensure dependencies are installed and bundle is built
     ensure_js_dependencies()
     bundle_path = find_client_bundle()
-    
-    # Set up Jupyter comm if in Jupyter
-    setup_jupyter_comm()
     
     # Convert data to Arrow if not already provided
     if arrow_data is None:
@@ -403,24 +290,24 @@ def render_chart(
       padding: 20px;
       color: #666;
     }}
-    #debug {{
+    #derive-debug {{
       position: fixed;
       top: 10px;
       right: 10px;
-      background: rgba(0,0,0,0.9);
+      background: rgba(0,0,0,0.95);
       color: #0f0;
       padding: 10px;
       font-size: 11px;
       font-family: monospace;
-      max-width: 500px;
-      max-height: 400px;
+      max-width: 600px;
+      max-height: 500px;
       overflow: auto;
       z-index: 10000;
       border: 2px solid #0f0;
       border-radius: 5px;
       box-shadow: 0 0 10px rgba(0,255,0,0.5);
     }}
-    #debug-header {{
+    #derive-debug-header {{
       background: #0f0;
       color: #000;
       padding: 5px;
@@ -428,24 +315,25 @@ def render_chart(
       font-weight: bold;
       cursor: pointer;
     }}
-    #debug-content {{
-      max-height: 350px;
+    #derive-debug-content {{
+      max-height: 450px;
       overflow-y: auto;
     }}
-    #debug-entry {{
+    #derive-debug-entry {{
       margin-bottom: 3px;
       padding: 2px 5px;
       border-left: 2px solid transparent;
+      word-break: break-word;
     }}
-    #debug-entry.error {{
+    #derive-debug-entry.error {{
       color: #f00;
       border-left-color: #f00;
       background: rgba(255,0,0,0.1);
     }}
-    #debug-entry.log {{
+    #derive-debug-entry.log {{
       color: #0f0;
     }}
-    #debug-toggle {{
+    #derive-debug-toggle {{
       position: fixed;
       top: 10px;
       right: 10px;
@@ -461,130 +349,135 @@ def render_chart(
   </style>
 </head>
 <body>
-  <button id="debug-toggle" onclick="document.getElementById('debug').style.display = document.getElementById('debug').style.display === 'none' ? 'block' : 'none';">🔍 Debug</button>
-  <div id="debug" style="display: block;">
-    <div id="debug-header" onclick="this.parentElement.style.display='none';">GoFish Debug Log (click to hide)</div>
-    <div id="debug-content">
-      <div id="debug-entry" class="log">[Initializing...]</div>
-    </div>
+  <button id="derive-debug-toggle" onclick="document.getElementById('derive-debug').style.display = document.getElementById('derive-debug').style.display === 'none' ? 'block' : 'none';">🔍 Derive Debug</button>
+  <div id="derive-debug" style="display: block;">
+    <div id="derive-debug-header" onclick="this.parentElement.style.display='none';">GoFish Derive Debug Log (click to hide)</div>
+    <div id="derive-debug-content"></div>
   </div>
   <div id="{container_id}">
-    <div id="loading">Loading chart... <span id="js-test" style="color: red; font-weight: bold;">(JS not running)</span></div>
+    <div id="loading">Loading chart...</div>
   </div>
   <script>
-    // Debug logging
-    const debugDiv = document.getElementById('debug');
-    const debugContent = document.getElementById('debug-content');
+    // Derive-specific debug logging
+    const deriveDebugDiv = document.getElementById('derive-debug');
+    const deriveDebugContent = document.getElementById('derive-debug-content');
     const originalLog = console.log;
     const originalError = console.error;
-    const originalWarn = console.warn;
     
-    function addDebugLog(level, ...args) {{
+    function addDeriveDebugLog(level, ...args) {{
+      // Only log messages related to derive
       const msg = args.map(a => {{
+        // Handle Error objects specially to avoid SecurityError when serializing
+        if (a instanceof Error) {{
+          // For Error objects, only use safe properties
+          const errorName = a.name || 'Error';
+          const errorMessage = a.message || '';
+          // Don't try to access stack or other properties that might reference window
+          return `${{errorName}}: ${{errorMessage}}`;
+        }}
+        
         if (typeof a === 'object') {{
           try {{
-            return JSON.stringify(a, null, 2);
+            // Limit object serialization to prevent huge outputs
+            const str = JSON.stringify(a, null, 2);
+            // Truncate very long strings (like bundle code or large data)
+            if (str.length > 10000) {{
+              return str.substring(0, 10000) + '... (truncated, ' + (str.length - 10000) + ' more characters)';
+            }}
+            return str;
           }} catch (e) {{
-            return String(a);
+            // If serialization fails (e.g., due to circular refs or SecurityError),
+            // just use a safe string representation
+            try {{
+              const str = String(a);
+              // Truncate string representations too
+              if (str.length > 10000) {{
+                return str.substring(0, 10000) + '... (truncated, ' + (str.length - 10000) + ' more characters)';
+              }}
+              return str;
+            }} catch (e2) {{
+              // Even String() can throw in some cases - use fallback
+              return '[Object - cannot serialize]';
+            }}
           }}
         }}
-        return String(a);
+        const str = String(a);
+        // Truncate very long strings
+        if (str.length > 10000) {{
+          return str.substring(0, 10000) + '... (truncated, ' + (str.length - 10000) + ' more characters)';
+        }}
+        return str;
       }}).join(' ');
       
+      // Filter for derive-related messages - but exclude if it looks like bundle code
+      // (bundle code might contain [GoFish Derive] but we don't want to log the entire bundle)
+      if (!msg.includes('[GoFish Derive]')) {{
+        return;
+      }}
+      
+      // Skip if message is suspiciously long (likely bundle code or large data dump)
+      // This prevents the "giant wall of characters" issue
+      if (msg.length > 50000) {{
+        console.warn('[GoFish Derive] Skipping extremely long message (' + msg.length + ' chars - likely bundle code or data dump)');
+        return;
+      }}
+      
       const entry = document.createElement('div');
-      entry.id = 'debug-entry';
+      entry.id = 'derive-debug-entry';
       entry.className = level;
       const timestamp = new Date().toLocaleTimeString();
-      entry.textContent = `[${{timestamp}}] [${{level.toUpperCase()}}] ${{msg}}`;
-      debugContent.appendChild(entry);
-      debugContent.scrollTop = debugContent.scrollHeight;
       
-      // Keep only last 100 entries
-      while (debugContent.children.length > 100) {{
-        debugContent.removeChild(debugContent.firstChild);
+      // Escape HTML to prevent rendering issues
+      const escapedMsg = msg
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+      
+      entry.innerHTML = `<span style="color: #888;">[${{timestamp}}]</span> <span style="white-space: pre-wrap; word-break: break-word;">${{escapedMsg}}</span>`;
+      deriveDebugContent.appendChild(entry);
+      deriveDebugContent.scrollTop = deriveDebugContent.scrollHeight;
+      
+      // Keep only last 200 entries
+      while (deriveDebugContent.children.length > 200) {{
+        deriveDebugContent.removeChild(deriveDebugContent.firstChild);
       }}
     }}
     
     console.log = function(...args) {{
       originalLog.apply(console, args);
-      addDebugLog('log', ...args);
+      addDeriveDebugLog('log', ...args);
     }};
     
     console.error = function(...args) {{
       originalError.apply(console, args);
-      addDebugLog('error', ...args);
+      addDeriveDebugLog('error', ...args);
     }};
-    
-    console.warn = function(...args) {{
-      originalWarn.apply(console, args);
-      addDebugLog('warn', ...args);
-    }};
-    
-    // Immediate test - is JavaScript running at all?
-    const jsTest = document.getElementById('js-test');
-    if (jsTest) {{
-      jsTest.textContent = '(JS IS RUNNING!)';
-      jsTest.style.color = 'green';
-    }}
-    
-    console.log('[GoFish] ===== SCRIPT STARTING =====');
-    console.log('[GoFish] Document ready state:', document.readyState);
-    console.log('[GoFish] Window object exists:', typeof window !== 'undefined');
     
     // Make chart spec available to client renderer
-    console.log('[GoFish] Setting up chart spec');
     window.gofishChartSpec = {{
       spec: {json.dumps(spec)},
       arrowData: {json.dumps(arrow_b64)},
       options: {json.dumps(options)},
       containerId: {json.dumps(container_id)}
     }};
-    console.log('[GoFish] Chart spec set, containerId:', {json.dumps(container_id)});
-    console.log('[GoFish] Spec operators count:', {len(spec.get('operators', []))});
-    console.log('[GoFish] Arrow data length:', {len(arrow_b64)});
-    console.log('[GoFish] Container element exists:', !!document.getElementById({json.dumps(container_id)}));
-    
-    // Try to remove loading message after a delay
-    setTimeout(function() {{
-      const loadingEl = document.getElementById('loading');
-      if (loadingEl) {{
-        console.log('[GoFish] Removing loading message');
-        loadingEl.textContent = 'JavaScript is running but chart not rendered yet...';
-      }}
-    }}, 1000);
   </script>
   <script>
-    console.log('[GoFish] ===== LOADING BUNDLE SCRIPT =====');
-    console.log('[GoFish] Bundle script length:', {len(bundle_js)});
     try {{
       {bundle_js}
-      console.log('[GoFish] ===== BUNDLE SCRIPT LOADED =====');
-      console.log('[GoFish] window.renderChart exists:', typeof window.renderChart !== 'undefined');
-      console.log('[GoFish] window.gofishChartSpec exists:', typeof window.gofishChartSpec !== 'undefined');
-      
-      // Force immediate render attempt
-      setTimeout(function() {{
-        console.log('[GoFish] ===== FORCING RENDER ATTEMPT =====');
-        if (window.renderChart && window.gofishChartSpec) {{
-          console.log('[GoFish] Calling renderChart directly...');
-          try {{
-            const {{ spec, arrowData, options, containerId }} = window.gofishChartSpec;
-            window.renderChart(spec, arrowData, options, containerId);
-          }} catch (e) {{
-            console.error('[GoFish] Error in forced render:', e);
-          }}
-        }} else {{
-          console.error('[GoFish] Cannot render - renderChart:', typeof window.renderChart, 'spec:', typeof window.gofishChartSpec);
-        }}
-      }}, 100);
     }} catch (e) {{
-      console.error('[GoFish] ===== ERROR LOADING BUNDLE =====');
-      console.error('[GoFish] Error:', e);
-      console.error('[GoFish] Error message:', e.message);
-      console.error('[GoFish] Error stack:', e.stack);
+      // Truncate error stack to prevent huge outputs
+      let errorStack = e.stack || '';
+      if (errorStack.length > 5000) {{
+        errorStack = errorStack.substring(0, 5000) + '... (truncated)';
+      }}
+      console.error('[GoFish Derive] Error loading bundle:', e.message, errorStack.substring(0, 1000));
       const container = document.getElementById({json.dumps(container_id)});
       if (container) {{
-        container.innerHTML = '<div style="color: red; padding: 20px;"><strong>Error loading bundle:</strong><br/>' + e.message + '<br/><pre>' + e.stack + '</pre></div>';
+        const safeMessage = (e.message || 'Unknown error').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const safeStack = errorStack.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        container.innerHTML = '<div style="color: red; padding: 20px;"><strong>Error loading bundle:</strong><br/>' + safeMessage + '<br/><pre style="max-height: 300px; overflow: auto;">' + safeStack + '</pre></div>';
       }}
     }}
   </script>

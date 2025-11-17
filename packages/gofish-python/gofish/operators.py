@@ -1,12 +1,8 @@
 """Operators for data transformation in GoFish charts."""
 
+import uuid
 from typing import Any, Callable, Dict, Optional, TypeVar, Union
 import pandas as pd
-
-# Import registry functions (avoid circular import)
-def _get_registry():
-    from .bridge import register_lambda
-    return register_lambda
 
 T = TypeVar("T")
 
@@ -29,6 +25,9 @@ class DeriveOperator(Operator):
     def __init__(self, fn: Callable):
         super().__init__("derive")
         self.fn = fn
+        # Generate unique ID for this function
+        # This ID will be used to look up the function in the widget's derive_functions dict
+        self.lambda_id = str(uuid.uuid4())
         # Store function source for debugging (optional)
         try:
             import inspect
@@ -49,10 +48,8 @@ class DeriveOperator(Operator):
         return self.fn(data)
 
     def to_dict(self) -> dict:
-        """Convert to dict - register lambda and return ID."""
-        register_lambda = _get_registry()
-        lambda_id = register_lambda(self.fn)
-        return {"type": "derive", "lambdaId": lambda_id}
+        """Convert to dict - return lambda ID (function stored in operator instance)."""
+        return {"type": "derive", "lambdaId": self.lambda_id}
 
 
 def spread(

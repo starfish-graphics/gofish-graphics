@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional
 
 from .bridge import render_chart
 from .arrow_utils import dataframe_to_arrow
+from .operators import DeriveOperator
 
 
 def _is_jupyter() -> bool:
@@ -50,50 +51,46 @@ def render_chart_spec(
     current_data = data.copy() if isinstance(data, pd.DataFrame) else pd.DataFrame(data)
     arrow_data = dataframe_to_arrow(current_data)
     
-    # Render chart via Node.js bridge (all operators, including derive, are passed through)
-    html = render_chart(
-        current_data,
-        operators,
-        mark,
-        options,
-        arrow_data=arrow_data,
-    )
-    
     # Display or save
     if _is_jupyter():
-        # Display in Jupyter - use IFrame with data URI to allow JavaScript execution
-        # Jupyter sanitizes HTML and removes script tags, so we use an iframe
-        try:
-            from IPython.display import IFrame
-            import base64
-            
-            # Use data URI to embed HTML directly
-            # Base64 encode the HTML
-            html_b64 = base64.b64encode(html.encode('utf-8')).decode('ascii')
-            data_uri = f"data:text/html;base64,{html_b64}"
-            
-            # Use IFrame with data URI
-            # This avoids the warning and allows JavaScript to execute
-            return IFrame(src=data_uri, width='100%', height=600)
-        except Exception as e:
-            # Fallback: try using HTML with srcdoc if IFrame doesn't work
-            try:
-                from IPython.display import HTML
-                # Escape HTML for srcdoc attribute
-                escaped_html = html.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;').replace("'", '&#39;')
-                iframe_html = f"""<iframe 
-srcdoc="{escaped_html}" 
-style="width: 100%; min-height: 600px; border: none;"
-sandbox="allow-scripts allow-same-origin"
-></iframe>"""
-                return HTML(iframe_html)
-            except ImportError:
-                # Final fallback: print HTML (won't render but shows structure)
-                print(f"Error displaying chart: {e}")
-                print(html)
-                return None
+        # Use AnyWidget for Jupyter rendering
+        from .widget import GoFishChartWidget
+        
+        # Collect derive functions from operators
+        derive_functions = {}
+        for op in operators:
+            if isinstance(op, DeriveOperator):
+                derive_functions[op.lambda_id] = op.fn
+        
+        # Serialize spec
+        spec = {
+            "data": None,  # Data will come via Arrow
+            "operators": [op.to_dict() for op in operators],
+            "mark": mark.to_dict(),
+            "options": {},
+        }
+        
+        # Create and return widget
+        widget = GoFishChartWidget(
+            spec=spec,
+            arrow_data=arrow_data,
+            derive_functions=derive_functions,
+            width=options.get("w", 800),
+            height=options.get("h", 600),
+            axes=options.get("axes", False),
+            debug=options.get("debug", False),
+        )
+        return widget
     else:
-        # Standalone mode
+        # Standalone mode - use HTML rendering
+        html = render_chart(
+            current_data,
+            operators,
+            mark,
+            options,
+            arrow_data=arrow_data,
+        )
+        
         if filename:
             with open(filename, "w", encoding="utf-8") as f:
                 f.write(html)

@@ -11,6 +11,7 @@ requires-python = ">=3.8"
 dependencies = [
     "pyarrow>=10.0.0",
     "pandas>=1.5.0",
+    "anywidget>=0.9.0",
 ]
 [project.optional-dependencies]
 jupyter = ["ipython>=8.0.0"]
