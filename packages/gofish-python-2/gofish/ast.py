@@ -159,11 +159,12 @@ class ChartBuilder:
         else:
             # Try to convert to DataFrame
             df = pd.DataFrame(self.data)
-        
+
         # Convert to Arrow (even if empty)
         if len(df) == 0:
             # Create empty Arrow table with a dummy schema
             import pyarrow as pa
+
             schema = pa.schema([pa.field("_placeholder", pa.int32())])
             table = pa.Table.from_arrays([], schema=schema)
             sink = pa.BufferOutputStream()
@@ -190,6 +191,7 @@ class ChartBuilder:
 
 
 # Operator factory functions
+
 
 def spread(
     field_or_options: Union[str, Dict[str, Any]],
@@ -287,6 +289,7 @@ def scatter(
 
 
 # Mark factory functions
+
 
 def rect(
     w: Optional[Union[int, str]] = None,
@@ -401,9 +404,7 @@ def scaffold(
     return Mark("scaffold", **scaffold_kwargs)
 
 
-def chart(
-    data: Any, options: Optional[dict] = None
-) -> ChartBuilder:
+def chart(data: Any, options: Optional[dict] = None) -> ChartBuilder:
     """
     Create a new chart builder.
 
@@ -415,4 +416,3 @@ def chart(
         ChartBuilder instance
     """
     return ChartBuilder(data, options)
-

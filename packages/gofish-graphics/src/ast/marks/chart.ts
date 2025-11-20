@@ -15,6 +15,7 @@ import { GoFishNode } from "../_node";
 import { MaybeValue } from "../data";
 import { For } from "../iterators/for";
 import { CoordinateTransform } from "../coordinateTransforms/coord";
+import { createResource } from "solid-js";
 
 /* inference */
 const inferSize = <T>(
@@ -40,7 +41,9 @@ export type Operator<T, U> = (_: Mark<U>) => Mark<T>;
 /* Data Transformation Operators */
 export function derive<T, U>(fn: (d: T) => U): Operator<T, U> {
   return (mark: Mark<U>) => {
-    return (d: T, key?: string | number) => mark(fn(d), key);
+    return (d: T, key?: string | number) => {
+      return mark(fn(d), key);
+    };
   };
 }
 

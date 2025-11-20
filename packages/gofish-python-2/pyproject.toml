@@ -13,6 +13,9 @@ dependencies = [
     "pyarrow>=10.0.0",
     "pandas>=1.5.0",
 ]
+# Note: solid-js is a peer dependency required at runtime in the browser.
+# The widget loads it from CDN, but for production use, solid-js should be
+# available as a peer dependency to work properly with Suspense boundaries.
 
 [project.optional-dependencies]
 test = ["pytest>=7.0.0"]
