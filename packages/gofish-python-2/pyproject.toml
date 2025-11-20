@@ -8,7 +8,11 @@ version = "0.1.0"
 description = "Clean AST implementation for GoFish graphics library"
 readme = "README.md"
 requires-python = ">=3.8"
-dependencies = []
+dependencies = [
+    "anywidget>=0.9.0",
+    "pyarrow>=10.0.0",
+    "pandas>=1.5.0",
+]
 
 [project.optional-dependencies]
 test = ["pytest>=7.0.0"]

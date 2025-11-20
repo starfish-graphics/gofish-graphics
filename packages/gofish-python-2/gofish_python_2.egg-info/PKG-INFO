@@ -4,6 +4,9 @@ Version: 0.1.0
 Summary: Clean AST implementation for GoFish graphics library
 Requires-Python: >=3.8
 Description-Content-Type: text/markdown
+Requires-Dist: anywidget>=0.9.0
+Requires-Dist: pyarrow>=10.0.0
+Requires-Dist: pandas>=1.5.0
 Provides-Extra: test
 Requires-Dist: pytest>=7.0.0; extra == "test"
 
@@ -65,14 +68,14 @@ The JSON IR has the following structure:
 
 ```json
 {
-    "data": null,
-    "operators": [
-        {"type": "spread", "field": "lake", "dir": "x", "spacing": 8},
-        {"type": "derive", "lambdaId": "uuid-here"},
-        {"type": "stack", "field": "species", "dir": "y"}
-    ],
-    "mark": {"type": "rect", "h": "count", "fill": "species"},
-    "options": {}
+  "data": null,
+  "operators": [
+    { "type": "spread", "field": "lake", "dir": "x", "spacing": 8 },
+    { "type": "derive", "lambdaId": "uuid-here" },
+    { "type": "stack", "field": "species", "dir": "y" }
+  ],
+  "mark": { "type": "rect", "h": "count", "fill": "species" },
+  "options": {}
 }
 ```
 
@@ -92,10 +95,10 @@ pytest
 ## What's Not Included
 
 This package intentionally excludes:
+
 - Rendering (no widgets, no HTML generation)
 - Data marshaling (no Arrow, no DataFrame handling)
 - Jupyter integration
 - JavaScript bridge
 
 These concerns are handled separately in the full implementation.
-

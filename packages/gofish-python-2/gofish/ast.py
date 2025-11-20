@@ -118,6 +118,76 @@ class ChartBuilder:
             "options": self.options,
         }
 
+    def render(
+        self,
+        w: int = 800,
+        h: int = 600,
+        axes: bool = False,
+        debug: bool = False,
+    ):
+        """
+        Render the chart as an anywidget for Jupyter notebooks.
+
+        Args:
+            w: Chart width in pixels
+            h: Chart height in pixels
+            axes: Whether to show axes
+            debug: Whether to enable debug mode
+
+        Returns:
+            GoFishChartWidget instance that will display in Jupyter
+
+        Example:
+            >>> data = [{"x": 1, "y": 2}]
+            >>> chart(data).mark(rect(h="y")).render()
+            >>> chart(data).mark(rect(h="y")).render(w=500, h=300)
+        """
+        if self._mark is None:
+            raise ValueError("Chart must have a mark before rendering")
+
+        # Import here to avoid circular dependencies
+        from .widget import GoFishChartWidget
+        from .arrow_utils import dataframe_to_arrow
+        import pandas as pd
+
+        # Convert data to Arrow format
+        if isinstance(self.data, pd.DataFrame):
+            df = self.data
+        elif self.data is None:
+            # Empty data
+            df = pd.DataFrame()
+        else:
+            # Try to convert to DataFrame
+            df = pd.DataFrame(self.data)
+        
+        # Convert to Arrow (even if empty)
+        if len(df) == 0:
+            # Create empty Arrow table with a dummy schema
+            import pyarrow as pa
+            schema = pa.schema([pa.field("_placeholder", pa.int32())])
+            table = pa.Table.from_arrays([], schema=schema)
+            sink = pa.BufferOutputStream()
+            with pa.ipc.new_stream(sink, schema) as writer:
+                writer.write_table(table)
+            arrow_data = sink.getvalue().to_pybytes()
+        else:
+            arrow_data = dataframe_to_arrow(df)
+
+        # Get the IR spec
+        spec = self.to_ir()
+
+        # Create and return widget
+        widget = GoFishChartWidget(
+            spec=spec,
+            arrow_data=arrow_data,
+            width=w,
+            height=h,
+            axes=axes,
+            debug=debug,
+        )
+
+        return widget
+
 
 # Operator factory functions
 
