@@ -24,8 +24,6 @@ import {
 } from "gofish-graphics";
 
 // Type definitions for widget model and IR
-type ExecuteDeriveFn = (lambdaId: string, arrowB64: string) => string;
-
 interface WidgetModel {
   get(key: "spec"): ChartSpec;
   get(key: "arrow_data"): string; // base64-encoded Arrow IPC bytes
@@ -34,7 +32,14 @@ interface WidgetModel {
   get(key: "axes"): boolean;
   get(key: "debug"): boolean;
   get(key: "container_id"): string;
-  get(key: "executeDerive"): ExecuteDeriveFn | undefined;
+}
+
+interface ExperimentalAPI {
+  invoke<T = any>(
+    name: string,
+    msg?: any,
+    buffers?: DataView[]
+  ): Promise<[T, DataView[]]>;
 }
 
 interface ChartSpec {
@@ -119,6 +124,9 @@ function normalizeToArray(value: any): any[] {
 /**
  * Converts an array of objects to Arrow IPC (Uint8Array).
  * Requires at least one row; callers should guard empty arrays.
+ *
+ * This matches the implementation of Arrow's tableToIPC function:
+ * RecordBatchStreamWriter.writeAll(table).toUint8Array(true)
  */
 function arrayToArrow(rows: Record<string, any>[]): Uint8Array {
   if (!rows || rows.length === 0) {
@@ -129,26 +137,56 @@ function arrayToArrow(rows: Record<string, any>[]): Uint8Array {
   let buffer: Uint8Array | ArrayBuffer | null = null;
 
   try {
-    const writer = (Arrow as any).RecordBatchStreamWriter;
-    if (writer && typeof writer.writeAll === "function") {
-      const stream = writer.writeAll(table);
-      if (stream && typeof stream.toUint8Array === "function") {
-        buffer = stream.toUint8Array();
-      } else if (stream && typeof stream.finish === "function") {
-        buffer = stream.finish();
-      }
-    } else if ((Arrow as any).tableToIPC) {
+    // Try tableToIPC if available (simplest method)
+    if (
+      (Arrow as any).tableToIPC &&
+      typeof (Arrow as any).tableToIPC === "function"
+    ) {
       buffer = (Arrow as any).tableToIPC(table);
+      if (buffer && buffer.byteLength > 0) {
+        return buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
+      }
     }
   } catch (error) {
-    // fall through to secondary attempt or error below
+    // Fall through to direct approach
+    console.warn("tableToIPC failed, trying direct approach:", error);
   }
 
-  if (!buffer) {
-    throw new Error("Failed to serialize Arrow table");
-  }
+  // Direct approach: RecordBatchStreamWriter.writeAll(table).toUint8Array(true)
+  // This is what tableToIPC does internally
+  try {
+    const writer = (Arrow as any).RecordBatchStreamWriter;
+    if (!writer || typeof writer.writeAll !== "function") {
+      throw new Error("RecordBatchStreamWriter.writeAll is not available");
+    }
 
-  return buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
+    // writeAll accepts the table directly and returns a stream
+    const stream = writer.writeAll(table);
+    if (!stream) {
+      throw new Error("writeAll returned null/undefined");
+    }
+
+    // The stream has a toUint8Array method that finishes the stream when passed true
+    if (typeof stream.toUint8Array === "function") {
+      buffer = stream.toUint8Array(true);
+    } else if (typeof stream.finish === "function") {
+      buffer = stream.finish();
+    } else {
+      throw new Error(
+        "Stream from writeAll has neither toUint8Array nor finish method"
+      );
+    }
+
+    if (!buffer || buffer.byteLength === 0) {
+      throw new Error("Serialized Arrow buffer is empty");
+    }
+
+    return buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
+  } catch (error) {
+    throw new Error(
+      `Failed to serialize Arrow table: ${error instanceof Error ? error.message : String(error)}`
+    );
+  }
 }
 
 // Operator mapping: IR operator specs -> GoFish API operators
@@ -157,17 +195,21 @@ function arrayToArrow(rows: Record<string, any>[]): Uint8Array {
  */
 const OPERATOR_MAP: Record<
   string,
-  (opts: Record<string, any>, model: WidgetModel) => Operator<any, any> | null
+  (
+    opts: Record<string, any>,
+    model: WidgetModel,
+    experimental: ExperimentalAPI
+  ) => Operator<any, any> | null
 > = {
-  derive: (opts: Record<string, any>, model: WidgetModel) => {
+  derive: (
+    opts: Record<string, any>,
+    model: WidgetModel,
+    experimental: ExperimentalAPI
+  ) => {
     const lambdaId = opts.lambdaId;
-    const executeDerive = model.get("executeDerive");
 
     if (!lambdaId) {
       throw new Error("derive operator missing lambdaId");
-    }
-    if (typeof executeDerive !== "function") {
-      throw new Error("executeDerive RPC hook is not available on the model");
     }
 
     return derive(async (d: any) => {
@@ -179,7 +221,19 @@ const OPERATOR_MAP: Record<
       const arrowBuffer = arrayToArrow(rows);
       const arrowB64 = btoa(String.fromCharCode(...arrowBuffer));
 
-      const resultB64 = executeDerive(lambdaId, arrowB64);
+      // Use experimental.invoke to call Python command
+      const [response] = await experimental.invoke<{ resultB64: string }>(
+        "_execute_derive",
+        {
+          lambdaId,
+          arrowB64,
+        }
+      );
+
+      const resultB64 = response?.resultB64;
+      if (typeof resultB64 !== "string") {
+        throw new Error("Invalid executeDerive response from Python");
+      }
       const resultBuffer = Uint8Array.from(atob(resultB64), (c) =>
         c.charCodeAt(0)
       );
@@ -193,18 +247,34 @@ const OPERATOR_MAP: Record<
       return resultArray[0] ?? null;
     });
   },
-  spread: (opts: Record<string, any>, _model: WidgetModel) => {
+  spread: (
+    opts: Record<string, any>,
+    _model: WidgetModel,
+    _experimental: ExperimentalAPI
+  ) => {
     const { field, ...rest } = opts;
     return field ? spread(field, rest) : spread(rest);
   },
-  stack: (opts: Record<string, any>, _model: WidgetModel) => {
+  stack: (
+    opts: Record<string, any>,
+    _model: WidgetModel,
+    _experimental: ExperimentalAPI
+  ) => {
     const { field, dir, ...rest } = opts;
     return stack(field, { dir, ...rest });
   },
-  group: (opts: Record<string, any>, _model: WidgetModel) => {
+  group: (
+    opts: Record<string, any>,
+    _model: WidgetModel,
+    _experimental: ExperimentalAPI
+  ) => {
     return group(opts.field);
   },
-  scatter: (opts: Record<string, any>, _model: WidgetModel) => {
+  scatter: (
+    opts: Record<string, any>,
+    _model: WidgetModel,
+    _experimental: ExperimentalAPI
+  ) => {
     const { field, x, y, ...rest } = opts;
     return scatter(field, { x, y, ...rest });
   },
@@ -215,14 +285,15 @@ const OPERATOR_MAP: Record<
  */
 function mapOperator(
   op: OperatorSpec,
-  model: WidgetModel
+  model: WidgetModel,
+  experimental: ExperimentalAPI
 ): Operator<any, any> | null {
   const { type, ...opts } = op;
   const factory = OPERATOR_MAP[type];
   if (!factory) {
     return null;
   }
-  return factory(opts, model);
+  return factory(opts, model, experimental);
 }
 
 // Mark mapping: IR mark spec -> GoFish API mark
@@ -274,7 +345,11 @@ function renderError(
 /**
  * Renders a GoFish chart from widget model state.
  */
-function renderChart(model: WidgetModel, container: HTMLElement): void {
+function renderChart(
+  model: WidgetModel,
+  container: HTMLElement,
+  experimental: ExperimentalAPI
+): void {
   const debug = model.get("debug");
 
   // Log only if debug mode is enabled
@@ -314,7 +389,7 @@ function renderChart(model: WidgetModel, container: HTMLElement): void {
 
   for (const opSpec of spec.operators || []) {
     log(`Mapping operator: ${opSpec.type}`);
-    const op = mapOperator(opSpec, model);
+    const op = mapOperator(opSpec, model, experimental);
     if (op) {
       operators.push(op);
     } else {
@@ -356,10 +431,18 @@ function renderChart(model: WidgetModel, container: HTMLElement): void {
 // AnyWidget entry point
 /**
  * Main render function for AnyWidget.
- * Accepts { model, el } from AnyWidget and renders the chart.
+ * Accepts { model, el, experimental } from AnyWidget and renders the chart.
  */
 export default {
-  async render({ model, el }: { model: WidgetModel; el: HTMLElement }) {
+  async render({
+    model,
+    el,
+    experimental,
+  }: {
+    model: WidgetModel;
+    el: HTMLElement;
+    experimental: ExperimentalAPI;
+  }) {
     const debug = model.get("debug");
     const log = debug
       ? (...args: any[]) => console.log("[GoFish Widget]", ...args)
@@ -385,7 +468,7 @@ export default {
 
     // Render the chart with error handling
     try {
-      renderChart(model, container);
+      renderChart(model, container, experimental);
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error));
       log("Error in render():", err);

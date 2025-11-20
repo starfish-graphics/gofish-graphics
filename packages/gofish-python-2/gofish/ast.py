@@ -177,10 +177,18 @@ class ChartBuilder:
         # Get the IR spec
         spec = self.to_ir()
 
+        # Collect derive functions for RPC execution in the widget
+        derive_functions = {
+            op.lambda_id: op.fn
+            for op in self.operators
+            if isinstance(op, DeriveOperator)
+        }
+
         # Create and return widget
         widget = GoFishChartWidget(
             spec=spec,
             arrow_data=arrow_data,
+            derive_functions=derive_functions,
             width=w,
             height=h,
             axes=axes,

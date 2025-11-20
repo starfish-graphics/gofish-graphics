@@ -82,6 +82,15 @@ The JSON IR has the following structure:
 }
 ```
 
+### Derive operator (Python execution)
+
+Derive operators now execute the provided Python callable from the front-end widget via Arrow-based RPC:
+
+- Each `derive(fn)` is assigned a unique `lambdaId` in the IR.
+- The widget keeps a Python-side registry mapping `lambdaId -> fn`.
+- The front-end serializes intermediate data to Arrow, calls `executeDerive(lambdaId, arrowB64)` on the model, and deserializes the result back into the pipeline.
+- Make sure the widget bundle is built and available (`pnpm build:widget`) so the derive bridge code is included.
+
 ## Building
 
 ### Building the Widget Bundle

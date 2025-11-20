@@ -18,7 +18,6 @@ class GoFishChartWidget(anywidget.AnyWidget):
     spec = traitlets.Dict().tag(sync=True)
     arrow_data = traitlets.Unicode().tag(sync=True)  # Base64-encoded Arrow data
     derive_functions = traitlets.Dict().tag(sync=False)  # Python-only registry
-    executeDerive = traitlets.Any().tag(sync=False)  # RPC hook callable
     width = traitlets.Int(800).tag(sync=True)
     height = traitlets.Int(600).tag(sync=True)
     axes = traitlets.Bool(False).tag(sync=True)
@@ -89,66 +88,50 @@ class GoFishChartWidget(anywidget.AnyWidget):
             **kwargs,
         )
 
-        # Handle RPC-style messages from the front-end
-        self.on_msg(self._handle_custom_msg)
+    @anywidget.experimental.command
+    def _execute_derive(self, msg: dict, buffers: list):
+        """Execute a derive function and return Arrow data as base64.
 
-    @traitlets.default("executeDerive")
-    def _execute_derive(self):
-        """Execute a derive function and return Arrow data as base64."""
+        Args:
+            msg: Message containing lambdaId and arrowB64
+            buffers: Optional buffers (not used for derive)
 
-        def execute(lambda_id: str, arrow_data_b64: str) -> str:
-            # Locate Python function for this lambda_id
-            fn = self.derive_functions.get(lambda_id)
-            if fn is None:
-                raise ValueError(f"Derive function with ID {lambda_id} not found")
+        Returns:
+            Tuple of (response dict, buffers list)
+        """
+        lambda_id = msg.get("lambdaId")
+        arrow_b64 = msg.get("arrowB64")
 
-            # Decode Arrow to DataFrame
-            arrow_bytes = base64.b64decode(arrow_data_b64)
-            df = arrow_to_dataframe(arrow_bytes)
+        if not lambda_id or not arrow_b64:
+            raise ValueError(f"Missing required fields: lambdaId and arrowB64")
 
-            # Execute user function
-            result = fn(df)
+        # Locate Python function for this lambda_id
+        fn = self.derive_functions.get(lambda_id)
+        if fn is None:
+            raise ValueError(f"Derive function with ID {lambda_id} not found")
 
-            # Normalize result to DataFrame
-            try:
-                import pandas as pd
-            except Exception as exc:  # pragma: no cover - import guard
-                raise RuntimeError("pandas is required for derive execution") from exc
+        # Decode Arrow to DataFrame
+        arrow_bytes = base64.b64decode(arrow_b64)
+        df = arrow_to_dataframe(arrow_bytes)
 
-            if result is None:
-                result_df = pd.DataFrame()
-            elif isinstance(result, pd.DataFrame):
-                result_df = result
-            else:
-                result_df = pd.DataFrame(result)
+        # Execute user function
+        result = fn(df)
 
-            # Encode result back to Arrow base64
-            result_arrow = dataframe_to_arrow(result_df)
-            return base64.b64encode(result_arrow).decode("utf-8")
-
-        return execute
-
-    def _handle_custom_msg(self, _, content: dict, buffers):
-        """Handle custom messages from the front-end for RPC invocations."""
-        # Expected shape: { "uuid": "...", "payload": { "type": "executeDerive", ... } }
-        uuid = content.get("uuid")
-        payload = content.get("payload", {})
-
-        if not uuid or not isinstance(payload, dict):
-            return
-
-        if payload.get("type") != "executeDerive":
-            return
-
+        # Normalize result to DataFrame
         try:
-            lambda_id = payload.get("lambdaId")
-            arrow_b64 = payload.get("arrowB64")
-            result_b64 = self.executeDerive(lambda_id, arrow_b64)
-            self.send({"uuid": uuid, "payload": {"resultB64": result_b64}})
-        except Exception as exc:  # pragma: no cover - defensive
-            self.send(
-                {
-                    "uuid": uuid,
-                    "error": f"executeDerive failed: {exc}",
-                }
-            )
+            import pandas as pd
+        except Exception as exc:  # pragma: no cover - import guard
+            raise RuntimeError("pandas is required for derive execution") from exc
+
+        if result is None:
+            result_df = pd.DataFrame()
+        elif isinstance(result, pd.DataFrame):
+            result_df = result
+        else:
+            result_df = pd.DataFrame(result)
+
+        # Encode result back to Arrow base64
+        result_arrow = dataframe_to_arrow(result_df)
+        result_b64 = base64.b64encode(result_arrow).decode("utf-8")
+
+        return {"resultB64": result_b64}, buffers
