@@ -77,6 +77,24 @@ class ChartBuilder(Generic[T, U]):
 
         Returns:
             Display object (for Jupyter) or None
+
+        Note:
+            This method serializes the chart to an Intermediate Representation (IR)
+            that is sent to JavaScript for rendering. The IR structure is:
+
+            {
+                "data": None,  # Data is sent separately via Apache Arrow
+                "operators": [
+                    {"type": "spread", "field": "lake", "dir": "x", "spacing": 8},
+                    {"type": "derive", "lambdaId": "uuid-here"},  # Special case
+                    {"type": "stack", "field": "species", "dir": "y"}
+                ],
+                "mark": {"type": "rect", "h": "count", "fill": "species"},
+                "options": {}
+            }
+
+            The derive operator uses a lambdaId that maps to a Python function
+            stored in the widget's derive_functions registry for RPC execution.
         """
         # Merge options
         render_options = {

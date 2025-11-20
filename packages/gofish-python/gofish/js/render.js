@@ -143,16 +143,46 @@ function readLine() {
   });
 }
 
+// Helper function to send debug messages to Python via stderr
+function debugRPC(message, level = "info") {
+  const debugMessage = {
+    type: "debug",
+    level: level,
+    message: message,
+    timestamp: new Date().toISOString(),
+  };
+  // Send to stderr so it doesn't interfere with stdout communication
+  process.stderr.write(JSON.stringify(debugMessage) + "\n");
+  if (process.stderr.flush) {
+    process.stderr.flush();
+  }
+}
+
 // Helper function to execute derive operator
 async function executeDerive(data, lambdaId) {
+  debugRPC(`executeDerive called with lambdaId: ${lambdaId}`, "debug");
+  debugRPC(
+    `Input data: ${Array.isArray(data) ? `array of ${data.length} items` : typeof data}`,
+    "debug"
+  );
+
   // Convert data array to Arrow
   let arrowBuffer;
   try {
     arrowBuffer = arrayToArrow(data);
+    debugRPC(
+      `Data converted to Arrow buffer length: ${arrowBuffer.length}`,
+      "debug"
+    );
   } catch (e) {
+    debugRPC(`Failed to convert data to Arrow: ${e.message}`, "error");
     throw new Error(`Failed to convert data to Arrow: ${e.message}`);
   }
   const arrowB64 = arrowBuffer.toString("base64");
+  debugRPC(
+    `Arrow buffer converted to base64 length: ${arrowB64.length}`,
+    "debug"
+  );
 
   // Send request to Python
   const request = {
@@ -161,6 +191,7 @@ async function executeDerive(data, lambdaId) {
     arrowData: arrowB64,
   };
 
+  debugRPC(`Sending derive_execute request to Python`, "debug");
   // Write request to stdout (which Python reads)
   process.stdout.write(JSON.stringify(request) + "\n");
   if (process.stdout.flush) {
@@ -168,34 +199,55 @@ async function executeDerive(data, lambdaId) {
   }
 
   // Read response from stdin (which Python writes to)
+  debugRPC(`Waiting for Python response...`, "debug");
   const responseLine = await readLine();
 
   try {
     const response = JSON.parse(responseLine);
+    debugRPC(`Received response type: ${response.type}`, "debug");
 
     if (response.type === "error") {
+      debugRPC(`Python returned error: ${response.error}`, "error");
       throw new Error(response.error);
     }
 
     if (response.type === "response" && response.arrowData) {
+      debugRPC(
+        `Response contains arrowData, length: ${response.arrowData.length}`,
+        "debug"
+      );
       // Convert Arrow back to array
       try {
         const arrowBuffer = Buffer.from(response.arrowData, "base64");
         const table = Arrow.tableFromIPC(arrowBuffer);
         const resultData = arrowTableToArray(table);
+        debugRPC(
+          `Result converted back to array, length: ${resultData.length}`,
+          "debug"
+        );
         return resultData;
       } catch (arrowError) {
+        debugRPC(
+          `Failed to parse Arrow response: ${arrowError.message}`,
+          "error"
+        );
         throw new Error(
           `Failed to parse Arrow response: ${arrowError.message}`
         );
       }
     } else {
+      debugRPC(
+        `Invalid response from Python: ${JSON.stringify(response)}`,
+        "error"
+      );
       throw new Error("Invalid response from Python");
     }
   } catch (e) {
     if (e instanceof Error) {
+      debugRPC(`Error processing response: ${e.message}`, "error");
       throw e;
     }
+    debugRPC(`Failed to parse response: ${e.message}`, "error");
     throw new Error(`Failed to parse response: ${e.message}`);
   }
 }
@@ -280,6 +332,7 @@ async function executeDerive(data, lambdaId) {
             async () => await executeDerive(d, lambdaId)
           );
           return result();
+          // return d;
         });
       } else if (op.type === "spread") {
         const { field, ...opts } = op;

@@ -10,7 +10,7 @@ import anywidget
 import traitlets
 
 from .arrow_utils import dataframe_to_arrow, arrow_to_dataframe
-from .bridge import find_client_bundle, ensure_js_dependencies
+from .bridge import find_client_bundle
 
 
 class GoFishChartWidget(anywidget.AnyWidget):
@@ -58,8 +58,7 @@ class GoFishChartWidget(anywidget.AnyWidget):
         # Store derive functions (not synced to frontend)
         self.derive_functions = derive_functions or {}
         
-        # Ensure JS bundle is built
-        ensure_js_dependencies()
+        # Load pre-built JS bundle
         bundle_path = find_client_bundle()
         
         # Read the ESM bundle content to inline it as a data URL
@@ -165,19 +164,39 @@ class GoFishChartWidget(anywidget.AnyWidget):
           return new Uint8Array(buffer);
         }
 
+        // Debug RPC function to print messages from JavaScript to Python
+        function debugRPC(model, message, level = "info") {
+          try {
+            const debugFn = model.get('debug');
+            if (debugFn && typeof debugFn === 'function') {
+              debugFn(message, level);
+            } else {
+              console.warn("[GoFish Widget] debug RPC not available");
+            }
+          } catch (error) {
+            console.warn("[GoFish Widget] Failed to call debug RPC:", error);
+          }
+        }
+
         // Execute derive function via model
         async function executeDeriveViaModel(model, lambdaId, data) {
+          debugRPC(model, `executeDeriveViaModel called for lambdaId: ${lambdaId}`, "debug");
+          debugRPC(model, `Input data: array with ${Array.isArray(data) ? data.length : 'unknown'} items`, "debug");
+          
           console.log("[GoFish Widget] executeDeriveViaModel called for lambdaId:", lambdaId);
           // Convert data array to Arrow
           const arrowBuffer = arrayToArrow(data);
+          debugRPC(model, `Data converted to Arrow buffer length: ${arrowBuffer.length}`, "debug");
           console.log("[GoFish Widget] Data converted to Arrow buffer length:", arrowBuffer.length);
           
           // Convert to base64 for transmission
           const arrowB64 = btoa(String.fromCharCode(...arrowBuffer));
+          debugRPC(model, `Arrow buffer converted to base64 length: ${arrowB64.length}`, "debug");
           console.log("[GoFish Widget] Arrow buffer converted to base64 length:", arrowB64.length);
           
           // Call Python method via model
           const resultB64 = await model.get('executeDerive')(lambdaId, arrowB64);
+          debugRPC(model, `Python executeDerive returned result length: ${resultB64.length}`, "debug");
           console.log("[GoFish Widget] Python executeDerive returned result length:", resultB64.length);
           
           // Convert result back to array
@@ -186,6 +205,7 @@ class GoFishChartWidget(anywidget.AnyWidget):
           );
           const resultTable = Arrow.tableFromIPC(resultBuffer);
           const resultArray = arrowTableToArray(resultTable);
+          debugRPC(model, `Result converted back to array length: ${resultArray.length}`, "debug");
           console.log("[GoFish Widget] Result converted back to array length:", resultArray.length);
           return resultArray;
         }
@@ -258,8 +278,15 @@ class GoFishChartWidget(anywidget.AnyWidget):
                 throw new Error("derive operator missing lambdaId");
               }
 
+              debugRPC(model, `Creating derive operator with lambdaId: ${lambdaId}`, "debug");
+
               // Create derive that returns a resource accessor
               reconstructedOp = derive((d) => {
+                debugRPC(model, `derive function called with data: ${Array.isArray(d) ? `array of ${d.length} items` : typeof d}`, "debug");
+                if (Array.isArray(d) && d.length > 0) {
+                  debugRPC(model, `First item sample: ${JSON.stringify(d[0]).substring(0, 100)}`, "debug");
+                }
+                
                 // Create resource for this derive operation
                 const dataKey = JSON.stringify(d);
 
@@ -268,14 +295,28 @@ class GoFishChartWidget(anywidget.AnyWidget):
                     return [lambdaId, dataKey];
                   },
                   async ([id, key]) => {
-                    return await executeDeriveViaModel(model, id, d);
+                    debugRPC(model, `Executing derive for lambdaId: ${id}`, "debug");
+                    try {
+                      const result = await executeDeriveViaModel(model, id, d);
+                      debugRPC(model, `Derive execution completed, result length: ${Array.isArray(result) ? result.length : 'unknown'}`, "debug");
+                      return result;
+                    } catch (error) {
+                      debugRPC(model, `Derive execution failed: ${error.message}`, "error");
+                      throw error;
+                    }
                   }
                 );
 
                 // Return resource accessor function
                 return () => {
-                  const value = result();
-                  return value;
+                  try {
+                    const value = result();
+                    debugRPC(model, `derive resource accessed, returning value`, "debug");
+                    return value;
+                  } catch (error) {
+                    debugRPC(model, `Error accessing derive resource: ${error.message}`, "error");
+                    throw error;
+                  }
                 };
               });
             } else if (op.type === "spread") {
@@ -487,4 +528,26 @@ class GoFishChartWidget(anywidget.AnyWidget):
             return result_b64
         
         return execute
+    
+    @traitlets.default('debug')
+    def _debug(self):
+        """Debug RPC method to print messages from JavaScript to Python."""
+        def debug_print(message: str, level: str = "info"):
+            """Print a debug message from JavaScript.
+            
+            Args:
+                message: Debug message to print
+                level: Log level (info, warn, error, debug)
+            """
+            prefix = f"[GoFish JS→Python]"
+            if level == "error":
+                print(f"{prefix} ERROR: {message}")
+            elif level == "warn":
+                print(f"{prefix} WARN: {message}")
+            elif level == "debug":
+                print(f"{prefix} DEBUG: {message}")
+            else:
+                print(f"{prefix} {message}")
+        
+        return debug_print
 

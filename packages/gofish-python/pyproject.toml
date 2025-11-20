@@ -21,5 +21,5 @@ all = ["ipython>=8.0.0"]
 packages = ["gofish"]
 
 [tool.setuptools.package-data]
-gofish = ["js/*.js", "js/package.json"]
+gofish = ["js/dist/*.js", "js/package.json"]
 

@@ -15,7 +15,19 @@ class Operator:
         self.kwargs = kwargs
 
     def to_dict(self) -> dict:
-        """Convert operator to dictionary for JSON serialization."""
+        """
+        Convert operator to dictionary for JSON serialization.
+
+        Returns:
+            Dictionary representation of the operator for the IR.
+
+        Example IR formats:
+            - spread: {"type": "spread", "field": "lake", "dir": "x", "spacing": 8}
+            - stack: {"type": "stack", "field": "species", "dir": "y", "spacing": 0}
+            - group: {"type": "group", "field": "category"}
+            - scatter: {"type": "scatter", "field": "group", "x": "x", "y": "y"}
+            - derive: {"type": "derive", "lambdaId": "uuid-123"}  # Special case
+        """
         return {"type": self.op_type, **self.kwargs}
 
 
@@ -28,27 +40,23 @@ class DeriveOperator(Operator):
         # Generate unique ID for this function
         # This ID will be used to look up the function in the widget's derive_functions dict
         self.lambda_id = str(uuid.uuid4())
-        # Store function source for debugging (optional)
-        try:
-            import inspect
-            self._source = inspect.getsource(fn)
-        except:
-            self._source = None
-
-    def execute(self, data: pd.DataFrame) -> pd.DataFrame:
-        """
-        Execute the derive function on the data.
-
-        Args:
-            data: Input DataFrame
-
-        Returns:
-            Transformed DataFrame
-        """
-        return self.fn(data)
 
     def to_dict(self) -> dict:
-        """Convert to dict - return lambda ID (function stored in operator instance)."""
+        """
+        Convert to dict - return lambda ID (function stored in operator instance).
+
+        Returns:
+            Dictionary with type "derive" and lambdaId for RPC lookup.
+
+        Note:
+            The derive operator is special: it stores a lambdaId that maps to a
+            Python function in the widget's derive_functions registry. When the
+            JavaScript rendering pipeline encounters this operator, it makes an
+            RPC call back to Python to execute the function.
+
+        Example IR:
+            {"type": "derive", "lambdaId": "550e8400-e29b-41d4-a716-446655440000"}
+        """
         return {"type": "derive", "lambdaId": self.lambda_id}
 
 

@@ -1,165 +1,35 @@
-"""Bridge for communicating with Node.js to render GoFish charts."""
+"""Bridge for standalone HTML rendering of GoFish charts.
 
-import json
-import os
-import subprocess
-import sys
-import tempfile
+This module provides client-side HTML rendering for non-Jupyter environments.
+For Jupyter notebooks, use the widget-based rendering in render.py instead.
+"""
+
 import base64
+import json
 import uuid
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from .arrow_utils import dataframe_to_arrow, arrow_to_dataframe
-
-
-def find_js_bridge_script() -> Path:
-    """Find the path to the Node.js render script."""
-    # Get the directory where this Python module is located
-    current_file = Path(__file__).resolve()
-    package_dir = current_file.parent
-    js_dir = package_dir / "js"
-    render_js = js_dir / "render.js"
-    
-    if not render_js.exists():
-        raise FileNotFoundError(
-            f"Could not find render.js at {render_js}. "
-            "Make sure the js/ directory exists and contains render.js"
-        )
-    
-    return render_js
-
-
-def find_node_executable() -> str:
-    """Find the Node.js executable."""
-    # Try common locations
-    node_candidates = ["node", "nodejs"]
-    
-    for node_cmd in node_candidates:
-        try:
-            result = subprocess.run(
-                [node_cmd, "--version"],
-                capture_output=True,
-                text=True,
-                timeout=5,
-            )
-            if result.returncode == 0:
-                return node_cmd
-        except (FileNotFoundError, subprocess.TimeoutExpired):
-            continue
-    
-    raise RuntimeError(
-        "Node.js not found. Please install Node.js (https://nodejs.org/) "
-        "and make sure it's in your PATH."
-    )
-
-
-def ensure_js_dependencies() -> None:
-    """Ensure Node.js dependencies are installed."""
-    js_dir = find_js_bridge_script().parent
-    package_json = js_dir / "package.json"
-    node_modules = js_dir / "node_modules"
-    
-    if not package_json.exists():
-        raise FileNotFoundError(
-            f"Could not find package.json at {package_json}"
-        )
-    
-    # Check if node_modules exists and if vite-plugin-solid is installed
-    vite_plugin_installed = (
-        node_modules.exists() and 
-        (node_modules / "vite-plugin-solid").exists()
-    )
-    
-    if not node_modules.exists() or not any(node_modules.iterdir()) or not vite_plugin_installed:
-        # Try to install dependencies (including devDependencies)
-        npm_cmd = find_npm_executable()
-        try:
-            result = subprocess.run(
-                [npm_cmd, "install"],
-                cwd=js_dir,
-                check=True,
-                capture_output=True,
-                text=True,
-                timeout=300,  # 5 minutes timeout
-            )
-        except subprocess.CalledProcessError as e:
-            error_msg = e.stderr if e.stderr else e.stdout if e.stdout else "Unknown error"
-            raise RuntimeError(
-                f"Failed to install Node.js dependencies: {error_msg}"
-            ) from e
-        except subprocess.TimeoutExpired:
-            raise RuntimeError(
-                "Timeout while installing Node.js dependencies. "
-                "Please run 'npm install' manually in the js/ directory."
-            )
-
-
-def find_npm_executable() -> str:
-    """Find the npm executable."""
-    # Try common locations
-    npm_candidates = ["npm", "npm.cmd"]  # .cmd for Windows
-    
-    for npm_cmd in npm_candidates:
-        try:
-            result = subprocess.run(
-                [npm_cmd, "--version"],
-                capture_output=True,
-                text=True,
-                timeout=5,
-            )
-            if result.returncode == 0:
-                return npm_cmd
-        except (FileNotFoundError, subprocess.TimeoutExpired):
-            continue
-    
-    raise RuntimeError(
-        "npm not found. Please install Node.js (https://nodejs.org/) "
-        "which includes npm, and make sure it's in your PATH."
-    )
-
-
-def ensure_gofish_graphics_built() -> None:
-    """Ensure gofish-graphics is built before bundling."""
-    current_file = Path(__file__).resolve()
-    # current_file is at packages/gofish-python/gofish/bridge.py
-    # So we need to go: gofish -> gofish-python -> packages -> packages/gofish-graphics
-    gofish_graphics_dir = current_file.parent.parent.parent / "gofish-graphics"
-    dist_file = gofish_graphics_dir / "dist" / "index.js"
-    
-    if not dist_file.exists():
-        # Try to build gofish-graphics
-        npm_cmd = find_npm_executable()
-        try:
-            result = subprocess.run(
-                [npm_cmd, "run", "build"],
-                cwd=gofish_graphics_dir,
-                check=True,
-                capture_output=True,
-                text=True,
-                timeout=300,
-            )
-        except subprocess.CalledProcessError as e:
-            error_msg = e.stderr if e.stderr else e.stdout if e.stdout else "Unknown error"
-            raise RuntimeError(
-                f"gofish-graphics is not built. Failed to build: {error_msg}\n"
-                f"Please run 'npm run build' (or 'pnpm run build') in {gofish_graphics_dir}"
-            ) from e
-        except subprocess.TimeoutExpired:
-            raise RuntimeError(
-                f"Timeout while building gofish-graphics. "
-                f"Please run 'npm run build' manually in {gofish_graphics_dir}"
-            )
+from .arrow_utils import dataframe_to_arrow
 
 
 def find_client_bundle() -> Path:
-    """Find the path to the bundled client JavaScript."""
+    """
+    Find the path to the pre-built client JavaScript bundle.
+    
+    Returns:
+        Path to the bundle file (ESM or IIFE format)
+        
+    Raises:
+        FileNotFoundError: If no bundle is found. The bundle should be built
+            during package installation using `build_assets.py`.
+    """
     current_file = Path(__file__).resolve()
     package_dir = current_file.parent
     js_dir = package_dir / "js"
     dist_dir = js_dir / "dist"
     
-    # For anywidget, prefer ESM format
+    # Prefer ESM format for modern environments
     bundle_path = dist_dir / "gofish-client.js"  # ESM format
     
     # Fallback to IIFE if ESM doesn't exist
@@ -167,48 +37,12 @@ def find_client_bundle() -> Path:
         bundle_path = dist_dir / "gofish-client.iife.js"
     
     if not bundle_path.exists():
-        # Ensure gofish-graphics is built first
-        ensure_gofish_graphics_built()
-        
-        # Try to build the client bundle
-        ensure_js_dependencies()
-        npm_cmd = find_npm_executable()
-        try:
-            result = subprocess.run(
-                [npm_cmd, "run", "build:client"],
-                cwd=js_dir,
-                check=True,
-                capture_output=True,
-                text=True,
-                timeout=300,
-            )
-            # Check for the actual file that was generated
-            # Vite generates gofish-client.iife.js when using iife format
-            bundle_path = dist_dir / "gofish-client.iife.js"
-            if not bundle_path.exists():
-                bundle_path = dist_dir / "gofish-client.js"
-            
-            # Verify the file was created
-            if not bundle_path.exists():
-                # List what files were actually created
-                dist_files = list(dist_dir.glob("gofish-client*")) if dist_dir.exists() else []
-                raise RuntimeError(
-                    f"Build completed but bundle file not found. "
-                    f"Expected: gofish-client.iife.js or gofish-client.js. "
-                    f"Found in dist: {[f.name for f in dist_files]}. "
-                    f"Build output: {result.stdout}"
-                )
-        except subprocess.CalledProcessError as e:
-            error_msg = e.stderr if e.stderr else e.stdout if e.stdout else "Unknown error"
-            raise RuntimeError(
-                f"Failed to build client bundle: {error_msg}\n"
-                f"Please run 'npm run build:client' manually in {js_dir}"
-            ) from e
-        except subprocess.TimeoutExpired:
-            raise RuntimeError(
-                "Timeout while building client bundle. "
-                f"Please run 'npm run build:client' manually in {js_dir}"
-            )
+        raise FileNotFoundError(
+            f"JavaScript bundle not found at {bundle_path}.\n"
+            f"Bundles must be pre-built during package installation.\n"
+            f"To build manually, run: python build_assets.py\n"
+            f"Or install the package from a distribution that includes pre-built bundles."
+        )
     
     return bundle_path
 
@@ -236,10 +70,9 @@ def render_chart(
         HTML string
 
     Raises:
-        RuntimeError: If bundle cannot be built or rendering fails
+        FileNotFoundError: If the JavaScript bundle is not found
     """
-    # Ensure dependencies are installed and bundle is built
-    ensure_js_dependencies()
+    # Load pre-built bundle
     bundle_path = find_client_bundle()
     
     # Convert data to Arrow if not already provided
@@ -485,5 +318,3 @@ def render_chart(
 </html>"""
     
     return html
-
-

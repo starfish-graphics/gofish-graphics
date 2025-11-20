@@ -22,7 +22,7 @@ setup(
     },
     include_package_data=True,
     package_data={
-        "gofish": ["js/*.js", "js/package.json"],
+        "gofish": ["js/dist/*.js", "js/package.json"],
     },
     classifiers=[
         "Development Status :: 3 - Alpha",

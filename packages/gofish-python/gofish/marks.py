@@ -11,7 +11,19 @@ class Mark:
         self.kwargs = kwargs
 
     def to_dict(self) -> dict:
-        """Convert mark to dictionary for JSON serialization."""
+        """
+        Convert mark to dictionary for JSON serialization.
+
+        Returns:
+            Dictionary representation of the mark for the IR.
+
+        Example IR formats:
+            - rect: {"type": "rect", "h": "count", "fill": "species", "w": 32}
+            - circle: {"type": "circle", "r": 5, "fill": "blue"}
+            - line: {"type": "line", "stroke": "blue", "strokeWidth": 2}
+            - area: {"type": "area", "opacity": 0.8, "mixBlendMode": "multiply"}
+            - scaffold: {"type": "scaffold", "w": 100, "h": 100}
+        """
         return {"type": self.mark_type, **self.kwargs}
 
 
