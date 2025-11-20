@@ -34,15 +34,16 @@ const connectXMode = {
   center: "center-to-center",
 } as const;
 
-export type Mark<T> = (d: T, key?: string | number) => GoFishNode;
+export type Mark<T> = (d: T, key?: string | number) => Promise<GoFishNode>;
 
-export type Operator<T, U> = (_: Mark<U>) => Mark<T>;
+export type Operator<T, U> = (_: Mark<U>) => Promise<Mark<T>>;
 
 /* Data Transformation Operators */
-export function derive<T, U>(fn: (d: T) => U): Operator<T, U> {
-  return (mark: Mark<U>) => {
-    return (d: T, key?: string | number) => {
-      return mark(fn(d), key);
+export function derive<T, U>(fn: (d: T) => U | Promise<U>): Operator<T, U> {
+  return async (mark: Mark<U>) => {
+    return async (d: T, key?: string | number) => {
+      const result = await fn(d);
+      return mark(result, key);
     };
   };
 }
@@ -69,8 +70,8 @@ export const normalize = <T, K extends keyof T>(
 };
 
 export function log<T>(label?: string): Operator<T, T> {
-  return (mark: Mark<T>) => {
-    return (d: T, key?: string | number) => {
+  return async (mark: Mark<T>) => {
+    return async (d: T, key?: string | number) => {
       if (label) {
         console.log(label, d);
       } else {
@@ -153,17 +154,19 @@ export class ChartBuilder<TInput, TOutput = TInput> {
   }
 
   // mark applies all accumulated operators and the final mark
-  mark(mark: Mark<TOutput>): GoFishNode & { as: (name: string) => GoFishNode } {
+  async mark(
+    mark: Mark<TOutput>
+  ): Promise<GoFishNode & { as: (name: string) => GoFishNode }> {
     let finalMark = mark as Mark<any>;
     const operators = this.operators;
     const data = this.data;
 
     for (const op of operators.toReversed()) {
-      finalMark = op(finalMark);
+      finalMark = await op(finalMark);
     }
 
-    const node = Frame(this.options ?? {}, [
-      finalMark(data as any).setShared([true, true]),
+    const node = await Frame(this.options ?? {}, [
+      (await finalMark(data as any)).setShared([true, true]),
     ]);
 
     // Add .as() method to the returned node
@@ -248,12 +251,12 @@ export function spread<T>(
     alignment: opts?.alignment ?? "start",
   };
 
-  return (mark: Mark<T[]>) => {
-    return (d: T[], key?: string | number) => {
+  return async (mark: Mark<T[]>) => {
+    return async (d: T[], key?: string | number) => {
       // Group by the field if provided, otherwise iterate over raw data
       const grouped = field ? groupBy(d, field as ValueIteratee<T>) : d;
 
-      return Stack(
+      return await Stack(
         {
           direction: finalOptions.dir === "x" ? 0 : 1,
           x: finalOptions?.x ?? finalOptions?.t,
@@ -271,9 +274,9 @@ export function spread<T>(
             ? inferSize(finalOptions?.h as string | number, d)
             : undefined,
         },
-        For(grouped as any, (groupData: T[], k) => {
+        For(grouped as any, async (groupData: T[], k) => {
           const currentKey = key != undefined ? `${key}-${k}` : k;
-          const node = mark(groupData, currentKey);
+          const node = await mark(groupData, currentKey);
           return finalOptions.label
             ? node.setKey(currentKey?.toString() ?? "")
             : node;
@@ -306,14 +309,14 @@ export function scatter<T>(
     debug?: boolean;
   }
 ): Operator<T[], T[]> {
-  return (mark: Mark<T[]>) => {
-    return (d: T[], key?: string | number) => {
+  return async (mark: Mark<T[]>) => {
+    return async (d: T[], key?: string | number) => {
       // Group by the field
       const groups = groupBy(d, field as ValueIteratee<T>);
       if (options?.debug) console.log("scatter groups", groups);
 
       return Frame(
-        For(groups, (items, groupKey) => {
+        For(groups, async (items, groupKey) => {
           // Calculate average x and y values for this group
           const avgX = meanBy(items, options.x as string);
           const avgY = meanBy(items, options.y as string);
@@ -324,7 +327,7 @@ export function scatter<T>(
           // Render the group items and wrap in Position operator
           const currentKey = key != undefined ? `${key}-${groupKey}` : groupKey;
           return Position({ x: v(avgX), y: v(avgY) }, [
-            mark(items, currentKey),
+            await mark(items, currentKey),
           ]);
         })
       );
@@ -333,8 +336,8 @@ export function scatter<T>(
 }
 
 export function group<T>(field: keyof T): Operator<T[], T[]> {
-  return (mark: Mark<T[]>) => {
-    return (d: T[], key?: string | number) => {
+  return async (mark: Mark<T[]>) => {
+    return async (d: T[], key?: string | number) => {
       // Group by the field
       const groups = groupBy(d, field as ValueIteratee<T>);
 
@@ -377,7 +380,7 @@ export function rect<T extends Record<string, any>>({
   strokeWidth?: number;
   debug?: boolean;
 }): Mark<T | T[] | { item: T | T[]; key: number | string }> {
-  return (input: T | T[] | { item: T | T[]; key: number | string }) => {
+  return async (input: T | T[] | { item: T | T[]; key: number | string }) => {
     let d: T | T[], key: number | string | undefined;
     if (typeof input === "object" && input !== null && "item" in input) {
       // @ts-ignore
@@ -431,7 +434,7 @@ export function circle<T extends Record<string, any>>({
   strokeWidth?: number;
   debug?: boolean;
 }): Mark<T> {
-  return (d: T, key?: string | number) => {
+  return async (d: T, key?: string | number) => {
     if (debug) console.log("circle", key, d);
     const node = Rect({
       w: typeof r === "number" ? r * 2 : inferSize(r, d),
@@ -478,7 +481,10 @@ export function line<T extends Record<string, any>>(options?: {
   opacity?: number;
   interpolation?: "linear" | "bezier";
 }): Mark<Array<T & { __ref?: GoFishNode }>> {
-  return (d: Array<T & { __ref?: GoFishNode }>, key?: string | number) => {
+  return async (
+    d: Array<T & { __ref?: GoFishNode }>,
+    key?: string | number
+  ) => {
     // Use refs from enriched data if available
     const refs = d.map((item) => {
       if ("__ref" in item && item.__ref) {
@@ -511,7 +517,10 @@ export function area<T extends Record<string, any>>(options?: {
   dir?: "x" | "y";
   interpolation?: "linear" | "bezier";
 }): Mark<Array<T & { __ref?: GoFishNode }>> {
-  return (d: Array<T & { __ref?: GoFishNode }>, key?: string | number) => {
+  return async (
+    d: Array<T & { __ref?: GoFishNode }>,
+    key?: string | number
+  ) => {
     // Use refs from enriched data if available
     const refs = d.map((item) => {
       if ("__ref" in item && item.__ref) {

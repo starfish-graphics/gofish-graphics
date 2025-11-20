@@ -8,11 +8,7 @@ version = "0.1.0"
 description = "Clean AST implementation for GoFish graphics library"
 readme = "README.md"
 requires-python = ">=3.8"
-dependencies = [
-    "anywidget>=0.9.0",
-    "pyarrow>=10.0.0",
-    "pandas>=1.5.0",
-]
+dependencies = ["anywidget>=0.9.0", "pyarrow>=10.0.0", "pandas>=1.5.0"]
 # Note: solid-js is a peer dependency required at runtime in the browser.
 # The widget loads it from CDN, but for production use, solid-js should be
 # available as a peer dependency to work properly with Suspense boundaries.
@@ -25,7 +21,3 @@ testpaths = ["tests"]
 python_files = "test_*.py"
 python_classes = "Test*"
 python_functions = "test_*"
-
-
-
-
