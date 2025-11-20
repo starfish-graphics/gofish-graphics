@@ -1,4 +1,11 @@
-import { For, Show, Suspense, type JSX } from "solid-js";
+import {
+  createEffect,
+  createResource,
+  For,
+  Show,
+  Suspense,
+  type JSX,
+} from "solid-js";
 import { render as solidRender } from "solid-js/web";
 import {
   debugInputSceneGraph,
@@ -149,9 +156,13 @@ export const gofish = (
 
     // Render to the provided container
     // console.log(scaleContext);
-    solidRender(
-      () => (
-        // used to handle async rendering of derived data
+    solidRender(() => {
+      const [result] = createResource(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        return 5;
+      });
+      // used to handle async rendering of derived data
+      return (
         <Suspense fallback={<div>Loading...</div>}>
           {render(
             {
@@ -169,9 +180,8 @@ export const gofish = (
             child
           )}
         </Suspense>
-      ),
-      container
-    );
+      );
+    }, container);
     return container;
   } finally {
     if (debug) {
