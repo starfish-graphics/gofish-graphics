@@ -1,0 +1,18 @@
+{
+  "name": "gofish-python-2",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build:widget": "node build-widget.mjs"
+  },
+  "dependencies": {
+    "apache-arrow": "^14.0.0",
+    "solid-js": "^1.9.5",
+    "gofish-graphics": "workspace:*"
+  },
+  "devDependencies": {
+    "esbuild": "^0.24.0"
+  }
+}
+

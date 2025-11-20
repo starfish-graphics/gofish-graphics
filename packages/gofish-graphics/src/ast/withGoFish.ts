@@ -15,12 +15,27 @@ import _, { ListOfRecursiveArraysOrValues } from "lodash";
 export function withGoFish<T extends Record<string, any>, R>(
   func: (opts: T, children: GoFishAST[]) => R
 ): {
-  (opts?: T, children?: ListOfRecursiveArraysOrValues<GoFishAST> | null): R;
-  (children: ListOfRecursiveArraysOrValues<GoFishAST> | null): R;
+  (
+    opts?: T,
+    children?:
+      | ListOfRecursiveArraysOrValues<GoFishAST>
+      | Promise<ListOfRecursiveArraysOrValues<GoFishAST>>
+      | null
+  ): Promise<R>;
+  (
+    children:
+      | ListOfRecursiveArraysOrValues<GoFishAST>
+      | Promise<ListOfRecursiveArraysOrValues<GoFishAST>>
+      | null
+  ): Promise<R>;
 } {
-  return function (...args: any[]): R {
+  return async function (...args: any[]): Promise<R> {
     let opts: T;
-    let children: ListOfRecursiveArraysOrValues<GoFishAST> | null | undefined;
+    let children:
+      | ListOfRecursiveArraysOrValues<GoFishAST>
+      | Promise<ListOfRecursiveArraysOrValues<GoFishAST>>
+      | null
+      | undefined;
     if (args.length === 2) {
       opts = args[0] ?? ({} as T);
       children = args[1];
@@ -31,10 +46,12 @@ export function withGoFish<T extends Record<string, any>, R>(
       opts = {} as T;
       children = undefined;
     } else {
-      throw new Error(`withGoFish: Expected 0, 1, or 2 arguments, got ${args.length}`);
+      throw new Error(
+        `withGoFish: Expected 0, 1, or 2 arguments, got ${args.length}`
+      );
     }
     // Flatten deeply nested children
-    const flatChildren = _.flattenDeep(children) as GoFishAST[];
+    const flatChildren = _.flattenDeep(await children);
     return func(opts, flatChildren);
   };
 }
@@ -60,7 +77,9 @@ export function withGoFishNoChildren<T extends Record<string, any>, R>(
       const [data, opts] = args;
       return func(opts);
     } else {
-      throw new Error(`withGoFishNoChildren: Expected 1 or 2 arguments, got ${args.length}`);
+      throw new Error(
+        `withGoFishNoChildren: Expected 1 or 2 arguments, got ${args.length}`
+      );
     }
   } as any;
 }
