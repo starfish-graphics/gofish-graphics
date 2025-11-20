@@ -24,6 +24,8 @@ import {
 } from "gofish-graphics";
 
 // Type definitions for widget model and IR
+type ExecuteDeriveFn = (lambdaId: string, arrowB64: string) => string;
+
 interface WidgetModel {
   get(key: "spec"): ChartSpec;
   get(key: "arrow_data"): string; // base64-encoded Arrow IPC bytes
@@ -32,6 +34,7 @@ interface WidgetModel {
   get(key: "axes"): boolean;
   get(key: "debug"): boolean;
   get(key: "container_id"): string;
+  get(key: "executeDerive"): ExecuteDeriveFn | undefined;
 }
 
 interface ChartSpec {
@@ -42,6 +45,7 @@ interface ChartSpec {
 
 interface OperatorSpec {
   type: "derive" | "spread" | "stack" | "group" | "scatter";
+  lambdaId?: string;
   [key: string]: any;
 }
 
@@ -99,31 +103,108 @@ function arrowTableToArray(table: Arrow.Table): Record<string, any>[] {
   return data;
 }
 
+/**
+ * Normalizes a value to an array for Arrow conversion.
+ */
+function normalizeToArray(value: any): any[] {
+  if (Array.isArray(value)) {
+    return value;
+  }
+  if (value === null || value === undefined) {
+    return [];
+  }
+  return [value];
+}
+
+/**
+ * Converts an array of objects to Arrow IPC (Uint8Array).
+ * Requires at least one row; callers should guard empty arrays.
+ */
+function arrayToArrow(rows: Record<string, any>[]): Uint8Array {
+  if (!rows || rows.length === 0) {
+    throw new Error("Cannot serialize empty data to Arrow");
+  }
+
+  const table = Arrow.tableFromJSON(rows);
+  let buffer: Uint8Array | ArrayBuffer | null = null;
+
+  try {
+    const writer = (Arrow as any).RecordBatchStreamWriter;
+    if (writer && typeof writer.writeAll === "function") {
+      const stream = writer.writeAll(table);
+      if (stream && typeof stream.toUint8Array === "function") {
+        buffer = stream.toUint8Array();
+      } else if (stream && typeof stream.finish === "function") {
+        buffer = stream.finish();
+      }
+    } else if ((Arrow as any).tableToIPC) {
+      buffer = (Arrow as any).tableToIPC(table);
+    }
+  } catch (error) {
+    // fall through to secondary attempt or error below
+  }
+
+  if (!buffer) {
+    throw new Error("Failed to serialize Arrow table");
+  }
+
+  return buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
+}
+
 // Operator mapping: IR operator specs -> GoFish API operators
 /**
  * Lookup table mapping operator type to factory function.
  */
 const OPERATOR_MAP: Record<
   string,
-  (opts: Record<string, any>) => Operator<any, any> | null
+  (opts: Record<string, any>, model: WidgetModel) => Operator<any, any> | null
 > = {
-  derive: (opts: Record<string, any>) => {
-    // Derive operators require a function; for now, use identity
-    // TODO: In the future, this might need to call back to Python
-    return derive(async (d: any) => d);
+  derive: (opts: Record<string, any>, model: WidgetModel) => {
+    const lambdaId = opts.lambdaId;
+    const executeDerive = model.get("executeDerive");
+
+    if (!lambdaId) {
+      throw new Error("derive operator missing lambdaId");
+    }
+    if (typeof executeDerive !== "function") {
+      throw new Error("executeDerive RPC hook is not available on the model");
+    }
+
+    return derive(async (d: any) => {
+      const rows = normalizeToArray(d);
+      if (rows.length === 0) {
+        return Array.isArray(d) ? d : (d ?? null);
+      }
+
+      const arrowBuffer = arrayToArrow(rows);
+      const arrowB64 = btoa(String.fromCharCode(...arrowBuffer));
+
+      const resultB64 = executeDerive(lambdaId, arrowB64);
+      const resultBuffer = Uint8Array.from(atob(resultB64), (c) =>
+        c.charCodeAt(0)
+      );
+      const resultTable = Arrow.tableFromIPC(resultBuffer);
+      const resultArray = arrowTableToArray(resultTable);
+
+      if (Array.isArray(d)) {
+        return resultArray;
+      }
+
+      return resultArray[0] ?? null;
+    });
   },
-  spread: (opts: Record<string, any>) => {
+  spread: (opts: Record<string, any>, _model: WidgetModel) => {
     const { field, ...rest } = opts;
     return field ? spread(field, rest) : spread(rest);
   },
-  stack: (opts: Record<string, any>) => {
+  stack: (opts: Record<string, any>, _model: WidgetModel) => {
     const { field, dir, ...rest } = opts;
     return stack(field, { dir, ...rest });
   },
-  group: (opts: Record<string, any>) => {
+  group: (opts: Record<string, any>, _model: WidgetModel) => {
     return group(opts.field);
   },
-  scatter: (opts: Record<string, any>) => {
+  scatter: (opts: Record<string, any>, _model: WidgetModel) => {
     const { field, x, y, ...rest } = opts;
     return scatter(field, { x, y, ...rest });
   },
@@ -132,13 +213,16 @@ const OPERATOR_MAP: Record<
 /**
  * Maps an IR operator spec to a GoFish operator function.
  */
-function mapOperator(op: OperatorSpec): Operator<any, any> | null {
+function mapOperator(
+  op: OperatorSpec,
+  model: WidgetModel
+): Operator<any, any> | null {
   const { type, ...opts } = op;
   const factory = OPERATOR_MAP[type];
   if (!factory) {
     return null;
   }
-  return factory(opts);
+  return factory(opts, model);
 }
 
 // Mark mapping: IR mark spec -> GoFish API mark
@@ -230,7 +314,7 @@ function renderChart(model: WidgetModel, container: HTMLElement): void {
 
   for (const opSpec of spec.operators || []) {
     log(`Mapping operator: ${opSpec.type}`);
-    const op = mapOperator(opSpec);
+    const op = mapOperator(opSpec, model);
     if (op) {
       operators.push(op);
     } else {
