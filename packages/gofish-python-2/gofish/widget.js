@@ -41,7 +41,7 @@ function arrowTableToArray(table) {
 }
 
 // Main render function
-function renderChart(model, GoFish, Arrow, createResource, createSignal) {
+function renderChart(model, GoFish, Arrow) {
   console.log("[GoFish Widget] ===== renderChart() called =====");
   const containerId = model.get("container_id");
   console.log("[GoFish Widget] Looking for container:", containerId);
@@ -106,59 +106,10 @@ function renderChart(model, GoFish, Arrow, createResource, createSignal) {
 
     if (op.type === "derive") {
       console.log("[GoFish Widget] ===== Creating derive operator =====");
-      console.log(
-        "[GoFish Widget] About to call GoFish Graphics derive() function"
-      );
-      // Map derive to gofish JS derive with async identity function using createResource
-      const deriveFn = (d) => {
-        console.log("[GoFish Widget] ===== derive function EXECUTED =====");
-        console.log("[GoFish Widget] derive called with data:", d);
-        console.log(
-          "[GoFish Widget] Data type:",
-          typeof d,
-          Array.isArray(d) ? `array of ${d.length} items` : ""
-        );
-
-        // Test signals
-        const [testSignal, setTestSignal] = createSignal("initial value");
-        console.log("[GoFish Widget] Signal initial value:", testSignal());
-        setTestSignal("updated value");
-        console.log("[GoFish Widget] Signal after update:", testSignal());
-
-        // Create an async resource that returns the data
-        const [result] = createResource(async () => {
-          console.log("[GoFish Widget] createResource async function started");
-          // Wait 1s before returning the data
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-          console.log(
-            "[GoFish Widget] createResource async function completed, returning data"
-          );
-          return d;
-        });
-        console.log(
-          "[GoFish Widget] createResource result (immediate):",
-          result()
-        );
-        setTimeout(() => {
-          console.log(
-            "[GoFish Widget] createResource timeout result (after 1s):",
-            result()
-          );
-          return result();
-        }, 1000);
-        // Return the resource accessor
-        // return /* () =>  */ result();
-        console.log("[GoFish Widget] derive function returning data directly");
-        return d;
-      };
-      console.log(
-        "[GoFish Widget] Calling GoFish Graphics derive() with function"
-      );
+      // Map derive to gofish JS derive with async identity function
+      const deriveFn = async (d) => d;
       reconstructedOp = derive(deriveFn);
       console.log("[GoFish Widget] ===== derive operator created =====");
-      console.log(
-        "[GoFish Widget] Note: GoFish Graphics derive() console.logs will appear in browser console"
-      );
     } else if (op.type === "spread") {
       const { field, ...opts } = op;
       if (field) {
@@ -259,12 +210,10 @@ export default {
       // prettier-ignore
       {EXTRACT_MODULES}
 
-      if (!gofishModule || !arrowModule || !createResource || !createSignal) {
+      if (!gofishModule || !arrowModule) {
         const missing = [];
         if (!gofishModule) missing.push("gofish-graphics");
         if (!arrowModule) missing.push("apache-arrow");
-        if (!createResource) missing.push("solid-js (createResource)");
-        if (!createSignal) missing.push("solid-js (createSignal)");
         const errorMsg = "Missing: " + missing.join(", ");
         el.innerHTML =
           '<div style="color: red; padding: 20px; border: 2px solid red; background: #ffe0e0;">' +
@@ -280,24 +229,10 @@ export default {
       }
 
       console.log("[GoFish Widget] All imports available");
-      console.log(
-        "[GoFish Widget] createResource available:",
-        typeof createResource
-      );
-      console.log(
-        "[GoFish Widget] createSignal available:",
-        typeof createSignal
-      );
 
       // Render the chart
       try {
-        renderChart(
-          model,
-          gofishModule,
-          arrowModule,
-          createResource,
-          createSignal
-        );
+        renderChart(model, gofishModule, arrowModule);
       } catch (error) {
         console.error("[GoFish Widget] Error rendering chart:", error);
         const errorHtml =

@@ -10,6 +10,7 @@ import {
   getLayerContext,
   Connect,
   Ref,
+  gofish,
 } from "../../lib";
 import { GoFishNode } from "../_node";
 import { MaybeValue } from "../data";
@@ -42,8 +43,7 @@ export type Operator<T, U> = (_: Mark<U>) => Promise<Mark<T>>;
 export function derive<T, U>(fn: (d: T) => U | Promise<U>): Operator<T, U> {
   return async (mark: Mark<U>) => {
     return async (d: T, key?: string | number) => {
-      const result = await fn(d);
-      return mark(result, key);
+      return mark(await fn(d), key);
     };
   };
 }
@@ -154,51 +154,73 @@ export class ChartBuilder<TInput, TOutput = TInput> {
   }
 
   // mark applies all accumulated operators and the final mark
-  async mark(
-    mark: Mark<TOutput>
-  ): Promise<GoFishNode & { as: (name: string) => GoFishNode }> {
-    let finalMark = mark as Mark<any>;
-    const operators = this.operators;
-    const data = this.data;
+  mark(mark: Mark<TOutput>): Promise<
+    GoFishNode & { as: (name: string) => GoFishNode }
+  > & {
+    render: (
+      ...args: Parameters<GoFishNode["render"]>
+    ) => Promise<ReturnType<GoFishNode["render"]>>;
+    as: (name: string) => Promise<GoFishNode>;
+  } {
+    const nodePromise = (async () => {
+      let finalMark = mark as Mark<any>;
+      const operators = this.operators;
+      const data = this.data;
 
-    for (const op of operators.toReversed()) {
-      finalMark = await op(finalMark);
-    }
+      for (const op of operators.toReversed()) {
+        finalMark = await op(finalMark);
+      }
 
-    const node = await Frame(this.options ?? {}, [
-      (await finalMark(data as any)).setShared([true, true]),
-    ]);
+      const node = await Frame(this.options ?? {}, [
+        (await finalMark(data as any)).setShared([true, true]),
+      ]);
 
-    // Add .as() method to the returned node
-    (node as any).as = (name: string) => {
-      const layerContext = getLayerContext();
-      // Use the actual child node from the Frame, not a new tree
-      const rootNode = node.children[0] as GoFishNode;
+      // Add .as() method to the returned node
+      (node as any).as = (name: string) => {
+        const layerContext = getLayerContext();
+        // Use the actual child node from the Frame, not a new tree
+        const rootNode = node.children[0] as GoFishNode;
 
-      // Collect only leaf nodes (nodes with no children)
-      const collectLeafNodes = (n: GoFishNode): GoFishNode[] => {
-        if (n.children && n.children.length > 0) {
-          const leaves: GoFishNode[] = [];
-          for (const child of n.children) {
-            leaves.push(...collectLeafNodes(child as GoFishNode));
+        // Collect only leaf nodes (nodes with no children)
+        const collectLeafNodes = (n: GoFishNode): GoFishNode[] => {
+          if (n.children && n.children.length > 0) {
+            const leaves: GoFishNode[] = [];
+            for (const child of n.children) {
+              leaves.push(...collectLeafNodes(child as GoFishNode));
+            }
+            return leaves;
           }
-          return leaves;
-        }
-        return [n];
+          return [n];
+        };
+
+        const leafNodes = collectLeafNodes(rootNode);
+
+        // Store layer data taken from node-attached datum and leaf nodes
+        layerContext[name] = {
+          data: leafNodes.map((n) => (n as any).datum),
+          nodes: leafNodes,
+        };
+
+        return node;
       };
 
-      const leafNodes = collectLeafNodes(rootNode);
+      return node as GoFishNode & { as: (name: string) => GoFishNode };
+    })();
 
-      // Store layer data taken from node-attached datum and leaf nodes
-      layerContext[name] = {
-        data: leafNodes.map((n) => (n as any).datum),
-        nodes: leafNodes,
-      };
-
-      return node;
+    const decoratedPromise = nodePromise as typeof nodePromise & {
+      render: (...args: Parameters<GoFishNode["render"]>) => HTMLElement;
+      as: (name: string) => Promise<GoFishNode>;
     };
 
-    return node as GoFishNode & { as: (name: string) => GoFishNode };
+    decoratedPromise.render = (container, ...args) =>
+      gofish(container, ...args, nodePromise);
+
+    decoratedPromise.as = async (name: string) => {
+      const node = await nodePromise;
+      return node.as(name);
+    };
+
+    return decoratedPromise;
   }
 }
 
