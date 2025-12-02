@@ -1,69 +1,191 @@
-# GoFish Python
+# gofish-python-2
 
-Python wrapper for the GoFish graphics library.
+A clean, minimal implementation of the AST portion for GoFish graphics library. This package focuses solely on converting Python syntax to a JSON Intermediate Representation (IR).
+
+**Note**: This package uses [uv](https://github.com/astral-sh/uv) for fast package management and testing.
+
+## Features
+
+- **AST Classes**: ChartBuilder, operators (spread, stack, derive, group, scatter), and marks (rect, circle, line, area, scaffold)
+- **IR Serialization**: Convert Python chart specifications to JSON IR
+- **No Dependencies**: Pure Python, no external dependencies required
+- **Comprehensive Tests**: Full test coverage for AST to IR conversion
+
+## Prerequisites
+
+- **Python 3.8+**
+- **[uv](https://github.com/astral-sh/uv)** - Fast Python package manager
+- **Node.js** (for building the widget bundle)
+- **pnpm** (for managing Node.js dependencies)
 
 ## Installation
 
+This package uses [uv](https://github.com/astral-sh/uv) for fast package management.
+
 ```bash
-pip install gofish-python
+cd packages/gofish-python-2
+uv pip install -e .
 ```
 
-For Jupyter notebook support:
+### Installing Node.js Dependencies
+
+If you need to build the widget bundle, install Node.js dependencies:
 
 ```bash
-pip install gofish-python[jupyter]
+pnpm install
 ```
 
 ## Usage
 
 ```python
-import pandas as pd
-from gofish import chart, spread, stack, derive, rect
+from gofish import chart, spread, stack, rect
 
-# Load your data
-seafood = pd.DataFrame({
-    "lake": ["A", "B", "C"],
-    "species": ["X", "Y", "Z"],
-    "count": [10, 20, 30]
-})
-
-# Create a chart
-(
-    chart(seafood)
+# Create a chart specification
+data = [{"lake": "A", "species": "B", "count": 10}]
+c = (
+    chart(data, options={"w": 800, "h": 600})
     .flow(
         spread("lake", dir="x", spacing=64),
-        derive(lambda d: d.sort_values("count")),
-        stack("species", dir="y", label=False)
+        stack("species", dir="y", spacing=0),
     )
     .mark(rect(h="count", fill="species"))
-    .render()
 )
+
+# Convert to JSON IR
+ir = c.to_ir()
+print(ir)
+# {
+#     "data": None,
+#     "operators": [
+#         {"type": "spread", "field": "lake", "dir": "x", "spacing": 64},
+#         {"type": "stack", "field": "species", "dir": "y", "spacing": 0}
+#     ],
+#     "mark": {"type": "rect", "h": "count", "fill": "species"},
+#     "options": {"w": 800, "h": 600}
+# }
 ```
 
-## Requirements
+## IR Format
 
-- Python 3.8+
-- pyarrow
-- pandas
-- anywidget (for Jupyter support)
+The JSON IR has the following structure:
 
-## Development / Building from Source
+```json
+{
+  "data": null,
+  "operators": [
+    { "type": "spread", "field": "lake", "dir": "x", "spacing": 8 },
+    { "type": "derive", "lambdaId": "uuid-here" },
+    { "type": "stack", "field": "species", "dir": "y" }
+  ],
+  "mark": { "type": "rect", "h": "count", "fill": "species" },
+  "options": {}
+}
+```
 
-To build the Python package from source, you need to build the JavaScript bundles first:
+### Derive operator (Python execution)
+
+Derive operators now execute the provided Python callable from the front-end widget via Arrow-based RPC:
+
+- Each `derive(fn)` is assigned a unique `lambdaId` in the IR.
+- The widget keeps a Python-side registry mapping `lambdaId -> fn`.
+- The front-end serializes intermediate data to Arrow, calls `executeDerive(lambdaId, arrowB64)` on the model, and deserializes the result back into the pipeline.
+- Make sure the widget bundle is built and available (`pnpm build:widget`) so the derive bridge code is included.
+
+## Building
+
+### Building the Widget Bundle
+
+The widget bundle is a self-contained JavaScript module that includes all dependencies. Build it with:
 
 ```bash
-# Build JavaScript assets (requires Node.js and npm)
-python build_assets.py
+# From the package directory
+pnpm run build:widget
 
-# Then install the package
-pip install -e .
+# Or directly with Node.js
+node build-widget.mjs
 ```
 
-The `build_assets.py` script will:
-1. Build the `gofish-graphics` dependency (if needed)
-2. Install JavaScript dependencies
-3. Build the client bundle (`gofish-client.js` and `gofish-client.iife.js`)
+This will:
 
-**Note**: Pre-built bundles are included in the published package, so end users don't need Node.js installed.
+- Bundle the TypeScript widget source (`widget-src/index.ts`)
+- Include all dependencies (gofish-graphics, solid-js, apache-arrow)
+- Output to `gofish/_static/widget.esm.js`
 
+**Note**: The build process will automatically use `gofish-graphics/dist/index.js` if available, otherwise it falls back to the package import. Make sure `gofish-graphics` is built first if you're developing locally.
 
+## Running Tests
+
+### Python Unit Tests
+
+```bash
+# Install with test dependencies
+uv pip install -e ".[test]"
+
+# Run all tests
+uv run pytest
+
+# Or run directly if installed
+pytest
+
+# Run specific test file
+pytest tests/test_ast.py
+
+# Run with verbose output
+pytest -v
+```
+
+### Jupyter Notebook Tests
+
+The package includes Jupyter notebooks for interactive testing:
+
+- `tests/test_ir.ipynb` - Tests for IR generation
+- `tests/test_rendering.ipynb` - Tests for widget rendering
+
+To run these:
+
+```bash
+# Start Jupyter
+jupyter notebook
+
+# Or use the provided script (if available)
+./run_notebook.sh
+```
+
+## Development Workflow
+
+1. **Install dependencies**:
+
+   ```bash
+   uv pip install -e ".[test]"
+   pnpm install
+   ```
+
+2. **Make changes** to Python code or widget TypeScript source
+
+3. **Build widget** (if you modified widget code):
+
+   ```bash
+   pnpm run build:widget
+   ```
+
+4. **Run tests**:
+
+   ```bash
+   pytest
+   ```
+
+5. **Test in Jupyter** (optional):
+   ```bash
+   jupyter notebook tests/test_rendering.ipynb
+   ```
+
+## What's Not Included
+
+This package intentionally excludes:
+
+- Rendering (no widgets, no HTML generation)
+- Data marshaling (no Arrow, no DataFrame handling)
+- Jupyter integration
+- JavaScript bridge
+
+These concerns are handled separately in the full implementation.

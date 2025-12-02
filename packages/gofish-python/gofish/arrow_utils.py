@@ -4,7 +4,6 @@ import io
 from typing import Union
 import pandas as pd
 import pyarrow as pa
-import pyarrow.parquet as pq
 
 
 def dataframe_to_arrow(df: pd.DataFrame) -> bytes:
@@ -75,20 +74,4 @@ def arrow_to_dataframe(arrow_bytes: bytes) -> pd.DataFrame:
     reader = pa.ipc.open_stream(arrow_bytes)
     table = reader.read_all()
     return table.to_pandas()
-
-
-def dataframe_to_dict_list(df: pd.DataFrame) -> list:
-    """
-    Convert DataFrame to list of dictionaries (for JSON serialization).
-
-    This is a fallback for cases where Arrow might not be needed.
-
-    Args:
-        df: pandas DataFrame
-
-    Returns:
-        List of dictionaries
-    """
-    return df.to_dict("records")
-
 
