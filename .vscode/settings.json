@@ -1,8 +1,5 @@
 {
-  "python.defaultInterpreterPath": "${workspaceFolder}/packages/gofish-python-2/.venv/bin/python",
-  "python.venvPath": "${workspaceFolder}/packages/gofish-python-2",
-  "python.venvFolders": [
-    "${workspaceFolder}/packages/gofish-python-2"
-  ]
+  "python.defaultInterpreterPath": "${workspaceFolder}/packages/gofish-python/.venv/bin/python",
+  "python.venvPath": "${workspaceFolder}/packages/gofish-python",
+  "python.venvFolders": ["${workspaceFolder}/packages/gofish-python"]
 }
-
