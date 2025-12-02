@@ -18,3 +18,4 @@ __pycache__/
 *$py.class
 .ipynb_checkpoints/
 *.egg-info/
+_static/
