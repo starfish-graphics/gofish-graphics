@@ -1,5 +1,5 @@
 """
-GoFish Python 2 - Clean AST implementation for GoFish graphics library.
+GoFish Graphics in Python
 """
 
 from .ast import (
@@ -33,9 +33,3 @@ __all__ = [
 ]
 
 __version__ = "0.1.0"
-
-
-
-
-
-
