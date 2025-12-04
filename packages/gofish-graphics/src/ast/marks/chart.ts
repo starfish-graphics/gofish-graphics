@@ -349,7 +349,7 @@ export function scatter<T>(
           // Render the group items and wrap in Position operator
           const currentKey = key != undefined ? `${key}-${groupKey}` : groupKey;
           return Position({ x: v(avgX), y: v(avgY) }, [
-            await mark(items, currentKey),
+            mark(items, currentKey),
           ]);
         })
       );
