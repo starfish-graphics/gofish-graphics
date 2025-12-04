@@ -1,12 +1,4 @@
-import {
-  createEffect,
-  createResource,
-  For,
-  lazy,
-  Show,
-  Suspense,
-  type JSX,
-} from "solid-js";
+import { createResource, For, Show, Suspense, type JSX } from "solid-js";
 import { render as solidRender } from "solid-js/web";
 import {
   debugInputSceneGraph,
@@ -25,6 +17,10 @@ import {
   type UnderlyingSpace,
 } from "./underlyingSpace";
 import { continuous } from "./domain";
+import {
+  initLayerContext,
+  resetLayerContext,
+} from "./graphicalOperators/frame";
 
 /* scope context */
 let scopeContext: ScopeContext | null = null;
@@ -183,35 +179,35 @@ export const gofish = (
   },
   child: GoFishNode | Promise<GoFishNode>
 ) => {
-  const runGofish = async () => {
-    let renderResult;
+  type LayoutData = {
+    sizeDomains: [any, any];
+    underlyingSpaceX: UnderlyingSpace;
+    underlyingSpaceY: UnderlyingSpace;
+    posScales: [(pos: number) => number, (pos: number) => number];
+    child: GoFishNode;
+    scaleContext: ScaleContext;
+    keyContext: KeyContext;
+  };
+
+  const runGofish = async (): Promise<LayoutData> => {
     try {
       scopeContext = new Map();
       scaleContext = { unit: { color: new Map() } };
       keyContext = {};
+      initLayerContext();
 
-      const {
-        sizeDomains,
-        underlyingSpaceX,
-        underlyingSpaceY,
-        posScales,
-        child: retChild,
-      } = await layout({ w, h, x, y, transform, debug, defs, axes }, child);
-      renderResult = render(
-        {
-          width: w,
-          height: h,
-          defs,
-          axes,
-          scaleContext,
-          keyContext,
-          sizeDomains,
-          underlyingSpaceX,
-          underlyingSpaceY,
-          posScales,
-        },
-        retChild
+      const layoutResult = await layout(
+        { w, h, x, y, transform, debug, defs, axes },
+        child
       );
+
+      const result = {
+        ...layoutResult,
+        scaleContext: scaleContext!,
+        keyContext: keyContext!,
+      };
+
+      return result;
     } finally {
       if (debug) {
         console.log("scopeContext", scopeContext);
@@ -221,18 +217,37 @@ export const gofish = (
       scopeContext = null;
       scaleContext = null;
       keyContext = null;
-      return renderResult;
+      resetLayerContext();
     }
   };
 
-  const [gofishElement] = createResource(runGofish);
+  const [layoutData] = createResource(runGofish);
 
   // Render to the provided container
-  // console.log(scaleContext);
   solidRender(() => {
     // used to handle async rendering of derived data
     return (
-      <Suspense fallback={<div>Loading...</div>}>{gofishElement()}</Suspense>
+      <Suspense fallback={<div>Loading...</div>}>
+        {(() => {
+          const data = layoutData();
+          if (!data) return null;
+          return render(
+            {
+              width: w,
+              height: h,
+              defs,
+              axes,
+              scaleContext: data.scaleContext,
+              keyContext: data.keyContext,
+              sizeDomains: data.sizeDomains,
+              underlyingSpaceX: data.underlyingSpaceX,
+              underlyingSpaceY: data.underlyingSpaceY,
+              posScales: data.posScales,
+            },
+            data.child
+          );
+        })()}
+      </Suspense>
     );
   }, container);
   return container;
