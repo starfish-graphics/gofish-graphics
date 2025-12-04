@@ -18,7 +18,7 @@ import { computeSize } from "../../util";
 import { CoordinateTransform } from "../coordinateTransforms/coord";
 import { coord } from "../coordinateTransforms/coord";
 import { getLayerContext, resetLayerContext } from "./frame";
-import { withGoFish } from "../withGoFish";
+import { withGoFish, PromiseWithRender, addRenderMethod } from "../withGoFish";
 import { GoFishAST } from "../_ast";
 import _, { ListOfRecursiveArraysOrValues } from "lodash";
 
@@ -70,42 +70,45 @@ function withLayerSequential<T extends Record<string, any>, R>(
       | ListOfRecursiveArraysOrValues<GoFishAST | Promise<GoFishAST>>
       | Promise<ListOfRecursiveArraysOrValues<GoFishAST | Promise<GoFishAST>>>
       | null
-  ): Promise<R>;
+  ): PromiseWithRender<R>;
   (
     children:
       | ListOfRecursiveArraysOrValues<GoFishAST | Promise<GoFishAST>>
       | Promise<ListOfRecursiveArraysOrValues<GoFishAST | Promise<GoFishAST>>>
       | null
-  ): Promise<R>;
+  ): PromiseWithRender<R>;
 } {
-  return async function (...args: any[]): Promise<R> {
-    let opts: T;
-    let children:
-      | ListOfRecursiveArraysOrValues<GoFishAST | Promise<GoFishAST>>
-      | Promise<ListOfRecursiveArraysOrValues<GoFishAST | Promise<GoFishAST>>>
-      | null
-      | undefined;
-    if (args.length === 2) {
-      opts = args[0] ?? ({} as T);
-      children = args[1];
-    } else if (args.length === 1) {
-      opts = {} as T;
-      children = args[0];
-    } else if (args.length === 0) {
-      opts = {} as T;
-      children = undefined;
-    } else {
-      throw new Error(
-        `withLayerSequential: Expected 0, 1, or 2 arguments, got ${args.length}`
+  return function (...args: any[]): PromiseWithRender<R> {
+    const promise = (async () => {
+      let opts: T;
+      let children:
+        | ListOfRecursiveArraysOrValues<GoFishAST | Promise<GoFishAST>>
+        | Promise<ListOfRecursiveArraysOrValues<GoFishAST | Promise<GoFishAST>>>
+        | null
+        | undefined;
+      if (args.length === 2) {
+        opts = args[0] ?? ({} as T);
+        children = args[1];
+      } else if (args.length === 1) {
+        opts = {} as T;
+        children = args[0];
+      } else if (args.length === 0) {
+        opts = {} as T;
+        children = undefined;
+      } else {
+        throw new Error(
+          `withLayerSequential: Expected 0, 1, or 2 arguments, got ${args.length}`
+        );
+      }
+      // Await all promises sequentially, then flatten deeply nested children
+      const awaitedChildren = await awaitAllPromisesSequential(children);
+      const flattened = _.flattenDeep(awaitedChildren) as any[];
+      const flatChildren = flattened.filter(
+        (child): child is GoFishAST => child != null
       );
-    }
-    // Await all promises sequentially, then flatten deeply nested children
-    const awaitedChildren = await awaitAllPromisesSequential(children);
-    const flattened = _.flattenDeep(awaitedChildren) as any[];
-    const flatChildren = flattened.filter(
-      (child): child is GoFishAST => child != null
-    );
-    return func(opts, flatChildren);
+      return func(opts, flatChildren);
+    })();
+    return addRenderMethod(promise);
   };
 }
 
