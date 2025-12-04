@@ -39,6 +39,34 @@ export type Mark<T> = (d: T, key?: string | number) => Promise<GoFishNode>;
 
 export type Operator<T, U> = (_: Mark<U>) => Promise<Mark<T>>;
 
+// LayerSelector is a lazy selector that defers layer lookup until actually needed
+export class LayerSelector<T = any> {
+  constructor(public readonly layerName: string) {}
+  
+  // Resolve the selector to actual data - throws if layer not found
+  resolve(): Array<T & { __ref: GoFishNode }> {
+    const layerContext = getLayerContext();
+    const layer = layerContext[this.layerName];
+
+    if (!layer) {
+      throw new Error(
+        `Layer "${this.layerName}" not found. Make sure to call .as("${this.layerName}") first.`
+      );
+    }
+
+    // Return node-attached data enriched with refs to nodes
+    return layer.nodes.map((node: GoFishNode) => {
+      const datum: any = (node as any).datum;
+      if (datum && typeof datum === "object") {
+        // (datum as any).__ref = node;
+        const datumHack = { ...datum[0], __ref: node };
+        return datumHack as T & { __ref: GoFishNode };
+      }
+      return { item: datum, __ref: node } as unknown as T & { __ref: GoFishNode };
+    });
+  }
+}
+
 /* Data Transformation Operators */
 export function derive<T, U>(fn: (d: T) => U | Promise<U>): Operator<T, U> {
   return async (mark: Mark<U>) => {
@@ -165,7 +193,13 @@ export class ChartBuilder<TInput, TOutput = TInput> {
     const nodePromise = (async () => {
       let finalMark = mark as Mark<any>;
       const operators = this.operators;
-      const data = this.data;
+      let data = this.data;
+
+      // Resolve LayerSelector if data is a lazy selector
+      // This defers layer lookup until the mark() phase when layers should be registered
+      if (data instanceof LayerSelector) {
+        data = data.resolve() as any;
+      }
 
       for (const op of operators.toReversed()) {
         finalMark = await op(finalMark);
@@ -473,27 +507,10 @@ export function circle<T extends Record<string, any>>({
   };
 }
 
-// select() retrieves enriched data from a named layer
-export function select<T>(layerName: string): Array<T & { __ref: GoFishNode }> {
-  const layerContext = getLayerContext();
-  const layer = layerContext[layerName];
-
-  if (!layer) {
-    throw new Error(
-      `Layer "${layerName}" not found. Make sure to call .as("${layerName}") first.`
-    );
-  }
-
-  // Return node-attached data enriched with refs to nodes
-  return layer.nodes.map((node: GoFishNode) => {
-    const datum: any = (node as any).datum;
-    if (datum && typeof datum === "object") {
-      // (datum as any).__ref = node;
-      const datumHack = { ...datum[0], __ref: node };
-      return datumHack as T & { __ref: GoFishNode };
-    }
-    return { item: datum, __ref: node } as unknown as T & { __ref: GoFishNode };
-  });
+// select() returns a lazy selector that defers layer lookup until actually needed
+// This allows layers to be registered by .as() calls before select() tries to access them
+export function select<T>(layerName: string): LayerSelector<T> {
+  return new LayerSelector<T>(layerName);
 }
 
 // line() mark connects data points using center-to-center mode
