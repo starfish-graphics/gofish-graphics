@@ -128,7 +128,7 @@ importers:
         specifier: ^2.11.6
         version: 2.11.8(@testing-library/jest-dom@6.8.0)(solid-js@1.9.5)(vite@6.0.0(@types/node@24.10.1))
 
-  packages/gofish-python-2:
+  packages/gofish-python:
     dependencies:
       apache-arrow:
         specifier: ^14.0.0

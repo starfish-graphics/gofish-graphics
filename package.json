@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "pnpm --filter gofish-graphics dev",
     "build": "pnpm --filter gofish-graphics build",
-    "build:widget": "pnpm --filter gofish-python-2 build:widget",
+    "build:widget": "pnpm --filter gofish-python build:widget",
     "docs:dev": "pnpm --filter docs docs:dev",
     "docs:build": "pnpm --filter docs docs:build",
     "docs:preview": "pnpm --filter docs docs:preview",

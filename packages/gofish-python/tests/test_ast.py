@@ -366,9 +366,3 @@ class TestChartBuilder:
             c = chart(data).mark(mark)
             ir = c.to_ir()
             assert ir["mark"]["type"] == mark.mark_type
-
-
-
-
-
-

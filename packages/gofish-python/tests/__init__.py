@@ -1,7 +1,1 @@
-"""Tests for gofish-python-2 AST to IR conversion."""
-
-
-
-
-
-
+"""Tests for gofish-python AST to IR conversion and end-to-end rendering."""
