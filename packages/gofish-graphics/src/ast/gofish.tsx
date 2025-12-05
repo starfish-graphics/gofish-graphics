@@ -262,8 +262,8 @@ export const render = (
     transform,
     defs,
     axes,
-    scaleContext,
-    keyContext,
+    scaleContext: scaleContextParam,
+    keyContext: keyContextParam,
     sizeDomains,
     underlyingSpaceX,
     underlyingSpaceY,
@@ -283,6 +283,11 @@ export const render = (
   },
   child: GoFishNode
 ): JSX.Element => {
+  // Restore global contexts for rendering (components access these via getScaleContext/getKeyContext)
+  // Note: scaleContext is always null here because runGofish() cleans it up in the finally block
+  scaleContext = scaleContextParam;
+  keyContext = keyContextParam;
+
   let yTicks: number[] = [];
   let xTicks: number[] = [];
   if (
@@ -309,7 +314,7 @@ export const render = (
     yTicks = ticks(yMin, yMax, 10);
   }
 
-  return (
+  const result = (
     <svg
       width={width + PADDING * 6 + (axes ? 100 : 0)}
       height={height + PADDING * 6 + (axes ? 100 : 0)}
@@ -744,4 +749,10 @@ export const render = (
       </g>
     </svg>
   );
+
+  // Clean up global contexts (they're already null from runGofish's finally block, but be explicit)
+  scaleContext = null;
+  keyContext = null;
+
+  return result;
 };
