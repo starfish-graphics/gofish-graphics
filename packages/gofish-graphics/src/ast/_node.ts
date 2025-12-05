@@ -252,6 +252,15 @@ export class GoFishNode {
     scaleFactors: Size<number | undefined>,
     posScales: Size<((pos: number) => number) | undefined>
   ): Placeable {
+    console.log("[DEBUG GoFishNode.layout] Starting layout", {
+      nodeType: this.type,
+      nodeKey: this.key,
+      nodeName: this.name,
+      nodeUid: this.uid,
+      hasIntrinsicDimsBefore: !!this.intrinsicDims,
+      size,
+    });
+
     const { intrinsicDims, transform, renderData } = this._layout(
       this.shared,
       size,
@@ -261,9 +270,26 @@ export class GoFishNode {
       posScales
     );
 
+    console.log("[DEBUG GoFishNode.layout] Setting intrinsicDims", {
+      nodeType: this.type,
+      nodeKey: this.key,
+      nodeName: this.name,
+      intrinsicDimsRaw: intrinsicDims,
+      intrinsicDimsElaborated: elaborateDims(intrinsicDims),
+    });
+
     this.intrinsicDims = elaborateDims(intrinsicDims);
     this.transform = elaborateTransform(transform);
     this.renderData = renderData;
+
+    console.log("[DEBUG GoFishNode.layout] Layout complete", {
+      nodeType: this.type,
+      nodeKey: this.key,
+      nodeName: this.name,
+      intrinsicDims: this.intrinsicDims,
+      intrinsicDimsLength: this.intrinsicDims?.length,
+    });
+
     return this;
   }
 
@@ -320,7 +346,50 @@ export class GoFishNode {
   }
 
   public embed(direction: FancyDirection): void {
-    this.intrinsicDims![elaborateDirection(direction)].embedded = true;
+    const dirIndex = elaborateDirection(direction);
+    console.log("[DEBUG GoFishNode.embed]", {
+      nodeType: this.type,
+      nodeKey: this.key,
+      nodeName: this.name,
+      nodeUid: this.uid,
+      direction,
+      dirIndex,
+      hasIntrinsicDims: !!this.intrinsicDims,
+      intrinsicDimsLength: this.intrinsicDims?.length,
+      intrinsicDimsAtDir: this.intrinsicDims?.[dirIndex],
+      intrinsicDimsFull: this.intrinsicDims,
+      stackTrace: new Error().stack?.split("\n").slice(0, 5).join("\n"),
+    });
+
+    if (!this.intrinsicDims) {
+      console.error("[ERROR GoFishNode.embed] intrinsicDims is undefined!", {
+        nodeType: this.type,
+        nodeKey: this.key,
+        nodeName: this.name,
+      });
+      throw new Error(
+        `Cannot embed: intrinsicDims is undefined for node ${this.type}${this.key ? ` (key: ${this.key})` : ""}`
+      );
+    }
+
+    if (!this.intrinsicDims[dirIndex]) {
+      console.error(
+        "[ERROR GoFishNode.embed] intrinsicDims[dirIndex] is undefined!",
+        {
+          nodeType: this.type,
+          nodeKey: this.key,
+          nodeName: this.name,
+          direction,
+          dirIndex,
+          intrinsicDims: this.intrinsicDims,
+        }
+      );
+      throw new Error(
+        `Cannot embed: intrinsicDims[${dirIndex}] is undefined for node ${this.type}${this.key ? ` (key: ${this.key})` : ""}`
+      );
+    }
+
+    this.intrinsicDims[dirIndex].embedded = true;
   }
 
   public INTERNAL_render(

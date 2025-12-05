@@ -17,6 +17,7 @@ import { MaybeValue } from "../data";
 import { For } from "../iterators/for";
 import { CoordinateTransform } from "../coordinateTransforms/coord";
 import { createResource } from "solid-js";
+import { getKeyContext } from "../gofish";
 
 /* inference */
 const inferSize = <T>(
@@ -42,10 +43,11 @@ export type Operator<T, U> = (_: Mark<U>) => Promise<Mark<T>>;
 // LayerSelector is a lazy selector that defers layer lookup until actually needed
 export class LayerSelector<T = any> {
   constructor(public readonly layerName: string) {}
-  
+
   // Resolve the selector to actual data - throws if layer not found
   resolve(): Array<T & { __ref: GoFishNode }> {
     const layerContext = getLayerContext();
+    console.log("[DEBUG LayerSelector.resolve] Layer context", layerContext);
     const layer = layerContext[this.layerName];
 
     if (!layer) {
@@ -54,16 +56,93 @@ export class LayerSelector<T = any> {
       );
     }
 
-    // Return node-attached data enriched with refs to nodes
-    return layer.nodes.map((node: GoFishNode) => {
-      const datum: any = (node as any).datum;
-      if (datum && typeof datum === "object") {
-        // (datum as any).__ref = node;
-        const datumHack = { ...datum[0], __ref: node };
-        return datumHack as T & { __ref: GoFishNode };
+    // Try to resolve nodes from keyContext (which points to laid-out nodes)
+    // If keyContext is not available, fall back to stored nodes
+    let resolvedNodes: GoFishNode[] = layer.nodes;
+
+    if (layer.keys && layer.keys.length > 0) {
+      try {
+        const keyContext = getKeyContext();
+        // Look up nodes by key from keyContext (these will be the laid-out nodes)
+        const lookedUpNodes = layer.keys
+          .map((key) => (key !== undefined ? keyContext[key] : undefined))
+          .filter((node): node is GoFishNode => node !== undefined);
+
+        if (lookedUpNodes.length === layer.nodes.length) {
+          // Successfully looked up all nodes from keyContext
+          resolvedNodes = lookedUpNodes;
+          console.log(
+            "[DEBUG LayerSelector.resolve] Resolved nodes from keyContext",
+            {
+              layerName: this.layerName,
+              nodesCount: resolvedNodes.length,
+            }
+          );
+        } else {
+          console.log(
+            "[DEBUG LayerSelector.resolve] Partial keyContext lookup, using stored nodes",
+            {
+              layerName: this.layerName,
+              lookedUpCount: lookedUpNodes.length,
+              expectedCount: layer.nodes.length,
+            }
+          );
+        }
+      } catch (error) {
+        // keyContext not available yet, use stored nodes
+        console.log(
+          "[DEBUG LayerSelector.resolve] keyContext not available, using stored nodes",
+          {
+            layerName: this.layerName,
+            error: error instanceof Error ? error.message : String(error),
+          }
+        );
       }
-      return { item: datum, __ref: node } as unknown as T & { __ref: GoFishNode };
+    }
+
+    // Return node-attached data enriched with refs to nodes
+    console.log("[DEBUG LayerSelector.resolve] Resolving layer", {
+      layerName: this.layerName,
+      nodesCount: resolvedNodes.length,
+      nodesTypes: resolvedNodes.map((n: any) => ({
+        type: n.type,
+        key: n.key,
+        name: n.name,
+        uid: n.uid,
+        hasIntrinsicDims: !!n.intrinsicDims,
+        intrinsicDims: n.intrinsicDims,
+      })),
     });
+
+    const result = resolvedNodes.map((node: GoFishNode) => {
+      const datum: any = (node as any).datum;
+      // Store the node key instead of the node instance
+      // This allows refs to look up the laid-out node from keyContext later
+      const nodeKey = node.key;
+      if (datum && typeof datum === "object") {
+        const datumHack = { ...datum[0], __ref: node, __refKey: nodeKey };
+        return datumHack as T & {
+          __ref: GoFishNode;
+          __refKey?: string | number;
+        };
+      }
+      return { item: datum, __ref: node, __refKey: nodeKey } as unknown as T & {
+        __ref: GoFishNode;
+        __refKey?: string | number;
+      };
+    });
+    console.log("[DEBUG LayerSelector.resolve] Resolved result", {
+      layerName: this.layerName,
+      resultCount: result.length,
+      resultRefs: result.map((r: any) => ({
+        hasRef: !!r.__ref,
+        refType: r.__ref?.type,
+        refKey: r.__ref?.key,
+        refUid: r.__ref?.uid,
+        refHasIntrinsicDims: !!r.__ref?.intrinsicDims,
+      })),
+    });
+    return result;
   }
 }
 
@@ -182,79 +261,161 @@ export class ChartBuilder<TInput, TOutput = TInput> {
   }
 
   // mark applies all accumulated operators and the final mark
-  mark(mark: Mark<TOutput>): Promise<
-    GoFishNode & { as: (name: string) => GoFishNode }
-  > & {
+  mark(mark: Mark<TOutput>): (
+    | Promise<GoFishNode & { as: (name: string) => GoFishNode }>
+    | (() => Promise<GoFishNode & { as: (name: string) => GoFishNode }>)
+  ) & {
     render: (
       ...args: Parameters<GoFishNode["render"]>
     ) => Promise<ReturnType<GoFishNode["render"]>>;
     as: (name: string) => Promise<GoFishNode>;
   } {
-    const nodePromise = (async () => {
-      let finalMark = mark as Mark<any>;
-      const operators = this.operators;
-      let data = this.data;
+    // Create a function that returns the promise (for lazy evaluation)
+    const createNodePromise = (): Promise<
+      GoFishNode & { as: (name: string) => GoFishNode }
+    > => {
+      return new Promise<GoFishNode & { as: (name: string) => GoFishNode }>(
+        async (resolve) => {
+          let finalMark = mark as Mark<any>;
+          const operators = this.operators;
+          let data = this.data;
 
-      // Resolve LayerSelector if data is a lazy selector
-      // This defers layer lookup until the mark() phase when layers should be registered
-      if (data instanceof LayerSelector) {
-        data = data.resolve() as any;
-      }
-
-      for (const op of operators.toReversed()) {
-        finalMark = await op(finalMark);
-      }
-
-      const node = await Frame(this.options ?? {}, [
-        (await finalMark(data as any)).setShared([true, true]),
-      ]);
-
-      // Add .as() method to the returned node
-      (node as any).as = (name: string) => {
-        const layerContext = getLayerContext();
-        // Use the actual child node from the Frame, not a new tree
-        const rootNode = node.children[0] as GoFishNode;
-
-        // Collect only leaf nodes (nodes with no children)
-        const collectLeafNodes = (n: GoFishNode): GoFishNode[] => {
-          if (n.children && n.children.length > 0) {
-            const leaves: GoFishNode[] = [];
-            for (const child of n.children) {
-              leaves.push(...collectLeafNodes(child as GoFishNode));
-            }
-            return leaves;
+          // Apply all operators first (they wrap the mark function)
+          for (const op of operators.toReversed()) {
+            finalMark = await op(finalMark);
           }
-          return [n];
-        };
 
-        const leafNodes = collectLeafNodes(rootNode);
+          // Resolve LayerSelector just before calling the mark function
+          // This ensures that layers from previous charts in layer() have been registered
+          // (since layer() processes children sequentially)
+          if (data instanceof LayerSelector) {
+            console.log(
+              "[DEBUG ChartBuilder.mark] About to resolve LayerSelector",
+              {
+                layerName: data.layerName,
+                stackTrace: new Error().stack
+                  ?.split("\n")
+                  .slice(0, 8)
+                  .join("\n"),
+              }
+            );
+            data = data.resolve() as any;
+            console.log("[DEBUG ChartBuilder.mark] LayerSelector resolved", {
+              layerName: (data as any).__ref ? "resolved" : "unknown",
+              dataLength: Array.isArray(data) ? data.length : "not array",
+            });
+          }
 
-        // Store layer data taken from node-attached datum and leaf nodes
-        layerContext[name] = {
-          data: leafNodes.map((n) => (n as any).datum),
-          nodes: leafNodes,
-        };
+          const node = await Frame(this.options ?? {}, [
+            (await finalMark(data as any)).setShared([true, true]),
+          ]);
 
-        return node;
-      };
+          // Add .as() method to the returned node
+          (node as any).as = (name: string) => {
+            const layerContext = getLayerContext();
+            // Use the actual child node from the Frame, not a new tree
+            const rootNode = node.children[0] as GoFishNode;
 
-      return node as GoFishNode & { as: (name: string) => GoFishNode };
-    })();
+            // Collect only leaf nodes (nodes with no children)
+            const collectLeafNodes = (n: GoFishNode): GoFishNode[] => {
+              if (n.children && n.children.length > 0) {
+                const leaves: GoFishNode[] = [];
+                for (const child of n.children) {
+                  leaves.push(...collectLeafNodes(child as GoFishNode));
+                }
+                return leaves;
+              }
+              return [n];
+            };
 
-    const decoratedPromise = nodePromise as typeof nodePromise & {
-      render: (...args: Parameters<GoFishNode["render"]>) => HTMLElement;
+            const leafNodes = collectLeafNodes(rootNode);
+
+            // Store layer data taken from node-attached datum and leaf nodes
+            console.log("[DEBUG ChartBuilder.as] Registering layer", {
+              layerName: name,
+              leafNodesCount: leafNodes.length,
+              leafNodesTypes: leafNodes.map((n: any) => ({
+                type: n.type,
+                key: n.key,
+                name: n.name,
+                hasIntrinsicDims: !!n.intrinsicDims,
+                nodeUid: n.uid,
+              })),
+            });
+
+            // Store node keys so we can look up laid-out nodes from keyContext
+            const nodeKeys = leafNodes.map((n: any) => n.key);
+
+            layerContext[name] = {
+              data: leafNodes.map((n) => (n as any).datum),
+              nodes: leafNodes, // Keep for backward compatibility/fallback
+              keys: nodeKeys, // Store keys for looking up laid-out nodes
+            };
+
+            return node;
+          };
+
+          resolve(node as GoFishNode & { as: (name: string) => GoFishNode });
+        }
+      );
+    };
+
+    // Auto-wrap in function if data is LayerSelector
+    // We'll also wrap when .as() is called (handled in the .as() method)
+    const shouldWrap = this.data instanceof LayerSelector;
+    const nodePromiseOrFunction = shouldWrap
+      ? createNodePromise
+      : createNodePromise();
+
+    // Helper to get the promise (whether it's direct or from a function)
+    const getPromise = (): Promise<
+      GoFishNode & { as: (name: string) => GoFishNode }
+    > => {
+      if (typeof nodePromiseOrFunction === "function") {
+        return nodePromiseOrFunction();
+      }
+      return nodePromiseOrFunction;
+    };
+
+    // Create decorated object that works with both promises and functions
+    const decorated = nodePromiseOrFunction as typeof nodePromiseOrFunction & {
+      render: (
+        ...args: Parameters<GoFishNode["render"]>
+      ) => Promise<ReturnType<GoFishNode["render"]>>;
       as: (name: string) => Promise<GoFishNode>;
     };
 
-    decoratedPromise.render = (container, ...args) =>
-      gofish(container, ...args, nodePromise);
+    decorated.render = (container, ...args) =>
+      Promise.resolve(gofish(container, ...args, getPromise()));
 
-    decoratedPromise.as = async (name: string) => {
-      const node = await nodePromise;
-      return node.as(name);
+    decorated.as = (name: string) => {
+      // When .as() is called, wrap in function for lazy evaluation if not already wrapped
+      // This ensures the chart is only evaluated when layer() processes it
+      if (typeof nodePromiseOrFunction !== "function") {
+        // Convert to function for lazy evaluation
+        const fn = createNodePromise;
+        // Replace the decorated object to be a function
+        const wrappedFn = (() => {
+          return fn().then((node) => {
+            node.as(name);
+            return node;
+          });
+        }) as any;
+        wrappedFn.render = decorated.render;
+        wrappedFn.as = decorated.as;
+        // Return the function-wrapped version, but also execute for .as() return value
+        return fn().then((node) => {
+          node.as(name);
+          return node;
+        });
+      }
+      return getPromise().then((node) => {
+        node.as(name);
+        return node;
+      });
     };
 
-    return decoratedPromise;
+    return decorated;
   }
 }
 
@@ -525,12 +686,19 @@ export function line<T extends Record<string, any>>(options?: {
     key?: string | number
   ) => {
     // Use refs from enriched data if available
+    // Prefer __refKey for lazy resolution from keyContext (laid-out nodes)
     const refs = d.map((item) => {
-      if ("__ref" in item && item.__ref) {
+      if ("__refKey" in item && item.__refKey !== undefined) {
+        // Create a ref that will look up the node by key from keyContext
+        // Store the key for lazy resolution
+        const ref = Ref(item.__ref ?? `${key ?? ""}`);
+        (ref as any)._refKey = item.__refKey;
+        return ref;
+      } else if ("__ref" in item && item.__ref) {
         return Ref(item.__ref);
       }
       // Fallback to name-based ref if no __ref
-      return Ref(`${key}`);
+      return Ref(`${key ?? ""}`);
     });
 
     return Connect(
@@ -561,12 +729,19 @@ export function area<T extends Record<string, any>>(options?: {
     key?: string | number
   ) => {
     // Use refs from enriched data if available
+    // Prefer __refKey for lazy resolution from keyContext (laid-out nodes)
     const refs = d.map((item) => {
-      if ("__ref" in item && item.__ref) {
+      if ("__refKey" in item && item.__refKey !== undefined) {
+        // Create a ref that will look up the node by key from keyContext
+        // Store the key for lazy resolution
+        const ref = Ref(item.__ref ?? `${key ?? ""}`);
+        (ref as any)._refKey = item.__refKey;
+        return ref;
+      } else if ("__ref" in item && item.__ref) {
         return Ref(item.__ref);
       }
       // Fallback to name-based ref if no __ref
-      return Ref(`${key}`);
+      return Ref(`${key ?? ""}`);
     });
 
     return Connect(

@@ -25,56 +25,41 @@ import _, { ListOfRecursiveArraysOrValues } from "lodash";
 // Re-export layer context functions for backward compatibility
 export { getLayerContext, resetLayerContext };
 
-/**
- * Sequentially await all promises in a nested structure (instead of parallel like Promise.all)
- * This ensures that children with .as() calls complete before dependent children try to resolve selectors
- */
-async function awaitAllPromisesSequential<T>(
-  value:
-    | T
-    | Promise<T>
-    | ListOfRecursiveArraysOrValues<T | Promise<T>>
-    | null
-    | undefined
-): Promise<ListOfRecursiveArraysOrValues<T>> {
-  if (value === null || value === undefined) {
-    return [] as ListOfRecursiveArraysOrValues<T>;
-  }
-
-  // If it's a promise, await it first
-  if (value instanceof Promise) {
-    const resolved = await value;
-    return awaitAllPromisesSequential(resolved);
-  }
-
-  // If it's an array, recursively await all elements sequentially
-  if (Array.isArray(value)) {
-    const awaited: any[] = [];
-    for (const item of value) {
-      awaited.push(await awaitAllPromisesSequential(item));
-    }
-    return _.flattenDeep(awaited) as ListOfRecursiveArraysOrValues<T>;
-  }
-
-  // Otherwise, return as-is
-  return value as ListOfRecursiveArraysOrValues<T>;
-}
-
-// Custom layer wrapper that processes children sequentially
-function withLayerSequential<T extends Record<string, any>, R>(
-  func: (opts: T, children: GoFishAST[]) => R
+// Custom wrapper for layer that preserves functions in children
+function withLayerGoFish<T extends Record<string, any>, R>(
+  func: (opts: T, children: GoFishAST[]) => R | Promise<R>
 ): {
   (
     opts?: T,
     children?:
-      | ListOfRecursiveArraysOrValues<GoFishAST | Promise<GoFishAST>>
-      | Promise<ListOfRecursiveArraysOrValues<GoFishAST | Promise<GoFishAST>>>
+      | ListOfRecursiveArraysOrValues<
+          | GoFishAST
+          | Promise<GoFishAST>
+          | (() => GoFishAST | Promise<GoFishAST>)
+        >
+      | Promise<
+          ListOfRecursiveArraysOrValues<
+            | GoFishAST
+            | Promise<GoFishAST>
+            | (() => GoFishAST | Promise<GoFishAST>)
+          >
+        >
       | null
   ): PromiseWithRender<R>;
   (
     children:
-      | ListOfRecursiveArraysOrValues<GoFishAST | Promise<GoFishAST>>
-      | Promise<ListOfRecursiveArraysOrValues<GoFishAST | Promise<GoFishAST>>>
+      | ListOfRecursiveArraysOrValues<
+          | GoFishAST
+          | Promise<GoFishAST>
+          | (() => GoFishAST | Promise<GoFishAST>)
+        >
+      | Promise<
+          ListOfRecursiveArraysOrValues<
+            | GoFishAST
+            | Promise<GoFishAST>
+            | (() => GoFishAST | Promise<GoFishAST>)
+          >
+        >
       | null
   ): PromiseWithRender<R>;
 } {
@@ -82,8 +67,18 @@ function withLayerSequential<T extends Record<string, any>, R>(
     const promise = (async () => {
       let opts: T;
       let children:
-        | ListOfRecursiveArraysOrValues<GoFishAST | Promise<GoFishAST>>
-        | Promise<ListOfRecursiveArraysOrValues<GoFishAST | Promise<GoFishAST>>>
+        | ListOfRecursiveArraysOrValues<
+            | GoFishAST
+            | Promise<GoFishAST>
+            | (() => GoFishAST | Promise<GoFishAST>)
+          >
+        | Promise<
+            ListOfRecursiveArraysOrValues<
+              | GoFishAST
+              | Promise<GoFishAST>
+              | (() => GoFishAST | Promise<GoFishAST>)
+            >
+          >
         | null
         | undefined;
       if (args.length === 2) {
@@ -97,23 +92,60 @@ function withLayerSequential<T extends Record<string, any>, R>(
         children = undefined;
       } else {
         throw new Error(
-          `withLayerSequential: Expected 0, 1, or 2 arguments, got ${args.length}`
+          `withLayerGoFish: Expected 0, 1, or 2 arguments, got ${args.length}`
         );
       }
-      // Await all promises sequentially, then flatten deeply nested children
-      const awaitedChildren = await awaitAllPromisesSequential(children);
-      const flattened = _.flattenDeep(awaitedChildren) as any[];
-      const flatChildren = flattened.filter(
-        (child): child is GoFishAST => child != null
-      );
-      return func(opts, flatChildren);
+
+      // Process children: await promises and preserve functions
+      const processChildren = async (
+        value: any
+      ): Promise<ListOfRecursiveArraysOrValues<any>> => {
+        if (value === null || value === undefined) {
+          return [];
+        }
+        if (value instanceof Promise) {
+          const resolved = await value;
+          return processChildren(resolved);
+        }
+        if (Array.isArray(value)) {
+          const processed = await Promise.all(value.map(processChildren));
+          return _.flattenDeep(processed);
+        }
+        // Preserve functions - don't filter them out
+        return value;
+      };
+
+      const processed = await processChildren(children);
+      const flattened = _.flattenDeep(processed) as any[];
+
+      // Now process children sequentially: call functions to get actual values
+      const finalChildren: GoFishAST[] = [];
+      for (let i = 0; i < flattened.length; i++) {
+        const child = flattened[i];
+        if (child == null) continue;
+        if (typeof child === "function") {
+          // Call the function to get the actual value/promise
+          const result = child();
+          // Await if it's a promise
+          const resolvedChild =
+            result instanceof Promise ? await result : result;
+          if (resolvedChild != null) {
+            finalChildren.push(resolvedChild);
+          }
+        } else {
+          // It's already a GoFishAST (or should be)
+          finalChildren.push(child);
+        }
+      }
+
+      return func(opts, finalChildren);
     })();
     return addRenderMethod(promise);
   };
 }
 
-export const layer = withLayerSequential(
-  (
+export const layer = withLayerGoFish(
+  async (
     childrenOrOptions:
       | ({
           key?: string;
@@ -144,7 +176,7 @@ export const layer = withLayerSequential(
           transform: coordTransform,
           ...restDims,
         },
-        children
+        children.filter((c): c is GoFishNode => c instanceof GoFishNode)
       );
     }
 
@@ -158,7 +190,12 @@ export const layer = withLayerSequential(
         resolveUnderlyingSpace: (children: Size<UnderlyingSpace>[]) => {
           let xSpace = UNDEFINED;
           const xChildrenPositionSpaces = children.filter(
-            (child) => child[0].kind === "position"
+            (
+              child
+            ): child is [
+              (typeof child)[0] & { kind: "position" },
+              (typeof child)[1],
+            ] => child[0].kind === "position"
           );
           const xChildrenOrdinalSpaces = children.filter(
             (child) => child[0].kind === "ordinal"
@@ -169,7 +206,7 @@ export const layer = withLayerSequential(
             xChildrenOrdinalSpaces.length === 0
           ) {
             const domain = Interval.unionAll(
-              ...xChildrenPositionSpaces.map((child) => child[0].domain!)
+              ...xChildrenPositionSpaces.map((child) => child[0].domain)
             );
             xSpace = POSITION([domain.min, domain.max]);
           } else if (xChildrenOrdinalSpaces.length > 0) {
@@ -178,7 +215,12 @@ export const layer = withLayerSequential(
 
           let ySpace = UNDEFINED;
           const yChildrenPositionSpaces = children.filter(
-            (child) => child[1].kind === "position"
+            (
+              child
+            ): child is [
+              (typeof child)[0],
+              (typeof child)[1] & { kind: "position" },
+            ] => child[1].kind === "position"
           );
           const yChildrenOrdinalSpaces = children.filter(
             (child) => child[1].kind === "ordinal"
@@ -189,7 +231,7 @@ export const layer = withLayerSequential(
             yChildrenOrdinalSpaces.length === 0
           ) {
             const domain = Interval.unionAll(
-              ...yChildrenPositionSpaces.map((child) => child[1].domain!)
+              ...yChildrenPositionSpaces.map((child) => child[1].domain)
             );
             ySpace = POSITION([domain.min, domain.max]);
           } else if (yChildrenOrdinalSpaces.length > 0) {
@@ -223,7 +265,7 @@ export const layer = withLayerSequential(
             canUnifyDomains(filteredYChildDomains)
               ? unifyContinuousDomains(filteredYChildDomains)
               : undefined,
-          ];
+          ] as Size<ContinuousDomain | undefined>;
           // console.log("layer.inferPosDomains", {
           //   filteredXChildDomains,
           //   filteredYChildDomains,
@@ -266,11 +308,43 @@ export const layer = withLayerSequential(
 
           const childPlaceables = [];
 
-          for (const child of children) {
+          console.log("[DEBUG layer.layout] Starting to layout children", {
+            childrenCount: children.length,
+            childrenTypes: children.map((c: any) => ({
+              type: c.type,
+              key: c.key,
+              name: c.name,
+            })),
+          });
+
+          for (let i = 0; i < children.length; i++) {
+            const child = children[i];
+            console.log(
+              `[DEBUG layer.layout] Laying out child ${i + 1}/${children.length}`,
+              {
+                childType: (child as any).type,
+                childKey: (child as any).key,
+                childName: (child as any).name,
+                hasIntrinsicDims: !!(child as any).intrinsicDims,
+              }
+            );
+
             const childPlaceable = child.layout(size, scaleFactors, posScales);
+
+            console.log(`[DEBUG layer.layout] Child ${i + 1} layout complete`, {
+              childType: (child as any).type,
+              childKey: (child as any).key,
+              hasIntrinsicDims: !!(child as any).intrinsicDims,
+              intrinsicDims: (child as any).intrinsicDims,
+            });
+
             childPlaceable.place({ x: 0, y: 0 });
             childPlaceables.push(childPlaceable);
           }
+
+          console.log("[DEBUG layer.layout] All children laid out", {
+            childrenCount: children.length,
+          });
 
           // Calculate the bounding box of all children
           const minX = Math.min(
