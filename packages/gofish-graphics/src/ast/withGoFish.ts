@@ -8,19 +8,68 @@
 import { GoFishAST } from "./_ast";
 import _, { ListOfRecursiveArraysOrValues } from "lodash";
 
+/**
+ * Recursively awaits all promises in a nested structure
+ */
+async function awaitAllPromises<T>(
+  value:
+    | T
+    | Promise<T>
+    | ListOfRecursiveArraysOrValues<T | Promise<T>>
+    | null
+    | undefined
+): Promise<ListOfRecursiveArraysOrValues<T>> {
+  if (value === null || value === undefined) {
+    return [] as ListOfRecursiveArraysOrValues<T>;
+  }
+
+  // If it's a promise, await it first
+  if (value instanceof Promise) {
+    const resolved = await value;
+    return awaitAllPromises(resolved);
+  }
+
+  // If it's an array, recursively await all elements
+  if (Array.isArray(value)) {
+    const awaited = await Promise.all(
+      value.map((item) => awaitAllPromises(item))
+    );
+    return _.flattenDeep(awaited) as ListOfRecursiveArraysOrValues<T>;
+  }
+
+  // Otherwise, return as-is (single value is valid in ListOfRecursiveArraysOrValues)
+  return value as ListOfRecursiveArraysOrValues<T>;
+}
+
 /* 
 - Flattens deeply nested children
 - Allows opts to be optional
+- Supports arrays where individual elements can be promises
 */
 export function withGoFish<T extends Record<string, any>, R>(
   func: (opts: T, children: GoFishAST[]) => R
 ): {
-  (opts?: T, children?: ListOfRecursiveArraysOrValues<GoFishAST> | null): R;
-  (children: ListOfRecursiveArraysOrValues<GoFishAST> | null): R;
+  (
+    opts?: T,
+    children?:
+      | ListOfRecursiveArraysOrValues<GoFishAST | Promise<GoFishAST>>
+      | Promise<ListOfRecursiveArraysOrValues<GoFishAST | Promise<GoFishAST>>>
+      | null
+  ): Promise<R>;
+  (
+    children:
+      | ListOfRecursiveArraysOrValues<GoFishAST | Promise<GoFishAST>>
+      | Promise<ListOfRecursiveArraysOrValues<GoFishAST | Promise<GoFishAST>>>
+      | null
+  ): Promise<R>;
 } {
-  return function (...args: any[]): R {
+  return async function (...args: any[]): Promise<R> {
     let opts: T;
-    let children: ListOfRecursiveArraysOrValues<GoFishAST> | null | undefined;
+    let children:
+      | ListOfRecursiveArraysOrValues<GoFishAST | Promise<GoFishAST>>
+      | Promise<ListOfRecursiveArraysOrValues<GoFishAST | Promise<GoFishAST>>>
+      | null
+      | undefined;
     if (args.length === 2) {
       opts = args[0] ?? ({} as T);
       children = args[1];
@@ -31,10 +80,16 @@ export function withGoFish<T extends Record<string, any>, R>(
       opts = {} as T;
       children = undefined;
     } else {
-      throw new Error(`withGoFish: Expected 0, 1, or 2 arguments, got ${args.length}`);
+      throw new Error(
+        `withGoFish: Expected 0, 1, or 2 arguments, got ${args.length}`
+      );
     }
-    // Flatten deeply nested children
-    const flatChildren = _.flattenDeep(children) as GoFishAST[];
+    // Await all promises in the structure, then flatten deeply nested children
+    const awaitedChildren = await awaitAllPromises(children);
+    const flattened = _.flattenDeep(awaitedChildren) as any[];
+    const flatChildren = flattened.filter(
+      (child): child is GoFishAST => child != null
+    );
     return func(opts, flatChildren);
   };
 }
@@ -60,7 +115,9 @@ export function withGoFishNoChildren<T extends Record<string, any>, R>(
       const [data, opts] = args;
       return func(opts);
     } else {
-      throw new Error(`withGoFishNoChildren: Expected 1 or 2 arguments, got ${args.length}`);
+      throw new Error(
+        `withGoFishNoChildren: Expected 1 or 2 arguments, got ${args.length}`
+      );
     }
   } as any;
 }
