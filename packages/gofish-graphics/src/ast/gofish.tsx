@@ -210,8 +210,8 @@ export const gofish = (
       return result;
     } finally {
       if (debug) {
+        console.log("scaleContext", scaleContext);
         console.log("scopeContext", scopeContext);
-        // console.log("scaleContext", scaleContext);
         // console.log("keyContext", keyContext);
       }
       scopeContext = null;
