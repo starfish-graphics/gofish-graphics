@@ -16,7 +16,7 @@ import {
 } from "./dims";
 import { Domain } from "./domain";
 import { getScopeContext } from "./gofish";
-import { GoFishNode } from "./_node";
+import { GoFishNode, ScaleFactorFunction } from "./_node";
 import { GoFishAST } from "./_ast";
 import { MaybeValue } from "./data";
 import { ORDINAL, POSITION, UnderlyingSpace } from "./underlyingSpace";
@@ -102,6 +102,10 @@ export class GoFishRef {
 
   public inferPosDomains(): Size<Domain | undefined> {
     return this.selectedNode?.inferPosDomains() ?? [undefined, undefined];
+  }
+
+  public inferSizeDomains(): Size<ScaleFactorFunction | undefined> {
+    return this.selectedNode?.inferSizeDomains() ?? [undefined, undefined];
   }
 
   /* TODO: what should the default be? */
