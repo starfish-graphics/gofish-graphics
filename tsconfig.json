@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+
+    // NEW: Allow TypeScript to read .js, .mjs, and .cjs files
+    "allowJs": true
+  },
+  "include": [
+    "eslint.config.mjs",
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.js",
+    "**/*.mjs",
+    "**/*.mts",  // NEW: Added support for .mts files
+    "**/*.cjs",  // NEW: Added support for .cjs files
+    "**/.vitepress/**/*", // simplified to catch everything in vitepress
+    "**/.storybook/**/*"
+  ],
+  "exclude": ["node_modules", "dist", "coverage"]
+}

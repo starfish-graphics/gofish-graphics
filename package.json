@@ -6,6 +6,7 @@
   "private": true,
   "license": "MIT",
   "scripts": {
+    "lint": "eslint .",
     "dev": "pnpm --filter gofish-graphics dev",
     "build": "pnpm --filter gofish-graphics build",
     "docs:dev": "pnpm --filter docs docs:dev",
@@ -15,6 +16,10 @@
     "build-storybook": "pnpm --filter gofish-graphics build-storybook"
   },
   "devDependencies": {
-    "prettier": "^3.6.2"
+    "eslint": "^9.39.1",
+    "globals": "^16.5.0",
+    "prettier": "^3.6.2",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.48.1"
   }
 }
