@@ -97,17 +97,7 @@ export class GoFishRef {
   }
 
   public embed(direction: FancyDirection): void {
-    if (!this.selectedNode) {
-      console.error("[ERROR GoFishRef.embed] selectedNode is undefined!", {
-        refName: this.name,
-        selection: this.selection,
-      });
-      throw new Error(
-        `Cannot embed: selectedNode is undefined for ref ${this.name || "unnamed"}`
-      );
-    }
-
-    this.selectedNode.embed(direction);
+    this.selectedNode?.embed(direction);
   }
 
   public inferPosDomains(): Size<Domain | undefined> {
