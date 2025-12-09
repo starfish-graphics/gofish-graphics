@@ -72,36 +72,65 @@ export function addRenderMethod<T>(promise: Promise<T>): PromiseWithRender<T> {
 }
 
 /**
- * Recursively awaits all promises in a nested structure
+ * Recursively flattens nested structures and awaits all promises, returning a flat array.
+ * If the type includes functions (thunks), they are preserved (not called).
+ * Always returns a flat array.
  */
-async function awaitAllPromises<T>(
+async function flattenAndAwaitPromises<T>(
   value:
     | T
     | Promise<T>
     | ListOfRecursiveArraysOrValues<T | Promise<T>>
+    | Promise<ListOfRecursiveArraysOrValues<T | Promise<T>>>
     | null
     | undefined
-): Promise<ListOfRecursiveArraysOrValues<T>> {
+): Promise<T[]> {
   if (value === null || value === undefined) {
-    return [] as ListOfRecursiveArraysOrValues<T>;
+    return [];
   }
 
   // If it's a promise, await it first
   if (value instanceof Promise) {
     const resolved = await value;
-    return awaitAllPromises(resolved);
+    return flattenAndAwaitPromises(resolved);
   }
 
   // If it's an array, recursively await all elements
   if (Array.isArray(value)) {
     const awaited = await Promise.all(
-      value.map((item) => awaitAllPromises(item))
+      value.map((item) => flattenAndAwaitPromises(item))
     );
-    return _.flattenDeep(awaited) as ListOfRecursiveArraysOrValues<T>;
+    return _.flattenDeep(awaited) as T[];
   }
 
-  // Otherwise, return as-is (single value is valid in ListOfRecursiveArraysOrValues)
-  return value as ListOfRecursiveArraysOrValues<T>;
+  // Otherwise, return as single-element array
+  return [value as T];
+}
+
+/**
+ * Process children sequentially, calling thunks and awaiting promises one at a time
+ */
+export async function reifyChildrenSequentially(
+  children: (GoFishAST | (() => GoFishAST | Promise<GoFishAST>))[]
+): Promise<GoFishAST[]> {
+  // if the child is a thunked promise, it must be resolved before the next child is resolved
+  const resolved: GoFishAST[] = [];
+
+  for (const child of children) {
+    if (typeof child === "function") {
+      // It's a thunk, call it and await if it returns a promise
+      const result = child();
+      const resolvedChild = result instanceof Promise ? await result : result;
+      if (resolvedChild != null) {
+        resolved.push(resolvedChild);
+      }
+    } else {
+      // It's already a GoFishAST, add it directly
+      resolved.push(child);
+    }
+  }
+
+  return resolved;
 }
 
 /* 
@@ -148,13 +177,106 @@ export function withGoFish<T extends Record<string, any>, R>(
           `withGoFish: Expected 0, 1, or 2 arguments, got ${args.length}`
         );
       }
-      // Await all promises in the structure, then flatten deeply nested children
-      const awaitedChildren = await awaitAllPromises(children);
-      const flattened = _.flattenDeep(awaitedChildren) as any[];
+      // Flatten nested structures and await all promises
+      const flattened = await flattenAndAwaitPromises<
+        GoFishAST | Promise<GoFishAST>
+      >(children);
       const flatChildren = flattened.filter(
-        (child): child is GoFishAST => child != null
-      );
+        (child): child is GoFishAST =>
+          child != null && !(child instanceof Promise)
+      ) as GoFishAST[];
       return func(opts, flatChildren);
+    })();
+    return addRenderMethod(promise);
+  };
+}
+
+/**
+ * Sequential version of withGoFish that supports thunks (functions) in children.
+ * Processes thunks sequentially (one at a time) rather than in parallel.
+ *
+ * - Flattens deeply nested children
+ * - Allows opts to be optional
+ * - Supports arrays where individual elements can be promises or thunks
+ * - Processes thunks sequentially to ensure proper execution order
+ */
+export function withGoFishSequential<T extends Record<string, any>, R>(
+  func: (opts: T, children: GoFishAST[]) => R
+): {
+  (
+    opts?: T,
+    children?:
+      | ListOfRecursiveArraysOrValues<
+          | GoFishAST
+          | Promise<GoFishAST>
+          | (() => GoFishAST | Promise<GoFishAST>)
+        >
+      | Promise<
+          ListOfRecursiveArraysOrValues<
+            | GoFishAST
+            | Promise<GoFishAST>
+            | (() => GoFishAST | Promise<GoFishAST>)
+          >
+        >
+      | null
+  ): PromiseWithRender<R>;
+  (
+    children:
+      | ListOfRecursiveArraysOrValues<
+          | GoFishAST
+          | Promise<GoFishAST>
+          | (() => GoFishAST | Promise<GoFishAST>)
+        >
+      | Promise<
+          ListOfRecursiveArraysOrValues<
+            | GoFishAST
+            | Promise<GoFishAST>
+            | (() => GoFishAST | Promise<GoFishAST>)
+          >
+        >
+      | null
+  ): PromiseWithRender<R>;
+} {
+  return function (...args: any[]): PromiseWithRender<R> {
+    const promise = (async () => {
+      let opts: T;
+      let children:
+        | ListOfRecursiveArraysOrValues<
+            | GoFishAST
+            | Promise<GoFishAST>
+            | (() => GoFishAST | Promise<GoFishAST>)
+          >
+        | Promise<
+            ListOfRecursiveArraysOrValues<
+              | GoFishAST
+              | Promise<GoFishAST>
+              | (() => GoFishAST | Promise<GoFishAST>)
+            >
+          >
+        | null
+        | undefined;
+      if (args.length === 2) {
+        opts = args[0] ?? ({} as T);
+        children = args[1];
+      } else if (args.length === 1) {
+        opts = {} as T;
+        children = args[0];
+      } else if (args.length === 0) {
+        opts = {} as T;
+        children = undefined;
+      } else {
+        throw new Error(
+          `withGoFishSequential: Expected 0, 1, or 2 arguments, got ${args.length}`
+        );
+      }
+      // First phase: flatten nested structures and await promises, preserving thunks
+      const flattenedWithThunks = await flattenAndAwaitPromises<
+        GoFishAST | (() => GoFishAST | Promise<GoFishAST>)
+      >(children);
+      // Second phase: process thunks sequentially
+      const resolvedChildren =
+        await reifyChildrenSequentially(flattenedWithThunks);
+      return func(opts, resolvedChildren);
     })();
     return addRenderMethod(promise);
   };

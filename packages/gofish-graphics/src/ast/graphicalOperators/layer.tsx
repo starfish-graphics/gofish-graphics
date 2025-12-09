@@ -18,133 +18,13 @@ import { computeSize } from "../../util";
 import { CoordinateTransform } from "../coordinateTransforms/coord";
 import { coord } from "../coordinateTransforms/coord";
 import { getLayerContext, resetLayerContext } from "./frame";
-import { withGoFish, PromiseWithRender, addRenderMethod } from "../withGoFish";
+import { withGoFishSequential } from "../withGoFish";
 import { GoFishAST } from "../_ast";
-import _, { ListOfRecursiveArraysOrValues } from "lodash";
 
 // Re-export layer context functions for backward compatibility
 export { getLayerContext, resetLayerContext };
 
-// Custom wrapper for layer that preserves functions in children
-function withLayerGoFish<T extends Record<string, any>, R>(
-  func: (opts: T, children: GoFishAST[]) => R | Promise<R>
-): {
-  (
-    opts?: T,
-    children?:
-      | ListOfRecursiveArraysOrValues<
-          | GoFishAST
-          | Promise<GoFishAST>
-          | (() => GoFishAST | Promise<GoFishAST>)
-        >
-      | Promise<
-          ListOfRecursiveArraysOrValues<
-            | GoFishAST
-            | Promise<GoFishAST>
-            | (() => GoFishAST | Promise<GoFishAST>)
-          >
-        >
-      | null
-  ): PromiseWithRender<R>;
-  (
-    children:
-      | ListOfRecursiveArraysOrValues<
-          | GoFishAST
-          | Promise<GoFishAST>
-          | (() => GoFishAST | Promise<GoFishAST>)
-        >
-      | Promise<
-          ListOfRecursiveArraysOrValues<
-            | GoFishAST
-            | Promise<GoFishAST>
-            | (() => GoFishAST | Promise<GoFishAST>)
-          >
-        >
-      | null
-  ): PromiseWithRender<R>;
-} {
-  return function (...args: any[]): PromiseWithRender<R> {
-    const promise = (async () => {
-      let opts: T;
-      let children:
-        | ListOfRecursiveArraysOrValues<
-            | GoFishAST
-            | Promise<GoFishAST>
-            | (() => GoFishAST | Promise<GoFishAST>)
-          >
-        | Promise<
-            ListOfRecursiveArraysOrValues<
-              | GoFishAST
-              | Promise<GoFishAST>
-              | (() => GoFishAST | Promise<GoFishAST>)
-            >
-          >
-        | null
-        | undefined;
-      if (args.length === 2) {
-        opts = args[0] ?? ({} as T);
-        children = args[1];
-      } else if (args.length === 1) {
-        opts = {} as T;
-        children = args[0];
-      } else if (args.length === 0) {
-        opts = {} as T;
-        children = undefined;
-      } else {
-        throw new Error(
-          `withLayerGoFish: Expected 0, 1, or 2 arguments, got ${args.length}`
-        );
-      }
-
-      // Process children: await promises and preserve functions
-      const processChildren = async (
-        value: any
-      ): Promise<ListOfRecursiveArraysOrValues<any>> => {
-        if (value === null || value === undefined) {
-          return [];
-        }
-        if (value instanceof Promise) {
-          const resolved = await value;
-          return processChildren(resolved);
-        }
-        if (Array.isArray(value)) {
-          const processed = await Promise.all(value.map(processChildren));
-          return _.flattenDeep(processed);
-        }
-        // Preserve functions - don't filter them out
-        return value;
-      };
-
-      const processed = await processChildren(children);
-      const flattened = _.flattenDeep(processed) as any[];
-
-      // Now process children sequentially: call functions to get actual values
-      const finalChildren: GoFishAST[] = [];
-      for (let i = 0; i < flattened.length; i++) {
-        const child = flattened[i];
-        if (child == null) continue;
-        if (typeof child === "function") {
-          // Call the function to get the actual value/promise
-          const result = child();
-          // Await if it's a promise
-          const resolvedChild =
-            result instanceof Promise ? await result : result;
-          if (resolvedChild != null) {
-            finalChildren.push(resolvedChild);
-          }
-        } else {
-          // It's already a GoFishAST (or should be)
-          finalChildren.push(child);
-        }
-      }
-
-      return func(opts, finalChildren);
-    })();
-    return addRenderMethod(promise);
-  };
-}
-
-export const layer = withLayerGoFish(
+export const layer = withGoFishSequential(
   async (
     childrenOrOptions:
       | ({
