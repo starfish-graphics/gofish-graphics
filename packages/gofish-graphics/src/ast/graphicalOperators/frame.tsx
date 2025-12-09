@@ -11,7 +11,6 @@ type LayerContext = {
   [name: string]: {
     data: any[];
     nodes: GoFishNode[];
-    keys?: (string | number | undefined)[]; // Store keys for looking up laid-out nodes from keyContext
   };
 };
 
