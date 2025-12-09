@@ -1,4 +1,4 @@
-# GoFish Python: Motivation and Goals
+# GoFish Python: Design
 
 ## Why Create a Python Wrapper?
 
@@ -11,26 +11,31 @@ GoFish Graphics is a powerful TypeScript/JavaScript visualization library with a
 - **Python's ecosystem** includes powerful libraries for statistics, machine learning, and scientific computing
 - Most data practitioners are more comfortable with Python than JavaScript
 
-While JavaScript has excellent visualization libraries (D3, Observable Plot, Vega-Lite), there's a gap: **how can Python users leverage GoFish's unique approach to visualization without leaving their Python environment?**
+So how can Python users leverage GoFish's unique approach to visualization without leaving their
+Python environment? GoFish doesn't really take advantage of any unique JS syntax features, so it
+should be possible to implement a Python API that is close to the JavaScript API.
 
 ### The Goal
 
 Create a Python interface to GoFish that:
 
 1. **Feels Pythonic** - Uses familiar patterns (builder pattern, method chaining, pandas DataFrames)
-2. **Maintains Fidelity** - Preserves the power and flexibility of the JavaScript API
-3. **Enables Python-Side Logic** - Allows data transformations using Python's rich ecosystem
-4. **Works in Jupyter** - Seamlessly integrates with JupyterLab, Jupyter Notebook, VSCode, and Google Colab
-5. **Requires No Setup** - Works offline, behind firewalls, with no manual dependency management
+2. **Corresponds Closely to the JavaScript API** - Preserves the power and flexibility of the JavaScript API
+3. **Enables Python-Side Logic** - Allows data transformations in Python, not just in JavaScript.
+4. **Works in Jupyter** - Seamlessly integrates with JupyterLab, Jupyter Notebook, VSCode, Google
+   Colab, and Marimo.
+5. **Doesn't Require Internet or a Special Setup. Just `pip install`** - Works offline, behind firewalls, with no manual dependency management
 
 ### Non-Goals
 
 This project intentionally **does not**:
 
-- Reimplement GoFish's rendering engine in Python (use the JavaScript version)
-- Support server-side rendering (client-side only, leverages browser performance)
+- Reimplement GoFish's rendering engine in Python
+- Support server-side rendering (client-side only for now)
 - Create a completely new API (closely mirrors the JavaScript chart API)
 - Support every JavaScript feature initially (focus on chart API first, expand later)
+
+**Just to make it super clear: We're only supporting the mid-level chart API for now. The low-level API is not supported yet.**
 
 ## What Environments Does It Support?
 
@@ -41,7 +46,8 @@ The gofish-python widget is built on AnyWidget, which should work in any Jupyter
 #### Streamlit / Gradio / Dash
 
 - **Status**: ❌ Not Supported
-- **Why**: These frameworks have different rendering models (server-side state, custom components)
+- **Why**: These frameworks have different rendering models (server-side state, custom components).
+  Haven't explored it too deeply yet.
 
 #### Python Scripts (Non-Interactive)
 
@@ -57,20 +63,18 @@ The gofish-python widget is built on AnyWidget, which should work in any Jupyter
 **Rationale**:
 
 - Leverages existing GoFish JavaScript library (no rewrite needed)
-- Better performance (GPU acceleration, efficient DOM updates)
-- Reduced server load (rendering happens on client)
 - Enables interactivity (hover, zoom, pan - future features)
 
 **Trade-offs**:
 
-- Requires browser environment (no command-line usage)
-- Data must be transferred to browser (network overhead)
-- Cannot use Python-only visualization features
+- Requires browser environment (makes it harder to build for non-notebook environments, but this has
+  been solved by other Python visualization libraries already)
+- Data must be marshalled between Python and JavaScript
 
 **Alternatives Considered**:
 
-- Server-side rendering with matplotlib-style API (would lose GoFish's unique features)
-- Hybrid approach (some rendering server-side) (complex, no clear benefit)
+- Python-only API (would require effectively maintaining two separate codebases with parallel logic.
+  likely to introduce bugs)
 
 ### Decision 2: Apache Arrow for Data Transfer
 
@@ -78,23 +82,20 @@ The gofish-python widget is built on AnyWidget, which should work in any Jupyter
 
 **Rationale**:
 
-- 3-5x smaller than JSON for numeric data
-- Zero-copy deserialization in JavaScript (1000x faster)
-- Type preservation (int vs float, null handling)
-- Standard format (interoperability with other tools)
+- Mostly I find JSON icky for representing tabular data. (It's pretty good for tree-shaped
+  qualitative-ish things like specs, though.)
+- Set the stage for possibly integrating Mosaic later.
+- Possibly avoid JSON semantic weirdnesses.
+- Use an efficient, zero-copy format for data transfer.
 
 **Trade-offs**:
 
 - Adds dependency (pyarrow, apache-arrow npm package)
 - More complex than JSON (requires schema, type handling)
-- base64 encoding adds 33% overhead (could use binary transport)
 
 **Alternatives Considered**:
 
 - JSON (simple but slow and large for big datasets)
-- CSV (loses type information, still requires parsing)
-- MessagePack/CBOR (better than JSON but not zero-copy)
-- Parquet (too heavy, designed for storage not transport)
 
 ### Decision 3: AnyWidget for Jupyter Integration
 
@@ -110,9 +111,8 @@ The gofish-python widget is built on AnyWidget, which should work in any Jupyter
 
 **Trade-offs**:
 
-- Relatively new library (less mature than ipywidgets)
-- Experimental features (e.g., commands) may change
-- Smaller community (fewer examples and tutorials)
+- Reliance on experimental `command` API.
+- Doesn't work outside notebook environments.
 
 **Alternatives Considered**:
 
@@ -128,21 +128,16 @@ The gofish-python widget is built on AnyWidget, which should work in any Jupyter
 
 - Python lambdas cannot be serialized to JavaScript
 - Derive must run in operator pipeline (can't pre-execute)
-- Enables using pandas, numpy, sklearn, etc. for transformations
-- Maintains semantic meaning (derive is a transformation step)
+- Enables using pandas, numpy, sklearn, etc. for transformations. Not restricted to eg a data transformation sublanguage like Vega-Lite's.
 
 **Trade-offs**:
 
-- Adds latency (50-200ms per derive call)
-- Requires active Jupyter kernel (no static export with derive)
-- Introduces async (GoFish chart API is currently synchronous)
-- Complex error handling (errors can happen on either side)
+- Introduces async into GoFish JS, which significantly increases complexity in many parts of the codebase.
 
 **Alternatives Considered**:
 
 - Pre-execute all derives in Python before sending (breaks pipeline semantics, loses reactivity)
 - Translate Python to JavaScript (impossible in general case, limited subset would be too restrictive)
-- Restrict derive to simple operations (too limiting, defeats purpose)
 - Use WebAssembly Python (complex setup, poor pandas/numpy support, large bundle)
 
 ### Decision 5: Bundle All Dependencies
@@ -158,10 +153,7 @@ The gofish-python widget is built on AnyWidget, which should work in any Jupyter
 
 **Trade-offs**:
 
-- Larger bundle size (~2.2 MB minified)
-- Longer initial load time (~100-300ms)
-- Must rebuild bundle when dependencies change
-- Cannot share dependencies with other widgets
+- Larger bundle size
 
 **Alternatives Considered**:
 
