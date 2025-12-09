@@ -320,37 +320,7 @@ export class GoFishNode {
   }
 
   public embed(direction: FancyDirection): void {
-    const dirIndex = elaborateDirection(direction);
-
-    if (!this.intrinsicDims) {
-      console.error("[ERROR GoFishNode.embed] intrinsicDims is undefined!", {
-        nodeType: this.type,
-        nodeKey: this.key,
-        nodeName: this.name,
-      });
-      throw new Error(
-        `Cannot embed: intrinsicDims is undefined for node ${this.type}${this.key ? ` (key: ${this.key})` : ""}`
-      );
-    }
-
-    if (!this.intrinsicDims[dirIndex]) {
-      console.error(
-        "[ERROR GoFishNode.embed] intrinsicDims[dirIndex] is undefined!",
-        {
-          nodeType: this.type,
-          nodeKey: this.key,
-          nodeName: this.name,
-          direction,
-          dirIndex,
-          intrinsicDims: this.intrinsicDims,
-        }
-      );
-      throw new Error(
-        `Cannot embed: intrinsicDims[${dirIndex}] is undefined for node ${this.type}${this.key ? ` (key: ${this.key})` : ""}`
-      );
-    }
-
-    this.intrinsicDims[dirIndex].embedded = true;
+    this.intrinsicDims![elaborateDirection(direction)].embedded = true;
   }
 
   public INTERNAL_render(
