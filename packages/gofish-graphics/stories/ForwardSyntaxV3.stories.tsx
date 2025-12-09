@@ -139,22 +139,6 @@ export const RibbonChart: StoryObj<Args> = {
         )
         .mark(rect({ h: "count", fill: "species" }))
         .as("bars"),
-      chart(seafood)
-        .flow(
-          spread("lake", { dir: "x", spacing: 64 }),
-          derive((d) => orderBy(d, "count", "asc")),
-          stack("species", { dir: "y" })
-        )
-        .mark(rect({ h: "count", fill: "species" }))
-        .as("bars2"),
-      chart(seafood)
-        .flow(
-          spread("lake", { dir: "x", spacing: 64 }),
-          derive((d) => orderBy(d, "count", "asc")),
-          stack("species", { dir: "y" })
-        )
-        .mark(rect({ h: "count", fill: "species" }))
-        .as("bars3"),
       chart(select("bars"))
         .flow(group("species"))
         .mark(area({ opacity: 0.8 })),
