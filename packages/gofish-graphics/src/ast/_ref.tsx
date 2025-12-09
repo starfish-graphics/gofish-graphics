@@ -15,7 +15,7 @@ import {
   Transform,
 } from "./dims";
 import { Domain } from "./domain";
-import { getScopeContext, getKeyContext } from "./gofish";
+import { getScopeContext } from "./gofish";
 import { GoFishNode } from "./_node";
 import { GoFishAST } from "./_ast";
 import { MaybeValue } from "./data";
@@ -80,36 +80,6 @@ export class GoFishRef {
 
   public resolveNames(): void {
     if (this.directNode) {
-      // If we have a stored key for lazy resolution, try to look up from keyContext first
-      const refKey = (this as any)._refKey;
-      if (refKey !== undefined) {
-        try {
-          const keyContext = getKeyContext();
-          const lookedUpNode = keyContext[refKey];
-          if (lookedUpNode) {
-            console.log(
-              "[DEBUG GoFishRef.resolveNames] Resolved node from keyContext",
-              {
-                key: refKey,
-                originalUid: this.directNode.uid,
-                lookedUpUid: lookedUpNode.uid,
-                hasIntrinsicDims: !!lookedUpNode.intrinsicDims,
-              }
-            );
-            this.selectedNode = lookedUpNode;
-            this.color = this.selectedNode?.color;
-            return;
-          }
-        } catch (error) {
-          // keyContext not available yet, fall through to use directNode
-          console.log(
-            "[DEBUG GoFishRef.resolveNames] keyContext lookup failed, using directNode",
-            {
-              error: error instanceof Error ? error.message : String(error),
-            }
-          );
-        }
-      }
       this.selectedNode = this.directNode;
     } else if (this.selection) {
       this.selectedNode = getScopeContext().get(this.selection);
@@ -127,20 +97,6 @@ export class GoFishRef {
   }
 
   public embed(direction: FancyDirection): void {
-    console.log("[DEBUG GoFishRef.embed]", {
-      refName: this.name,
-      hasSelectedNode: !!this.selectedNode,
-      selectedNodeType: this.selectedNode?.type,
-      selectedNodeKey: this.selectedNode?.key,
-      selectedNodeName: this.selectedNode?.name,
-      selectedNodeUid: this.selectedNode?.uid,
-      selectedNodeHasIntrinsicDims: !!this.selectedNode?.intrinsicDims,
-      selectedNodeIntrinsicDimsLength: this.selectedNode?.intrinsicDims?.length,
-      selectedNodeIntrinsicDims: this.selectedNode?.intrinsicDims,
-      direction,
-      stackTrace: new Error().stack?.split("\n").slice(0, 5).join("\n"),
-    });
-
     if (!this.selectedNode) {
       console.error("[ERROR GoFishRef.embed] selectedNode is undefined!", {
         refName: this.name,
@@ -149,36 +105,6 @@ export class GoFishRef {
       throw new Error(
         `Cannot embed: selectedNode is undefined for ref ${this.name || "unnamed"}`
       );
-    }
-
-    // If the selected node doesn't have intrinsicDims, try to look it up from keyContext
-    // This handles the case where refs point to pre-layout nodes but we need laid-out nodes
-    if (
-      !this.selectedNode.intrinsicDims &&
-      this.selectedNode.key !== undefined
-    ) {
-      try {
-        const keyContext = getKeyContext();
-        const lookedUpNode = keyContext[this.selectedNode.key];
-        if (lookedUpNode && lookedUpNode.intrinsicDims) {
-          console.log("[DEBUG GoFishRef.embed] Resolved node from keyContext", {
-            key: this.selectedNode.key,
-            originalUid: this.selectedNode.uid,
-            lookedUpUid: lookedUpNode.uid,
-            hasIntrinsicDims: !!lookedUpNode.intrinsicDims,
-          });
-          // Update selectedNode to point to the laid-out node
-          this.selectedNode = lookedUpNode;
-        }
-      } catch (error) {
-        // keyContext not available, use original node
-        console.log(
-          "[DEBUG GoFishRef.embed] keyContext lookup failed, using original node",
-          {
-            error: error instanceof Error ? error.message : String(error),
-          }
-        );
-      }
     }
 
     this.selectedNode.embed(direction);

@@ -67,26 +67,7 @@ export const connect = withGoFish(
           const paths: Path[] = [];
 
           if (mode === "edge-to-edge") {
-            console.log("[DEBUG connect.layout] About to embed children", {
-              direction,
-              mode,
-              childrenCount: children.length,
-              childrenTypes: children.map((c: any) => ({
-                type: c.type,
-                key: c.key,
-                name: c.name,
-                hasIntrinsicDims: !!c.intrinsicDims,
-              })),
-            });
-
             for (const child of children) {
-              console.log("[DEBUG connect.layout] Embedding child", {
-                childType: (child as any).type,
-                childKey: (child as any).key,
-                childName: (child as any).name,
-                direction,
-              });
-
               // toggle embedding on the direction axis
               (child as GoFishAST).embed(direction);
             }

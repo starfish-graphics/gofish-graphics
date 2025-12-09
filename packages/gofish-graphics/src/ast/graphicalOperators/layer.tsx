@@ -308,43 +308,13 @@ export const layer = withLayerGoFish(
 
           const childPlaceables = [];
 
-          console.log("[DEBUG layer.layout] Starting to layout children", {
-            childrenCount: children.length,
-            childrenTypes: children.map((c: any) => ({
-              type: c.type,
-              key: c.key,
-              name: c.name,
-            })),
-          });
-
           for (let i = 0; i < children.length; i++) {
             const child = children[i];
-            console.log(
-              `[DEBUG layer.layout] Laying out child ${i + 1}/${children.length}`,
-              {
-                childType: (child as any).type,
-                childKey: (child as any).key,
-                childName: (child as any).name,
-                hasIntrinsicDims: !!(child as any).intrinsicDims,
-              }
-            );
-
             const childPlaceable = child.layout(size, scaleFactors, posScales);
-
-            console.log(`[DEBUG layer.layout] Child ${i + 1} layout complete`, {
-              childType: (child as any).type,
-              childKey: (child as any).key,
-              hasIntrinsicDims: !!(child as any).intrinsicDims,
-              intrinsicDims: (child as any).intrinsicDims,
-            });
 
             childPlaceable.place({ x: 0, y: 0 });
             childPlaceables.push(childPlaceable);
           }
-
-          console.log("[DEBUG layer.layout] All children laid out", {
-            childrenCount: children.length,
-          });
 
           // Calculate the bounding box of all children
           const minX = Math.min(

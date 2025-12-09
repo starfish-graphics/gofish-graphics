@@ -16,7 +16,6 @@ import { GoFishNode } from "../_node";
 import { MaybeValue } from "../data";
 import { For } from "../iterators/for";
 import { CoordinateTransform } from "../coordinateTransforms/coord";
-import { getKeyContext } from "../gofish";
 
 /* inference */
 const inferSize = <T>(
@@ -57,23 +56,6 @@ export class LayerSelector<T = any> {
     // Try to resolve nodes from keyContext (which points to laid-out nodes)
     // If keyContext is not available, fall back to stored nodes
     let resolvedNodes: GoFishNode[] = layer.nodes;
-
-    if (layer.keys && layer.keys.length > 0) {
-      try {
-        const keyContext = getKeyContext();
-        // Look up nodes by key from keyContext (these will be the laid-out nodes)
-        const lookedUpNodes = layer.keys
-          .map((key) => (key !== undefined ? keyContext[key] : undefined))
-          .filter((node): node is GoFishNode => node !== undefined);
-
-        if (lookedUpNodes.length === layer.nodes.length) {
-          // Successfully looked up all nodes from keyContext
-          resolvedNodes = lookedUpNodes;
-        }
-      } catch (error) {
-        // keyContext not available yet, use stored nodes
-      }
-    }
 
     // Return node-attached data enriched with refs to nodes
     const result = resolvedNodes.map((node: GoFishNode) => {
@@ -261,13 +243,9 @@ export class ChartBuilder<TInput, TOutput = TInput> {
             const leafNodes = collectLeafNodes(rootNode);
 
             // Store layer data taken from node-attached datum and leaf nodes
-            // Store node keys so we can look up laid-out nodes from keyContext
-            const nodeKeys = leafNodes.map((n: any) => n.key);
-
             layerContext[name] = {
               data: leafNodes.map((n) => (n as any).datum),
-              nodes: leafNodes, // Keep for backward compatibility/fallback
-              keys: nodeKeys, // Store keys for looking up laid-out nodes
+              nodes: leafNodes,
             };
 
             return node;
