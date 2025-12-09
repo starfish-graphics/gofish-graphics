@@ -4,7 +4,7 @@
 
 The gofish-python package provides a Python interface to the GoFish Graphics library, enabling users to create interactive visualizations in Jupyter notebooks using a Pythonic API. The implementation consists of three main layers:
 
-1. **Python API Layer** - Fluent chart-building API that mirrors the JavaScript v3 API
+1. **Python API Layer** - Fluent chart-building API that mirrors the JavaScript high-level API
 2. **Intermediate Representation (IR)** - JSON-based specification that bridges Python and JavaScript
 3. **Widget Rendering Layer** - AnyWidget-based browser rendering with bidirectional RPC
 
@@ -84,7 +84,7 @@ The Python layer provides a fluent, builder-pattern API for constructing chart s
 **DeriveOperator** (special case)
 
 - Extends Operator
-- Stores a Python callable (lambda or function)
+- Represents a Python callable (lambda)
 - Generates unique `lambda_id` (UUID) for RPC identification
 - The actual function is NOT serialized (stays Python-side)
 
@@ -118,7 +118,7 @@ Efficient data transfer between Python and JavaScript using Apache Arrow IPC for
 `dataframe_to_arrow(df: pd.DataFrame) -> bytes`
 
 - Converts pandas DataFrame to Arrow IPC bytes
-- Handles Int64 � Int32 conversion (JavaScript compatibility)
+- Handles Int64 -> Int32 conversion (JavaScript compatibility)
 - Uses streaming format for efficient serialization
 
 `arrow_to_dataframe(arrow_bytes: bytes) -> pd.DataFrame`
@@ -128,7 +128,7 @@ Efficient data transfer between Python and JavaScript using Apache Arrow IPC for
 
 **Type Handling**
 
-- Int64/UInt64 columns are automatically downcasted to Int32/UInt32 if values fit
+- Int64/UInt64 columns are automatically downcast to Int32/UInt32 if values fit
 - Prevents JavaScript BigInt issues while preserving precision when possible
 - Falls back to original type if values are too large
 
@@ -179,13 +179,13 @@ The IR is a simple, flat JSON structure that describes the chart specification.
 
 **Limitations**
 
-- Cannot represent nested operator trees (for low-level v1/v2 APIs)
+- Cannot represent nested operator trees (for lower-level API and nested charts)
 - No support for custom operators (no registry pattern yet)
 - No schema validation (relies on JavaScript to fail gracefully)
 
 ### 4. Widget Layer (`gofish/widget.py`)
 
-AnyWidget-based Jupyter widget for rendering charts in the browser.
+AnyWidget-based widget for rendering charts in the browser.
 
 **GoFishChartWidget**
 
@@ -195,7 +195,7 @@ Inherits from `anywidget.AnyWidget` to provide seamless Jupyter integration.
 
 - `spec` (Dict, synced) - Chart specification JSON
 - `arrow_data` (Unicode, synced) - Base64-encoded Arrow IPC bytes
-- `derive_functions` (Dict, NOT synced) - Python-only registry mapping lambda_id � callable
+- `derive_functions` (Dict, NOT synced) - Python-only registry mapping lambda_id -> callable
 - `width`, `height`, `axes`, `debug` (synced) - Render options
 - `container_id` (synced) - Unique DOM element ID
 
@@ -220,13 +220,13 @@ def _execute_derive(self, msg: dict, buffers: list):
     # Look up Python function
     fn = self.derive_functions[lambda_id]
 
-    # Deserialize Arrow � DataFrame
+    # Deserialize Arrow -> DataFrame
     df = arrow_to_dataframe(base64.b64decode(arrow_b64))
 
     # Execute user function
     result_df = fn(df)
 
-    # Serialize result � Arrow � base64
+    # Serialize result -> Arrow -> base64
     result_b64 = base64.b64encode(dataframe_to_arrow(result_df))
 
     return {"resultB64": result_b64}, buffers
@@ -267,7 +267,7 @@ export default {
 `arrowTableToArray(table: Arrow.Table)`
 
 - Converts Arrow Table to array of plain objects
-- Handles BigInt � Number conversion
+- Handles BigInt -> Number conversion
 - Compatible with GoFish's data format expectations
 
 `arrayToArrow(rows: object[])`
@@ -356,19 +356,11 @@ The widget bundle is built using esbuild at package build time.
 
 **Dependency Resolution**
 
-The build script uses a custom plugin to resolve `gofish-graphics`:
+The build script uses esbuild's standard module resolution:
 
-1. First checks for `../gofish-graphics/dist/index.js` (built package)
-2. Falls back to `node_modules/gofish-graphics` (workspace link)
-3. Fails with clear error if neither exists
-
-**Why Bundle Everything?**
-
-- No network access required at runtime
-- No CDN dependencies (works offline, behind firewalls)
-- Consistent versions (no import map conflicts)
-- Faster startup (single file, no module resolution)
-- ~2.2 MB total (acceptable for visualization library)
+- Sets `absWorkingDir` to the workspace root to resolve hoisted dependencies
+- Relies on the workspace link (`"gofish-graphics": "workspace:*"` in package.json)
+- esbuild resolves `gofish-graphics` through normal node_modules resolution from the workspace root
 
 **Build Trigger**
 
@@ -385,41 +377,6 @@ This should be run:
 - During development (after widget code changes)
 - Before package distribution (in CI/CD)
 - Optionally in setup.py/pyproject.toml build hooks
-
-### Python Package Structure
-
-```
-packages/gofish-python/
-├── gofish/
-│   ├── __init__.py           # Public API exports
-│   ├── ast.py                # ChartBuilder, operators, marks
-│   ├── widget.py             # AnyWidget implementation
-│   ├── arrow_utils.py        # Arrow serialization
-│   └── _static/
-│       └── widget.esm.js     # Pre-built widget bundle (2.2 MB)
-├── widget-src/
-│   └── index.ts              # Widget TypeScript source
-├── tests/
-│   ├── test_ast.py           # Python unit tests
-│   └── test_ir.ipynb         # Jupyter notebook tests
-├── notes/
-│   ├── implementation.md     # This file
-│   └── motivation.md         # Project motivation
-├── pyproject.toml            # Python package config
-├── package.json              # Node.js dependencies for building
-└── build-widget.mjs          # Widget build script
-```
-
-**Package Data**
-
-The `pyproject.toml` specifies that `gofish/_static/widget.esm.js` should be included in the wheel:
-
-```toml
-[tool.setuptools.package-data]
-gofish = ["_static/widget.esm.js"]
-```
-
-This ensures the bundle is available when users `pip install gofish-python`.
 
 ## Data Flow: End-to-End Example
 
@@ -459,9 +416,9 @@ chart(data) \
 
 **2. Serialization (Python)**
 
-- DataFrame � Arrow IPC bytes via `dataframe_to_arrow()`
-- Arrow bytes � base64 string for JSON transport
-- Chart spec � JSON IR via `to_ir()`
+- DataFrame -> Arrow IPC bytes via `dataframe_to_arrow()`
+- Arrow bytes -> base64 string for JSON transport
+- Chart spec -> JSON IR via `to_ir()`
 - Derive functions collected: `{"abc123": lambda df: df.sort_values("count")}`
 
 **3. Widget Creation (Python)**
@@ -477,8 +434,8 @@ chart(data) \
 **4. Widget Render (JavaScript)**
 
 - AnyWidget calls `render({ model, el, experimental })`
-- Decode base64 � Arrow bytes � `Arrow.tableFromIPC()`
-- Convert Arrow Table � array of objects:
+- Decode base64 -> Arrow bytes -> `Arrow.tableFromIPC()`
+- Convert Arrow Table -> array of objects:
   ```js
   [
     {lake: "A", species: "X", count: 10},
@@ -519,7 +476,7 @@ chart(data) \
 - GoFish processes operators sequentially
 - When it hits `deriveOp`, the async function executes
 
-**7. Derive RPC (JavaScript � Python � JavaScript)**
+**7. Derive RPC (JavaScript -> Python -> JavaScript)**
 
 JavaScript side:
 
@@ -566,29 +523,7 @@ return {"resultB64": result_b64}
 - `stack` operator positions elements
 - `rect` mark creates visual encoding
 - GoFish renders SVG to DOM container
-- Chart appears in Jupyter notebook output cell
-
-## Current Limitations
-
-1. **Chart API Only**
-   - Only supports mid-level chart API (`chart().flow().mark()`)
-   - Cannot use low-level APIs (`Stack([Rect(...)])`)
-   - IR is flat, not tree-structured
-
-2. **No Custom Operators**
-   - Operator set is fixed (spread, stack, derive, group, scatter)
-   - No registry pattern for extensibility
-   - Users can't define custom transformations (except via derive)
-
-3. **No Streaming**
-   - All data must fit in memory
-   - No support for lazy loading or windowing
-   - Large datasets (millions of rows) may be slow
-
-4. **Jupyter Only**
-   - No standalone HTML export with derive support
-   - No Streamlit/Gradio integration
-   - Requires Jupyter kernel for RPC
+- Chart appears in notebook output cell
 
 ## Testing
 
