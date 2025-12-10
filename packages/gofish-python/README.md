@@ -1,15 +1,9 @@
-# gofish-python-2
+# gofish-python
 
-A clean, minimal implementation of the AST portion for GoFish graphics library. This package focuses solely on converting Python syntax to a JSON Intermediate Representation (IR).
+A Python wrapper for the GoFish graphics library. Supports the mid-level chart API for now. The
+low-level API is not supported yet. (See [notes/design.md](notes/design.md) and [notes/implementation.md](notes/implementation.md) for more details.)
 
 **Note**: This package uses [uv](https://github.com/astral-sh/uv) for fast package management and testing.
-
-## Features
-
-- **AST Classes**: ChartBuilder, operators (spread, stack, derive, group, scatter), and marks (rect, circle, line, area, scaffold)
-- **IR Serialization**: Convert Python chart specifications to JSON IR
-- **No Dependencies**: Pure Python, no external dependencies required
-- **Comprehensive Tests**: Full test coverage for AST to IR conversion
 
 ## Prerequisites
 
@@ -23,7 +17,7 @@ A clean, minimal implementation of the AST portion for GoFish graphics library. 
 This package uses [uv](https://github.com/astral-sh/uv) for fast package management.
 
 ```bash
-cd packages/gofish-python-2
+cd packages/gofish-python
 uv pip install -e .
 ```
 
@@ -81,15 +75,6 @@ The JSON IR has the following structure:
   "options": {}
 }
 ```
-
-### Derive operator (Python execution)
-
-Derive operators now execute the provided Python callable from the front-end widget via Arrow-based RPC:
-
-- Each `derive(fn)` is assigned a unique `lambdaId` in the IR.
-- The widget keeps a Python-side registry mapping `lambdaId -> fn`.
-- The front-end serializes intermediate data to Arrow, calls `executeDerive(lambdaId, arrowB64)` on the model, and deserializes the result back into the pipeline.
-- Make sure the widget bundle is built and available (`pnpm build:widget`) so the derive bridge code is included.
 
 ## Building
 
@@ -178,14 +163,3 @@ jupyter notebook
    ```bash
    jupyter notebook tests/test_rendering.ipynb
    ```
-
-## What's Not Included
-
-This package intentionally excludes:
-
-- Rendering (no widgets, no HTML generation)
-- Data marshaling (no Arrow, no DataFrame handling)
-- Jupyter integration
-- JavaScript bridge
-
-These concerns are handled separately in the full implementation.
