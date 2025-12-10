@@ -23,6 +23,10 @@ export const getLayerContext = (): LayerContext => {
   return layerContext;
 };
 
+export const initLayerContext = (): void => {
+  layerContext = {};
+};
+
 export const resetLayerContext = (): void => {
   layerContext = null;
 };
