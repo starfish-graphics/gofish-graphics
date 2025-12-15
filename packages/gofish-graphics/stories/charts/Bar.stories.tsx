@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
-import { bar } from "../../src/charts/bar";
+import { barChart } from "../../src/charts/bar";
 import { circle } from "../../src/lib";
 
 const meta: Meta = {
@@ -32,7 +32,7 @@ export const Vertical: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    bar(testData, { x: "category", h: "value" }).render(container, {
+    barChart(testData, { x: "category", y: "value" }).render(container, {
       w: args.w,
       h: args.h,
       axes: true,
@@ -47,7 +47,11 @@ export const Horizontal: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    bar(testData, { y: "category", w: "value" }).render(container, {
+    barChart(testData, {
+      x: "value",
+      y: "category",
+      orientation: "x",
+    }).render(container, {
       w: args.w,
       h: args.h,
       axes: true,
@@ -62,14 +66,15 @@ export const VerticalWithFillColor: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    bar(testData, { x: "category", h: "value", fill: "#4ecdc4" }).render(
-      container,
-      {
-        w: args.w,
-        h: args.h,
-        axes: true,
-      }
-    );
+    barChart(testData, {
+      x: "category",
+      y: "value",
+      fill: "#4ecdc4",
+    }).render(container, {
+      w: args.w,
+      h: args.h,
+      axes: true,
+    });
 
     return container;
   },
@@ -80,14 +85,16 @@ export const HorizontalWithFillColor: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    bar(testData, { y: "category", w: "value", fill: "#ff6b6b" }).render(
-      container,
-      {
-        w: args.w,
-        h: args.h,
-        axes: true,
-      }
-    );
+    barChart(testData, {
+      x: "value",
+      y: "category",
+      orientation: "x",
+      fill: "#ff6b6b",
+    }).render(container, {
+      w: args.w,
+      h: args.h,
+      axes: true,
+    });
 
     return container;
   },
@@ -98,9 +105,9 @@ export const VerticalWithFillField: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    bar(testData, {
+    barChart(testData, {
       x: "category",
-      h: "value",
+      y: "value",
       fill: "color",
     }).render(container, {
       w: args.w,
@@ -117,9 +124,10 @@ export const HorizontalWithFillField: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    bar(testData, {
+    barChart(testData, {
+      x: "value",
       y: "category",
-      w: "value",
+      orientation: "x",
       fill: "color",
     }).render(container, {
       w: args.w,
@@ -136,9 +144,9 @@ export const VerticalWithCustomMark: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    bar(testData, {
+    barChart(testData, {
       x: "category",
-      h: "value",
+      y: "value",
       mark: circle,
     }).render(container, {
       w: args.w,
@@ -155,9 +163,10 @@ export const HorizontalWithCustomMark: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    bar(testData, {
+    barChart(testData, {
+      x: "value",
       y: "category",
-      w: "value",
+      orientation: "x",
       mark: circle,
     }).render(container, {
       w: args.w,
@@ -174,9 +183,9 @@ export const VerticalWithCustomMarkAndFill: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    bar(testData, {
+    barChart(testData, {
       x: "category",
-      h: "value",
+      y: "value",
       fill: "#6c5ce7",
       mark: circle,
     }).render(container, {
@@ -194,9 +203,10 @@ export const HorizontalWithCustomMarkAndFill: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    bar(testData, {
+    barChart(testData, {
+      x: "value",
       y: "category",
-      w: "value",
+      orientation: "x",
       fill: "#f9ca24",
       mark: circle,
     }).render(container, {

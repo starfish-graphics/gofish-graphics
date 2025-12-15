@@ -46,13 +46,43 @@ class BarChartBuilder<TInput, TOutput = TInput>
     return this.builder.mark(finalMark as Mark<TOutput>);
   }
 
-  stack<K extends keyof TOutput>(
-    field: K,
-    options: {
+  render(
+    container: HTMLElement,
+    {
+      w,
+      h,
+      x,
+      y,
+      transform,
+      debug = false,
+      defs,
+      axes = false,
+    }: {
+      w: number;
+      h: number;
       x?: number;
       y?: number;
-      w?: number | keyof TOutput;
-      h?: number | keyof TOutput;
+      transform?: { x?: number; y?: number };
+      debug?: boolean;
+      defs?: JSX.Element[];
+      axes?: boolean;
+    }
+  ) {
+    return this.mark().render(container, {
+      w,
+      h,
+      x,
+      y,
+      transform,
+      debug,
+      defs,
+      axes,
+    });
+  }
+
+  stack<K extends keyof TOutput>(
+    field: K,
+    options?: {
       spacing?: number;
       alignment?: "start" | "middle" | "end";
     }
@@ -77,13 +107,12 @@ class BarChartBuilder<TInput, TOutput = TInput>
   }
 }
 
-export const bar = <T extends Record<string, any>>(
+export const barChart = <T extends Record<string, any>>(
   data: T[],
   options: {
-    x?: keyof T;
-    y?: keyof T;
-    w?: keyof T;
-    h?: keyof T;
+    x: keyof T;
+    y: keyof T;
+    orientation?: "x" | "y";
     fill?: keyof T | string;
     mark?: (options: {
       h?: string | number | keyof T;
@@ -93,47 +122,43 @@ export const bar = <T extends Record<string, any>>(
     }) => Mark<T | T[] | { item: T | T[]; key: number | string }>;
   }
 ) => {
-  // Error if both x and y are provided (ambiguous)
-  // COMBAK: probably this should do a grid
-  if (options.x && options.y) {
-    throw new Error(
-      "bar chart cannot have both 'x' and 'y' encoding channels. Use 'x' for vertical bars or 'y' for horizontal bars"
-    );
+  // Both x and y are required
+  if (options.x === undefined || options.y === undefined) {
+    throw new Error("bar chart requires both 'x' and 'y' encoding channels");
   }
 
   const markFn = options.mark ?? rect;
+  const orientation = options.orientation ?? "y";
 
-  // Vertical bar chart: if x is provided, spread along x-axis and use h for height
-  if (options.x) {
+  // Vertical bar chart (orientation: "y"): spread along x-axis using x field, height from y field
+  if (orientation === "y") {
     const builder = chart(data).flow(spread(options.x, { dir: "x" }));
     return new BarChartBuilder(
       builder as ChartBuilder<T[], T[]>,
       "x",
       {
-        h: options.h as string | number | undefined,
+        h: options.y as string | number,
         fill: options.fill as string | undefined,
       },
       markFn
     );
   }
 
-  // Horizontal bar chart: if y is provided, spread along y-axis and use w for width
-  if (options.y) {
+  // Horizontal bar chart (orientation: "x"): spread along y-axis using y field, width from x field
+  if (orientation === "x") {
     const builder = chart(data).flow(spread(options.y, { dir: "y" }));
     return new BarChartBuilder(
       builder as ChartBuilder<T[], T[]>,
       "y",
       {
-        w: options.w as string | number | undefined,
+        w: options.x as string | number,
         fill: options.fill as string | undefined,
       },
       markFn
     );
   }
 
-  // Error if neither x nor y is provided
-  // COMBAK: probably this should render a single rectangle at the origin
   throw new Error(
-    "bar chart requires either 'x' (for vertical bars) or 'y' (for horizontal bars) encoding channel"
+    `bar chart orientation must be either 'x' or 'y', got '${orientation}'`
   );
 };
