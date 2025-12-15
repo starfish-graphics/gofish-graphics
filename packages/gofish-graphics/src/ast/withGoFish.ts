@@ -9,6 +9,7 @@ import type { JSX } from "solid-js";
 import { GoFishAST } from "./_ast";
 import { GoFishNode } from "./_node";
 import _, { ListOfRecursiveArraysOrValues } from "lodash";
+import { ChartBuilder } from "./marks/chart";
 
 /**
  * A Promise-like object that also has a render method.
@@ -35,6 +36,13 @@ export interface PromiseWithRender<T> extends Promise<T> {
  */
 function hasRenderMethod(value: any): value is GoFishNode {
   return value instanceof GoFishNode && typeof value.render === "function";
+}
+
+/**
+ * Type guard to check if value is a ChartBuilder
+ */
+function isChartBuilder(value: any): value is ChartBuilder<any, any> {
+  return value instanceof ChartBuilder;
 }
 
 /**
@@ -75,6 +83,7 @@ export function addRenderMethod<T>(promise: Promise<T>): PromiseWithRender<T> {
  * Recursively flattens nested structures and awaits all promises, returning a flat array.
  * If the type includes functions (thunks), they are preserved (not called).
  * Always returns a flat array.
+ * ChartBuilder instances are automatically resolved.
  */
 async function flattenAndAwaitPromises<T>(
   value:
@@ -95,6 +104,13 @@ async function flattenAndAwaitPromises<T>(
     return flattenAndAwaitPromises(resolved);
   }
 
+  // If it's a ChartBuilder, preserve it (don't resolve here)
+  // ChartBuilder instances should be resolved sequentially in reifyChildrenSequentially
+  // For non-sequential contexts, they'll be resolved when processed
+  if (isChartBuilder(value)) {
+    return [value as T];
+  }
+
   // If it's an array, recursively await all elements
   if (Array.isArray(value)) {
     const awaited = await Promise.all(
@@ -109,9 +125,14 @@ async function flattenAndAwaitPromises<T>(
 
 /**
  * Process children sequentially, calling thunks and awaiting promises one at a time
+ * ChartBuilder instances are automatically resolved sequentially
  */
 export async function reifyChildrenSequentially(
-  children: (GoFishAST | (() => GoFishAST | Promise<GoFishAST>))[]
+  children: (
+    | GoFishAST
+    | (() => GoFishAST | Promise<GoFishAST>)
+    | ChartBuilder<any, any>
+  )[]
 ): Promise<GoFishAST[]> {
   // if the child is a thunked promise, it must be resolved before the next child is resolved
   const resolved: GoFishAST[] = [];
@@ -122,8 +143,18 @@ export async function reifyChildrenSequentially(
       const result = child();
       const resolvedChild = result instanceof Promise ? await result : result;
       if (resolvedChild != null) {
-        resolved.push(resolvedChild);
+        // If it's a ChartBuilder, resolve it
+        if (isChartBuilder(resolvedChild)) {
+          const node = await resolvedChild.resolve();
+          resolved.push(node);
+        } else {
+          resolved.push(resolvedChild);
+        }
       }
+    } else if (isChartBuilder(child)) {
+      // If it's a ChartBuilder, resolve it sequentially
+      const node = await child.resolve();
+      resolved.push(node);
     } else {
       // It's already a GoFishAST, add it directly
       resolved.push(child);
@@ -179,9 +210,18 @@ export function withGoFish<T extends Record<string, any>, R>(
       }
       // Flatten nested structures and await all promises
       const flattened = await flattenAndAwaitPromises<
-        GoFishAST | Promise<GoFishAST>
+        GoFishAST | Promise<GoFishAST> | ChartBuilder<any, any>
       >(children);
-      const flatChildren = flattened.filter(
+      // Resolve any ChartBuilder instances and filter out promises
+      const resolvedBuilders = await Promise.all(
+        flattened.map(async (child) => {
+          if (isChartBuilder(child)) {
+            return await child.resolve();
+          }
+          return child;
+        })
+      );
+      const flatChildren = resolvedBuilders.filter(
         (child): child is GoFishAST =>
           child != null && !(child instanceof Promise)
       ) as GoFishAST[];
@@ -269,11 +309,13 @@ export function withGoFishSequential<T extends Record<string, any>, R>(
           `withGoFishSequential: Expected 0, 1, or 2 arguments, got ${args.length}`
         );
       }
-      // First phase: flatten nested structures and await promises, preserving thunks
+      // First phase: flatten nested structures and await promises, preserving thunks and ChartBuilder instances
       const flattenedWithThunks = await flattenAndAwaitPromises<
-        GoFishAST | (() => GoFishAST | Promise<GoFishAST>)
+        | GoFishAST
+        | (() => GoFishAST | Promise<GoFishAST>)
+        | ChartBuilder<any, any>
       >(children);
-      // Second phase: process thunks sequentially
+      // Second phase: process thunks and ChartBuilder instances sequentially
       const resolvedChildren =
         await reifyChildrenSequentially(flattenedWithThunks);
       return func(opts, resolvedChildren);

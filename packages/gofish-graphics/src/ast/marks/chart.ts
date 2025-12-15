@@ -123,19 +123,33 @@ export type ChartOptions = {
   coord?: CoordinateTransform;
 };
 
+// Collect only leaf nodes (nodes with no children)
+const collectLeafNodes = (n: GoFishNode): GoFishNode[] => {
+  if (n.children && n.children.length > 0) {
+    return n.children.flatMap((child) => collectLeafNodes(child as GoFishNode));
+  }
+  return [n];
+};
+
 export class ChartBuilder<TInput, TOutput = TInput> {
   private readonly data: TInput;
   private readonly options?: ChartOptions;
   private readonly operators: Operator<any, any>[] = [];
+  private readonly finalMark?: Mark<TOutput>;
+  private readonly layerName?: string;
 
   constructor(
     data: TInput,
     options?: ChartOptions,
-    operators: Operator<any, any>[] = []
+    operators: Operator<any, any>[] = [],
+    finalMark?: Mark<TOutput>,
+    layerName?: string
   ) {
     this.data = data;
     this.options = options;
     this.operators = operators;
+    this.finalMark = finalMark;
+    this.layerName = layerName;
   }
 
   // flow accumulates operators and returns a new builder for chaining
@@ -180,138 +194,81 @@ export class ChartBuilder<TInput, TOutput = TInput> {
     op7: Operator<T6, T7>
   ): ChartBuilder<TInput, T7>;
   flow(...ops: Operator<any, any>[]): ChartBuilder<TInput, any> {
-    return new ChartBuilder(this.data, this.options, [
-      ...this.operators,
-      ...ops,
-    ]);
+    return new ChartBuilder(
+      this.data,
+      this.options,
+      [...this.operators, ...ops],
+      this.finalMark,
+      this.layerName
+    );
   }
 
-  // mark applies all accumulated operators and the final mark
-  mark(mark: Mark<TOutput>): (
-    | Promise<GoFishNode & { as: (name: string) => GoFishNode }>
-    | (() => Promise<GoFishNode & { as: (name: string) => GoFishNode }>)
-  ) & {
-    render: (
-      ...args: Parameters<GoFishNode["render"]>
-    ) => Promise<ReturnType<GoFishNode["render"]>>;
-    as: (name: string) => Promise<GoFishNode>;
-  } {
-    // Create a function that returns the promise (for lazy evaluation)
-    const createNodePromise = (): Promise<
-      GoFishNode & { as: (name: string) => GoFishNode }
-    > => {
-      return new Promise<GoFishNode & { as: (name: string) => GoFishNode }>(
-        async (resolve) => {
-          let finalMark = mark as Mark<any>;
-          const operators = this.operators;
-          let data = this.data;
+  // mark stores the mark and returns a new builder
+  mark(mark: Mark<TOutput>): ChartBuilder<TInput, TOutput> {
+    return new ChartBuilder(
+      this.data,
+      this.options,
+      this.operators,
+      mark,
+      this.layerName
+    );
+  }
 
-          // Apply all operators first (they wrap the mark function)
-          for (const op of operators.toReversed()) {
-            finalMark = await op(finalMark);
-          }
+  // resolve creates the node and registers layers if .as() was called
+  async resolve(): Promise<GoFishNode> {
+    if (!this.finalMark) {
+      throw new Error("Cannot resolve: no mark specified. Call .mark() first.");
+    }
 
-          // Resolve LayerSelector just before calling the mark function
-          // This ensures that layers from previous charts in layer() have been registered
-          // (since layer() processes children sequentially)
-          if (data instanceof LayerSelector) {
-            data = data.resolve() as any;
-          }
+    // Apply all operators to the mark
+    let composedMark = this.finalMark as Mark<any>;
+    for (const op of this.operators.toReversed()) {
+      composedMark = await op(composedMark);
+    }
 
-          const node = await Frame(this.options ?? {}, [
-            (await finalMark(data as any)).setShared([true, true]),
-          ]);
+    // Resolve LayerSelector just before calling mark
+    let data = this.data;
+    if (data instanceof LayerSelector) {
+      data = data.resolve() as any;
+    }
 
-          // Add .as() method to the returned node
-          (node as any).as = (name: string) => {
-            const layerContext = getLayerContext();
-            // Use the actual child node from the Frame, not a new tree
-            const rootNode = node.children[0] as GoFishNode;
+    // Create the node
+    const node = await Frame(this.options ?? {}, [
+      (await composedMark(data as any)).setShared([true, true]),
+    ]);
 
-            // Collect only leaf nodes (nodes with no children)
-            const collectLeafNodes = (n: GoFishNode): GoFishNode[] => {
-              if (n.children && n.children.length > 0) {
-                const leaves: GoFishNode[] = [];
-                for (const child of n.children) {
-                  leaves.push(...collectLeafNodes(child as GoFishNode));
-                }
-                return leaves;
-              }
-              return [n];
-            };
+    // Register layer if .as() was called (layerName is set)
+    if (this.layerName) {
+      const layerContext = getLayerContext();
+      const rootNode = node.children[0] as GoFishNode;
+      const leafNodes = collectLeafNodes(rootNode);
 
-            const leafNodes = collectLeafNodes(rootNode);
+      layerContext[this.layerName] = {
+        data: leafNodes.map((n) => (n as any).datum),
+        nodes: leafNodes,
+      };
+    }
 
-            // Store layer data taken from node-attached datum and leaf nodes
-            layerContext[name] = {
-              data: leafNodes.map((n) => (n as any).datum),
-              nodes: leafNodes,
-            };
+    return node;
+  }
 
-            return node;
-          };
+  // as updates state and returns a new builder for chaining
+  as(name: string): ChartBuilder<TInput, TOutput> {
+    return new ChartBuilder(
+      this.data,
+      this.options,
+      this.operators,
+      this.finalMark,
+      name
+    );
+  }
 
-          resolve(node as GoFishNode & { as: (name: string) => GoFishNode });
-        }
-      );
-    };
-
-    // Auto-wrap in function if data is LayerSelector
-    // We'll also wrap when .as() is called (handled in the .as() method)
-    const shouldWrap = this.data instanceof LayerSelector;
-    const nodePromiseOrFunction = shouldWrap
-      ? createNodePromise
-      : createNodePromise();
-
-    // Helper to get the promise (whether it's direct or from a function)
-    const getPromise = (): Promise<
-      GoFishNode & { as: (name: string) => GoFishNode }
-    > => {
-      if (typeof nodePromiseOrFunction === "function") {
-        return nodePromiseOrFunction();
-      }
-      return nodePromiseOrFunction;
-    };
-
-    // Create decorated object that works with both promises and functions
-    const decorated = nodePromiseOrFunction as typeof nodePromiseOrFunction & {
-      render: (
-        ...args: Parameters<GoFishNode["render"]>
-      ) => Promise<ReturnType<GoFishNode["render"]>>;
-      as: (name: string) => Promise<GoFishNode>;
-    };
-
-    decorated.render = (container, ...args) =>
-      Promise.resolve(gofish(container, ...args, getPromise()));
-
-    decorated.as = (name: string) => {
-      // When .as() is called, wrap in function for lazy evaluation if not already wrapped
-      // This ensures the chart is only evaluated when layer() processes it
-      if (typeof nodePromiseOrFunction !== "function") {
-        // Convert to function for lazy evaluation
-        const fn = createNodePromise;
-        // Replace the decorated object to be a function
-        const wrappedFn = (() => {
-          return fn().then((node) => {
-            node.as(name);
-            return node;
-          });
-        }) as any;
-        wrappedFn.render = decorated.render;
-        wrappedFn.as = decorated.as;
-        // Return the function-wrapped version, but also execute for .as() return value
-        return fn().then((node) => {
-          node.as(name);
-          return node;
-        });
-      }
-      return getPromise().then((node) => {
-        node.as(name);
-        return node;
-      });
-    };
-
-    return decorated;
+  // render calls resolve and then renders
+  async render(
+    ...args: Parameters<GoFishNode["render"]>
+  ): Promise<ReturnType<GoFishNode["render"]>> {
+    const node = await this.resolve();
+    return node.render(...args);
   }
 }
 
