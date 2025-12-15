@@ -12,22 +12,49 @@ import _, { ListOfRecursiveArraysOrValues } from "lodash";
 import { ChartBuilder } from "./marks/chart";
 
 /**
+ * Options for rendering a GoFish node
+ */
+export interface RenderOptions {
+  w: number;
+  h: number;
+  x?: number;
+  y?: number;
+  transform?: { x?: number; y?: number };
+  debug?: boolean;
+  defs?: JSX.Element[];
+  axes?: boolean;
+}
+
+/**
+ * Children input type that can be a recursive structure, a promise of it, or null
+ */
+type GoFishChildrenInput =
+  | ListOfRecursiveArraysOrValues<GoFishAST | Promise<GoFishAST>>
+  | Promise<ListOfRecursiveArraysOrValues<GoFishAST | Promise<GoFishAST>>>
+  | null;
+
+/**
+ * Children input type with thunks that can be a recursive structure, a promise of it, or null
+ */
+type GoFishChildrenInputWithThunks =
+  | ListOfRecursiveArraysOrValues<
+      GoFishAST | Promise<GoFishAST> | (() => GoFishAST | Promise<GoFishAST>)
+    >
+  | Promise<
+      ListOfRecursiveArraysOrValues<
+        GoFishAST | Promise<GoFishAST> | (() => GoFishAST | Promise<GoFishAST>)
+      >
+    >
+  | null;
+
+/**
  * A Promise-like object that also has a render method.
  * This allows calling .render() on promises returned by withGoFish and withLayerSequential.
  */
 export interface PromiseWithRender<T> extends Promise<T> {
   render(
     container: HTMLElement,
-    options: {
-      w: number;
-      h: number;
-      x?: number;
-      y?: number;
-      transform?: { x?: number; y?: number };
-      debug?: boolean;
-      defs?: JSX.Element[];
-      axes?: boolean;
-    }
+    options: RenderOptions
   ): HTMLElement | Promise<HTMLElement>;
 }
 
@@ -54,16 +81,7 @@ export function addRenderMethod<T>(promise: Promise<T>): PromiseWithRender<T> {
   // In JavaScript, you can add properties to any object, including Promises
   (promise as any).render = function (
     container: HTMLElement,
-    options: {
-      w: number;
-      h: number;
-      x?: number;
-      y?: number;
-      transform?: { x?: number; y?: number };
-      debug?: boolean;
-      defs?: JSX.Element[];
-      axes?: boolean;
-    }
+    options: RenderOptions
   ): HTMLElement | Promise<HTMLElement> {
     return promise.then((result) => {
       // Check if the result has a render method (like GoFishNode)
@@ -172,28 +190,13 @@ export async function reifyChildrenSequentially(
 export function withGoFish<T extends Record<string, any>, R>(
   func: (opts: T, children: GoFishAST[]) => R
 ): {
-  (
-    opts?: T,
-    children?:
-      | ListOfRecursiveArraysOrValues<GoFishAST | Promise<GoFishAST>>
-      | Promise<ListOfRecursiveArraysOrValues<GoFishAST | Promise<GoFishAST>>>
-      | null
-  ): PromiseWithRender<R>;
-  (
-    children:
-      | ListOfRecursiveArraysOrValues<GoFishAST | Promise<GoFishAST>>
-      | Promise<ListOfRecursiveArraysOrValues<GoFishAST | Promise<GoFishAST>>>
-      | null
-  ): PromiseWithRender<R>;
+  (opts?: T, children?: GoFishChildrenInput): PromiseWithRender<R>;
+  (children: GoFishChildrenInput): PromiseWithRender<R>;
 } {
   return function (...args: any[]): PromiseWithRender<R> {
     const promise = (async () => {
       let opts: T;
-      let children:
-        | ListOfRecursiveArraysOrValues<GoFishAST | Promise<GoFishAST>>
-        | Promise<ListOfRecursiveArraysOrValues<GoFishAST | Promise<GoFishAST>>>
-        | null
-        | undefined;
+      let children: GoFishChildrenInput | undefined;
       if (args.length === 2) {
         opts = args[0] ?? ({} as T);
         children = args[1];
@@ -243,58 +246,13 @@ export function withGoFish<T extends Record<string, any>, R>(
 export function withGoFishSequential<T extends Record<string, any>, R>(
   func: (opts: T, children: GoFishAST[]) => R
 ): {
-  (
-    opts?: T,
-    children?:
-      | ListOfRecursiveArraysOrValues<
-          | GoFishAST
-          | Promise<GoFishAST>
-          | (() => GoFishAST | Promise<GoFishAST>)
-        >
-      | Promise<
-          ListOfRecursiveArraysOrValues<
-            | GoFishAST
-            | Promise<GoFishAST>
-            | (() => GoFishAST | Promise<GoFishAST>)
-          >
-        >
-      | null
-  ): PromiseWithRender<R>;
-  (
-    children:
-      | ListOfRecursiveArraysOrValues<
-          | GoFishAST
-          | Promise<GoFishAST>
-          | (() => GoFishAST | Promise<GoFishAST>)
-        >
-      | Promise<
-          ListOfRecursiveArraysOrValues<
-            | GoFishAST
-            | Promise<GoFishAST>
-            | (() => GoFishAST | Promise<GoFishAST>)
-          >
-        >
-      | null
-  ): PromiseWithRender<R>;
+  (opts?: T, children?: GoFishChildrenInputWithThunks): PromiseWithRender<R>;
+  (children: GoFishChildrenInputWithThunks): PromiseWithRender<R>;
 } {
   return function (...args: any[]): PromiseWithRender<R> {
     const promise = (async () => {
       let opts: T;
-      let children:
-        | ListOfRecursiveArraysOrValues<
-            | GoFishAST
-            | Promise<GoFishAST>
-            | (() => GoFishAST | Promise<GoFishAST>)
-          >
-        | Promise<
-            ListOfRecursiveArraysOrValues<
-              | GoFishAST
-              | Promise<GoFishAST>
-              | (() => GoFishAST | Promise<GoFishAST>)
-            >
-          >
-        | null
-        | undefined;
+      let children: GoFishChildrenInputWithThunks | undefined;
       if (args.length === 2) {
         opts = args[0] ?? ({} as T);
         children = args[1];
