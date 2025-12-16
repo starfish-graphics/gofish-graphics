@@ -10,6 +10,7 @@ import {
   getLayerContext,
   Connect,
   Ref,
+  gofish,
 } from "../../lib";
 import { GoFishNode } from "../_node";
 import { MaybeValue } from "../data";
@@ -33,14 +34,50 @@ const connectXMode = {
   center: "center-to-center",
 } as const;
 
-export type Mark<T> = (d: T, key?: string | number) => GoFishNode;
+export type Mark<T> = (d: T, key?: string | number) => Promise<GoFishNode>;
 
-export type Operator<T, U> = (_: Mark<U>) => Mark<T>;
+export type Operator<T, U> = (_: Mark<U>) => Promise<Mark<T>>;
+
+// LayerSelector is a lazy selector that defers layer lookup until actually needed
+export class LayerSelector<T = any> {
+  constructor(public readonly layerName: string) {}
+
+  // Resolve the selector to actual data - throws if layer not found
+  resolve(): Array<T & { __ref: GoFishNode }> {
+    const layerContext = getLayerContext();
+    const layer = layerContext[this.layerName];
+
+    if (!layer) {
+      throw new Error(
+        `Layer "${this.layerName}" not found. Make sure to call .as("${this.layerName}") first.`
+      );
+    }
+
+    // Try to resolve nodes from keyContext (which points to laid-out nodes)
+    // If keyContext is not available, fall back to stored nodes
+    let resolvedNodes: GoFishNode[] = layer.nodes;
+
+    // Return node-attached data enriched with refs to nodes
+    const result = resolvedNodes.map((node: GoFishNode) => {
+      const datum: any = (node as any).datum;
+      if (datum && typeof datum === "object") {
+        const datumHack = { ...datum[0], __ref: node };
+        return datumHack as T & { __ref: GoFishNode };
+      }
+      return { item: datum, __ref: node } as unknown as T & {
+        __ref: GoFishNode;
+      };
+    });
+    return result;
+  }
+}
 
 /* Data Transformation Operators */
-export function derive<T, U>(fn: (d: T) => U): Operator<T, U> {
-  return (mark: Mark<U>) => {
-    return (d: T, key?: string | number) => mark(fn(d), key);
+export function derive<T, U>(fn: (d: T) => U | Promise<U>): Operator<T, U> {
+  return async (mark: Mark<U>) => {
+    return async (d: T, key?: string | number) => {
+      return mark(await fn(d), key);
+    };
   };
 }
 
@@ -66,8 +103,8 @@ export const normalize = <T, K extends keyof T>(
 };
 
 export function log<T>(label?: string): Operator<T, T> {
-  return (mark: Mark<T>) => {
-    return (d: T, key?: string | number) => {
+  return async (mark: Mark<T>) => {
+    return async (d: T, key?: string | number) => {
       if (label) {
         console.log(label, d);
       } else {
@@ -86,19 +123,33 @@ export type ChartOptions = {
   coord?: CoordinateTransform;
 };
 
+// Collect only leaf nodes (nodes with no children)
+const collectLeafNodes = (n: GoFishNode): GoFishNode[] => {
+  if (n.children && n.children.length > 0) {
+    return n.children.flatMap((child) => collectLeafNodes(child as GoFishNode));
+  }
+  return [n];
+};
+
 export class ChartBuilder<TInput, TOutput = TInput> {
   private readonly data: TInput;
   private readonly options?: ChartOptions;
   private readonly operators: Operator<any, any>[] = [];
+  private readonly finalMark?: Mark<TOutput>;
+  private readonly layerName?: string;
 
   constructor(
     data: TInput,
     options?: ChartOptions,
-    operators: Operator<any, any>[] = []
+    operators: Operator<any, any>[] = [],
+    finalMark?: Mark<TOutput>,
+    layerName?: string
   ) {
     this.data = data;
     this.options = options;
     this.operators = operators;
+    this.finalMark = finalMark;
+    this.layerName = layerName;
   }
 
   // flow accumulates operators and returns a new builder for chaining
@@ -143,56 +194,81 @@ export class ChartBuilder<TInput, TOutput = TInput> {
     op7: Operator<T6, T7>
   ): ChartBuilder<TInput, T7>;
   flow(...ops: Operator<any, any>[]): ChartBuilder<TInput, any> {
-    return new ChartBuilder(this.data, this.options, [
-      ...this.operators,
-      ...ops,
-    ]);
+    return new ChartBuilder(
+      this.data,
+      this.options,
+      [...this.operators, ...ops],
+      this.finalMark,
+      this.layerName
+    );
   }
 
-  // mark applies all accumulated operators and the final mark
-  mark(mark: Mark<TOutput>): GoFishNode & { as: (name: string) => GoFishNode } {
-    let finalMark = mark as Mark<any>;
-    const operators = this.operators;
-    const data = this.data;
+  // mark stores the mark and returns a new builder
+  mark(mark: Mark<TOutput>): ChartBuilder<TInput, TOutput> {
+    return new ChartBuilder(
+      this.data,
+      this.options,
+      this.operators,
+      mark,
+      this.layerName
+    );
+  }
 
-    for (const op of operators.toReversed()) {
-      finalMark = op(finalMark);
+  // resolve creates the node and registers layers if .as() was called
+  async resolve(): Promise<GoFishNode> {
+    if (!this.finalMark) {
+      throw new Error("Cannot resolve: no mark specified. Call .mark() first.");
     }
 
-    const node = Frame(this.options ?? {}, [
-      finalMark(data as any).setShared([true, true]),
+    // Apply all operators to the mark
+    let composedMark = this.finalMark as Mark<any>;
+    for (const op of this.operators.toReversed()) {
+      composedMark = await op(composedMark);
+    }
+
+    // Resolve LayerSelector just before calling mark
+    let data = this.data;
+    if (data instanceof LayerSelector) {
+      data = data.resolve() as any;
+    }
+
+    // Create the node
+    const node = await Frame(this.options ?? {}, [
+      (await composedMark(data as any)).setShared([true, true]),
     ]);
 
-    // Add .as() method to the returned node
-    (node as any).as = (name: string) => {
+    // Register layer if .as() was called (layerName is set)
+    if (this.layerName) {
       const layerContext = getLayerContext();
-      // Use the actual child node from the Frame, not a new tree
       const rootNode = node.children[0] as GoFishNode;
-
-      // Collect only leaf nodes (nodes with no children)
-      const collectLeafNodes = (n: GoFishNode): GoFishNode[] => {
-        if (n.children && n.children.length > 0) {
-          const leaves: GoFishNode[] = [];
-          for (const child of n.children) {
-            leaves.push(...collectLeafNodes(child as GoFishNode));
-          }
-          return leaves;
-        }
-        return [n];
-      };
-
       const leafNodes = collectLeafNodes(rootNode);
 
-      // Store layer data taken from node-attached datum and leaf nodes
-      layerContext[name] = {
+      layerContext[this.layerName] = {
         data: leafNodes.map((n) => (n as any).datum),
         nodes: leafNodes,
       };
+    }
 
-      return node;
-    };
+    return node;
+  }
 
-    return node as GoFishNode & { as: (name: string) => GoFishNode };
+  // as updates state and returns a new builder for chaining
+  as(name: string): ChartBuilder<TInput, TOutput> {
+    return new ChartBuilder(
+      this.data,
+      this.options,
+      this.operators,
+      this.finalMark,
+      name
+    );
+  }
+
+  // render calls resolve and then renders
+  async render(
+    ...args: Parameters<GoFishNode["render"]>
+  ): Promise<ReturnType<GoFishNode["render"]>> {
+    const node = await this.resolve();
+    return node.render(...args);
   }
 }
 
@@ -245,8 +321,8 @@ export function spread<T>(
     alignment: opts?.alignment ?? "start",
   };
 
-  return (mark: Mark<T[]>) => {
-    return (d: T[], key?: string | number) => {
+  return async (mark: Mark<T[]>) => {
+    return async (d: T[], key?: string | number) => {
       // Group by the field if provided, otherwise iterate over raw data
       const grouped = field ? groupBy(d, field as ValueIteratee<T>) : d;
 
@@ -268,9 +344,9 @@ export function spread<T>(
             ? inferSize(finalOptions?.h as string | number, d)
             : undefined,
         },
-        For(grouped as any, (groupData: T[], k) => {
+        For(grouped as any, async (groupData: T[], k) => {
           const currentKey = key != undefined ? `${key}-${k}` : k;
-          const node = mark(groupData, currentKey);
+          const node = await mark(groupData, currentKey);
           return finalOptions.label
             ? node.setKey(currentKey?.toString() ?? "")
             : node;
@@ -303,18 +379,16 @@ export function scatter<T>(
     debug?: boolean;
   }
 ): Operator<T[], T[]> {
-  return (mark: Mark<T[]>) => {
-    return (d: T[], key?: string | number) => {
+  return async (mark: Mark<T[]>) => {
+    return async (d: T[], key?: string | number) => {
       // Group by the field
       const groups = groupBy(d, field as ValueIteratee<T>);
       if (options?.debug) console.log("scatter groups", groups);
-
       return Frame(
-        For(groups, (items, groupKey) => {
+        For(groups, async (items, groupKey) => {
           // Calculate average x and y values for this group
           const avgX = meanBy(items, options.x as string);
           const avgY = meanBy(items, options.y as string);
-
           if (options?.debug)
             console.log(`Group ${groupKey}: avgX=${avgX}, avgY=${avgY}`);
 
@@ -330,8 +404,8 @@ export function scatter<T>(
 }
 
 export function group<T>(field: keyof T): Operator<T[], T[]> {
-  return (mark: Mark<T[]>) => {
-    return (d: T[], key?: string | number) => {
+  return async (mark: Mark<T[]>) => {
+    return async (d: T[], key?: string | number) => {
       // Group by the field
       const groups = groupBy(d, field as ValueIteratee<T>);
 
@@ -374,7 +448,7 @@ export function rect<T extends Record<string, any>>({
   strokeWidth?: number;
   debug?: boolean;
 }): Mark<T | T[] | { item: T | T[]; key: number | string }> {
-  return (input: T | T[] | { item: T | T[]; key: number | string }) => {
+  return async (input: T | T[] | { item: T | T[]; key: number | string }) => {
     let d: T | T[], key: number | string | undefined;
     if (typeof input === "object" && input !== null && "item" in input) {
       // @ts-ignore
@@ -428,7 +502,7 @@ export function circle<T extends Record<string, any>>({
   strokeWidth?: number;
   debug?: boolean;
 }): Mark<T> {
-  return (d: T, key?: string | number) => {
+  return async (d: T, key?: string | number) => {
     if (debug) console.log("circle", key, d);
     const node = Rect({
       w: typeof r === "number" ? r * 2 : inferSize(r, d),
@@ -445,27 +519,10 @@ export function circle<T extends Record<string, any>>({
   };
 }
 
-// select() retrieves enriched data from a named layer
-export function select<T>(layerName: string): Array<T & { __ref: GoFishNode }> {
-  const layerContext = getLayerContext();
-  const layer = layerContext[layerName];
-
-  if (!layer) {
-    throw new Error(
-      `Layer "${layerName}" not found. Make sure to call .as("${layerName}") first.`
-    );
-  }
-
-  // Return node-attached data enriched with refs to nodes
-  return layer.nodes.map((node: GoFishNode) => {
-    const datum: any = (node as any).datum;
-    if (datum && typeof datum === "object") {
-      // (datum as any).__ref = node;
-      const datumHack = { ...datum[0], __ref: node };
-      return datumHack as T & { __ref: GoFishNode };
-    }
-    return { item: datum, __ref: node } as unknown as T & { __ref: GoFishNode };
-  });
+// select() returns a lazy selector that defers layer lookup until actually needed
+// This allows layers to be registered by .as() calls before select() tries to access them
+export function select<T>(layerName: string): LayerSelector<T> {
+  return new LayerSelector<T>(layerName);
 }
 
 // line() mark connects data points using center-to-center mode
@@ -475,14 +532,16 @@ export function line<T extends Record<string, any>>(options?: {
   opacity?: number;
   interpolation?: "linear" | "bezier";
 }): Mark<Array<T & { __ref?: GoFishNode }>> {
-  return (d: Array<T & { __ref?: GoFishNode }>, key?: string | number) => {
-    // Use refs from enriched data if available
+  return async (
+    d: Array<T & { __ref?: GoFishNode }>,
+    key?: string | number
+  ) => {
+    // Use refs from enriched data (lazy resolution via __ref)
     const refs = d.map((item) => {
       if ("__ref" in item && item.__ref) {
         return Ref(item.__ref);
       }
-      // Fallback to name-based ref if no __ref
-      return Ref(`${key}`);
+      throw new Error("line mark expected __ref on items");
     });
 
     return Connect(
@@ -508,14 +567,16 @@ export function area<T extends Record<string, any>>(options?: {
   dir?: "x" | "y";
   interpolation?: "linear" | "bezier";
 }): Mark<Array<T & { __ref?: GoFishNode }>> {
-  return (d: Array<T & { __ref?: GoFishNode }>, key?: string | number) => {
-    // Use refs from enriched data if available
+  return async (
+    d: Array<T & { __ref?: GoFishNode }>,
+    key?: string | number
+  ) => {
+    // Use refs from enriched data (lazy resolution via __ref)
     const refs = d.map((item) => {
       if ("__ref" in item && item.__ref) {
         return Ref(item.__ref);
       }
-      // Fallback to name-based ref if no __ref
-      return Ref(`${key}`);
+      throw new Error("area mark expected __ref on items");
     });
 
     return Connect(

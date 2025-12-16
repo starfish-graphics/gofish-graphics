@@ -1,4 +1,4 @@
-import { For, Show, type JSX } from "solid-js";
+import { createResource, For, Show, Suspense, type JSX } from "solid-js";
 import { render as solidRender } from "solid-js/web";
 import {
   debugInputSceneGraph,
@@ -17,6 +17,10 @@ import {
   type UnderlyingSpace,
 } from "./underlyingSpace";
 import { continuous } from "./domain";
+import {
+  initLayerContext,
+  resetLayerContext,
+} from "./graphicalOperators/frame";
 
 /* scope context */
 let scopeContext: ScopeContext | null = null;
@@ -55,6 +59,102 @@ export const getKeyContext = (): KeyContext => {
   return keyContext;
 };
 
+export async function layout(
+  {
+    w,
+    h,
+    x,
+    y,
+    transform,
+    debug = false,
+    defs,
+    axes = false,
+  }: {
+    w: number;
+    h: number;
+    x?: number;
+    y?: number;
+    transform?: { x?: number; y?: number };
+    debug?: boolean;
+    defs?: JSX.Element[];
+    axes?: boolean;
+  },
+  child: GoFishNode | Promise<GoFishNode>
+): Promise<{
+  sizeDomains: [any, any];
+  underlyingSpaceX: UnderlyingSpace;
+  underlyingSpaceY: UnderlyingSpace;
+  posScales: [(pos: number) => number, (pos: number) => number];
+  child: GoFishNode;
+}> {
+  child = await child;
+  if (debug) {
+    console.log("🌳 Input Scene Graph:");
+    debugInputSceneGraph(child);
+  }
+
+  // const domainAST = child.inferDomain();
+  // const sizeThatFitsAST = domainAST.sizeThatFits();
+  // const layoutAST = sizeThatFitsAST.layout();
+  // return render({ width, height, transform }, layoutAST);
+  child.resolveColorScale();
+  child.resolveNames();
+  child.resolveKeys();
+  const [posDomainX, posDomainY] = child.inferPosDomains();
+  const sizeDomains = child.inferSizeDomains();
+  const [underlyingSpaceX, underlyingSpaceY] = child.resolveUnderlyingSpace();
+
+  if (debug) {
+    console.log("🌳 Underlying Space Tree:");
+    debugUnderlyingSpaceTree(child);
+  }
+
+  const posScales = [
+    underlyingSpaceX.kind === "position"
+      ? computePosScale(
+          continuous({
+            value: [underlyingSpaceX.domain!.min, underlyingSpaceX.domain!.max],
+            measure: "unit",
+          }),
+          w
+        )
+      : posDomainX
+        ? computePosScale(posDomainX, w)
+        : undefined,
+    underlyingSpaceY.kind === "position"
+      ? computePosScale(
+          continuous({
+            value: [underlyingSpaceY.domain!.min, underlyingSpaceY.domain!.max],
+            measure: "unit",
+          }),
+          h
+        )
+      : posDomainY
+        ? computePosScale(posDomainY, h)
+        : undefined,
+  ];
+
+  if (debug) {
+    console.log("width and height constraints:", w, h);
+  }
+
+  child.layout([w, h], [undefined, undefined], posScales);
+  child.place({ x: x ?? transform?.x ?? 0, y: y ?? transform?.y ?? 0 });
+
+  if (debug) {
+    console.log("🌳 Node Tree:");
+    debugNodeTree(child);
+  }
+
+  return {
+    sizeDomains,
+    underlyingSpaceX,
+    underlyingSpaceY,
+    posScales,
+    child,
+  };
+}
+
 /* global pass handler */
 export const gofish = (
   container: HTMLElement,
@@ -77,108 +177,80 @@ export const gofish = (
     defs?: JSX.Element[];
     axes?: boolean;
   },
-  child: GoFishNode
+  child: GoFishNode | Promise<GoFishNode>
 ) => {
-  scopeContext = new Map();
-  scaleContext = { unit: { color: new Map() } };
-  keyContext = {};
-  try {
-    if (debug) {
-      console.log("🌳 Input Scene Graph:");
-      debugInputSceneGraph(child);
+  type LayoutData = {
+    sizeDomains: [any, any];
+    underlyingSpaceX: UnderlyingSpace;
+    underlyingSpaceY: UnderlyingSpace;
+    posScales: [(pos: number) => number, (pos: number) => number];
+    child: GoFishNode;
+    scaleContext: ScaleContext;
+    keyContext: KeyContext;
+  };
+
+  const runGofish = async (): Promise<LayoutData> => {
+    try {
+      scopeContext = new Map();
+      scaleContext = { unit: { color: new Map() } };
+      keyContext = {};
+      initLayerContext();
+
+      const layoutResult = await layout(
+        { w, h, x, y, transform, debug, defs, axes },
+        child
+      );
+
+      const result = {
+        ...layoutResult,
+        scaleContext: scaleContext!,
+        keyContext: keyContext!,
+      };
+
+      return result;
+    } finally {
+      if (debug) {
+        console.log("scaleContext", scaleContext);
+        console.log("scopeContext", scopeContext);
+        // console.log("keyContext", keyContext);
+      }
+      scopeContext = null;
+      scaleContext = null;
+      keyContext = null;
+      resetLayerContext();
     }
+  };
 
-    // const domainAST = child.inferDomain();
-    // const sizeThatFitsAST = domainAST.sizeThatFits();
-    // const layoutAST = sizeThatFitsAST.layout();
-    // return render({ width, height, transform }, layoutAST);
-    child.resolveColorScale();
-    child.resolveNames();
-    child.resolveKeys();
-    const [posDomainX, posDomainY] = child.inferPosDomains();
-    const sizeDomains = child.inferSizeDomains();
-    const [underlyingSpaceX, underlyingSpaceY] = child.resolveUnderlyingSpace();
+  const [layoutData] = createResource(runGofish);
 
-    if (debug) {
-      console.log("🌳 Underlying Space Tree:");
-      debugUnderlyingSpaceTree(child);
-    }
-
-    const posScales = [
-      underlyingSpaceX.kind === "position"
-        ? computePosScale(
-            continuous({
-              value: [
-                underlyingSpaceX.domain!.min,
-                underlyingSpaceX.domain!.max,
-              ],
-              measure: "unit",
-            }),
-            w
-          )
-        : posDomainX
-          ? computePosScale(posDomainX, w)
-          : undefined,
-      underlyingSpaceY.kind === "position"
-        ? computePosScale(
-            continuous({
-              value: [
-                underlyingSpaceY.domain!.min,
-                underlyingSpaceY.domain!.max,
-              ],
-              measure: "unit",
-            }),
-            h
-          )
-        : posDomainY
-          ? computePosScale(posDomainY, h)
-          : undefined,
-    ];
-
-    if (debug) {
-      console.log("width and height constraints:", w, h);
-    }
-
-    child.layout([w, h], [undefined, undefined], posScales);
-    child.place({ x: x ?? transform?.x ?? 0, y: y ?? transform?.y ?? 0 });
-
-    if (debug) {
-      console.log("🌳 Node Tree:");
-      debugNodeTree(child);
-    }
-
-    // Render to the provided container
-    // console.log(scaleContext);
-    solidRender(
-      () =>
-        render(
-          {
-            width: w,
-            height: h,
-            defs,
-            axes,
-            scaleContext,
-            keyContext,
-            sizeDomains,
-            underlyingSpaceX,
-            underlyingSpaceY,
-            posScales,
-          },
-          child
-        ),
-      container
+  // Render to the provided container
+  solidRender(() => {
+    // used to handle async rendering of derived data
+    return (
+      <Suspense fallback={<div>Loading...</div>}>
+        {(() => {
+          const data = layoutData();
+          if (!data) return null;
+          return render(
+            {
+              width: w,
+              height: h,
+              defs,
+              axes,
+              scaleContext: data.scaleContext,
+              keyContext: data.keyContext,
+              sizeDomains: data.sizeDomains,
+              underlyingSpaceX: data.underlyingSpaceX,
+              underlyingSpaceY: data.underlyingSpaceY,
+              posScales: data.posScales,
+            },
+            data.child
+          );
+        })()}
+      </Suspense>
     );
-    return container;
-  } finally {
-    if (debug) {
-      console.log("scopeContext", scopeContext);
-      // console.log("scaleContext", scaleContext);
-      // console.log("keyContext", keyContext);
-    }
-    scopeContext = null;
-    scaleContext = null;
-    keyContext = null;
-  }
+  }, container);
+  return container;
 };
 
 const PADDING = 10;
@@ -190,8 +262,8 @@ export const render = (
     transform,
     defs,
     axes,
-    scaleContext,
-    keyContext,
+    scaleContext: scaleContextParam,
+    keyContext: keyContextParam,
     sizeDomains,
     underlyingSpaceX,
     underlyingSpaceY,
@@ -211,6 +283,11 @@ export const render = (
   },
   child: GoFishNode
 ): JSX.Element => {
+  // Restore global contexts for rendering (components access these via getScaleContext/getKeyContext)
+  // Note: scaleContext is always null here because runGofish() cleans it up in the finally block
+  scaleContext = scaleContextParam;
+  keyContext = keyContextParam;
+
   let yTicks: number[] = [];
   let xTicks: number[] = [];
   if (
@@ -237,7 +314,7 @@ export const render = (
     yTicks = ticks(yMin, yMax, 10);
   }
 
-  return (
+  const result = (
     <svg
       width={width + PADDING * 6 + (axes ? 100 : 0)}
       height={height + PADDING * 6 + (axes ? 100 : 0)}
@@ -672,4 +749,10 @@ export const render = (
       </g>
     </svg>
   );
+
+  // Clean up global contexts (they're already null from runGofish's finally block, but be explicit)
+  scaleContext = null;
+  keyContext = null;
+
+  return result;
 };
