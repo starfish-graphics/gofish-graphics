@@ -24,14 +24,6 @@ class BarChartBuilder<TInput, TOutput = TInput>
     this.barOrientation = barOrientation;
   }
 
-  // Delegate all ChartBuilder methods
-  flow<T1>(op1: Operator<TInput, T1>): BarChartBuilder<TInput, T1> {
-    return new BarChartBuilder(
-      this.builder.flow(op1) as ChartBuilder<TInput, T1>,
-      this.barOrientation
-    );
-  }
-
   as(name: string): BarChartBuilder<TInput, TOutput> {
     return new BarChartBuilder(this.builder.as(name), this.barOrientation);
   }
@@ -49,24 +41,22 @@ class BarChartBuilder<TInput, TOutput = TInput>
   stack<K extends keyof TOutput>(
     field: K,
     options?: {
+      x?: number;
+      y?: number;
+      w?: number | keyof TOutput;
+      h?: number | keyof TOutput;
       spacing?: number;
       alignment?: "start" | "middle" | "end";
     }
   ): BarChartBuilder<TInput, TOutput> {
-    // Stack in the bar orientation direction:
-    // - Vertical bars (x orientation) stack vertically (y direction)
-    // - Horizontal bars (y orientation) stack horizontally (x direction)
     const stackOptions = {
       ...options,
       dir: this.barOrientation,
     };
 
-    // stack() returns Operator<T[], T[]>, and in bar chart context TOutput is T[]
-    // TypeScript has trouble with overload resolution here, so we bypass it
-    const builderAny = this.builder as any;
-    const stackOp = stack(field as any, stackOptions);
+    const stackOp = stack(field, stackOptions);
     return new BarChartBuilder(
-      builderAny.flow(stackOp) as ChartBuilder<TInput, TOutput>,
+      this.builder.flow(stackOp as unknown as Operator<TInput, TOutput>),
       this.barOrientation
     );
   }
