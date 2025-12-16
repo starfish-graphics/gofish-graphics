@@ -45,7 +45,6 @@ class BarChartBuilder<TInput, TOutput = TInput>
       y?: number;
       w?: number | keyof TOutput;
       h?: number | keyof TOutput;
-      spacing?: number;
       alignment?: "start" | "middle" | "end";
     }
   ): BarChartBuilder<TInput, TOutput> {

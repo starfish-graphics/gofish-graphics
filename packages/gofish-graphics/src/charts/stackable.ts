@@ -6,7 +6,6 @@ export interface Stackable<TInput, TOutput> {
       y?: number;
       w?: number | keyof TOutput;
       h?: number | keyof TOutput;
-      spacing?: number;
       alignment?: "start" | "middle" | "end";
     }
   ): Stackable<TInput, TOutput>;
