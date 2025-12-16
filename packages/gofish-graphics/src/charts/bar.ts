@@ -1,4 +1,12 @@
-import { chart, rect, spread, stack, Mark, ChartBuilder } from "../lib";
+import {
+  chart,
+  rect,
+  spread,
+  stack,
+  Mark,
+  ChartBuilder,
+  Operator,
+} from "../lib";
 import { Stackable } from "./stackable";
 
 // Wrapper class that adds .stack() method to ChartBuilder
@@ -7,77 +15,35 @@ class BarChartBuilder<TInput, TOutput = TInput>
 {
   private builder: ChartBuilder<TInput, TOutput>;
   private readonly barOrientation: "x" | "y";
-  private readonly markOptions: {
-    h?: string | number;
-    w?: string | number;
-    fill?: string;
-  };
-  private readonly markFn?: (options: any) => Mark<any>;
 
   constructor(
     builder: ChartBuilder<TInput, TOutput>,
-    barOrientation: "x" | "y",
-    markOptions: {
-      h?: string | number;
-      w?: string | number;
-      fill?: string;
-    },
-    markFn?: (options: any) => Mark<any>
+    barOrientation: "x" | "y"
   ) {
     this.builder = builder;
     this.barOrientation = barOrientation;
-    this.markOptions = markOptions;
-    this.markFn = markFn;
   }
 
-  flow<T1>(op1: any): BarChartBuilder<TInput, T1> {
+  // Delegate all ChartBuilder methods
+  flow<T1>(op1: Operator<TInput, T1>): BarChartBuilder<TInput, T1> {
     return new BarChartBuilder(
-      this.builder.flow(op1) as any,
-      this.barOrientation,
-      this.markOptions as any,
-      this.markFn
+      this.builder.flow(op1) as ChartBuilder<TInput, T1>,
+      this.barOrientation
     );
   }
 
-  mark(mark?: Mark<TOutput>): any {
-    const finalMark =
-      mark ??
-      (this.markFn ? this.markFn(this.markOptions) : rect(this.markOptions));
-    return this.builder.mark(finalMark as Mark<TOutput>);
+  as(name: string): BarChartBuilder<TInput, TOutput> {
+    return new BarChartBuilder(this.builder.as(name), this.barOrientation);
   }
 
-  render(
-    container: HTMLElement,
-    {
-      w,
-      h,
-      x,
-      y,
-      transform,
-      debug = false,
-      defs,
-      axes = false,
-    }: {
-      w: number;
-      h: number;
-      x?: number;
-      y?: number;
-      transform?: { x?: number; y?: number };
-      debug?: boolean;
-      defs?: JSX.Element[];
-      axes?: boolean;
-    }
-  ) {
-    return this.mark().render(container, {
-      w,
-      h,
-      x,
-      y,
-      transform,
-      debug,
-      defs,
-      axes,
-    });
+  async resolve() {
+    return this.builder.resolve();
+  }
+
+  async render(
+    ...args: Parameters<ChartBuilder<TInput, TOutput>["render"]>
+  ): Promise<ReturnType<ChartBuilder<TInput, TOutput>["render"]>> {
+    return this.builder.render(...args);
   }
 
   stack<K extends keyof TOutput>(
@@ -92,17 +58,16 @@ class BarChartBuilder<TInput, TOutput = TInput>
     // - Horizontal bars (y orientation) stack horizontally (x direction)
     const stackOptions = {
       ...options,
-      dir: this.barOrientation === "x" ? ("y" as const) : ("x" as const),
+      dir: this.barOrientation,
     };
 
-    // Vertical bars, stacking vertically - use stack operator
+    // stack() returns Operator<T[], T[]>, and in bar chart context TOutput is T[]
+    // TypeScript has trouble with overload resolution here, so we bypass it
+    const builderAny = this.builder as any;
+    const stackOp = stack(field as any, stackOptions);
     return new BarChartBuilder(
-      this.builder.flow(
-        stack(field as any, stackOptions) as any
-      ) as ChartBuilder<TInput, TOutput>,
-      this.barOrientation,
-      this.markOptions,
-      this.markFn
+      builderAny.flow(stackOp) as ChartBuilder<TInput, TOutput>,
+      this.barOrientation
     );
   }
 }
@@ -132,30 +97,28 @@ export const barChart = <T extends Record<string, any>>(
 
   // Vertical bar chart (orientation: "y"): spread along x-axis using x field, height from y field
   if (orientation === "y") {
-    const builder = chart(data).flow(spread(options.x, { dir: "x" }));
-    return new BarChartBuilder(
-      builder as ChartBuilder<T[], T[]>,
-      "x",
-      {
-        h: options.y as string | number,
-        fill: options.fill as string | undefined,
-      },
-      markFn
-    );
+    const builder = chart(data)
+      .flow(spread(options.x, { dir: "x" }))
+      .mark(
+        markFn({
+          h: options.y as string | number,
+          fill: options.fill as string | undefined,
+        })
+      );
+    return new BarChartBuilder(builder as ChartBuilder<T[], T[]>, orientation);
   }
 
   // Horizontal bar chart (orientation: "x"): spread along y-axis using y field, width from x field
   if (orientation === "x") {
-    const builder = chart(data).flow(spread(options.y, { dir: "y" }));
-    return new BarChartBuilder(
-      builder as ChartBuilder<T[], T[]>,
-      "y",
-      {
-        w: options.x as string | number,
-        fill: options.fill as string | undefined,
-      },
-      markFn
-    );
+    const builder = chart(data)
+      .flow(spread(options.y, { dir: "y" }))
+      .mark(
+        markFn({
+          w: options.x as string | number,
+          fill: options.fill as string | undefined,
+        })
+      );
+    return new BarChartBuilder(builder as ChartBuilder<T[], T[]>, orientation);
   }
 
   throw new Error(
