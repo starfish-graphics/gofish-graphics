@@ -126,9 +126,8 @@ export const rect = ({
         } else {
           const min = isValue(dims[0].min) ? getValue(dims[0].min) : 0;
           const size = isValue(dims[0].size) ? getValue(dims[0].size) : 0;
-          underlyingSpaceX = POSITION(
-            size >= 0 ? [min, min + size] : [min + size, min]
-          );
+          const domain = size >= 0 ? [min, min + size] : [min + size, min];
+          underlyingSpaceX = POSITION(domain);
         }
 
         let underlyingSpaceY = UNDEFINED;
@@ -141,9 +140,8 @@ export const rect = ({
         } else {
           const min = isValue(dims[1].min) ? getValue(dims[1].min) : 0;
           const size = isValue(dims[1].size) ? getValue(dims[1].size) : 0;
-          underlyingSpaceY = POSITION(
-            size >= 0 ? [min, min + size] : [min + size, min]
-          );
+          const domain = size >= 0 ? [min, min + size] : [min + size, min];
+          underlyingSpaceY = POSITION(domain);
         }
 
         // const w = computeIntrinsicSize(dims[0].size);
@@ -205,6 +203,12 @@ export const rect = ({
             undefined
           );
           w = max - min;
+        } else if (isValue(dims[0].size) && posScales?.[0]) {
+          // If we have size but no min, and posScales exists, use position scale
+          // Treat min as 0 (baseline) and compute width from position scale
+          const minPos = posScales[0](0);
+          const maxPos = posScales[0](getValue(dims[0].size)!);
+          w = maxPos - minPos;
         } else {
           w = computeSize(dims[0].size, scaleFactors?.[0]!, size[0]);
         }
@@ -219,6 +223,12 @@ export const rect = ({
             undefined
           );
           h = max - min;
+        } else if (isValue(dims[1].size) && posScales?.[1]) {
+          // If we have size but no min, and posScales exists, use position scale
+          // Treat min as 0 (baseline) and compute height from position scale
+          const minPos = posScales[1](0);
+          const maxPos = posScales[1](getValue(dims[1].size)!);
+          h = maxPos - minPos;
         } else {
           h = computeSize(dims[1].size, scaleFactors?.[1]!, size[1]);
         }
@@ -226,17 +236,17 @@ export const rect = ({
         return {
           intrinsicDims: [
             {
-              min: 0,
+              min: w >= 0 ? 0 : w,
               size: w,
               center: w / 2,
-              max: w,
+              max: w >= 0 ? w : 0,
               embedded: dims[0].embedded,
             },
             {
-              min: 0,
+              min: h >= 0 ? 0 : h,
               size: h,
               center: h / 2,
-              max: h,
+              max: h >= 0 ? h : 0,
               embedded: dims[1].embedded,
             },
           ],
