@@ -324,22 +324,29 @@ export const stack = withGoFish(
           );
 
           /* align */
-          // For "start" alignment with mixed positive/negative bars, we need to align at the baseline (0 in data space)
-          // Use the position scale to map data value 0 to pixel position
-          const baselinePos = posScales?.[alignDir]
-            ? posScales[alignDir](0)
-            : 0;
           if (alignment === "start") {
+            // For "start" alignment with mixed positive/negative bars, align at the baseline (0 in data space)
+            // Use the position scale to map data value 0 to pixel position
+            const baselinePos = posScales?.[alignDir]
+              ? posScales[alignDir](0)
+              : 0;
             for (const child of childPlaceables) {
               child.place({ [alignDir]: baselinePos });
             }
           } else if (alignment === "middle") {
+            // For "middle" alignment, center children in the available space
+            const centerPos = size[alignDir] / 2;
             for (const child of childPlaceables) {
               child.place({
-                [alignDir]: baselinePos - child.dims[alignDir].size! / 2,
+                [alignDir]: centerPos - child.dims[alignDir].size! / 2,
               });
             }
           } else if (alignment === "end") {
+            // For "end" alignment with mixed positive/negative bars, align at the baseline (0 in data space)
+            // Use the position scale to map data value 0 to pixel position
+            const baselinePos = posScales?.[alignDir]
+              ? posScales[alignDir](0)
+              : 0;
             for (const child of childPlaceables) {
               child.place({
                 [alignDir]: baselinePos - child.dims[alignDir].size!,
