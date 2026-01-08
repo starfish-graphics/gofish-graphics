@@ -331,18 +331,24 @@ export const rect = ({
 
           // For linear spaces, we can render a simple line
           if (space.type === "linear") {
-            const x = isXEmbedded
+            const baseX = isXEmbedded
               ? (displayDims[0].min ?? 0)
               : aestheticMid - thickness / 2;
-            const y = isXEmbedded
+            const baseY = isXEmbedded
               ? aestheticMid - thickness / 2
               : (displayDims[1].min ?? 0);
-            const width = isXEmbedded
+            const rawWidth = isXEmbedded
               ? (displayDims[0].max ?? 0) - (displayDims[0].min ?? 0)
               : thickness;
-            const height = isXEmbedded
+            const rawHeight = isXEmbedded
               ? thickness
               : (displayDims[1].max ?? 0) - (displayDims[1].min ?? 0);
+
+            // Handle negative dimensions by using absolute values and adjusting positions
+            const width = Math.abs(rawWidth);
+            const height = Math.abs(rawHeight);
+            const x = rawWidth < 0 ? baseX + rawWidth : baseX;
+            const y = rawHeight < 0 ? baseY + rawHeight : baseY;
 
             return (
               <rect
@@ -393,10 +399,17 @@ export const rect = ({
 
         // If we're in a linear space, render as a rect element
         if (space.type === "linear") {
-          const x = displayDims[0].min ?? 0;
-          const y = displayDims[1].min ?? 0;
-          const width = (displayDims[0].max ?? 0) - x;
-          const height = (displayDims[1].max ?? 0) - y;
+          const baseX = displayDims[0].min ?? 0;
+          const baseY = displayDims[1].min ?? 0;
+          const rawWidth = (displayDims[0].max ?? 0) - baseX;
+          const rawHeight = (displayDims[1].max ?? 0) - baseY;
+
+          // Handle negative dimensions by using absolute values and adjusting positions
+          const width = Math.abs(rawWidth);
+          const height = Math.abs(rawHeight);
+          const x = rawWidth < 0 ? baseX + rawWidth : baseX;
+          const y = rawHeight < 0 ? baseY + rawHeight : baseY;
+
           return (
             <rect
               transform={`scale(1, -1)`}
