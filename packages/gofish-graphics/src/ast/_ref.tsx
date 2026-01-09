@@ -199,15 +199,20 @@ export class GoFishRef {
 
   public place(pos: FancyPosition): void {
     const elabPos = elaboratePosition(pos);
-    /* for each dimension, if intrinsic dim is not defined, assign pos to that. otherwise assign it
-    to corresponding translation */
+    /* For each dimension, if intrinsic dim is not defined, assign pos to that.
+     * Otherwise, compute translation to position the implicit anchor point.
+     *
+     * The anchor point is always the local origin (0). Shapes set up their
+     * intrinsic dimensions so that one edge is at 0:
+     * - For positive sizes: min = 0 (anchor at bottom)
+     * - For negative sizes: max = 0 (anchor at top)
+     */
     for (let i = 0; i < elabPos.length; i++) {
       if (elabPos[i] === undefined) continue;
       if (this.intrinsicDims?.[i]?.min === undefined) {
         this.intrinsicDims![i].min = elabPos[i]!;
       } else {
-        this.transform!.translate![i] =
-          elabPos[i]! - (this.intrinsicDims![i].min ?? 0);
+        this.transform!.translate![i] = elabPos[i]!;
       }
     }
   }

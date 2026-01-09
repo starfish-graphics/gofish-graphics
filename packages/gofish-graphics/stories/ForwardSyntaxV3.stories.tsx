@@ -64,6 +64,32 @@ export const BarChart: StoryObj<Args> = {
   },
 };
 
+export const NegativeBarChart: StoryObj<Args> = {
+  args: { w: 400, h: 400 },
+  render: (args: Args) => {
+    const container = initializeContainer();
+
+    const testData = [
+      { category: "A", value: -30 },
+      { category: "B", value: 80 },
+      { category: "C", value: 45 },
+      { category: "D", value: 60 },
+      { category: "E", value: 20 },
+    ];
+
+    chart(testData)
+      .flow(spread("category", { dir: "x" }))
+      .mark(rect({ h: "value" }))
+      .render(container, {
+        w: args.w,
+        h: args.h,
+        axes: true,
+      });
+
+    return container;
+  },
+};
+
 export const HorizontalBarChart: StoryObj<Args> = {
   args: { w: 400, h: 400 },
   render: (args: Args) => {

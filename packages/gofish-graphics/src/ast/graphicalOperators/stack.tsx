@@ -98,9 +98,10 @@ export const stack = withGoFish(
             children.every((child) => isPOSITION(child[alignDir])) &&
             (alignment === "start" || alignment === "end")
           ) {
-            const domain = Interval.unionAll(
-              ...children.map((child) => child[alignDir].domain!)
+            const childDomains = children.map(
+              (child) => child[alignDir].domain!
             );
+            const domain = Interval.unionAll(...childDomains);
             alignSpace = POSITION([domain.min, domain.max]);
           }
           // if children are all UNDEFINED or POSITION and alignment is middle, return INTERVAL
@@ -324,30 +325,33 @@ export const stack = withGoFish(
 
           /* align */
           if (alignment === "start") {
+            // For "start" alignment with mixed positive/negative bars, align at the baseline (0 in data space)
+            // Use the position scale to map data value 0 to pixel position
+            const baselinePos = posScales?.[alignDir]
+              ? posScales[alignDir](0)
+              : 0;
             for (const child of childPlaceables) {
-              child.place({ [alignDir]: 0 });
+              child.place({ [alignDir]: baselinePos });
             }
           } else if (alignment === "middle") {
+            // For "middle" alignment, center children in the available space
+            const centerPos = size[alignDir] / 2;
             for (const child of childPlaceables) {
-              child.place({ [alignDir]: -child.dims[alignDir].size! / 2 });
+              child.place({
+                [alignDir]: centerPos - child.dims[alignDir].size! / 2,
+              });
             }
           } else if (alignment === "end") {
+            // For "end" alignment with mixed positive/negative bars, align at the baseline (0 in data space)
+            // Use the position scale to map data value 0 to pixel position
+            const baselinePos = posScales?.[alignDir]
+              ? posScales[alignDir](0)
+              : 0;
             for (const child of childPlaceables) {
-              child.place({ [alignDir]: -child.dims[alignDir].size! });
+              child.place({
+                [alignDir]: baselinePos - child.dims[alignDir].size!,
+              });
             }
-          }
-
-          let alignMin: number;
-          if (alignment === "start") {
-            alignMin = 0;
-          } else if (alignment === "middle") {
-            alignMin = Math.min(
-              ...childPlaceables.map((child) => -child.dims[alignDir].size! / 2)
-            );
-          } /* if (alignment === "end") */ else {
-            alignMin = Math.min(
-              ...childPlaceables.map((child) => -child.dims[alignDir].size!)
-            );
           }
 
           /* distribute */
@@ -364,15 +368,20 @@ export const stack = withGoFish(
             }
           }
 
-          const alignSize = Math.max(
-            ...childPlaceables.map((child) => child.dims[alignDir].size!)
+          // Compute alignDir intrinsicDims from extents to account for negative bars
+          const alignMin = Math.min(
+            ...childPlaceables.map((child) => child.dims[alignDir].min!)
           );
+          const alignMax = Math.max(
+            ...childPlaceables.map((child) => child.dims[alignDir].max!)
+          );
+          const alignSize = alignMax - alignMin;
           return {
             intrinsicDims: {
               [alignDir]: {
                 min: alignMin,
                 size: alignSize,
-                max: alignMin + alignSize,
+                max: alignMax,
               },
               [stackDir]: {
                 min: 0,

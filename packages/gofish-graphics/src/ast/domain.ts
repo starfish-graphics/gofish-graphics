@@ -8,7 +8,13 @@ export type ContinuousDomain = {
   measure: Measure;
 };
 
-export const continuous = ({ value, measure }: { value: [number, number]; measure: Measure }): ContinuousDomain => ({
+export const continuous = ({
+  value,
+  measure,
+}: {
+  value: [number, number];
+  measure: Measure;
+}): ContinuousDomain => ({
   type: "continuous",
   value,
   measure,
@@ -26,11 +32,16 @@ export const aesthetic = (value: any): AestheticDomain => ({
 
 export const canUnifyDomains = (domains: Domain[]) => {
   return domains.every(
-    (domain) => domain !== undefined && domain.type === "continuous" && domain.measure === domains[0].measure
+    (domain) =>
+      domain !== undefined &&
+      domain.type === "continuous" &&
+      domain.measure === domains[0].measure
   );
 };
 
-export const unifyContinuousDomains = (domains: ContinuousDomain[]): ContinuousDomain => {
+export const unifyContinuousDomains = (
+  domains: ContinuousDomain[]
+): ContinuousDomain => {
   const measure = domains[0].measure;
   const mins = domains.map((domain) => domain.value[0]);
   const maxs = domains.map((domain) => domain.value[1]);
@@ -41,8 +52,13 @@ export const unifyContinuousDomains = (domains: ContinuousDomain[]): ContinuousD
 };
 
 // creates an affine scale transforming the domain to [0, size] or [size, 0] if reverse is true
-export const computePosScale = (domain: ContinuousDomain, size: number, reverse: boolean = false) => {
+export const computePosScale = (
+  domain: ContinuousDomain,
+  size: number,
+  reverse: boolean = false
+) => {
   const [min, max] = domain.value;
   const scale = size / (max - min);
-  return (pos: number) => (reverse ? size - (pos - min) * scale : (pos - min) * scale);
+  return (pos: number) =>
+    reverse ? size - (pos - min) * scale : (pos - min) * scale;
 };

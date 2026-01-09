@@ -126,9 +126,8 @@ export const rect = ({
         } else {
           const min = isValue(dims[0].min) ? getValue(dims[0].min) : 0;
           const size = isValue(dims[0].size) ? getValue(dims[0].size) : 0;
-          underlyingSpaceX = POSITION(
-            size >= 0 ? [min, min + size] : [min + size, min]
-          );
+          const domain = size >= 0 ? [min, min + size] : [min + size, min];
+          underlyingSpaceX = POSITION(domain);
         }
 
         let underlyingSpaceY = UNDEFINED;
@@ -141,9 +140,8 @@ export const rect = ({
         } else {
           const min = isValue(dims[1].min) ? getValue(dims[1].min) : 0;
           const size = isValue(dims[1].size) ? getValue(dims[1].size) : 0;
-          underlyingSpaceY = POSITION(
-            size >= 0 ? [min, min + size] : [min + size, min]
-          );
+          const domain = size >= 0 ? [min, min + size] : [min + size, min];
+          underlyingSpaceY = POSITION(domain);
         }
 
         // const w = computeIntrinsicSize(dims[0].size);
@@ -205,6 +203,12 @@ export const rect = ({
             undefined
           );
           w = max - min;
+        } else if (isValue(dims[0].size) && posScales?.[0]) {
+          // If we have size but no min, and posScales exists, use position scale
+          // Treat min as 0 (baseline) and compute width from position scale
+          const minPos = posScales[0](0);
+          const maxPos = posScales[0](getValue(dims[0].size)!);
+          w = maxPos - minPos;
         } else {
           w = computeSize(dims[0].size, scaleFactors?.[0]!, size[0]);
         }
@@ -219,6 +223,12 @@ export const rect = ({
             undefined
           );
           h = max - min;
+        } else if (isValue(dims[1].size) && posScales?.[1]) {
+          // If we have size but no min, and posScales exists, use position scale
+          // Treat min as 0 (baseline) and compute height from position scale
+          const minPos = posScales[1](0);
+          const maxPos = posScales[1](getValue(dims[1].size)!);
+          h = maxPos - minPos;
         } else {
           h = computeSize(dims[1].size, scaleFactors?.[1]!, size[1]);
         }
@@ -226,17 +236,17 @@ export const rect = ({
         return {
           intrinsicDims: [
             {
-              min: 0,
+              min: w >= 0 ? 0 : w,
               size: w,
               center: w / 2,
-              max: w,
+              max: w >= 0 ? w : 0,
               embedded: dims[0].embedded,
             },
             {
-              min: 0,
+              min: h >= 0 ? 0 : h,
               size: h,
               center: h / 2,
-              max: h,
+              max: h >= 0 ? h : 0,
               embedded: dims[1].embedded,
             },
           ],
@@ -331,18 +341,24 @@ export const rect = ({
 
           // For linear spaces, we can render a simple line
           if (space.type === "linear") {
-            const x = isXEmbedded
+            const baseX = isXEmbedded
               ? (displayDims[0].min ?? 0)
               : aestheticMid - thickness / 2;
-            const y = isXEmbedded
+            const baseY = isXEmbedded
               ? aestheticMid - thickness / 2
               : (displayDims[1].min ?? 0);
-            const width = isXEmbedded
+            const rawWidth = isXEmbedded
               ? (displayDims[0].max ?? 0) - (displayDims[0].min ?? 0)
               : thickness;
-            const height = isXEmbedded
+            const rawHeight = isXEmbedded
               ? thickness
               : (displayDims[1].max ?? 0) - (displayDims[1].min ?? 0);
+
+            // Handle negative dimensions by using absolute values and adjusting positions
+            const width = Math.abs(rawWidth);
+            const height = Math.abs(rawHeight);
+            const x = rawWidth < 0 ? baseX + rawWidth : baseX;
+            const y = rawHeight < 0 ? baseY + rawHeight : baseY;
 
             return (
               <rect
@@ -393,10 +409,17 @@ export const rect = ({
 
         // If we're in a linear space, render as a rect element
         if (space.type === "linear") {
-          const x = displayDims[0].min ?? 0;
-          const y = displayDims[1].min ?? 0;
-          const width = (displayDims[0].max ?? 0) - x;
-          const height = (displayDims[1].max ?? 0) - y;
+          const baseX = displayDims[0].min ?? 0;
+          const baseY = displayDims[1].min ?? 0;
+          const rawWidth = (displayDims[0].max ?? 0) - baseX;
+          const rawHeight = (displayDims[1].max ?? 0) - baseY;
+
+          // Handle negative dimensions by using absolute values and adjusting positions
+          const width = Math.abs(rawWidth);
+          const height = Math.abs(rawHeight);
+          const x = rawWidth < 0 ? baseX + rawWidth : baseX;
+          const y = rawHeight < 0 ? baseY + rawHeight : baseY;
+
           return (
             <rect
               transform={`scale(1, -1)`}
