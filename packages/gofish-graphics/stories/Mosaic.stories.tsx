@@ -1,10 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "./helper";
 import { testNestedMosaic } from "../src/tests/nestedMosaic";
-import { rect } from "../src/ast/marks/chart";
-import { catchData } from "../src/data/catch";
-import { orderBy } from "../src/lib";
-import { v2ChartNestedMosaic } from "../src/tests/chartAPITestV2";
 import { testMosaic } from "../src/tests/mosaic";
 
 export default {
@@ -36,19 +32,6 @@ export const NestedMosaic: StoryObj<Args> = {
   },
 };
 
-export const NestedMosaicV2: StoryObj<Args> = {
-  args: { w: 500, h: 400 },
-  render: (args: Args) => {
-    const container = initializeContainer();
-    v2ChartNestedMosaic().render(container, {
-      w: args.w,
-      h: args.h,
-      axes: true,
-    });
-    return container;
-  },
-};
-
 export const Mosaic: StoryObj<Args> = {
   args: { w: 500, h: 400 },
   render: (args: Args) => {
@@ -58,23 +41,6 @@ export const Mosaic: StoryObj<Args> = {
       h: args.h,
       axes: true,
     });
-    return container;
-  },
-};
-
-export const MosaicV2: StoryObj<Args> = {
-  args: { w: 500, h: 400 },
-  render: (args: Args) => {
-    const container = initializeContainer();
-    rect(catchData, { fill: "species", h: "count" })
-      .stackY("species", { w: "count" })
-      .transform((d) => orderBy(d, "count", "asc"))
-      .spreadX("lake")
-      .render(container, {
-        w: args.w,
-        h: args.h,
-        axes: true,
-      });
     return container;
   },
 };
