@@ -48,14 +48,17 @@ type GoFishChildrenInputWithThunks =
   | null;
 
 /**
- * A Promise-like object that also has a render method.
- * This allows calling .render() on promises returned by withGoFish and withLayerSequential.
+ * A Promise-like object that also has chainable methods from GoFishNode.
+ * This allows calling .render(), .name(), .setKey(), .setShared() on promises returned by withGoFish.
  */
 export interface PromiseWithRender<T> extends Promise<T> {
   render(
     container: HTMLElement,
     options: RenderOptions
   ): HTMLElement | Promise<HTMLElement>;
+  name(name: string): PromiseWithRender<T>;
+  setKey(key: string): PromiseWithRender<T>;
+  setShared(shared: [boolean, boolean]): PromiseWithRender<T>;
 }
 
 /**
@@ -73,8 +76,8 @@ function isChartBuilder(value: any): value is ChartBuilder<any, any> {
 }
 
 /**
- * Wraps a Promise to add a render method.
- * The render method will await the promise and call render on the result if it's a GoFishNode.
+ * Wraps a Promise to add chainable methods that proxy to GoFishNode.
+ * This allows calling .render(), .name(), .setKey(), .setShared() on promises.
  */
 export function addRenderMethod<T>(promise: Promise<T>): PromiseWithRender<T> {
   // Add the render method directly to the promise object
@@ -92,6 +95,42 @@ export function addRenderMethod<T>(promise: Promise<T>): PromiseWithRender<T> {
         "Cannot call render on this result. Only GoFishNode instances have a render method."
       );
     });
+  };
+
+  // Add chainable methods that return new PromiseWithRender
+  (promise as any).name = function (name: string): PromiseWithRender<T> {
+    return addRenderMethod(
+      promise.then((result) => {
+        if (result instanceof GoFishNode) {
+          return result.name(name) as T;
+        }
+        return result;
+      })
+    );
+  };
+
+  (promise as any).setKey = function (key: string): PromiseWithRender<T> {
+    return addRenderMethod(
+      promise.then((result) => {
+        if (result instanceof GoFishNode) {
+          return result.setKey(key) as T;
+        }
+        return result;
+      })
+    );
+  };
+
+  (promise as any).setShared = function (
+    shared: [boolean, boolean]
+  ): PromiseWithRender<T> {
+    return addRenderMethod(
+      promise.then((result) => {
+        if (result instanceof GoFishNode) {
+          return result.setShared(shared) as T;
+        }
+        return result;
+      })
+    );
   };
 
   return promise as PromiseWithRender<T>;

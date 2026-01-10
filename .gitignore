@@ -1,5 +1,6 @@
 node_modules
 dist
+.pnpm-store
 .env
 .env.local
 .env.development.local
