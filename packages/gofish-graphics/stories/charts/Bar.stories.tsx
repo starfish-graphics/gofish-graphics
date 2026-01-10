@@ -186,7 +186,7 @@ export const VerticalWithCustomMarkAndFill: StoryObj<Args> = {
     barChart(testData, {
       x: "category",
       y: "value",
-      fill: "#6c5ce7",
+      fill: "#45b7d1",
       mark: circle,
     }).render(container, {
       w: args.w,
