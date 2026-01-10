@@ -79,7 +79,12 @@ export async function layout(
     defs?: JSX.Element[];
     axes?: boolean;
   },
-  child: GoFishNode | Promise<GoFishNode>
+  child: GoFishNode | Promise<GoFishNode>,
+  contexts?: {
+    scaleCtx: ScaleContext;
+    scopeCtx: ScopeContext;
+    keyCtx: KeyContext;
+  }
 ): Promise<{
   sizeDomains: [any, any];
   underlyingSpaceX: UnderlyingSpace;
@@ -88,6 +93,13 @@ export async function layout(
   child: GoFishNode;
 }> {
   child = await child;
+
+  // Restore contexts after await - they may have been cleared by another concurrent runGofish
+  if (contexts) {
+    scaleContext = contexts.scaleCtx;
+    scopeContext = contexts.scopeCtx;
+    keyContext = contexts.keyCtx;
+  }
   if (debug) {
     console.log("🌳 Input Scene Graph:");
     debugInputSceneGraph(child);
@@ -196,15 +208,24 @@ export const gofish = (
       keyContext = {};
       initLayerContext();
 
+      // Capture context references to pass to layout - they will be restored after await
+      const contexts = {
+        scaleCtx: scaleContext!,
+        scopeCtx: scopeContext!,
+        keyCtx: keyContext!,
+      };
+
       const layoutResult = await layout(
         { w, h, x, y, transform, debug, defs, axes },
-        child
+        child,
+        contexts
       );
 
       const result = {
         ...layoutResult,
-        scaleContext: scaleContext!,
-        keyContext: keyContext!,
+        // Use the captured contexts, not the module variable which may have been overwritten
+        scaleContext: contexts.scaleCtx,
+        keyContext: contexts.keyCtx,
       };
 
       return result;

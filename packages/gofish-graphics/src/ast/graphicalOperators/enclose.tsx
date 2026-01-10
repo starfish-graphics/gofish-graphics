@@ -6,16 +6,18 @@ import { black, gray, tailwindColors } from "../../color";
 import { Domain } from "../domain";
 import * as Monotonic from "../../util/monotonic";
 import { UNDEFINED, UnderlyingSpace } from "../underlyingSpace";
+import { withGoFish } from "../withGoFish";
 
-export const enclose = (
-  {
-    padding = 2,
-    rx = 2,
-    ry = 2,
-  }: { padding?: number; rx?: number; ry?: number },
-  children: GoFishAST[]
-) => {
-  return new GoFishNode(
+export const enclose = withGoFish(
+  (
+    {
+      padding = 2,
+      rx = 2,
+      ry = 2,
+    }: { padding?: number; rx?: number; ry?: number },
+    children: GoFishAST[]
+  ) => {
+    return new GoFishNode(
     {
       type: "enclose",
       shared: [false, false],
@@ -88,4 +90,4 @@ export const enclose = (
     },
     children
   );
-};
+});

@@ -12,6 +12,7 @@ import {
   POSITION,
   ORDINAL,
 } from "../underlyingSpace";
+import { withGoFish } from "../withGoFish";
 
 export type CoordinateTransform = {
   type: string;
@@ -84,228 +85,232 @@ const flattenLayout = (
   For now we'll just assume that it's a GoFishNode tho... maybe it's a GoFishNode that contains DisplayObjects
   inside it?
 */
-export const coord = (
-  {
-    key,
-    name,
-    transform: coordTransform,
-    grid = false,
-    ...fancyDims
-  }: {
-    key?: string;
-    name?: string;
-    transform: CoordinateTransform;
-    grid?: boolean;
-  } & FancyDims,
-  children: GoFishNode[]
-) => {
-  const dims = elaborateDims(fancyDims);
-
-  return new GoFishNode(
+export const coord = withGoFish(
+  (
     {
-      type: "coord",
       key,
       name,
-      resolveUnderlyingSpace: (children: Size<UnderlyingSpace>[]) => {
-        let xSpace = UNDEFINED;
-        const xChildrenPositionSpaces = children.filter(
-          (child) => child[0].kind === "position"
-        );
-        const xChildrenOrdinalSpaces = children.filter(
-          (child) => child[0].kind === "ordinal"
-        );
+      transform: coordTransform,
+      grid = false,
+      ...fancyDims
+    }: {
+      key?: string;
+      name?: string;
+      transform: CoordinateTransform;
+      grid?: boolean;
+    } & FancyDims,
+    children: GoFishAST[]
+  ) => {
+    const dims = elaborateDims(fancyDims);
 
-        if (
-          xChildrenPositionSpaces.length > 0 &&
-          xChildrenOrdinalSpaces.length === 0
-        ) {
-          xSpace = POSITION;
-        } else if (xChildrenOrdinalSpaces.length > 0) {
-          xSpace = ORDINAL;
-        }
+    return new GoFishNode(
+      {
+        type: "coord",
+        key,
+        name,
+        resolveUnderlyingSpace: (children: Size<UnderlyingSpace>[]) => {
+          let xSpace = UNDEFINED;
+          const xChildrenPositionSpaces = children.filter(
+            (child) => child[0].kind === "position"
+          );
+          const xChildrenOrdinalSpaces = children.filter(
+            (child) => child[0].kind === "ordinal"
+          );
 
-        let ySpace = UNDEFINED;
-        const yChildrenPositionSpaces = children.filter(
-          (child) => child[1].kind === "position"
-        );
-        const yChildrenOrdinalSpaces = children.filter(
-          (child) => child[1].kind === "ordinal"
-        );
+          if (
+            xChildrenPositionSpaces.length > 0 &&
+            xChildrenOrdinalSpaces.length === 0
+          ) {
+            xSpace = POSITION;
+          } else if (xChildrenOrdinalSpaces.length > 0) {
+            xSpace = ORDINAL;
+          }
 
-        if (
-          yChildrenPositionSpaces.length > 0 &&
-          yChildrenOrdinalSpaces.length === 0
-        ) {
-          ySpace = POSITION;
-        } else if (yChildrenOrdinalSpaces.length > 0) {
-          ySpace = ORDINAL;
-        }
+          let ySpace = UNDEFINED;
+          const yChildrenPositionSpaces = children.filter(
+            (child) => child[1].kind === "position"
+          );
+          const yChildrenOrdinalSpaces = children.filter(
+            (child) => child[1].kind === "ordinal"
+          );
 
-        return [xSpace, ySpace];
-      },
-      inferPosDomains: (childPosDomains: Size<Domain>[]) => {
-        // unify continuous domains of children for each direction
-        return [
-          canUnifyDomains(
-            childPosDomains.map((childPosDomain) => childPosDomain[0])
-          )
-            ? unifyContinuousDomains(
-                childPosDomains.map((childPosDomain) => childPosDomain[0])
-              )
-            : undefined,
-          canUnifyDomains(
-            childPosDomains.map((childPosDomain) => childPosDomain[1])
-          )
-            ? unifyContinuousDomains(
-                childPosDomains.map((childPosDomain) => childPosDomain[1])
-              )
-            : undefined,
-        ];
-      },
-      inferSizeDomains: (shared, children) => {
-        // TODO: only works for polar2 right now
-        // size = [2 * Math.PI, Math.min(size[0], size[1]) / 2 - 30];
-        const childMeasures = children.map((child) => child.inferSizeDomains());
-        const childMeasuresWidth = childMeasures.map((cm) => cm[0]);
-        const childMeasuresHeight = childMeasures.map((cm) => cm[1]);
+          if (
+            yChildrenPositionSpaces.length > 0 &&
+            yChildrenOrdinalSpaces.length === 0
+          ) {
+            ySpace = POSITION;
+          } else if (yChildrenOrdinalSpaces.length > 0) {
+            ySpace = ORDINAL;
+          }
 
-        return {
-          w: Monotonic.max(...childMeasuresWidth),
-          h: Monotonic.max(...childMeasuresHeight),
-        };
-      },
-      layout: (shared, size, scaleFactors, children, measurement) => {
-        /* TODO: need correct scale factors */
-        // TODO: only works for polar2 right now
-        size = [2 * Math.PI, Math.min(size[0], size[1]) / 2 - 30];
-        const childPlaceables = children.map((child) =>
-          child.layout(size, [1, 1])
-        );
+          return [xSpace, ySpace];
+        },
+        inferPosDomains: (childPosDomains: Size<Domain>[]) => {
+          // unify continuous domains of children for each direction
+          return [
+            canUnifyDomains(
+              childPosDomains.map((childPosDomain) => childPosDomain[0])
+            )
+              ? unifyContinuousDomains(
+                  childPosDomains.map((childPosDomain) => childPosDomain[0])
+                )
+              : undefined,
+            canUnifyDomains(
+              childPosDomains.map((childPosDomain) => childPosDomain[1])
+            )
+              ? unifyContinuousDomains(
+                  childPosDomains.map((childPosDomain) => childPosDomain[1])
+                )
+              : undefined,
+          ];
+        },
+        inferSizeDomains: (shared, children) => {
+          // TODO: only works for polar2 right now
+          // size = [2 * Math.PI, Math.min(size[0], size[1]) / 2 - 30];
+          const childMeasures = children.map((child) =>
+            child.inferSizeDomains()
+          );
+          const childMeasuresWidth = childMeasures.map((cm) => cm[0]);
+          const childMeasuresHeight = childMeasures.map((cm) => cm[1]);
 
-        /* TODO: maybe have to be smarter about this... */
-        const minX = Math.min(
-          ...childPlaceables.map(
-            (childPlaceable) => childPlaceable.dims[0].min!
-          )
-        );
-        const maxX = Math.max(
-          ...childPlaceables.map(
-            (childPlaceable) => childPlaceable.dims[0].max!
-          )
-        );
-        const minY = Math.min(
-          ...childPlaceables.map(
-            (childPlaceable) => childPlaceable.dims[1].min!
-          )
-        );
-        const maxY = Math.max(
-          ...childPlaceables.map(
-            (childPlaceable) => childPlaceable.dims[1].max!
-          )
-        );
+          return {
+            w: Monotonic.max(...childMeasuresWidth),
+            h: Monotonic.max(...childMeasuresHeight),
+          };
+        },
+        layout: (shared, size, scaleFactors, children, measurement) => {
+          /* TODO: need correct scale factors */
+          // TODO: only works for polar2 right now
+          size = [2 * Math.PI, Math.min(size[0], size[1]) / 2 - 30];
+          const childPlaceables = children.map((child) =>
+            child.layout(size, [1, 1])
+          );
 
-        return {
-          intrinsicDims: {
-            x: minX,
-            y: minY,
-            w: maxX - minX,
-            h: maxY - minY,
-          },
-          transform: {
-            translate: [
-              dims[0].min !== undefined ? dims[0].min - minX : undefined,
-              dims[1].min !== undefined ? dims[1].min - minY : undefined,
-            ],
-          },
-        };
-      },
-      render: ({ transform }) => {
-        const gridLines = () => {
-          /* take an evenly space net of lines covering the space, map them through the space, and
+          /* TODO: maybe have to be smarter about this... */
+          const minX = Math.min(
+            ...childPlaceables.map(
+              (childPlaceable) => childPlaceable.dims[0].min!
+            )
+          );
+          const maxX = Math.max(
+            ...childPlaceables.map(
+              (childPlaceable) => childPlaceable.dims[0].max!
+            )
+          );
+          const minY = Math.min(
+            ...childPlaceables.map(
+              (childPlaceable) => childPlaceable.dims[1].min!
+            )
+          );
+          const maxY = Math.max(
+            ...childPlaceables.map(
+              (childPlaceable) => childPlaceable.dims[1].max!
+            )
+          );
+
+          return {
+            intrinsicDims: {
+              x: minX,
+              y: minY,
+              w: maxX - minX,
+              h: maxY - minY,
+            },
+            transform: {
+              translate: [
+                dims[0].min !== undefined ? dims[0].min - minX : undefined,
+                dims[1].min !== undefined ? dims[1].min - minY : undefined,
+              ],
+            },
+          };
+        },
+        render: ({ transform }) => {
+          const gridLines = () => {
+            /* take an evenly space net of lines covering the space, map them through the space, and
           render the paths */
-          // const domain = space.inferDomain({ width, height });
-          const lines = [];
-          const ticks = [];
+            // const domain = space.inferDomain({ width, height });
+            const lines = [];
+            const ticks = [];
 
-          const domain = coordTransform.domain;
+            const domain = coordTransform.domain;
 
-          for (
-            let i = domain[0].min!;
-            i <= domain[0].max!;
-            i += domain[0].size! / 10
-          ) {
-            const line = transformPath(
-              path(
-                [
-                  [i, domain[1].min!],
-                  [i, domain[1].max!],
-                ],
-                { subdivision: 100 }
-              ),
-              coordTransform
+            for (
+              let i = domain[0].min!;
+              i <= domain[0].max!;
+              i += domain[0].size! / 10
+            ) {
+              const line = transformPath(
+                path(
+                  [
+                    [i, domain[1].min!],
+                    [i, domain[1].max!],
+                  ],
+                  { subdivision: 100 }
+                ),
+                coordTransform
+              );
+              lines.push(
+                <path d={pathToSVGPath(line)} stroke={black} fill="none" />
+              );
+              const [x, y] = coordTransform.transform([i, domain[1].max!]);
+              ticks.push(
+                <text x={x} y={y} /* dy="-1em" */ font-size="8pt" fill={black}>
+                  {i.toFixed(0)}
+                </text>
+              );
+            }
+            for (
+              let i = domain[1].min!;
+              i <= domain[1].max!;
+              i += domain[1].size! / 10
+            ) {
+              const line = transformPath(
+                path(
+                  [
+                    [domain[0].min!, i],
+                    [domain[0].max!, i],
+                  ],
+                  { subdivision: 100 }
+                ),
+                coordTransform
+              );
+              lines.push(
+                <path d={pathToSVGPath(line)} stroke={black} fill="none" />
+              );
+              const [x, y] = coordTransform.transform([
+                domain[0].max! + domain[0].size! / 20,
+                i,
+              ]);
+              ticks.push(
+                <text x={x} y={y} /* dy="-1em" */ font-size="8pt" fill={black}>
+                  {i.toFixed(0)}
+                </text>
+              );
+            }
+            return (
+              <g>
+                {lines}
+                {ticks}
+              </g>
             );
-            lines.push(
-              <path d={pathToSVGPath(line)} stroke={black} fill="none" />
-            );
-            const [x, y] = coordTransform.transform([i, domain[1].max!]);
-            ticks.push(
-              <text x={x} y={y} /* dy="-1em" */ font-size="8pt" fill={black}>
-                {i.toFixed(0)}
-              </text>
-            );
-          }
-          for (
-            let i = domain[1].min!;
-            i <= domain[1].max!;
-            i += domain[1].size! / 10
-          ) {
-            const line = transformPath(
-              path(
-                [
-                  [domain[0].min!, i],
-                  [domain[0].max!, i],
-                ],
-                { subdivision: 100 }
-              ),
-              coordTransform
-            );
-            lines.push(
-              <path d={pathToSVGPath(line)} stroke={black} fill="none" />
-            );
-            const [x, y] = coordTransform.transform([
-              domain[0].max! + domain[0].size! / 20,
-              i,
-            ]);
-            ticks.push(
-              <text x={x} y={y} /* dy="-1em" */ font-size="8pt" fill={black}>
-                {i.toFixed(0)}
-              </text>
-            );
-          }
+          };
+
+          const flattenedChildren = children.flatMap((child) =>
+            flattenLayout(child)
+          );
+
           return (
-            <g>
-              {lines}
-              {ticks}
+            <g
+              transform={`translate(${transform?.translate?.[0] ?? 0}, ${transform?.translate?.[1] ?? 0})`}
+            >
+              {flattenedChildren.map((child) =>
+                child.INTERNAL_render(coordTransform)
+              )}
+              <Show when={grid}>{gridLines()}</Show>
             </g>
           );
-        };
-
-        const flattenedChildren = children.flatMap((child) =>
-          flattenLayout(child)
-        );
-
-        return (
-          <g
-            transform={`translate(${transform?.translate?.[0] ?? 0}, ${transform?.translate?.[1] ?? 0})`}
-          >
-            {flattenedChildren.map((child) =>
-              child.INTERNAL_render(coordTransform)
-            )}
-            <Show when={grid}>{gridLines()}</Show>
-          </g>
-        );
+        },
       },
-    },
-    children
-  );
-};
+      children
+    );
+  }
+);
