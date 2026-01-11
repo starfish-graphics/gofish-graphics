@@ -2,12 +2,6 @@ import * as Monotonic from "../../util/monotonic";
 import { GoFishNode } from "../_node";
 import { Size, elaborateDims, FancyDims } from "../dims";
 import {
-  canUnifyDomains,
-  Domain,
-  unifyContinuousDomains,
-  ContinuousDomain,
-} from "../domain";
-import {
   UNDEFINED,
   POSITION,
   UnderlyingSpace,
@@ -119,39 +113,6 @@ export const layer = withGoFishSequential(
           }
 
           return [xSpace, ySpace];
-        },
-        inferPosDomains: (childPosDomains: Size<Domain>[]) => {
-          // unify continuous domains of children for each direction
-
-          const filteredXChildDomains = childPosDomains
-            .map((childPosDomain) => childPosDomain[0])
-            .filter(
-              (d): d is ContinuousDomain =>
-                d !== undefined && d.type === "continuous"
-            );
-          const filteredYChildDomains = childPosDomains
-            .map((childPosDomain) => childPosDomain[1])
-            .filter(
-              (d): d is ContinuousDomain =>
-                d !== undefined && d.type === "continuous"
-            );
-
-          const result = [
-            filteredXChildDomains.length > 0 &&
-            canUnifyDomains(filteredXChildDomains)
-              ? unifyContinuousDomains(filteredXChildDomains)
-              : undefined,
-            filteredYChildDomains.length > 0 &&
-            canUnifyDomains(filteredYChildDomains)
-              ? unifyContinuousDomains(filteredYChildDomains)
-              : undefined,
-          ] as Size<ContinuousDomain | undefined>;
-          // console.log("layer.inferPosDomains", {
-          //   filteredXChildDomains,
-          //   filteredYChildDomains,
-          //   result,
-          // });
-          return result;
         },
         inferSizeDomains: (shared, children) => {
           const childMeasures = children.map((child) =>

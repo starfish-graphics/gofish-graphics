@@ -58,9 +58,6 @@ export const connect = withGoFish(
             h: Monotonic.linear(0, 0),
           };
         },
-        inferPosDomains: (childPosDomains: Size<Domain>[]) => {
-          return [undefined, undefined];
-        },
         layout: (shared, size, scaleFactors, children) => {
           const defaultColor = children[0]?.color ?? "black";
 

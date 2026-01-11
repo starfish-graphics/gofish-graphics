@@ -76,22 +76,6 @@ export const ellipse = ({
 
         return [underlyingSpaceX, underlyingSpaceY];
       },
-      inferPosDomains: (childPosDomains: Size<Domain>[]) => {
-        return [
-          isValue(dims[0].min)
-            ? continuous({
-                value: [getValue(dims[0].min)!, getValue(dims[0].min)!],
-                measure: getMeasure(dims[0].min),
-              })
-            : undefined,
-          isValue(dims[1].min)
-            ? continuous({
-                value: [getValue(dims[1].min)!, getValue(dims[1].min)!],
-                measure: getMeasure(dims[1].min),
-              })
-            : undefined,
-        ];
-      },
       // inferDomains: () => {
       //   return [
       //     isValue(dims[0].size)

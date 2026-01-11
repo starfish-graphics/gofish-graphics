@@ -5,7 +5,6 @@ import { GoFishAST } from "../_ast";
 import { GoFishNode } from "../_node";
 import { elaborateDims, FancyDims, Interval, Size } from "../dims";
 import { black } from "../../color";
-import { canUnifyDomains, Domain, unifyContinuousDomains } from "../domain";
 import {
   UnderlyingSpace,
   UNDEFINED,
@@ -144,25 +143,6 @@ export const coord = withGoFish(
           }
 
           return [xSpace, ySpace];
-        },
-        inferPosDomains: (childPosDomains: Size<Domain>[]) => {
-          // unify continuous domains of children for each direction
-          return [
-            canUnifyDomains(
-              childPosDomains.map((childPosDomain) => childPosDomain[0])
-            )
-              ? unifyContinuousDomains(
-                  childPosDomains.map((childPosDomain) => childPosDomain[0])
-                )
-              : undefined,
-            canUnifyDomains(
-              childPosDomains.map((childPosDomain) => childPosDomain[1])
-            )
-              ? unifyContinuousDomains(
-                  childPosDomains.map((childPosDomain) => childPosDomain[1])
-                )
-              : undefined,
-          ];
         },
         inferSizeDomains: (shared, children) => {
           // TODO: only works for polar2 right now

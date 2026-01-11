@@ -111,9 +111,6 @@ export class GoFishNode {
   // private inferDomains: (childDomains: Size<Domain>[]) => FancySize<Domain | undefined>;
   private _resolveUnderlyingSpace: ResolveUnderlyingSpace;
   private _underlyingSpace?: Size<UnderlyingSpace> = undefined;
-  private _inferPosDomains: (
-    childPosDomains: Size<ContinuousDomain>[]
-  ) => FancySize<ContinuousDomain | undefined>;
   private _inferSizeDomains: InferSizeDomains;
   private _layout: Layout;
   private _render: Render;
@@ -137,7 +134,6 @@ export class GoFishNode {
       inferSizeDomains,
       layout,
       render,
-      inferPosDomains,
       shared = [false, false],
       color,
     }: {
@@ -151,9 +147,6 @@ export class GoFishNode {
       inferSizeDomains: InferSizeDomains;
       layout: Layout;
       render: Render;
-      inferPosDomains: (
-        childPosDomains: Size<ContinuousDomain>[]
-      ) => FancySize<ContinuousDomain | undefined>;
       shared?: Size<boolean>;
       color?: MaybeValue<string>;
     },
@@ -166,7 +159,6 @@ export class GoFishNode {
     this._inferSizeDomains = inferSizeDomains;
     this._layout = layout;
     this._render = render;
-    this._inferPosDomains = inferPosDomains;
     this.children = children;
     children.forEach((child) => {
       child.parent = this;
@@ -226,16 +218,6 @@ export class GoFishNode {
       )
     );
     return this._underlyingSpace;
-  }
-
-  public inferPosDomains(): Size<ContinuousDomain | undefined> {
-    const posDomains = elaborateSize(
-      this._inferPosDomains(
-        this.children.map((child) => child.inferPosDomains())
-      )
-    );
-    // this.posDomains = posDomains;
-    return posDomains;
   }
 
   public inferSizeDomains(): Size<ScaleFactorFunction> {

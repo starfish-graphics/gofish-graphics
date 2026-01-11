@@ -149,33 +149,6 @@ export const rect = ({
 
         return [underlyingSpaceX, underlyingSpaceY];
       },
-      inferPosDomains: (childPosDomains: Size<Domain>[]) => {
-        const result = [
-          isValue(dims[0].min)
-            ? continuous({
-                value: [
-                  getValue(dims[0].min),
-                  isValue(dims[0].size)
-                    ? getValue(dims[0].min) + getValue(dims[0].size)
-                    : getValue(dims[0].min),
-                ],
-                measure: getMeasure(dims[0].min),
-              })
-            : undefined,
-          isValue(dims[1].min)
-            ? continuous({
-                value: [
-                  getValue(dims[1].min),
-                  isValue(dims[1].size)
-                    ? getValue(dims[1].min) + getValue(dims[1].size)
-                    : getValue(dims[1].min),
-                ],
-                measure: getMeasure(dims[1].min),
-              })
-            : undefined,
-        ];
-        return result;
-      },
       inferSizeDomains: (shared, children) => {
         return {
           w: computeIntrinsicSize(dims[0].size),
