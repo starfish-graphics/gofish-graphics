@@ -207,7 +207,7 @@ export const rect = ({
           h = computeSize(dims[1].size, scaleFactors?.[1]!, size[1]);
         }
 
-        return {
+        const result = {
           intrinsicDims: [
             {
               min: w >= 0 ? 0 : w,
@@ -228,6 +228,7 @@ export const rect = ({
             translate: [x, y],
           },
         };
+        return result;
       },
       render: ({
         intrinsicDims,
