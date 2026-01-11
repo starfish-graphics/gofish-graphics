@@ -33,6 +33,7 @@ import { scaleContext } from "../gofish";
 import * as Monotonic from "../../util/monotonic";
 import { computeAesthetic, computeSize } from "../../util";
 import { DIFFERENCE, ORDINAL, POSITION, UNDEFINED } from "../underlyingSpace";
+import { interval } from "../../util/interval";
 
 const computeIntrinsicSize = (
   input: MaybeValue<number> | undefined
@@ -126,7 +127,7 @@ export const rect = ({
         } else {
           const min = isValue(dims[0].min) ? getValue(dims[0].min) : 0;
           const size = isValue(dims[0].size) ? getValue(dims[0].size) : 0;
-          const domain = size >= 0 ? [min, min + size] : [min + size, min];
+          const domain = size >= 0 ? interval(min, min + size) : interval(min + size, min);
           underlyingSpaceX = POSITION(domain);
         }
 
@@ -140,7 +141,7 @@ export const rect = ({
         } else {
           const min = isValue(dims[1].min) ? getValue(dims[1].min) : 0;
           const size = isValue(dims[1].size) ? getValue(dims[1].size) : 0;
-          const domain = size >= 0 ? [min, min + size] : [min + size, min];
+          const domain = size >= 0 ? interval(min, min + size) : interval(min + size, min);
           underlyingSpaceY = POSITION(domain);
         }
 

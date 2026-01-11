@@ -82,7 +82,7 @@ export const layer = withGoFishSequential(
             const domain = Interval.unionAll(
               ...xChildrenPositionSpaces.map((child) => child[0].domain)
             );
-            xSpace = POSITION([domain.min, domain.max]);
+            xSpace = POSITION(domain);
           } else if (xChildrenOrdinalSpaces.length > 0) {
             xSpace = ORDINAL;
           }
@@ -107,7 +107,7 @@ export const layer = withGoFishSequential(
             const domain = Interval.unionAll(
               ...yChildrenPositionSpaces.map((child) => child[1].domain)
             );
-            ySpace = POSITION([domain.min, domain.max]);
+            ySpace = POSITION(domain);
           } else if (yChildrenOrdinalSpaces.length > 0) {
             ySpace = ORDINAL;
           }

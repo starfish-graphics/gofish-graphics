@@ -95,7 +95,7 @@ export const stack = withGoFish(
               (child) => child[alignDir].domain!
             );
             const domain = Interval.unionAll(...childDomains);
-            alignSpace = POSITION([domain.min, domain.max]);
+            alignSpace = POSITION(domain);
           }
           // if children are all UNDEFINED or POSITION and alignment is middle, return DIFFERENCE
           else if (
@@ -129,7 +129,7 @@ export const stack = withGoFish(
               })
               .reduce((a, b) => a + b, 0);
             stackSpace = POSITION(
-              totalWidth >= 0 ? [0, totalWidth] : [totalWidth, 0]
+              totalWidth >= 0 ? Interval.interval(0, totalWidth) : Interval.interval(totalWidth, 0)
             );
           }
 
