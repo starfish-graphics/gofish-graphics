@@ -24,9 +24,6 @@ export const enclose = withGoFish(
       resolveUnderlyingSpace: (children: Size<UnderlyingSpace>[]) => {
         return [UNDEFINED, UNDEFINED];
       },
-      inferPosDomains: (childPosDomains: Size<Domain>[]) => {
-        return [undefined, undefined];
-      },
       inferSizeDomains: (shared, children) => {
         const childMeasures = children.map((child) => child.inferSizeDomains());
 

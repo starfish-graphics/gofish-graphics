@@ -1,6 +1,5 @@
 import { GoFishNode } from "../_node";
 import { Size, elaborateDims, FancyDims } from "../dims";
-import { Domain, continuous } from "../domain";
 import { getMeasure, getValue, isValue, MaybeValue } from "../data";
 import { POSITION, UNDEFINED, UnderlyingSpace } from "../underlyingSpace";
 import { withGoFish } from "../withGoFish";
@@ -30,22 +29,6 @@ export const position = withGoFish(
             isValue(options.y)
               ? POSITION([getValue(options.y)!, getValue(options.y)!])
               : UNDEFINED,
-          ];
-        },
-        inferPosDomains: (childPosDomains: Size<Domain>[]) => {
-          return [
-            isValue(options.x)
-              ? continuous({
-                  value: [getValue(options.x)!, getValue(options.x)!],
-                  measure: getMeasure(options.x),
-                })
-              : undefined,
-            isValue(options.y)
-              ? continuous({
-                  value: [getValue(options.y)!, getValue(options.y)!],
-                  measure: getMeasure(options.y),
-                })
-              : undefined,
           ];
         },
         inferSizeDomains: (shared, children) => {

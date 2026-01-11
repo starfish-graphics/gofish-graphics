@@ -11,13 +11,6 @@ import {
   Size,
 } from "../dims";
 import _, { Collection, size } from "lodash";
-import {
-  canUnifyDomains,
-  continuous,
-  ContinuousDomain,
-  Domain,
-  unifyContinuousDomains,
-} from "../domain";
 import { computeAesthetic, computeSize, findTargetMonotonic } from "../../util";
 import { GoFishAST } from "../_ast";
 import { getScaleContext } from "../gofish";
@@ -158,58 +151,6 @@ export const stack = withGoFish(
             [stackDir]: stackSpace,
             [alignDir]: alignSpace,
           };
-        },
-        inferPosDomains: (childPosDomains: Size<Domain>[]) => {
-          // For the stacking dimension, unify domains like in layer
-          // console.log("stack.inferPosDomains", { childPosDomains });
-          const filteredStackDirChildDomains = childPosDomains
-            .map((childPosDomain) => childPosDomain[stackDir])
-            .filter((d) => d !== undefined);
-
-          const filteredAlignDirChildDomains = childPosDomains
-            .map((childPosDomain) => childPosDomain[alignDir])
-            .filter((d) => d !== undefined);
-
-          const result = [undefined, undefined] as (
-            | ContinuousDomain
-            | undefined
-          )[];
-
-          if (
-            filteredStackDirChildDomains.length > 0 &&
-            canUnifyDomains(filteredStackDirChildDomains)
-          ) {
-            result[stackDir] = unifyContinuousDomains(
-              filteredStackDirChildDomains
-            );
-          } else if (isValue(dims[stackDir].min)) {
-            result[stackDir] = continuous({
-              value: [
-                getValue(dims[stackDir].min)!,
-                getValue(dims[stackDir].min)!,
-              ],
-              measure: getMeasure(dims[stackDir].min),
-            });
-          }
-
-          if (
-            filteredAlignDirChildDomains.length > 0 &&
-            canUnifyDomains(filteredAlignDirChildDomains)
-          ) {
-            result[alignDir] = unifyContinuousDomains(
-              filteredAlignDirChildDomains
-            );
-          } else if (isValue(dims[alignDir].min)) {
-            result[alignDir] = continuous({
-              value: [
-                getValue(dims[alignDir].min)!,
-                getValue(dims[alignDir].min)!,
-              ],
-              measure: getMeasure(dims[alignDir].min),
-            });
-          }
-
-          return result;
         },
         inferSizeDomains: (shared, children) => {
           const childSizeDomains = children.map((child) =>

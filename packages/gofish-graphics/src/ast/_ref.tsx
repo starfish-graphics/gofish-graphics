@@ -100,10 +100,6 @@ export class GoFishRef {
     this.selectedNode?.embed(direction);
   }
 
-  public inferPosDomains(): Size<Domain | undefined> {
-    return this.selectedNode?.inferPosDomains() ?? [undefined, undefined];
-  }
-
   public inferSizeDomains(): Size<ScaleFactorFunction | undefined> {
     return this.selectedNode?.inferSizeDomains() ?? [undefined, undefined];
   }

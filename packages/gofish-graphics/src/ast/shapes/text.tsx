@@ -47,7 +47,6 @@ export const text = ({
       name,
       key,
       type: "text",
-      inferPosDomains: () => [undefined, undefined],
       inferSizeDomains: () => {
         const finalText = isValue(textContent) ? getValue(textContent) : textContent;
         const { width, height } = estimateTextDimensions(finalText, fontSize, fontFamily);

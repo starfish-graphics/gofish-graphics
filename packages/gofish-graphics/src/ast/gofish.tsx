@@ -112,7 +112,6 @@ export async function layout(
   child.resolveColorScale();
   child.resolveNames();
   child.resolveKeys();
-  const [posDomainX, posDomainY] = child.inferPosDomains();
   const sizeDomains = child.inferSizeDomains();
   const [underlyingSpaceX, underlyingSpaceY] = child.resolveUnderlyingSpace();
 
@@ -130,9 +129,7 @@ export async function layout(
           }),
           w
         )
-      : posDomainX
-        ? computePosScale(posDomainX, w)
-        : undefined,
+      : undefined,
     underlyingSpaceY.kind === "position"
       ? computePosScale(
           continuous({
@@ -141,9 +138,7 @@ export async function layout(
           }),
           h
         )
-      : posDomainY
-        ? computePosScale(posDomainY, h)
-        : undefined,
+      : undefined,
   ];
 
   if (debug) {
