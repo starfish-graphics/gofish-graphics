@@ -43,9 +43,9 @@ export type UnderlyingSpace =
   | ORDINAL_TYPE
   | UNDEFINED_TYPE;
 
-export const POSITION = (domain: [number, number]): UnderlyingSpace => ({
+export const POSITION = (domain: Interval): UnderlyingSpace => ({
   kind: "position",
-  domain: interval(domain[0], domain[1]),
+  domain,
 });
 
 export const isPOSITION = (space: UnderlyingSpace): space is POSITION_TYPE =>

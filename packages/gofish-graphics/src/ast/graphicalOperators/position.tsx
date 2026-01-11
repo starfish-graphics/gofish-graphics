@@ -2,6 +2,7 @@ import { GoFishNode } from "../_node";
 import { Size, elaborateDims, FancyDims } from "../dims";
 import { getMeasure, getValue, isValue, MaybeValue } from "../data";
 import { POSITION, UNDEFINED, UnderlyingSpace } from "../underlyingSpace";
+import { interval } from "../../util/interval";
 import { withGoFish } from "../withGoFish";
 import { GoFishAST } from "../_ast";
 
@@ -24,10 +25,10 @@ export const position = withGoFish(
         resolveUnderlyingSpace: (children: Size<UnderlyingSpace>[]) => {
           return [
             isValue(options.x)
-              ? POSITION([getValue(options.x)!, getValue(options.x)!])
+              ? POSITION(interval(getValue(options.x)!, getValue(options.x)!))
               : UNDEFINED,
             isValue(options.y)
-              ? POSITION([getValue(options.y)!, getValue(options.y)!])
+              ? POSITION(interval(getValue(options.y)!, getValue(options.y)!))
               : UNDEFINED,
           ];
         },
