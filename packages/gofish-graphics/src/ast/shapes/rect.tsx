@@ -32,7 +32,7 @@ import { aesthetic, continuous, Domain } from "../domain";
 import { scaleContext } from "../gofish";
 import * as Monotonic from "../../util/monotonic";
 import { computeAesthetic, computeSize } from "../../util";
-import { INTERVAL, ORDINAL, POSITION, UNDEFINED } from "../underlyingSpace";
+import { DIFFERENCE, ORDINAL, POSITION, UNDEFINED } from "../underlyingSpace";
 
 const computeIntrinsicSize = (
   input: MaybeValue<number> | undefined
@@ -121,8 +121,8 @@ export const rect = ({
           // nothing is data-driven
           underlyingSpaceX = ORDINAL;
         } else if (isAesthetic(dims[0].min) && isValue(dims[0].size)) {
-          // the best we can do is interval
-          underlyingSpaceX = INTERVAL;
+          // the best we can do is difference
+          underlyingSpaceX = DIFFERENCE(getValue(dims[0].size)!);
         } else {
           const min = isValue(dims[0].min) ? getValue(dims[0].min) : 0;
           const size = isValue(dims[0].size) ? getValue(dims[0].size) : 0;
@@ -135,8 +135,8 @@ export const rect = ({
           // nothing is data-driven
           underlyingSpaceY = ORDINAL;
         } else if (isAesthetic(dims[1].min) && isValue(dims[1].size)) {
-          // the best we can do is interval
-          underlyingSpaceY = INTERVAL;
+          // the best we can do is difference
+          underlyingSpaceY = DIFFERENCE(getValue(dims[1].size)!);
         } else {
           const min = isValue(dims[1].min) ? getValue(dims[1].min) : 0;
           const size = isValue(dims[1].size) ? getValue(dims[1].size) : 0;

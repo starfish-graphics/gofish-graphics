@@ -12,7 +12,7 @@ import { computePosScale } from "./domain";
 import { tickIncrement, ticks, nice } from "d3-array";
 import { isConstant } from "../util/monotonic";
 import {
-  isINTERVAL,
+  isDIFFERENCE,
   isPOSITION,
   type UnderlyingSpace,
 } from "./underlyingSpace";
@@ -405,7 +405,7 @@ export const render = (
             </Show>
             <Show
               when={
-                isINTERVAL(underlyingSpaceY) &&
+                isDIFFERENCE(underlyingSpaceY) &&
                 scaleContext?.y &&
                 "scaleFactor" in scaleContext.y
               }
@@ -528,10 +528,10 @@ export const render = (
               })()}
             </Show>
 
-            {/* x axis (interval) */}
+            {/* x axis (difference) */}
             <Show
               when={
-                isINTERVAL(underlyingSpaceX) &&
+                isDIFFERENCE(underlyingSpaceX) &&
                 scaleContext?.x &&
                 "scaleFactor" in scaleContext.x
               }

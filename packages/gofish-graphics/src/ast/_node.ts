@@ -30,7 +30,7 @@ import { color6 } from "../color";
 import * as Monotonic from "../util/monotonic";
 import { findTargetMonotonic } from "../util";
 import {
-  isINTERVAL,
+  isDIFFERENCE,
   isORDINAL,
   isPOSITION,
   isUNDEFINED,
@@ -490,8 +490,8 @@ export const debugUnderlyingSpaceTree = (
         .map((s) => {
           if (isPOSITION(s)) {
             return `position(${toJSON(s.domain)})`;
-          } else if (isINTERVAL(s)) {
-            return `interval(${s.width})`;
+          } else if (isDIFFERENCE(s)) {
+            return `difference(${s.width})`;
           } else if (isORDINAL(s)) {
             return `ordinal(${s.spacing})`;
           } else if (isUNDEFINED(s)) {
@@ -504,8 +504,8 @@ export const debugUnderlyingSpaceTree = (
     } else {
       if (isPOSITION(space)) {
         return `position(${toJSON(space.domain)})`;
-      } else if (isINTERVAL(space)) {
-        return `interval(${space.width})`;
+      } else if (isDIFFERENCE(space)) {
+        return `difference(${space.width})`;
       } else if (isORDINAL(space)) {
         return `ordinal(${space.spacing})`;
       } else if (isUNDEFINED(space)) {
