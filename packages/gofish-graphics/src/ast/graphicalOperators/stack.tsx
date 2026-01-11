@@ -17,7 +17,7 @@ import { getScaleContext } from "../gofish";
 import { withGoFish } from "../withGoFish";
 import * as Monotonic from "../../util/monotonic";
 import {
-  INTERVAL,
+  DIFFERENCE,
   ORDINAL,
   POSITION,
   UNDEFINED,
@@ -97,7 +97,7 @@ export const stack = withGoFish(
             const domain = Interval.unionAll(...childDomains);
             alignSpace = POSITION([domain.min, domain.max]);
           }
-          // if children are all UNDEFINED or POSITION and alignment is middle, return INTERVAL
+          // if children are all UNDEFINED or POSITION and alignment is middle, return DIFFERENCE
           else if (
             children.every((child) => isPOSITION(child[alignDir])) &&
             alignment === "middle"
@@ -105,7 +105,7 @@ export const stack = withGoFish(
             const domain = Interval.unionAll(
               ...children.map((child) => child[alignDir].domain!)
             );
-            alignSpace = INTERVAL(Interval.width(domain));
+            alignSpace = DIFFERENCE(Interval.width(domain));
           } else {
             alignSpace = UNDEFINED;
           }

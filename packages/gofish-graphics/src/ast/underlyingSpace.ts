@@ -3,7 +3,7 @@ import { interval, Interval } from "../util/interval";
 
 export type UnderlyingSpaceKind =
   | "position"
-  | "interval"
+  | "difference"
   | "ordinal"
   | "undefined";
 
@@ -15,8 +15,8 @@ export type POSITION_TYPE = {
   source?: string;
 };
 
-export type INTERVAL_TYPE = {
-  kind: "interval";
+export type DIFFERENCE_TYPE = {
+  kind: "difference";
   width: number;
   spacing?: number;
   ordinalGroupId?: string;
@@ -39,7 +39,7 @@ export type UNDEFINED_TYPE = {
 
 export type UnderlyingSpace =
   | POSITION_TYPE
-  | INTERVAL_TYPE
+  | DIFFERENCE_TYPE
   | ORDINAL_TYPE
   | UNDEFINED_TYPE;
 
@@ -51,12 +51,12 @@ export const POSITION = (domain: [number, number]): UnderlyingSpace => ({
 export const isPOSITION = (space: UnderlyingSpace): space is POSITION_TYPE =>
   space.kind === "position";
 
-export const INTERVAL = (width: number): UnderlyingSpace => ({
-  kind: "interval",
+export const DIFFERENCE = (width: number): UnderlyingSpace => ({
+  kind: "difference",
   width,
 });
-export const isINTERVAL = (space: UnderlyingSpace): space is INTERVAL_TYPE =>
-  space.kind === "interval";
+export const isDIFFERENCE = (space: UnderlyingSpace): space is DIFFERENCE_TYPE =>
+  space.kind === "difference";
 
 export const ORDINAL: UnderlyingSpace = { kind: "ordinal" };
 export const isORDINAL = (space: UnderlyingSpace): space is ORDINAL_TYPE =>
