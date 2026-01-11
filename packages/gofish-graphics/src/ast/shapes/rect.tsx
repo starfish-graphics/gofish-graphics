@@ -127,7 +127,7 @@ export const rect = ({
         } else {
           const min = isValue(dims[0].min) ? getValue(dims[0].min) : 0;
           const size = isValue(dims[0].size) ? getValue(dims[0].size) : 0;
-          const domain = size >= 0 ? interval(min, min + size) : interval(min + size, min);
+          const domain = interval(min, min + size);
           underlyingSpaceX = POSITION(domain);
         }
 
@@ -141,7 +141,7 @@ export const rect = ({
         } else {
           const min = isValue(dims[1].min) ? getValue(dims[1].min) : 0;
           const size = isValue(dims[1].size) ? getValue(dims[1].size) : 0;
-          const domain = size >= 0 ? interval(min, min + size) : interval(min + size, min);
+          const domain = interval(min, min + size);
           underlyingSpaceY = POSITION(domain);
         }
 

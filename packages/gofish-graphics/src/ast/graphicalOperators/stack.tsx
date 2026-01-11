@@ -128,9 +128,7 @@ export const stack = withGoFish(
                 return domain ? Interval.width(domain) : 0;
               })
               .reduce((a, b) => a + b, 0);
-            stackSpace = POSITION(
-              totalWidth >= 0 ? Interval.interval(0, totalWidth) : Interval.interval(totalWidth, 0)
-            );
+            stackSpace = POSITION(Interval.interval(0, totalWidth));
           }
 
           // if children are all UNDEFINED or POSITION and spacing is > 0, return ORDINAL

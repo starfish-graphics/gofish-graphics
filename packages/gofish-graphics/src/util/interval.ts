@@ -4,10 +4,12 @@ export type Interval = {
 };
 
 /**
- * Creates an interval from min and max values
+ * Creates a normalized interval from two values.
+ * The values can be provided in any order; the function will always
+ * return an interval where min <= max.
  */
-export function interval(min: number, max: number): Interval {
-  return { min, max };
+export function interval(a: number, b: number): Interval {
+  return { min: Math.min(a, b), max: Math.max(a, b) };
 }
 
 /**
