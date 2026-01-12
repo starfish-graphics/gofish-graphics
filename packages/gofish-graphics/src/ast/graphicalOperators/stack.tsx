@@ -382,6 +382,7 @@ export const stack = withGoFish(
               [alignDir]: {
                 min: alignMin,
                 size: alignSize,
+                center: alignMin + alignSize / 2,
                 max: alignMax,
               },
               [stackDir]: {
