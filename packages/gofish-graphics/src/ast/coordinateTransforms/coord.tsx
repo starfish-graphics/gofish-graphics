@@ -4,12 +4,15 @@ import { path, pathToSVGPath, transformPath } from "../../path";
 import { GoFishAST } from "../_ast";
 import { GoFishNode } from "../_node";
 import { elaborateDims, FancyDims, Interval, Size } from "../dims";
+import * as IntervalLib from "../../util/interval";
 import { black } from "../../color";
 import {
   UnderlyingSpace,
   UNDEFINED,
   POSITION,
   ORDINAL,
+  isORDINAL,
+  isPOSITION,
 } from "../underlyingSpace";
 import { withGoFish } from "../withGoFish";
 
@@ -107,7 +110,10 @@ export const coord = withGoFish(
         type: "coord",
         key,
         name,
-        resolveUnderlyingSpace: (children: Size<UnderlyingSpace>[]) => {
+        resolveUnderlyingSpace: (
+          children: Size<UnderlyingSpace>[],
+          _childNodes: GoFishAST[]
+        ) => {
           let xSpace = UNDEFINED;
           const xChildrenPositionSpaces = children.filter(
             (child) => child[0].kind === "position"
@@ -120,9 +126,23 @@ export const coord = withGoFish(
             xChildrenPositionSpaces.length > 0 &&
             xChildrenOrdinalSpaces.length === 0
           ) {
-            xSpace = POSITION;
+            const domain = IntervalLib.unionAll(
+              ...xChildrenPositionSpaces
+                .map((child) => child[0])
+                .filter(isPOSITION)
+                .map((space) => space.domain)
+            );
+            xSpace = POSITION(domain);
           } else if (xChildrenOrdinalSpaces.length > 0) {
-            xSpace = ORDINAL;
+            // Collect and merge domains from all child ordinal spaces
+            const allKeys = new Set<string>();
+            xChildrenOrdinalSpaces.forEach((child) => {
+              const ordinalSpace = child[0];
+              if (isORDINAL(ordinalSpace) && ordinalSpace.domain) {
+                ordinalSpace.domain.forEach((key) => allKeys.add(key));
+              }
+            });
+            xSpace = ORDINAL(Array.from(allKeys));
           }
 
           let ySpace = UNDEFINED;
@@ -137,9 +157,23 @@ export const coord = withGoFish(
             yChildrenPositionSpaces.length > 0 &&
             yChildrenOrdinalSpaces.length === 0
           ) {
-            ySpace = POSITION;
+            const domain = IntervalLib.unionAll(
+              ...yChildrenPositionSpaces
+                .map((child) => child[1])
+                .filter(isPOSITION)
+                .map((space) => space.domain)
+            );
+            ySpace = POSITION(domain);
           } else if (yChildrenOrdinalSpaces.length > 0) {
-            ySpace = ORDINAL;
+            // Collect and merge domains from all child ordinal spaces
+            const allKeys = new Set<string>();
+            yChildrenOrdinalSpaces.forEach((child) => {
+              const ordinalSpace = child[1];
+              if (isORDINAL(ordinalSpace) && ordinalSpace.domain) {
+                ordinalSpace.domain.forEach((key) => allKeys.add(key));
+              }
+            });
+            ySpace = ORDINAL(Array.from(allKeys));
           }
 
           return [xSpace, ySpace];

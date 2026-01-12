@@ -49,7 +49,7 @@ export const connect = withGoFish(
         type: "connect",
         shared: [false, false],
         color: fill,
-        resolveUnderlyingSpace: (children: Size<UnderlyingSpace>[]) => {
+        resolveUnderlyingSpace: (children: Size<UnderlyingSpace>[], _childNodes: GoFishAST[]) => {
           return [UNDEFINED, UNDEFINED];
         },
         inferSizeDomains: (shared, children) => {

@@ -6,6 +6,7 @@ import {
   POSITION,
   UnderlyingSpace,
   ORDINAL,
+  isORDINAL,
 } from "../underlyingSpace";
 import * as Interval from "../../util/interval";
 import { computeSize } from "../../util";
@@ -61,7 +62,10 @@ export const layer = withGoFishSequential(
         type: options.box === true ? "box" : "layer",
         key: options.key,
         shared: [false, false],
-        resolveUnderlyingSpace: (children: Size<UnderlyingSpace>[]) => {
+        resolveUnderlyingSpace: (
+          children: Size<UnderlyingSpace>[],
+          _childNodes: GoFishAST[]
+        ) => {
           let xSpace = UNDEFINED;
           const xChildrenPositionSpaces = children.filter(
             (
@@ -84,7 +88,15 @@ export const layer = withGoFishSequential(
             );
             xSpace = POSITION(domain);
           } else if (xChildrenOrdinalSpaces.length > 0) {
-            xSpace = ORDINAL;
+            // Collect and merge domains from all child ordinal spaces
+            const allKeys = new Set<string>();
+            xChildrenOrdinalSpaces.forEach((child) => {
+              const ordinalSpace = child[0];
+              if (isORDINAL(ordinalSpace) && ordinalSpace.domain) {
+                ordinalSpace.domain.forEach((key) => allKeys.add(key));
+              }
+            });
+            xSpace = ORDINAL(Array.from(allKeys));
           }
 
           let ySpace = UNDEFINED;
@@ -109,7 +121,15 @@ export const layer = withGoFishSequential(
             );
             ySpace = POSITION(domain);
           } else if (yChildrenOrdinalSpaces.length > 0) {
-            ySpace = ORDINAL;
+            // Collect and merge domains from all child ordinal spaces
+            const allKeys = new Set<string>();
+            yChildrenOrdinalSpaces.forEach((child) => {
+              const ordinalSpace = child[1];
+              if (isORDINAL(ordinalSpace) && ordinalSpace.domain) {
+                ordinalSpace.domain.forEach((key) => allKeys.add(key));
+              }
+            });
+            ySpace = ORDINAL(Array.from(allKeys));
           }
 
           return [xSpace, ySpace];
@@ -190,7 +210,8 @@ export const layer = withGoFishSequential(
             size: cp.dims[1].size,
           }));
 
-          const translateY = dims[1].min !== undefined ? dims[1].min - minY : undefined;
+          const translateY =
+            dims[1].min !== undefined ? dims[1].min - minY : undefined;
 
           return {
             intrinsicDims: [

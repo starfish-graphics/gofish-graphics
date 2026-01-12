@@ -690,8 +690,13 @@ export const render = (
             >
               {(() => {
                 const scale = ordinalScales[0]!;
-                const entries = Object.entries(keyContext ?? {});
+                // Use domain from ORDINAL space for top-level keys
+                const domain = isORDINAL(underlyingSpaceX)
+                  ? underlyingSpaceX.domain
+                  : undefined;
+                const labelKeys = domain && domain.length > 0 ? domain : [];
                 // Get the minimum Y position for label placement
+                const entries = Object.entries(keyContext ?? {});
                 const minY = entries.reduce((min, [, node]) => {
                   if (!("intrinsicDims" in node) || !node.intrinsicDims)
                     return min;
@@ -711,8 +716,8 @@ export const render = (
                 }, Infinity);
                 return (
                   <g>
-                    <For each={entries}>
-                      {([key]) => {
+                    <For each={labelKeys}>
+                      {(key) => {
                         const xPos = scale(key);
                         if (xPos === undefined) return null;
                         return (
@@ -744,8 +749,13 @@ export const render = (
             >
               {(() => {
                 const scale = ordinalScales[1]!;
-                const entries = Object.entries(keyContext ?? {});
+                // Use domain from ORDINAL space for top-level keys
+                const domain = isORDINAL(underlyingSpaceY)
+                  ? underlyingSpaceY.domain
+                  : undefined;
+                const labelKeys = domain && domain.length > 0 ? domain : [];
                 // Get the minimum X position for label placement
+                const entries = Object.entries(keyContext ?? {});
                 const minX = entries.reduce((min, [, node]) => {
                   if (!("intrinsicDims" in node) || !node.intrinsicDims)
                     return min;
@@ -765,8 +775,8 @@ export const render = (
                 }, Infinity);
                 return (
                   <g>
-                    <For each={entries}>
-                      {([key]) => {
+                    <For each={labelKeys}>
+                      {(key) => {
                         const yPos = scale(key);
                         if (yPos === undefined) return null;
                         return (

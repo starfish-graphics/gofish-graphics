@@ -37,6 +37,7 @@ export type ORDINAL_TYPE = {
   spacing?: number;
   ordinalGroupId?: string;
   source?: string;
+  domain?: string[]; // Top-level category keys for axis labels
 };
 
 export type UNDEFINED_TYPE = {
@@ -76,7 +77,10 @@ export const SIZE = (value: number): UnderlyingSpace => ({
 export const isSIZE = (space: UnderlyingSpace): space is SIZE_TYPE =>
   space.kind === "size";
 
-export const ORDINAL: UnderlyingSpace = { kind: "ordinal" };
+export const ORDINAL = (domain?: string[]): UnderlyingSpace => ({
+  kind: "ordinal",
+  domain,
+});
 export const isORDINAL = (space: UnderlyingSpace): space is ORDINAL_TYPE =>
   space.kind === "ordinal";
 

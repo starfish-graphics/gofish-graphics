@@ -9,6 +9,7 @@ import {
   transformPath,
 } from "../../path";
 import { GoFishNode } from "../_node";
+import { GoFishAST } from "../_ast";
 import { CoordinateTransform } from "../coordinateTransforms/coord";
 import { linear } from "../coordinateTransforms/linear";
 import {
@@ -71,8 +72,11 @@ export const petal = ({
       //       : undefined,
       //   ];
       // },
-      resolveUnderlyingSpace: () => {
-        let underlyingSpaceX = ORDINAL;
+      resolveUnderlyingSpace: (
+        _children: Size<UnderlyingSpace>[],
+        _childNodes: GoFishAST[]
+      ) => {
+        let underlyingSpaceX = ORDINAL([]);
         if (isValue(dims[0].min)) {
           // position. treat it like a position space w/ a single element
           underlyingSpaceX = POSITION;
@@ -81,7 +85,7 @@ export const petal = ({
           underlyingSpaceX = UNDEFINED;
         }
 
-        let underlyingSpaceY = ORDINAL;
+        let underlyingSpaceY = ORDINAL([]);
         if (isValue(dims[1].min)) {
           // position. treat it like a position space w/ a single element
           underlyingSpaceY = POSITION;
