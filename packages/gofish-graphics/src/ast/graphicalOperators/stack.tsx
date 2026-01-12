@@ -132,6 +132,8 @@ export const stack = withGoFish(
 
           /* SPACING RULES */
           let stackSpace = UNDEFINED;
+          const stackSpaces = children.map((child) => child[stackDir]);
+
           // if children are all UNDEFINED or POSITION and spacing is 0, return POSITION
           if (
             children.every(
@@ -150,7 +152,14 @@ export const stack = withGoFish(
               .reduce((a, b) => a + b, 0);
             stackSpace = POSITION(Interval.interval(0, totalWidth));
           }
-
+          // if children are all SIZE and spacing is 0, return POSITION (sum of sizes)
+          else if (stackSpaces.every((s) => isSIZE(s)) && spacing === 0) {
+            const sizeValues = stackSpaces.map(
+              (s) => (s as any).value as number
+            );
+            const totalSize = sizeValues.reduce((a, b) => a + b, 0);
+            stackSpace = POSITION(Interval.interval(0, totalSize));
+          }
           // if children are all UNDEFINED or POSITION and spacing is > 0, return ORDINAL
           else if (
             children.every(
