@@ -43,6 +43,49 @@ const boxAndWhisker = ({
   ]);
 };
 
+export const testSingleBoxWhisker = () => {
+  const data = genderPayGap[0];
+  return boxAndWhisker({
+    median: data.Median,
+    min: data.Min,
+    max: data.Max,
+    q1: data["25-Percentile"],
+    q3: data["75-Percentile"],
+    fill: v(data.Gender as string),
+  });
+};
+
+export const testPairBoxWhisker = () => {
+  const payGradeFive = genderPayGap.filter((d) => d["Pay Grade"] === "Five");
+  const male = payGradeFive.find((d) => d.Gender === "Male")!;
+  const female = payGradeFive.find((d) => d.Gender === "Female")!;
+
+  return StackX(
+    {
+      spacing: 8,
+      sharedScale: true,
+    },
+    [
+      boxAndWhisker({
+        median: male.Median,
+        min: male.Min,
+        max: male.Max,
+        q1: male["25-Percentile"],
+        q3: male["75-Percentile"],
+        fill: v(male.Gender as string),
+      }) as any,
+      boxAndWhisker({
+        median: female.Median,
+        min: female.Min,
+        max: female.Max,
+        q1: female["25-Percentile"],
+        q3: female["75-Percentile"],
+        fill: v(female.Gender as string),
+      }),
+    ]
+  );
+};
+
 export const testBoxWhiskerPlot = () =>
   StackX(
     {

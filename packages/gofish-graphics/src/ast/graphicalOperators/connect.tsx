@@ -77,6 +77,30 @@ export const connect = withGoFish(
           // If in center-to-center mode, adjust bounding boxes to have zero width/height
           // with min and max equal to the center point
 
+          // Compute bounding box from connected elements
+          let bboxMinX = Infinity;
+          let bboxMaxX = -Infinity;
+          let bboxMinY = Infinity;
+          let bboxMaxY = -Infinity;
+
+          for (const [b0, b1] of bboxPairs) {
+            if (mode === "center-to-center") {
+              const cx0 = (b0[0].min! + b0[0].max!) / 2;
+              const cy0 = (b0[1].min! + b0[1].max!) / 2;
+              const cx1 = (b1[0].min! + b1[0].max!) / 2;
+              const cy1 = (b1[1].min! + b1[1].max!) / 2;
+              bboxMinX = Math.min(bboxMinX, cx0, cx1);
+              bboxMaxX = Math.max(bboxMaxX, cx0, cx1);
+              bboxMinY = Math.min(bboxMinY, cy0, cy1);
+              bboxMaxY = Math.max(bboxMaxY, cy0, cy1);
+            } else {
+              bboxMinX = Math.min(bboxMinX, b0[0].min!, b1[0].min!);
+              bboxMaxX = Math.max(bboxMaxX, b0[0].max!, b1[0].max!);
+              bboxMinY = Math.min(bboxMinY, b0[1].min!, b1[1].min!);
+              bboxMaxY = Math.max(bboxMaxY, b0[1].max!, b1[1].max!);
+            }
+          }
+
           if (dir === 0) {
             if (interpolation === "linear") {
               if (mode === "center-to-center") {
@@ -279,8 +303,25 @@ export const connect = withGoFish(
             }
           }
 
+          // If no paths were created, use zero dimensions
+          const bboxW = bboxPairs.length > 0 ? bboxMaxX - bboxMinX : 0;
+          const bboxH = bboxPairs.length > 0 ? bboxMaxY - bboxMinY : 0;
+
           return {
-            intrinsicDims: { w: size[0], h: size[1] },
+            intrinsicDims: [
+              {
+                min: bboxPairs.length > 0 ? bboxMinX : 0,
+                size: bboxW,
+                center: bboxPairs.length > 0 ? bboxMinX + bboxW / 2 : 0,
+                max: bboxPairs.length > 0 ? bboxMaxX : 0,
+              },
+              {
+                min: bboxPairs.length > 0 ? bboxMinY : 0,
+                size: bboxH,
+                center: bboxPairs.length > 0 ? bboxMinY + bboxH / 2 : 0,
+                max: bboxPairs.length > 0 ? bboxMaxY : 0,
+              },
+            ],
             transform: { translate: [0, 0] },
             renderData: { paths, defaultColor },
           };

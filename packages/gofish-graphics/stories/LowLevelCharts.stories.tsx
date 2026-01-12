@@ -3,7 +3,11 @@ import { rect } from "../src/ast/marks/chart";
 import { initializeContainer } from "./helper";
 import { catchData } from "../src/data/catch";
 import { orderBy } from "../src/lib";
-import { testBoxWhiskerPlot } from "../src/tests/boxwhisker";
+import {
+  testBoxWhiskerPlot,
+  testSingleBoxWhisker,
+  testPairBoxWhisker,
+} from "../src/tests/boxwhisker";
 
 const meta: Meta = {
   title: "Charts/LowLevel",
@@ -20,15 +24,47 @@ export default meta;
 
 type Args = { w: number; h: number };
 
+export const SingleBoxWhisker: StoryObj<Args> = {
+  args: { w: 320, h: 400 },
+  render: (args: Args) => {
+    const container = initializeContainer();
+
+    testSingleBoxWhisker().render(container, {
+      w: args.w,
+      h: args.h,
+      axes: true,
+    });
+
+    return container;
+  },
+};
+
+export const PairBoxWhisker: StoryObj<Args> = {
+  args: { w: 320, h: 400 },
+  render: (args: Args) => {
+    const container = initializeContainer();
+
+    testPairBoxWhisker().render(container, {
+      w: args.w,
+      h: args.h,
+      axes: true,
+    });
+
+    return container;
+  },
+};
+
 export const BoxWhisker: StoryObj<Args> = {
   args: { w: 320, h: 400 },
   render: (args: Args) => {
     const container = initializeContainer();
 
-    return testBoxWhiskerPlot().render(container, {
+    testBoxWhiskerPlot().render(container, {
       w: args.w,
       h: args.h,
       axes: true,
     });
+
+    return container;
   },
 };

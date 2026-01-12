@@ -21,7 +21,9 @@ import {
   ORDINAL,
   POSITION,
   UNDEFINED,
+  isDIFFERENCE,
   isPOSITION,
+  isSIZE,
 } from "../underlyingSpace";
 import { UnderlyingSpace } from "../underlyingSpace";
 import * as Interval from "../../util/interval";
@@ -63,6 +65,8 @@ export const stack = withGoFish(
 
     const stackDir = elaborateDirection(direction);
     const alignDir = (1 - stackDir) as Direction;
+    // track whether align axis came from SIZE so we still perform baseline alignment even with posScales
+    let alignFromSize = false;
     const dims = elaborateDims(fancyDims);
 
     return new GoFishNode(
@@ -86,32 +90,57 @@ export const stack = withGoFish(
           /* ALIGNMENT RULES */
           let alignSpace = UNDEFINED;
 
-          // if children are all UNDEFINED or POSITION and alignment is start or end, return POSITION
-          if (
-            children.every((child) => isPOSITION(child[alignDir])) &&
-            (alignment === "start" || alignment === "end")
-          ) {
-            const childDomains = children.map(
-              (child) => child[alignDir].domain!
+          const alignSpaces = children.map((child) => child[alignDir]);
+
+          // children are all SIZE
+          if (alignSpaces.every((s) => isSIZE(s))) {
+            alignFromSize = true;
+            const sizeValues = alignSpaces.map(
+              (s) => (s as any).value as number
             );
-            const domain = Interval.unionAll(...childDomains);
-            alignSpace = POSITION(domain);
+
+            if (alignment === "start" || alignment === "end") {
+              // Merge SIZE into POSITION by treating each size as an interval from 0 to size
+              const intervals = sizeValues.map((v) => Interval.interval(0, v));
+              const domain = Interval.unionAll(...intervals);
+              alignSpace = POSITION(domain);
+            } else if (alignment === "middle") {
+              // Middle alignment: treat as DIFFERENCE, using the maximum absolute size
+              const maxWidth = Math.max(...sizeValues.map((v) => Math.abs(v)));
+              alignSpace = DIFFERENCE(maxWidth);
+            } else {
+              alignSpace = UNDEFINED;
+            }
           }
-          // if children are all UNDEFINED or POSITION and alignment is middle, return DIFFERENCE
-          else if (
-            children.every((child) => isPOSITION(child[alignDir])) &&
-            alignment === "middle"
-          ) {
-            const domain = Interval.unionAll(
-              ...children.map((child) => child[alignDir].domain!)
-            );
-            alignSpace = DIFFERENCE(Interval.width(domain));
+          // children are all DIFFERENCE
+          else if (alignSpaces.every((s) => isDIFFERENCE(s))) {
+            alignFromSize = false;
+            const widths = alignSpaces.map((s) => (s as any).width as number);
+            const maxWidth = Math.max(...widths);
+            alignSpace = DIFFERENCE(maxWidth);
+          }
+          // children are all POSITION -> POSITION (union domains, but layout will not realign)
+          // OR DIFFERENCE if alignment is "middle" (for streamgraph-style centering)
+          else if (alignSpaces.every((s) => isPOSITION(s))) {
+            alignFromSize = false;
+            const childDomains = alignSpaces.map((s) => (s as any).domain);
+            const domain = Interval.unionAll(...childDomains);
+            if (alignment === "middle") {
+              // For middle alignment with POSITION children, use DIFFERENCE space
+              const maxWidth = Interval.width(domain);
+              alignSpace = DIFFERENCE(maxWidth);
+            } else {
+              alignSpace = POSITION(domain);
+            }
           } else {
+            alignFromSize = false;
             alignSpace = UNDEFINED;
           }
 
           /* SPACING RULES */
           let stackSpace = UNDEFINED;
+          const stackSpaces = children.map((child) => child[stackDir]);
+
           // if children are all UNDEFINED or POSITION and spacing is 0, return POSITION
           if (
             children.every(
@@ -130,13 +159,21 @@ export const stack = withGoFish(
               .reduce((a, b) => a + b, 0);
             stackSpace = POSITION(Interval.interval(0, totalWidth));
           }
-
+          // if children are all SIZE and spacing is 0, return POSITION (sum of sizes)
+          else if (stackSpaces.every((s) => isSIZE(s)) && spacing === 0) {
+            const sizeValues = stackSpaces.map(
+              (s) => (s as any).value as number
+            );
+            const totalSize = sizeValues.reduce((a, b) => a + b, 0);
+            stackSpace = POSITION(Interval.interval(0, totalSize));
+          }
           // if children are all UNDEFINED or POSITION and spacing is > 0, return ORDINAL
           else if (
             children.every(
               (child) =>
                 child[stackDir].kind === "undefined" ||
-                child[stackDir].kind === "position"
+                child[stackDir].kind === "position" ||
+                child[stackDir].kind === "size" // SIZE along stackDir behaves like position extents for spacing
             ) &&
             spacing > 0
           ) {
@@ -263,33 +300,40 @@ export const stack = withGoFish(
           );
 
           /* align */
-          if (alignment === "start") {
-            // For "start" alignment with mixed positive/negative bars, align at the baseline (0 in data space)
-            // Use the position scale to map data value 0 to pixel position
-            const baselinePos = posScales?.[alignDir]
-              ? posScales[alignDir](0)
-              : 0;
-            for (const child of childPlaceables) {
-              child.place({ [alignDir]: baselinePos });
-            }
-          } else if (alignment === "middle") {
-            // For "middle" alignment, center children in the available space
-            const centerPos = size[alignDir] / 2;
-            for (const child of childPlaceables) {
-              child.place({
-                [alignDir]: centerPos - child.dims[alignDir].size! / 2,
-              });
-            }
-          } else if (alignment === "end") {
-            // For "end" alignment with mixed positive/negative bars, align at the baseline (0 in data space)
-            // Use the position scale to map data value 0 to pixel position
-            const baselinePos = posScales?.[alignDir]
-              ? posScales[alignDir](0)
-              : 0;
-            for (const child of childPlaceables) {
-              child.place({
-                [alignDir]: baselinePos - child.dims[alignDir].size!,
-              });
+          // Skip alignment if children have position scales (they already have data-driven positions),
+          // UNLESS the align space came from SIZE (no inherent position) and we need baseline alignment,
+          // OR alignment is "middle" (which requires centering regardless of position scales).
+          if (
+            !posScales?.[alignDir] ||
+            alignFromSize ||
+            alignment === "middle"
+          ) {
+            if (alignment === "start") {
+              // For "start" alignment with mixed positive/negative bars, align at the baseline (0 in data space)
+              const baselinePos = posScales?.[alignDir]
+                ? posScales[alignDir](0)
+                : 0;
+              for (const child of childPlaceables) {
+                child.place({ [alignDir]: baselinePos });
+              }
+            } else if (alignment === "middle") {
+              // For "middle" alignment, center children in the available space
+              const centerPos = size[alignDir] / 2;
+              for (const child of childPlaceables) {
+                child.place({
+                  [alignDir]: centerPos - child.dims[alignDir].size! / 2,
+                });
+              }
+            } else if (alignment === "end") {
+              // For "end" alignment with mixed positive/negative bars, align at the baseline (0 in data space)
+              const baselinePos = posScales?.[alignDir]
+                ? posScales[alignDir](0)
+                : 0;
+              for (const child of childPlaceables) {
+                child.place({
+                  [alignDir]: baselinePos - child.dims[alignDir].size!,
+                });
+              }
             }
           }
 
@@ -315,6 +359,9 @@ export const stack = withGoFish(
             ...childPlaceables.map((child) => child.dims[alignDir].max!)
           );
           const alignSize = alignMax - alignMin;
+          const translateAlign =
+            alignPos !== undefined ? alignPos - alignMin : undefined;
+
           return {
             intrinsicDims: {
               [alignDir]: {
@@ -331,8 +378,7 @@ export const stack = withGoFish(
             },
             transform: {
               translate: {
-                [alignDir]:
-                  alignPos !== undefined ? alignPos - alignMin : undefined,
+                [alignDir]: translateAlign,
                 [stackDir]: stackPos !== undefined ? stackPos : undefined,
               },
             },

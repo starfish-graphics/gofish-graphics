@@ -182,6 +182,16 @@ export const layer = withGoFishSequential(
           const scaleX = options.transform?.scale?.x ?? 1;
           const scaleY = options.transform?.scale?.y ?? 1;
 
+          const childYPositions = childPlaceables.map((cp, i) => ({
+            index: i,
+            min: cp.dims[1].min,
+            max: cp.dims[1].max,
+            center: cp.dims[1].center,
+            size: cp.dims[1].size,
+          }));
+
+          const translateY = dims[1].min !== undefined ? dims[1].min - minY : undefined;
+
           return {
             intrinsicDims: [
               {
@@ -200,7 +210,7 @@ export const layer = withGoFishSequential(
             transform: {
               translate: [
                 dims[0].min !== undefined ? dims[0].min - minX : undefined,
-                dims[1].min !== undefined ? dims[1].min - minY : undefined,
+                translateY,
               ],
               scale: [scaleX, scaleY],
             },
