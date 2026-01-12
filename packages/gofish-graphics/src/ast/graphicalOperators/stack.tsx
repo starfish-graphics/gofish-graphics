@@ -120,11 +120,18 @@ export const stack = withGoFish(
             alignSpace = DIFFERENCE(maxWidth);
           }
           // children are all POSITION -> POSITION (union domains, but layout will not realign)
+          // OR DIFFERENCE if alignment is "middle" (for streamgraph-style centering)
           else if (alignSpaces.every((s) => isPOSITION(s))) {
             alignFromSize = false;
             const childDomains = alignSpaces.map((s) => (s as any).domain);
             const domain = Interval.unionAll(...childDomains);
-            alignSpace = POSITION(domain);
+            if (alignment === "middle") {
+              // For middle alignment with POSITION children, use DIFFERENCE space
+              const maxWidth = Interval.width(domain);
+              alignSpace = DIFFERENCE(maxWidth);
+            } else {
+              alignSpace = POSITION(domain);
+            }
           } else {
             alignFromSize = false;
             alignSpace = UNDEFINED;
@@ -294,8 +301,13 @@ export const stack = withGoFish(
 
           /* align */
           // Skip alignment if children have position scales (they already have data-driven positions),
-          // UNLESS the align space came from SIZE (no inherent position) and we need baseline alignment.
-          if (!posScales?.[alignDir] || alignFromSize) {
+          // UNLESS the align space came from SIZE (no inherent position) and we need baseline alignment,
+          // OR alignment is "middle" (which requires centering regardless of position scales).
+          if (
+            !posScales?.[alignDir] ||
+            alignFromSize ||
+            alignment === "middle"
+          ) {
             if (alignment === "start") {
               // For "start" alignment with mixed positive/negative bars, align at the baseline (0 in data space)
               const baselinePos = posScales?.[alignDir]
