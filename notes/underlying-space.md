@@ -13,12 +13,25 @@ this logic organized that we call "underlying space."
 Underlying space is a tree of spaces where each space currently has one of the following tags:
 
 - position
-- interval
+- difference
+- size
 - ordinal
 - undefined
 
 (These map closely to Stevens's statistical data types, which is probably not a coincidence, but the
 relationship isn't clear yet.)
+
+## Space Types
+
+**POSITION**: Represents data-driven positions. Each position space has a domain (interval) that maps data values to screen positions.
+
+**DIFFERENCE**: Represents spaces where differences/distances are meaningful, but absolute locations are not. This is a weakening of POSITION - once a space is DIFFERENCE, it cannot be converted back to POSITION. (Speculative: DIFFERENCE may be aesthetic position + data-driven size, whereas POSITION is data-driven position. This is not yet confirmed and should not be used for implementation.)
+
+**SIZE**: Represents shapes with data-driven sizes but undetermined positions. SIZE tracks a single numeric value (which can be negative, e.g., for negative bars). Unlike DIFFERENCE, SIZE spaces can be merged into POSITION spaces when alignment is determined (e.g., when bars are aligned to a baseline). Example: individual bars in a bar chart have SIZE, but the stack operator merges them into POSITION space for baseline alignment.
+
+**ORDINAL**: Represents nominal/ordinal spaces where relative positions are meaningful (like above, below, left, right), but not quantitatively meaningful.
+
+**UNDEFINED**: Represents spaces with no data-driven information.
 
 ## Why?
 

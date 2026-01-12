@@ -32,7 +32,13 @@ import { aesthetic, continuous, Domain } from "../domain";
 import { scaleContext } from "../gofish";
 import * as Monotonic from "../../util/monotonic";
 import { computeAesthetic, computeSize } from "../../util";
-import { DIFFERENCE, ORDINAL, POSITION, UNDEFINED } from "../underlyingSpace";
+import {
+  DIFFERENCE,
+  ORDINAL,
+  POSITION,
+  SIZE,
+  UNDEFINED,
+} from "../underlyingSpace";
 import { interval } from "../../util/interval";
 
 const computeIntrinsicSize = (
@@ -122,9 +128,13 @@ export const rect = ({
           // nothing is data-driven
           underlyingSpaceX = ORDINAL;
         } else if (isAesthetic(dims[0].min) && isValue(dims[0].size)) {
-          // the best we can do is difference
+          // aesthetic position + data-driven size -> DIFFERENCE
           underlyingSpaceX = DIFFERENCE(getValue(dims[0].size)!);
+        } else if (!isValue(dims[0].min) && isValue(dims[0].size)) {
+          // no position, but has data-driven size -> SIZE
+          underlyingSpaceX = SIZE(getValue(dims[0].size)!);
         } else {
+          // has position (and possibly size) -> POSITION
           const min = isValue(dims[0].min) ? getValue(dims[0].min) : 0;
           const size = isValue(dims[0].size) ? getValue(dims[0].size) : 0;
           const domain = interval(min, min + size);
@@ -136,11 +146,15 @@ export const rect = ({
           // nothing is data-driven
           underlyingSpaceY = ORDINAL;
         } else if (isAesthetic(dims[1].min) && isValue(dims[1].size)) {
-          // the best we can do is difference
+          // aesthetic position + data-driven size -> DIFFERENCE
           underlyingSpaceY = DIFFERENCE(getValue(dims[1].size)!);
+        } else if (!isValue(dims[1].min) && isValue(dims[1].size)) {
+          // no position, but has data-driven size -> SIZE
+          underlyingSpaceY = SIZE(getValue(dims[1].size)!);
         } else {
-          const min = isValue(dims[1].min) ? getValue(dims[1].min) : 0;
-          const size = isValue(dims[1].size) ? getValue(dims[1].size) : 0;
+          // has position (and possibly size) -> POSITION
+          const min = getValue(dims[1].min) ?? 0;
+          const size = getValue(dims[1].size) ?? 0;
           const domain = interval(min, min + size);
           underlyingSpaceY = POSITION(domain);
         }
