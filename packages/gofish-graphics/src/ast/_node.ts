@@ -413,7 +413,7 @@ export const debugNodeTree = (
   // Get the name for display (handle both GoFishNode and GoFishRef)
   const nodeName = isGoFishNode(node) ? node._name : node.name;
 
-  p; // Create a group for this node
+  // Create a group for this node
   console.group(
     `${indent}Node: ${node.type}${nodeName ? ` (${nodeName})` : ""}`
   );
