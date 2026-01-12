@@ -8,6 +8,7 @@ import {
   transformPath,
 } from "../../path";
 import { GoFishNode } from "../_node";
+import { GoFishAST } from "../_ast";
 import { CoordinateTransform } from "../coordinateTransforms/coord";
 import { linear } from "../coordinateTransforms/linear";
 import {
@@ -88,7 +89,10 @@ export const rect = ({
         dims,
       },
       color: fill,
-      resolveUnderlyingSpace: () => {
+      resolveUnderlyingSpace: (
+        _children: Size<UnderlyingSpace>[],
+        _childNodes: GoFishAST[]
+      ) => {
         /* cases
         a: aesthetic
         v: value
@@ -126,7 +130,7 @@ export const rect = ({
         let underlyingSpaceX = UNDEFINED;
         if (!isValue(dims[0].min) && !isValue(dims[0].size)) {
           // nothing is data-driven
-          underlyingSpaceX = ORDINAL;
+          underlyingSpaceX = ORDINAL([]);
         } else if (isAesthetic(dims[0].min) && isValue(dims[0].size)) {
           // aesthetic position + data-driven size -> DIFFERENCE
           underlyingSpaceX = DIFFERENCE(getValue(dims[0].size)!);
@@ -144,7 +148,7 @@ export const rect = ({
         let underlyingSpaceY = UNDEFINED;
         if (!isValue(dims[1].min) && !isValue(dims[1].size)) {
           // nothing is data-driven
-          underlyingSpaceY = ORDINAL;
+          underlyingSpaceY = ORDINAL([]);
         } else if (isAesthetic(dims[1].min) && isValue(dims[1].size)) {
           // aesthetic position + data-driven size -> DIFFERENCE
           underlyingSpaceY = DIFFERENCE(getValue(dims[1].size)!);

@@ -96,7 +96,8 @@ export type Render = (
 ) => JSX.Element;
 
 export type ResolveUnderlyingSpace = (
-  childSpaces: Size<UnderlyingSpace>[]
+  childSpaces: Size<UnderlyingSpace>[],
+  childNodes: (GoFishNode | GoFishRef)[]
 ) => FancySize<UnderlyingSpace>;
 
 export class GoFishNode {
@@ -214,7 +215,8 @@ export class GoFishNode {
     }
     this._underlyingSpace = elaborateSize(
       this._resolveUnderlyingSpace(
-        this.children.map((child) => child.resolveUnderlyingSpace())
+        this.children.map((child) => child.resolveUnderlyingSpace()),
+        this.children
       )
     );
     return this._underlyingSpace;

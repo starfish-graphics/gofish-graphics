@@ -317,7 +317,7 @@ export function spread<T>(
 
   const finalOptions = {
     ...opts,
-    label: opts?.label ?? true,
+    label: opts?.label ?? false,
     alignment: opts?.alignment ?? "start",
   };
 
@@ -347,9 +347,8 @@ export function spread<T>(
         For(grouped as any, async (groupData: T[], k) => {
           const currentKey = key != undefined ? `${key}-${k}` : k;
           const node = await mark(groupData, currentKey);
-          return finalOptions.label
-            ? node.setKey(currentKey?.toString() ?? "")
-            : node;
+          // Always set keys for ordinal axis mapping, regardless of label setting
+          return node.setKey(currentKey?.toString() ?? "");
         })
       );
     };

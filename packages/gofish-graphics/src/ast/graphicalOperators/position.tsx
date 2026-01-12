@@ -22,7 +22,7 @@ export const position = withGoFish(
         type: "position",
         key: options.key,
         shared: [false, false],
-        resolveUnderlyingSpace: (children: Size<UnderlyingSpace>[]) => {
+        resolveUnderlyingSpace: (children: Size<UnderlyingSpace>[], _childNodes: GoFishAST[]) => {
           return [
             isValue(options.x)
               ? POSITION(interval(getValue(options.x)!, getValue(options.x)!))

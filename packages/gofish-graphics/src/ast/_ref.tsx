@@ -106,7 +106,7 @@ export class GoFishRef {
 
   /* TODO: what should the default be? */
   public resolveUnderlyingSpace(): UnderlyingSpace {
-    return this.selectedNode?.resolveUnderlyingSpace() ?? ORDINAL;
+    return this.selectedNode?.resolveUnderlyingSpace() ?? ORDINAL([]);
   }
 
   /* TODO: I'm not really sure what this should do */

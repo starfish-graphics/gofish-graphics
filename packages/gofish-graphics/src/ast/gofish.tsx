@@ -13,6 +13,7 @@ import { tickIncrement, ticks, nice } from "d3-array";
 import { isConstant } from "../util/monotonic";
 import {
   isDIFFERENCE,
+  isORDINAL,
   isPOSITION,
   type UnderlyingSpace,
 } from "./underlyingSpace";
@@ -59,6 +60,64 @@ export const getKeyContext = (): KeyContext => {
   return keyContext;
 };
 
+type OrdinalScale = (key: string) => number | undefined;
+
+function buildOrdinalScaleX(
+  keyContext: KeyContext,
+  root: GoFishNode
+): OrdinalScale {
+  const keyToPosition = new Map<string, number>();
+
+  for (const [key, node] of Object.entries(keyContext)) {
+    if (!("intrinsicDims" in node) || !node.intrinsicDims) continue;
+
+    const pathToRoot = findPathToRoot(node);
+    const accumulatedTransform = pathToRoot.reduce(
+      (acc, n) => {
+        return {
+          x: acc.x + (n.transform?.translate?.[0] ?? 0),
+          y: acc.y + (n.transform?.translate?.[1] ?? 0),
+        };
+      },
+      { x: 0, y: 0 }
+    );
+
+    const centerX =
+      accumulatedTransform.x + (node.intrinsicDims[0]?.center ?? 0);
+    keyToPosition.set(key, centerX);
+  }
+
+  return (key: string) => keyToPosition.get(key);
+}
+
+function buildOrdinalScaleY(
+  keyContext: KeyContext,
+  root: GoFishNode
+): OrdinalScale {
+  const keyToPosition = new Map<string, number>();
+
+  for (const [key, node] of Object.entries(keyContext)) {
+    if (!("intrinsicDims" in node) || !node.intrinsicDims) continue;
+
+    const pathToRoot = findPathToRoot(node);
+    const accumulatedTransform = pathToRoot.reduce(
+      (acc, n) => {
+        return {
+          x: acc.x + (n.transform?.translate?.[0] ?? 0),
+          y: acc.y + (n.transform?.translate?.[1] ?? 0),
+        };
+      },
+      { x: 0, y: 0 }
+    );
+
+    const centerY =
+      accumulatedTransform.y + (node.intrinsicDims[1]?.center ?? 0);
+    keyToPosition.set(key, centerY);
+  }
+
+  return (key: string) => keyToPosition.get(key);
+}
+
 export async function layout(
   {
     w,
@@ -90,6 +149,7 @@ export async function layout(
   underlyingSpaceX: UnderlyingSpace;
   underlyingSpaceY: UnderlyingSpace;
   posScales: [(pos: number) => number, (pos: number) => number];
+  ordinalScales: [OrdinalScale | undefined, OrdinalScale | undefined];
   child: GoFishNode;
 }> {
   child = await child;
@@ -153,11 +213,21 @@ export async function layout(
     debugNodeTree(child);
   }
 
+  const ordinalScales: [OrdinalScale | undefined, OrdinalScale | undefined] = [
+    isORDINAL(underlyingSpaceX) && keyContext
+      ? buildOrdinalScaleX(keyContext, child)
+      : undefined,
+    isORDINAL(underlyingSpaceY) && keyContext
+      ? buildOrdinalScaleY(keyContext, child)
+      : undefined,
+  ];
+
   return {
     sizeDomains,
     underlyingSpaceX,
     underlyingSpaceY,
     posScales,
+    ordinalScales,
     child,
   };
 }
@@ -191,6 +261,7 @@ export const gofish = (
     underlyingSpaceX: UnderlyingSpace;
     underlyingSpaceY: UnderlyingSpace;
     posScales: [(pos: number) => number, (pos: number) => number];
+    ordinalScales: [OrdinalScale | undefined, OrdinalScale | undefined];
     child: GoFishNode;
     scaleContext: ScaleContext;
     keyContext: KeyContext;
@@ -259,6 +330,7 @@ export const gofish = (
               underlyingSpaceX: data.underlyingSpaceX,
               underlyingSpaceY: data.underlyingSpaceY,
               posScales: data.posScales,
+              ordinalScales: data.ordinalScales,
             },
             data.child
           );
@@ -284,6 +356,7 @@ export const render = (
     underlyingSpaceX,
     underlyingSpaceY,
     posScales,
+    ordinalScales,
   }: {
     width: number;
     height: number;
@@ -296,6 +369,7 @@ export const render = (
     underlyingSpaceX: UnderlyingSpace;
     underlyingSpaceY: UnderlyingSpace;
     posScales: [(pos: number) => number, (pos: number) => number];
+    ordinalScales: [OrdinalScale | undefined, OrdinalScale | undefined];
   },
   child: GoFishNode
 ): JSX.Element => {
@@ -606,129 +680,123 @@ export const render = (
               })()}
             </Show>
             {/* x axis (discrete) */}
-            <Show when={underlyingSpaceX.kind === "ordinal" && keyContext}>
-              <g>
-                <For each={Object.entries(keyContext ?? {})}>
-                  {([key, value]) => {
-                    const pathToRoot = findPathToRoot(value);
-                    const accumulatedTransform = pathToRoot.reduce(
-                      (acc, node) => {
-                        return {
-                          x: acc.x + (node.transform?.translate?.[0] ?? 0),
-                          y: acc.y + (node.transform?.translate?.[1] ?? 0),
-                        };
-                      },
-                      { x: 0, y: 0 }
-                    );
-                    const displayDims = [
-                      {
-                        min:
-                          (accumulatedTransform.x ?? 0) +
-                          (value.intrinsicDims?.[0]?.min ?? 0),
-                        size: value.intrinsicDims?.[0]?.size ?? 0,
-                        center:
-                          (accumulatedTransform.x ?? 0) +
-                          (value.intrinsicDims?.[0]?.center ?? 0),
-                        max:
-                          (accumulatedTransform.x ?? 0) +
-                          (value.intrinsicDims?.[0]?.max ?? 0),
-                      },
-                      {
-                        min:
-                          (accumulatedTransform.y ?? 0) +
-                          (value.intrinsicDims?.[1]?.min ?? 0),
-                        size: value.intrinsicDims?.[1]?.size ?? 0,
-                        center:
-                          (accumulatedTransform.y ?? 0) +
-                          (value.intrinsicDims?.[1]?.center ?? 0),
-                        max:
-                          (accumulatedTransform.y ?? 0) +
-                          (value.intrinsicDims?.[1]?.max ?? 0),
-                      },
-                    ];
-                    return (
-                      <text
-                        transform="scale(1, -1)"
-                        x={displayDims[0].center ?? 0}
-                        y={-(displayDims[1].min ?? 0) + 5}
-                        text-anchor="middle"
-                        dominant-baseline="hanging"
-                        font-size="10px"
-                        fill="gray"
-                      >
-                        {key}
-                      </text>
-                    );
-                  }}
-                </For>
-              </g>
+            <Show
+              when={
+                axes &&
+                isORDINAL(underlyingSpaceX) &&
+                ordinalScales[0] &&
+                keyContext
+              }
+            >
+              {(() => {
+                const scale = ordinalScales[0]!;
+                // Use domain from ORDINAL space for top-level keys
+                const domain = isORDINAL(underlyingSpaceX)
+                  ? underlyingSpaceX.domain
+                  : undefined;
+                const labelKeys = domain && domain.length > 0 ? domain : [];
+                // Get the minimum Y position for label placement
+                const entries = Object.entries(keyContext ?? {});
+                const minY = entries.reduce((min, [, node]) => {
+                  if (!("intrinsicDims" in node) || !node.intrinsicDims)
+                    return min;
+                  const pathToRoot = findPathToRoot(node);
+                  const accumulatedTransform = pathToRoot.reduce(
+                    (acc, n) => {
+                      return {
+                        x: acc.x + (n.transform?.translate?.[0] ?? 0),
+                        y: acc.y + (n.transform?.translate?.[1] ?? 0),
+                      };
+                    },
+                    { x: 0, y: 0 }
+                  );
+                  const yPos =
+                    accumulatedTransform.y + (node.intrinsicDims[1]?.min ?? 0);
+                  return Math.min(min, yPos);
+                }, Infinity);
+                return (
+                  <g>
+                    <For each={labelKeys}>
+                      {(key) => {
+                        const xPos = scale(key);
+                        if (xPos === undefined) return null;
+                        return (
+                          <text
+                            transform="scale(1, -1)"
+                            x={xPos}
+                            y={-minY + 5}
+                            text-anchor="middle"
+                            dominant-baseline="hanging"
+                            font-size="10px"
+                            fill="gray"
+                          >
+                            {key}
+                          </text>
+                        );
+                      }}
+                    </For>
+                  </g>
+                );
+              })()}
             </Show>
-            <Show when={underlyingSpaceY.kind === "ordinal" && keyContext}>
-              {/* Vertical (Y axis) labels */}
-              <g>
-                <For each={Object.values(keyContext ?? {})}>
-                  {(value, i) => {
-                    // Only render for GoFishNode (not GoFishRef)
-                    if (!("intrinsicDims" in value) || !("key" in value))
-                      return null;
-                    // Accumulate transforms up the tree for correct label placement
-                    const accumulatedTransform = findPathToRoot(
-                      value as GoFishNode
-                    ).reduce(
-                      (acc, node) => {
-                        return {
-                          x: acc.x + (node.transform?.translate?.[0] ?? 0),
-                          y: acc.y + (node.transform?.translate?.[1] ?? 0),
-                        };
-                      },
-                      { x: 0, y: 0 }
-                    );
-                    const displayDims = [
-                      {
-                        min:
-                          (accumulatedTransform.x ?? 0) +
-                          ((value as GoFishNode).intrinsicDims?.[0]?.min ?? 0),
-                        size:
-                          (value as GoFishNode).intrinsicDims?.[0]?.size ?? 0,
-                        center:
-                          (accumulatedTransform.x ?? 0) +
-                          ((value as GoFishNode).intrinsicDims?.[0]?.center ??
-                            0),
-                        max:
-                          (accumulatedTransform.x ?? 0) +
-                          ((value as GoFishNode).intrinsicDims?.[0]?.max ?? 0),
-                      },
-                      {
-                        min:
-                          (accumulatedTransform.y ?? 0) +
-                          ((value as GoFishNode).intrinsicDims?.[1]?.min ?? 0),
-                        size:
-                          (value as GoFishNode).intrinsicDims?.[1]?.size ?? 0,
-                        center:
-                          (accumulatedTransform.y ?? 0) +
-                          ((value as GoFishNode).intrinsicDims?.[1]?.center ??
-                            0),
-                        max:
-                          (accumulatedTransform.y ?? 0) +
-                          ((value as GoFishNode).intrinsicDims?.[1]?.max ?? 0),
-                      },
-                    ];
-                    return (
-                      <text
-                        transform="scale(1, -1)"
-                        x={displayDims[0].min - 5}
-                        y={-(displayDims[1].center ?? 0)}
-                        text-anchor="end"
-                        dominant-baseline="middle"
-                        font-size="10px"
-                        fill="gray"
-                      >
-                        {(value as GoFishNode).key}
-                      </text>
-                    );
-                  }}
-                </For>
-              </g>
+            <Show
+              when={
+                axes &&
+                isORDINAL(underlyingSpaceY) &&
+                ordinalScales[1] &&
+                keyContext
+              }
+            >
+              {(() => {
+                const scale = ordinalScales[1]!;
+                // Use domain from ORDINAL space for top-level keys
+                const domain = isORDINAL(underlyingSpaceY)
+                  ? underlyingSpaceY.domain
+                  : undefined;
+                const labelKeys = domain && domain.length > 0 ? domain : [];
+                // Get the minimum X position for label placement
+                const entries = Object.entries(keyContext ?? {});
+                const minX = entries.reduce((min, [, node]) => {
+                  if (!("intrinsicDims" in node) || !node.intrinsicDims)
+                    return min;
+                  const pathToRoot = findPathToRoot(node);
+                  const accumulatedTransform = pathToRoot.reduce(
+                    (acc, n) => {
+                      return {
+                        x: acc.x + (n.transform?.translate?.[0] ?? 0),
+                        y: acc.y + (n.transform?.translate?.[1] ?? 0),
+                      };
+                    },
+                    { x: 0, y: 0 }
+                  );
+                  const xPos =
+                    accumulatedTransform.x + (node.intrinsicDims[0]?.min ?? 0);
+                  return Math.min(min, xPos);
+                }, Infinity);
+                return (
+                  <g>
+                    <For each={labelKeys}>
+                      {(key) => {
+                        const yPos = scale(key);
+                        if (yPos === undefined) return null;
+                        return (
+                          <text
+                            transform="scale(1, -1)"
+                            x={minX - 5}
+                            y={-yPos}
+                            text-anchor="end"
+                            dominant-baseline="middle"
+                            font-size="10px"
+                            fill="gray"
+                          >
+                            {key}
+                          </text>
+                        );
+                      }}
+                    </For>
+                  </g>
+                );
+              })()}
             </Show>
             {/* legend (discrete color for now) */}
             <g>

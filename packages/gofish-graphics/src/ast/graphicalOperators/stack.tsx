@@ -86,7 +86,10 @@ export const stack = withGoFish(
         key,
         name,
         shared: [sharedScale, sharedScale],
-        resolveUnderlyingSpace: (children: Size<UnderlyingSpace>[]) => {
+        resolveUnderlyingSpace: (
+          children: Size<UnderlyingSpace>[],
+          childNodes: GoFishAST[]
+        ) => {
           /* ALIGNMENT RULES */
           let alignSpace = UNDEFINED;
 
@@ -153,7 +156,9 @@ export const stack = withGoFish(
             // position's domain should be [0, sum(widths of child intervals)] using the interval library
             const totalWidth = children
               .map((child) => {
-                const domain = child[stackDir].domain;
+                const domain = isPOSITION(child[stackDir])
+                  ? child[stackDir].domain
+                  : undefined;
                 return domain ? Interval.width(domain) : 0;
               })
               .reduce((a, b) => a + b, 0);
@@ -177,9 +182,19 @@ export const stack = withGoFish(
             ) &&
             spacing > 0
           ) {
-            stackSpace = ORDINAL;
+            // Extract top-level keys from child nodes for ordinal domain
+            const topLevelKeys = childNodes
+              .filter((node): node is GoFishNode => node instanceof GoFishNode)
+              .map((node) => node.key)
+              .filter((key): key is string => key !== undefined);
+            stackSpace = ORDINAL(topLevelKeys);
           } else {
-            stackSpace = ORDINAL;
+            // Extract top-level keys from child nodes for ordinal domain
+            const topLevelKeys = childNodes
+              .filter((node): node is GoFishNode => node instanceof GoFishNode)
+              .map((node) => node.key)
+              .filter((key): key is string => key !== undefined);
+            stackSpace = ORDINAL(topLevelKeys);
           }
 
           return {
@@ -367,6 +382,7 @@ export const stack = withGoFish(
               [alignDir]: {
                 min: alignMin,
                 size: alignSize,
+                center: alignMin + alignSize / 2,
                 max: alignMax,
               },
               [stackDir]: {

@@ -21,7 +21,7 @@ export const enclose = withGoFish(
     {
       type: "enclose",
       shared: [false, false],
-      resolveUnderlyingSpace: (children: Size<UnderlyingSpace>[]) => {
+      resolveUnderlyingSpace: (children: Size<UnderlyingSpace>[], _childNodes: GoFishAST[]) => {
         return [UNDEFINED, UNDEFINED];
       },
       inferSizeDomains: (shared, children) => {
