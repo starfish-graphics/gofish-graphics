@@ -20,4 +20,4 @@ __pycache__/
 .ipynb_checkpoints/
 *.egg-info/
 _static/
-.cursor/debug.log
+.cursor/

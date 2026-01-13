@@ -1,0 +1,68 @@
+name: Nightly Release
+
+# This workflow builds and publishes gofish-graphics to npm nightly
+
+on:
+  schedule:
+    # Run at 4:00 UTC daily (midnight Eastern time during EDT, 1 AM EST during winter)
+    - cron: '0 4 * * *'
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  nightly-release:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' # Only run on main branch
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build gofish-graphics
+        run: pnpm --filter gofish-graphics build
+        working-directory: .
+
+      - name: Generate TypeScript declarations
+        run: pnpm exec tsc --project packages/gofish-graphics/tsconfig.build.json
+
+      - name: Get current date
+        id: date
+        run: echo "date=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
+
+      - name: Read base version
+        id: version
+        run: |
+          BASE_VERSION=$(node -p "require('./packages/gofish-graphics/package.json').version")
+          echo "base=$BASE_VERSION" >> $GITHUB_OUTPUT
+          echo "Base version: $BASE_VERSION"
+
+      - name: Update package version
+        run: |
+          cd packages/gofish-graphics
+          NIGHTLY_VERSION="${{ steps.version.outputs.base }}-nightly.${{ steps.date.outputs.date }}"
+          npm version --no-git-tag-version "$NIGHTLY_VERSION"
+          echo "Updated version to: $NIGHTLY_VERSION"
+
+      - name: Configure npm authentication
+        run: |
+          npm config set //registry.npmjs.org/:_authToken ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish to npm
+        run: |
+          cd packages/gofish-graphics
+          npm publish --tag nightly --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
