@@ -12,6 +12,9 @@ jobs:
   nightly-release:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' # Only run on main branch
+    permissions:
+      id-token: write # Required for OIDC
+      contents: read
 
     steps:
       - name: Checkout repository
@@ -56,13 +59,7 @@ jobs:
           npm version --no-git-tag-version "$NIGHTLY_VERSION"
           echo "Updated version to: $NIGHTLY_VERSION"
 
-      - name: Configure npm authentication
-        run: |
-          npm config set //registry.npmjs.org/:_authToken ${{ secrets.NPM_TOKEN }}
-
       - name: Publish to npm
         run: |
           cd packages/gofish-graphics
           npm publish --tag nightly --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
