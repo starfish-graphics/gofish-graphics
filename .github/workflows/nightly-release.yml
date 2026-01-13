@@ -5,14 +5,14 @@ name: Nightly Release
 on:
   schedule:
     # Run at 4:00 UTC daily (midnight Eastern time during EDT, 1 AM EST during winter)
-    - cron: '0 4 * * *'
+    - cron: "0 4 * * *"
   workflow_dispatch: # Allow manual triggering
 
 jobs:
   nightly-release:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' # Only run on main branch
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -20,13 +20,13 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          registry-url: 'https://registry.npmjs.org'
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 8
+          version: 9
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
