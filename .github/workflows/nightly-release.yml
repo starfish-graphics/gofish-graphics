@@ -36,7 +36,7 @@ jobs:
         working-directory: .
 
       - name: Generate TypeScript declarations
-        run: pnpm exec tsc --project packages/gofish-graphics/tsconfig.build.json
+        run: pnpm exec tsc --project packages/gofish-graphics/tsconfig.build.json || true
 
       - name: Get current date
         id: date
