@@ -25,6 +25,10 @@
   ],
   "author": "Your Name",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/starfish-graphics/gofish-graphics"
+  },
   "scripts": {
     "start": "vite",
     "dev": "vite",
