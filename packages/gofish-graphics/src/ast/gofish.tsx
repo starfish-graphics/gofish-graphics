@@ -18,6 +18,7 @@ import {
   type UnderlyingSpace,
 } from "./underlyingSpace";
 import { continuous } from "./domain";
+import { interval } from "../util/interval";
 import {
   initLayerContext,
   resetLayerContext,
@@ -175,25 +176,53 @@ export async function layout(
   const sizeDomains = child.inferSizeDomains();
   const [underlyingSpaceX, underlyingSpaceY] = child.resolveUnderlyingSpace();
 
+  // Apply nice rounding to POSITION space domains
+  let niceUnderlyingSpaceX = underlyingSpaceX;
+  let niceUnderlyingSpaceY = underlyingSpaceY;
+
+  if (isPOSITION(underlyingSpaceX) && underlyingSpaceX.domain) {
+    const [niceMin, niceMax] = nice(
+      underlyingSpaceX.domain.min,
+      underlyingSpaceX.domain.max,
+      10
+    );
+    niceUnderlyingSpaceX = {
+      ...underlyingSpaceX,
+      domain: interval(niceMin, niceMax),
+    };
+  }
+
+  if (isPOSITION(underlyingSpaceY) && underlyingSpaceY.domain) {
+    const [niceMin, niceMax] = nice(
+      underlyingSpaceY.domain.min,
+      underlyingSpaceY.domain.max,
+      10
+    );
+    niceUnderlyingSpaceY = {
+      ...underlyingSpaceY,
+      domain: interval(niceMin, niceMax),
+    };
+  }
+
   if (debug) {
     console.log("🌳 Underlying Space Tree:");
     debugUnderlyingSpaceTree(child);
   }
 
   const posScales = [
-    underlyingSpaceX.kind === "position"
+    niceUnderlyingSpaceX.kind === "position"
       ? computePosScale(
           continuous({
-            value: [underlyingSpaceX.domain!.min, underlyingSpaceX.domain!.max],
+            value: [niceUnderlyingSpaceX.domain!.min, niceUnderlyingSpaceX.domain!.max],
             measure: "unit",
           }),
           w
         )
       : undefined,
-    underlyingSpaceY.kind === "position"
+    niceUnderlyingSpaceY.kind === "position"
       ? computePosScale(
           continuous({
-            value: [underlyingSpaceY.domain!.min, underlyingSpaceY.domain!.max],
+            value: [niceUnderlyingSpaceY.domain!.min, niceUnderlyingSpaceY.domain!.max],
             measure: "unit",
           }),
           h
@@ -214,18 +243,18 @@ export async function layout(
   }
 
   const ordinalScales: [OrdinalScale | undefined, OrdinalScale | undefined] = [
-    isORDINAL(underlyingSpaceX) && keyContext
+    isORDINAL(niceUnderlyingSpaceX) && keyContext
       ? buildOrdinalScaleX(keyContext, child)
       : undefined,
-    isORDINAL(underlyingSpaceY) && keyContext
+    isORDINAL(niceUnderlyingSpaceY) && keyContext
       ? buildOrdinalScaleY(keyContext, child)
       : undefined,
   ];
 
   return {
     sizeDomains,
-    underlyingSpaceX,
-    underlyingSpaceY,
+    underlyingSpaceX: niceUnderlyingSpaceX,
+    underlyingSpaceY: niceUnderlyingSpaceY,
     posScales,
     ordinalScales,
     child,
