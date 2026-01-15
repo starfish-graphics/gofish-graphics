@@ -15,6 +15,8 @@ import {
   isPOSITION,
 } from "../underlyingSpace";
 import { withGoFish } from "../withGoFish";
+import { computeTransformedBoundingBox } from "./coordUtils";
+import { empty, union } from "../../util/bbox";
 
 export type CoordinateTransform = {
   type: string;
@@ -192,48 +194,73 @@ export const coord = withGoFish(
             h: Monotonic.max(...childMeasuresHeight),
           };
         },
-        layout: (shared, size, scaleFactors, children, measurement) => {
+        layout: (
+          shared,
+          size,
+          scaleFactors,
+          children,
+          measurement,
+          posScales
+        ) => {
           /* TODO: need correct scale factors */
           // TODO: only works for polar2 right now
           size = [2 * Math.PI, Math.min(size[0], size[1]) / 2 - 30];
           const childPlaceables = children.map((child) =>
-            child.layout(size, [1, 1])
+            child.layout(size, [1, 1], [undefined, undefined])
           );
 
-          /* TODO: maybe have to be smarter about this... */
-          const minX = Math.min(
-            ...childPlaceables.map(
-              (childPlaceable) => childPlaceable.dims[0].min!
-            )
-          );
-          const maxX = Math.max(
-            ...childPlaceables.map(
-              (childPlaceable) => childPlaceable.dims[0].max!
-            )
-          );
-          const minY = Math.min(
-            ...childPlaceables.map(
-              (childPlaceable) => childPlaceable.dims[1].min!
-            )
-          );
-          const maxY = Math.max(
-            ...childPlaceables.map(
-              (childPlaceable) => childPlaceable.dims[1].max!
-            )
-          );
+          // Compute bounding box in screen space by transforming sample points
+          // For each child placeable, compute its transformed bounding box and union them
+          let screenBbox = empty();
+
+          childPlaceables.forEach((childPlaceable) => {
+            const coordMinX = childPlaceable.dims[0].min!;
+            const coordMaxX = childPlaceable.dims[0].max!;
+            const coordMinY = childPlaceable.dims[1].min!;
+            const coordMaxY = childPlaceable.dims[1].max!;
+
+            const transformedBbox = computeTransformedBoundingBox(
+              coordMinX,
+              coordMaxX,
+              coordMinY,
+              coordMaxY,
+              coordTransform
+            );
+
+            screenBbox = union(screenBbox, transformedBbox);
+          });
+
+          const {
+            minX: screenBboxMinX,
+            maxX: screenBboxMaxX,
+            minY: screenBboxMinY,
+            maxY: screenBboxMaxY,
+          } = screenBbox;
+
+          // Return intrinsicDims in screen space, normalized to start at (0, 0) for parent layouts
+          const intrinsicDims = {
+            x: 0,
+            y: 0,
+            w: screenBboxMaxX - screenBboxMinX,
+            h: screenBboxMaxY - screenBboxMinY,
+          };
+
+          // Translate to offset the negative values and position correctly
+          const translateX =
+            dims[0].min !== undefined
+              ? coordTransform.transform([dims[0].min, dims[1].min ?? 0])[0] -
+                screenBboxMinX
+              : -screenBboxMinX;
+          const translateY =
+            dims[1].min !== undefined
+              ? coordTransform.transform([dims[0].min ?? 0, dims[1].min])[1] -
+                screenBboxMinY
+              : -screenBboxMinY;
 
           return {
-            intrinsicDims: {
-              x: minX,
-              y: minY,
-              w: maxX - minX,
-              h: maxY - minY,
-            },
+            intrinsicDims,
             transform: {
-              translate: [
-                dims[0].min !== undefined ? dims[0].min - minX : undefined,
-                dims[1].min !== undefined ? dims[1].min - minY : undefined,
-              ],
+              translate: [translateX, translateY],
             },
           };
         },

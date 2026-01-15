@@ -256,7 +256,6 @@ export const PolarRibbonChart: StoryObj<Args> = {
     ]).render(container, {
       w: args.w,
       h: args.h,
-      transform: { x: 200, y: 200 },
       axes: true,
     });
 
@@ -316,12 +315,11 @@ export const PieChart: StoryObj<Args> = {
 
     chart(seafood, { coord: clock() })
       .flow(stack("species", { dir: "x" }))
-      .mark(rect({ w: "count", fill: "species" }))
+      .mark(rect({ w: "count", fill: "species", emY: true }))
       .render(container, {
         w: args.w,
         h: args.h,
         axes: true,
-        transform: { x: 200, y: 200 },
       });
 
     return container;
@@ -340,7 +338,6 @@ export const DonutChart: StoryObj<Args> = {
         w: args.w,
         h: args.h,
         axes: true,
-        transform: { x: 200, y: 200 },
       });
 
     return container;
@@ -367,7 +364,6 @@ export const RoseChart: StoryObj<Args> = {
         w: args.w,
         h: args.h,
         axes: true,
-        transform: { x: 200, y: 200 },
       });
 
     return container;
