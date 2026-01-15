@@ -27,16 +27,6 @@ jobs:
           echo "week_ago=$(date -d '7 days ago' +%Y-%m-%d)" >> $GITHUB_OUTPUT
           echo "today=$(date +%Y-%m-%d)" >> $GITHUB_OUTPUT
 
-      - name: Get commits from last week
-        id: commits
-        run: |
-          COMMITS=$(git log --since="7 days ago" --pretty=format:"- **%s** (%an, %as)" | head -100)
-          if [ -z "$COMMITS" ]; then
-            COMMITS="No commits this week."
-          fi
-          # Store in file to avoid escaping issues
-          echo "$COMMITS" > commits.txt
-
       - name: Get merged PRs from last week
         id: prs
         env:
@@ -58,62 +48,7 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
-          # Build the prompt
-          read -r -d '' PROMPT << 'ENDPROMPT'
-          You're summarizing a week of development on GoFish, a charting library for data visualization. Create a Slack-friendly weekly update.
-
-          ## Commits from the last 7 days:
-          COMMITS_PLACEHOLDER
-
-          ## Merged PRs from the last 7 days:
-          PRS_PLACEHOLDER
-
-          Write a concise weekly summary with:
-          1. **Highlights** - 2-3 sentence overview of the main thrust of work this week
-          2. **What changed** - Group related changes by theme (e.g., "API improvements", "Bug fixes", "Documentation"). Use bullet points, keep each brief.
-          3. **PRs of note** - Call out any significant PRs with a one-liner each
-
-          Keep the tone casual and informative. Use emoji sparingly. Total length should be readable in ~30 seconds.
-          ENDPROMPT
-
-          # Read data from files (avoids escaping issues with GitHub Actions outputs)
-          COMMITS_DATA=$(cat commits.txt)
-          PRS_DATA=$(cat prs.txt)
-
-          PROMPT="${PROMPT//COMMITS_PLACEHOLDER/$COMMITS_DATA}"
-          PROMPT="${PROMPT//PRS_PLACEHOLDER/$PRS_DATA}"
-
-          # Escape for JSON payload
-          PROMPT_JSON=$(echo "$PROMPT" | jq -Rs .)
-
-          # Call Claude API
-          RESPONSE=$(curl -s https://api.anthropic.com/v1/messages \
-            -H "Content-Type: application/json" \
-            -H "x-api-key: $ANTHROPIC_API_KEY" \
-            -H "anthropic-version: 2024-06-01" \
-            -d "{
-              \"model\": \"claude-3-5-sonnet-20241022\",
-              \"max_tokens\": 1024,
-              \"messages\": [{\"role\": \"user\", \"content\": $PROMPT_JSON}]
-            }")
-
-          # Check for errors
-          if echo "$RESPONSE" | jq -e '.error' > /dev/null 2>&1; then
-            echo "Error from Claude API:"
-            echo "$RESPONSE" | jq -r '.error'
-            exit 1
-          fi
-
-          SUMMARY=$(echo "$RESPONSE" | jq -r '.content[0].text // "Failed to generate summary"')
-
-          if [ -z "$SUMMARY" ] || [ "$SUMMARY" = "Failed to generate summary" ]; then
-            echo "Failed to extract summary from API response"
-            echo "Response: $RESPONSE"
-            exit 1
-          fi
-
-          # Save to file to avoid escaping issues
-          echo "$SUMMARY" > summary.txt
+          bash .github/scripts/summarize-with-claude.sh
 
       - name: Display summary (always shown)
         run: |
