@@ -1,5 +1,6 @@
 // import { ContinuousDomain } from "./domain";
 import { interval, Interval } from "../util/interval";
+import { CoordinateTransform } from "./coordinateTransforms/coord";
 
 export type UnderlyingSpaceKind =
   | "position"
@@ -14,6 +15,7 @@ export type POSITION_TYPE = {
   spacing?: number;
   ordinalGroupId?: string;
   source?: string;
+  coordinateTransform?: CoordinateTransform;
 };
 
 export type DIFFERENCE_TYPE = {
@@ -54,9 +56,10 @@ export type UnderlyingSpace =
   | ORDINAL_TYPE
   | UNDEFINED_TYPE;
 
-export const POSITION = (domain: Interval): UnderlyingSpace => ({
+export const POSITION = (domain: Interval, coordinateTransform?: CoordinateTransform): UnderlyingSpace => ({
   kind: "position",
   domain,
+  coordinateTransform,
 });
 
 export const isPOSITION = (space: UnderlyingSpace): space is POSITION_TYPE =>

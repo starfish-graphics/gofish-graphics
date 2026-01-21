@@ -134,7 +134,10 @@ export const coord = withGoFish(
                 .filter(isPOSITION)
                 .map((space) => space.domain)
             );
-            xSpace = POSITION(domain);
+            xSpace = {
+              ...POSITION(domain),
+              coordinateTransform: coordTransform,
+            };
           } else if (xChildrenOrdinalSpaces.length > 0) {
             // Collect and merge domains from all child ordinal spaces
             const allKeys = new Set<string>();
@@ -165,7 +168,10 @@ export const coord = withGoFish(
                 .filter(isPOSITION)
                 .map((space) => space.domain)
             );
-            ySpace = POSITION(domain);
+            ySpace = {
+              ...POSITION(domain),
+              coordinateTransform: coordTransform,
+            };
           } else if (yChildrenOrdinalSpaces.length > 0) {
             // Collect and merge domains from all child ordinal spaces
             const allKeys = new Set<string>();
