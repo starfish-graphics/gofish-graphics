@@ -412,6 +412,35 @@ function findCoordTranslation(node: GoFishNode): [number, number] | null {
   return null;
 }
 
+/**
+ * Finds the coordinate-space bounding box from the top-level coord node.
+ * Checks the node itself first, then its immediate children.
+ * Returns the coord node's coordinate-space bounding box, or null if not found.
+ */
+function findCoordBoundingBox(
+  node: GoFishNode
+): { thetaMin: number; thetaMax: number; rMin: number; rMax: number } | null {
+  // Check if the node itself is a coord node
+  if (node.type === "coord" && node.renderData?.coordinateSpaceBbox) {
+    return node.renderData.coordinateSpaceBbox;
+  }
+
+  // Check immediate children for a coord node
+  if (node.children) {
+    for (const child of node.children) {
+      // Check if child is a coord node (coord nodes are always GoFishNode, not GoFishRef)
+      if ("type" in child && child.type === "coord" && "renderData" in child) {
+        const coordNode = child as GoFishNode;
+        if (coordNode.renderData?.coordinateSpaceBbox) {
+          return coordNode.renderData.coordinateSpaceBbox;
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
 export const render = (
   {
     width,
@@ -723,26 +752,42 @@ export const render = (
                 const coordTransform = spaceX.coordinateTransform;
 
                 if (coordTransform && posScales[0]) {
-                  // Map using posScales before applying coordinate transform
-                  const yDomainMin = coordTransform.domain[1].min!;
-                  const screenXMin = posScales[0](xMin);
-                  const screenXMax = posScales[0](xMax);
-                  const screenY = 200;
-
-                  // Create path in screen space, then transform
-                  const screenPath = path(
-                    // [
-                    //   [screenXMin, screenY],
-                    //   [screenXMax, screenY],
-                    // ],
-                    [[0, 100], [Math.PI, 100]],
-                    { subdivision: 1000 }
+                  // Map the chart's data domain into the coordinate-space theta range.
+                  // For clock/polar, the coord transform expects theta in [0, 2π] (or whatever its domain says),
+                  // not raw data-domain values.
+                  const thetaSize =
+                    coordTransform.domain[0].size ??
+                    (coordTransform.domain[0].max! - coordTransform.domain[0].min!);
+                  const thetaScale = computePosScale(
+                    continuous({
+                      value: [xMin, xMax],
+                      measure: "unit",
+                    }),
+                    thetaSize
                   );
 
-                  console.log(screenXMin, screenXMax, screenY);
+                  const thetaMin = thetaScale(xMin);
+                  const thetaMax = thetaScale(xMax);
+                  
+                  // Get the maximum radius from the coordinate-space bounding box
+                  // and add padding to position axis outside chart bounds
+                  const coordBbox = findCoordBoundingBox(child);
+                  const rMax = coordBbox
+                    ? coordBbox.rMax + PADDING * 2
+                    : coordTransform.domain[1].max ??
+                      coordTransform.domain[1].size ??
+                      100;
+
+                  const axisDomainPath = path(
+                    [
+                      [thetaMin, rMax],
+                      [thetaMax, rMax],
+                    ],
+                    { subdivision: 200 }
+                  );
 
                   const axisLinePath = transformPath(
-                    screenPath,
+                    axisDomainPath,
                     coordTransform
                   );
 
@@ -756,15 +801,22 @@ export const render = (
                       />
                       <For each={xTicks}>
                         {(tick) => {
-                          const screenTickX = posScales[0](tick);
-                          const [transformedX, transformedY] =
-                            coordTransform.transform([screenTickX, screenY]);
+                          const thetaTick = thetaScale(tick);
+                          // Place ticks at a fixed radius on the axis circle
+                          const rOuter = rMax;
+                          const rInner = rMax - PADDING * 0.5;
+                          const [tickOuterX, tickOuterY] = coordTransform.transform(
+                            [thetaTick, rOuter]
+                          );
+                          const [tickInnerX, tickInnerY] = coordTransform.transform(
+                            [thetaTick, rInner]
+                          );
                           return (
                             <>
                               <text
                                 transform="scale(1, -1)"
-                                x={transformedX}
-                                y={-transformedY + PADDING * 1.75}
+                                x={tickOuterX}
+                                y={-tickOuterY + PADDING * 1.75}
                                 text-anchor="middle"
                                 dominant-baseline="hanging"
                                 font-size="10px"
@@ -774,10 +826,10 @@ export const render = (
                               </text>
                               {/* Tick mark - create a small line from the axis */}
                               <line
-                                x1={transformedX}
-                                y1={transformedY}
-                                x2={transformedX}
-                                y2={transformedY - PADDING * 0.5}
+                                x1={tickOuterX}
+                                y1={tickOuterY}
+                                x2={tickInnerX}
+                                y2={tickInnerY}
                                 stroke="gray"
                               />
                             </>
