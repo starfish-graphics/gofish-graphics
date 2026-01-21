@@ -134,7 +134,10 @@ export const coord = withGoFish(
                 .filter(isPOSITION)
                 .map((space) => space.domain)
             );
-            xSpace = POSITION(domain);
+            xSpace = {
+              ...POSITION(domain),
+              coordinateTransform: coordTransform,
+            };
           } else if (xChildrenOrdinalSpaces.length > 0) {
             // Collect and merge domains from all child ordinal spaces
             const allKeys = new Set<string>();
@@ -165,7 +168,10 @@ export const coord = withGoFish(
                 .filter(isPOSITION)
                 .map((space) => space.domain)
             );
-            ySpace = POSITION(domain);
+            ySpace = {
+              ...POSITION(domain),
+              coordinateTransform: coordTransform,
+            };
           } else if (yChildrenOrdinalSpaces.length > 0) {
             // Collect and merge domains from all child ordinal spaces
             const allKeys = new Set<string>();
@@ -212,12 +218,35 @@ export const coord = withGoFish(
           // Compute bounding box in screen space by transforming sample points
           // For each child placeable, compute its transformed bounding box and union them
           let screenBbox = empty();
+          
+          // Track coordinate-space bounding box (before transformation)
+          let coordSpaceBbox: {
+            thetaMin: number;
+            thetaMax: number;
+            rMin: number;
+            rMax: number;
+          } | null = null;
 
           childPlaceables.forEach((childPlaceable) => {
             const coordMinX = childPlaceable.dims[0].min!;
             const coordMaxX = childPlaceable.dims[0].max!;
             const coordMinY = childPlaceable.dims[1].min!;
             const coordMaxY = childPlaceable.dims[1].max!;
+
+            // Track coordinate-space bounds (theta = X, radius = Y for polar/clock)
+            if (coordSpaceBbox === null) {
+              coordSpaceBbox = {
+                thetaMin: coordMinX,
+                thetaMax: coordMaxX,
+                rMin: coordMinY,
+                rMax: coordMaxY,
+              };
+            } else {
+              coordSpaceBbox.thetaMin = Math.min(coordSpaceBbox.thetaMin, coordMinX);
+              coordSpaceBbox.thetaMax = Math.max(coordSpaceBbox.thetaMax, coordMaxX);
+              coordSpaceBbox.rMin = Math.min(coordSpaceBbox.rMin, coordMinY);
+              coordSpaceBbox.rMax = Math.max(coordSpaceBbox.rMax, coordMaxY);
+            }
 
             const transformedBbox = computeTransformedBoundingBox(
               coordMinX,
@@ -261,6 +290,9 @@ export const coord = withGoFish(
             intrinsicDims,
             transform: {
               translate: [translateX, translateY],
+            },
+            renderData: {
+              coordinateSpaceBbox: coordSpaceBbox,
             },
           };
         },

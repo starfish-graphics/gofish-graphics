@@ -121,7 +121,7 @@ export class GoFishNode {
   public shared: Size<boolean>;
   // public posDomains: Size<Domain | undefined> = [undefined, undefined];
   private sizeDomains: Size<ScaleFactorFunction>;
-  private renderData?: any;
+  public renderData?: any;
   public coordinateTransform?: CoordinateTransform;
   public color?: MaybeValue<string>;
   constructor(
