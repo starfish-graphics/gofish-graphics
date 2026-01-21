@@ -23,6 +23,7 @@ import {
   initLayerContext,
   resetLayerContext,
 } from "./graphicalOperators/frame";
+import { path, pathToSVGPath, transformPath } from "../path";
 
 /* scope context */
 let scopeContext: ScopeContext | null = null;
@@ -213,7 +214,10 @@ export async function layout(
     niceUnderlyingSpaceX.kind === "position"
       ? computePosScale(
           continuous({
-            value: [niceUnderlyingSpaceX.domain!.min, niceUnderlyingSpaceX.domain!.max],
+            value: [
+              niceUnderlyingSpaceX.domain!.min,
+              niceUnderlyingSpaceX.domain!.max,
+            ],
             measure: "unit",
           }),
           w
@@ -222,7 +226,10 @@ export async function layout(
     niceUnderlyingSpaceY.kind === "position"
       ? computePosScale(
           continuous({
-            value: [niceUnderlyingSpaceY.domain!.min, niceUnderlyingSpaceY.domain!.max],
+            value: [
+              niceUnderlyingSpaceY.domain!.min,
+              niceUnderlyingSpaceY.domain!.max,
+            ],
             measure: "unit",
           }),
           h
@@ -372,6 +379,39 @@ export const gofish = (
 
 const PADDING = 10;
 
+/**
+ * Finds the translation from the top-level coord node.
+ * Checks the node itself first, then its immediate children.
+ * Returns the coord node's transform.translate values, or null if not found.
+ */
+function findCoordTranslation(node: GoFishNode): [number, number] | null {
+  // Check if the node itself is a coord node
+  if (node.type === "coord" && node.transform?.translate) {
+    return [
+      node.transform.translate[0] ?? 0,
+      node.transform.translate[1] ?? 0,
+    ];
+  }
+
+  // Check immediate children for a coord node
+  if (node.children) {
+    for (const child of node.children) {
+      // Check if child is a coord node (coord nodes are always GoFishNode, not GoFishRef)
+      if ("type" in child && child.type === "coord" && "transform" in child) {
+        const coordNode = child as GoFishNode;
+        if (coordNode.transform?.translate) {
+          return [
+            coordNode.transform.translate[0] ?? 0,
+            coordNode.transform.translate[1] ?? 0,
+          ];
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
 export const render = (
   {
     width,
@@ -449,8 +489,27 @@ export const render = (
           <g transform={transform ?? ""}>{child.INTERNAL_render()}</g>
         </Show>
         <Show when={axes}>
-          <g>
-            {/* x axis */}
+          {(() => {
+            // Check if we have a coordinate transform (polar/clock coordinates)
+            const hasCoordTransform =
+              (isPOSITION(underlyingSpaceX) &&
+                underlyingSpaceX.coordinateTransform) ||
+              (isPOSITION(underlyingSpaceY) &&
+                underlyingSpaceY.coordinateTransform);
+            
+            // Find the coord node's translation if we have a coordinate transform
+            const coordTranslation = hasCoordTransform
+              ? findCoordTranslation(child)
+              : null;
+            
+            // Apply translation if found
+            const axesTransform = coordTranslation
+              ? `translate(${coordTranslation[0]}, ${coordTranslation[1]})`
+              : undefined;
+            
+            return (
+              <g transform={axesTransform}>
+                {/* x axis */}
             {/* <line
               x1={0}
               y1={height + PADDING}
@@ -462,48 +521,115 @@ export const render = (
             {/* y axis (continuous) */}
             <Show when={isPOSITION(underlyingSpaceY)}>
               {(() => {
+                if (!isPOSITION(underlyingSpaceY)) return null;
+                const spaceY = underlyingSpaceY; // Type narrowed to POSITION_TYPE
                 const [yMin, yMax] = nice(
-                  underlyingSpaceY.domain!.min,
-                  underlyingSpaceY.domain!.max,
+                  spaceY.domain.min,
+                  spaceY.domain.max,
                   10
                 );
                 const yTicks = ticks(yMin, yMax, 10);
-                return (
-                  <g>
-                    <line
-                      x1={-PADDING}
-                      y1={posScales[1](yTicks[0]) - 0.5}
-                      x2={-PADDING}
-                      y2={posScales[1](yTicks[yTicks.length - 1]) + 0.5}
-                      stroke="gray"
-                      stroke-width="1px"
-                    />
-                    <For each={yTicks}>
-                      {(tick) => (
-                        <>
-                          <text
-                            transform="scale(1, -1)"
-                            x={-PADDING * 1.75}
-                            y={-posScales[1](tick)}
-                            text-anchor="end"
-                            dominant-baseline="middle"
-                            font-size="10px"
-                            fill="gray"
-                          >
-                            {tick}
-                          </text>
-                          <line
-                            x1={-PADDING * 1.5}
-                            y1={posScales[1](tick)}
-                            x2={-PADDING}
-                            y2={posScales[1](tick)}
-                            stroke="gray"
-                          />
-                        </>
-                      )}
-                    </For>
-                  </g>
-                );
+                const coordTransform = spaceY.coordinateTransform;
+
+                if (coordTransform && posScales[0] && posScales[1]) {
+                  // Map using posScales before applying coordinate transform
+                  const xDomainMin = coordTransform.domain[0].min!;
+                  const screenYMin = posScales[1](yMin);
+                  const screenYMax = posScales[1](yMax);
+                  const screenX = posScales[0](xDomainMin);
+
+                  // Create path in screen space, then transform
+                  const screenPath = path(
+                    [
+                      [screenX, screenYMin],
+                      [screenX, screenYMax],
+                    ],
+                    { subdivision: 100 }
+                  );
+                  const axisLinePath = transformPath(
+                    screenPath,
+                    coordTransform
+                  );
+
+                  return (
+                    <g>
+                      <path
+                        d={pathToSVGPath(axisLinePath)}
+                        stroke="gray"
+                        stroke-width="1px"
+                        fill="none"
+                      />
+                      <For each={yTicks}>
+                        {(tick) => {
+                          const screenTickY = posScales[1](tick);
+                          const [transformedX, transformedY] =
+                            coordTransform.transform([screenX, screenTickY]);
+                          return (
+                            <>
+                              <text
+                                transform="scale(1, -1)"
+                                x={transformedX - PADDING * 0.25}
+                                y={-transformedY}
+                                text-anchor="end"
+                                dominant-baseline="middle"
+                                font-size="10px"
+                                fill="gray"
+                              >
+                                {tick}
+                              </text>
+                              {/* Tick mark - create a small line from the axis */}
+                              <line
+                                x1={transformedX}
+                                y1={transformedY}
+                                x2={transformedX - PADDING * 0.5}
+                                y2={transformedY}
+                                stroke="gray"
+                              />
+                            </>
+                          );
+                        }}
+                      </For>
+                    </g>
+                  );
+                } else {
+                  // Standard cartesian y-axis
+                  return (
+                    <g>
+                      <line
+                        x1={-PADDING}
+                        y1={posScales[1](yTicks[0]) - 0.5}
+                        x2={-PADDING}
+                        y2={posScales[1](yTicks[yTicks.length - 1]) + 0.5}
+                        stroke="gray"
+                        stroke-width="1px"
+                      />
+                      <For each={yTicks}>
+                        {(tick) => (
+                          <>
+                            <text
+                              transform="scale(1, -1)"
+                              x={-PADDING * 1.75}
+                              y={-posScales[1](tick)}
+                              text-anchor="end"
+                              dominant-baseline="middle"
+                              font-size="10px"
+                              fill="gray"
+                            >
+                              {tick}
+                            </text>
+                            <line
+                              x1={-PADDING * 1.5}
+                              y1={posScales[1](tick)}
+                              x2={-PADDING}
+                              y2={posScales[1](tick)}
+                              stroke="gray"
+                            />
+                          </>
+                        )}
+                      </For>
+                    </g>
+                  );
+                }
               })()}
             </Show>
             <Show
@@ -586,48 +712,116 @@ export const render = (
             {/* x axis (position) */}
             <Show when={isPOSITION(underlyingSpaceX)}>
               {(() => {
+                if (!isPOSITION(underlyingSpaceX)) return null;
+                const spaceX = underlyingSpaceX; // Type narrowed to POSITION_TYPE
                 const [xMin, xMax] = nice(
-                  underlyingSpaceX.domain!.min,
-                  underlyingSpaceX.domain!.max,
+                  spaceX.domain.min,
+                  spaceX.domain.max,
                   10
                 );
                 const xTicks = ticks(xMin, xMax, 10);
-                return (
-                  <g>
-                    <line
-                      x1={posScales[0](xTicks[0]) - 0.5}
-                      y1={-PADDING}
-                      x2={posScales[0](xTicks[xTicks.length - 1]) + 0.5}
-                      y2={-PADDING}
-                      stroke="gray"
-                      stroke-width="1px"
-                    />
-                    <For each={xTicks}>
-                      {(tick) => (
-                        <>
-                          <text
-                            transform="scale(1, -1)"
-                            x={posScales[0](tick)}
-                            y={PADDING * 1.75}
-                            text-anchor="middle"
-                            dominant-baseline="hanging"
-                            font-size="10px"
-                            fill="gray"
-                          >
-                            {tick}
-                          </text>
-                          <line
-                            x1={posScales[0](tick)}
-                            y1={-PADDING}
-                            x2={posScales[0](tick)}
-                            y2={-PADDING * 1.5}
-                            stroke="gray"
-                          />
-                        </>
-                      )}
-                    </For>
-                  </g>
-                );
+                const coordTransform = spaceX.coordinateTransform;
+
+                if (coordTransform && posScales[0]) {
+                  // Map using posScales before applying coordinate transform
+                  const yDomainMin = coordTransform.domain[1].min!;
+                  const screenXMin = posScales[0](xMin);
+                  const screenXMax = posScales[0](xMax);
+                  const screenY = 200;
+
+                  // Create path in screen space, then transform
+                  const screenPath = path(
+                    // [
+                    //   [screenXMin, screenY],
+                    //   [screenXMax, screenY],
+                    // ],
+                    [[0, 100], [Math.PI, 100]],
+                    { subdivision: 1000 }
+                  );
+                  const axisLinePath = transformPath(
+                    screenPath,
+                    coordTransform
+                  );
+
+                  return (
+                    <g>
+                      <path
+                        d={pathToSVGPath(axisLinePath)}
+                        stroke="gray"
+                        stroke-width="1px"
+                        fill="none"
+                      />
+                      <For each={xTicks}>
+                        {(tick) => {
+                          const screenTickX = posScales[0](tick);
+                          const [transformedX, transformedY] =
+                            coordTransform.transform([screenTickX, screenY]);
+                          return (
+                            <>
+                              <text
+                                transform="scale(1, -1)"
+                                x={transformedX}
+                                y={-transformedY + PADDING * 1.75}
+                                text-anchor="middle"
+                                dominant-baseline="hanging"
+                                font-size="10px"
+                                fill="gray"
+                              >
+                                {tick}
+                              </text>
+                              {/* Tick mark - create a small line from the axis */}
+                              <line
+                                x1={transformedX}
+                                y1={transformedY}
+                                x2={transformedX}
+                                y2={transformedY - PADDING * 0.5}
+                                stroke="gray"
+                              />
+                            </>
+                          );
+                        }}
+                      </For>
+                    </g>
+                  );
+                } else {
+                  // Standard cartesian x-axis
+                  return (
+                    <g>
+                      <line
+                        x1={posScales[0](xTicks[0]) - 0.5}
+                        y1={-PADDING}
+                        x2={posScales[0](xTicks[xTicks.length - 1]) + 0.5}
+                        y2={-PADDING}
+                        stroke="gray"
+                        stroke-width="1px"
+                      />
+                      <For each={xTicks}>
+                        {(tick) => (
+                          <>
+                            <text
+                              transform="scale(1, -1)"
+                              x={posScales[0](tick)}
+                              y={PADDING * 1.75}
+                              text-anchor="middle"
+                              dominant-baseline="hanging"
+                              font-size="10px"
+                              fill="gray"
+                            >
+                              {tick}
+                            </text>
+                            <line
+                              x1={posScales[0](tick)}
+                              y1={-PADDING}
+                              x2={posScales[0](tick)}
+                              y2={-PADDING * 1.5}
+                              stroke="gray"
+                            />
+                          </>
+                        )}
+                      </For>
+                    </g>
+                  );
+                }
               })()}
             </Show>
 
@@ -857,7 +1051,9 @@ export const render = (
                 )}
               </For>
             </g>
-          </g>
+              </g>
+            );
+          })()}
         </Show>
       </g>
     </svg>
