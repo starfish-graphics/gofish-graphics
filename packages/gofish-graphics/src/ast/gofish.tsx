@@ -738,6 +738,9 @@ export const render = (
                     [[0, 100], [Math.PI, 100]],
                     { subdivision: 1000 }
                   );
+
+                  console.log(screenXMin, screenXMax, screenY);
+
                   const axisLinePath = transformPath(
                     screenPath,
                     coordTransform
