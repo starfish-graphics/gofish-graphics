@@ -549,6 +549,7 @@ export const render = (
               : undefined;
             
             return (
+              <>
               <g transform={axesTransform}>
                 {/* x axis */}
             {/* <line
@@ -1110,6 +1111,7 @@ export const render = (
                 );
               })()}
             </Show>
+              </g>
             {/* legend (discrete color for now) */}
             <g>
               <For
@@ -1140,7 +1142,7 @@ export const render = (
                 )}
               </For>
             </g>
-              </g>
+              </>
             );
           })()}
         </Show>
