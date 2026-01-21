@@ -150,7 +150,10 @@ export async function layout(
   sizeDomains: [any, any];
   underlyingSpaceX: UnderlyingSpace;
   underlyingSpaceY: UnderlyingSpace;
-  posScales: [(pos: number) => number, (pos: number) => number];
+  posScales: [
+    ((pos: number) => number) | undefined,
+    ((pos: number) => number) | undefined,
+  ];
   ordinalScales: [OrdinalScale | undefined, OrdinalScale | undefined];
   child: GoFishNode;
 }> {
@@ -210,7 +213,10 @@ export async function layout(
     debugUnderlyingSpaceTree(child);
   }
 
-  const posScales = [
+  const posScales: [
+    ((pos: number) => number) | undefined,
+    ((pos: number) => number) | undefined,
+  ] = [
     niceUnderlyingSpaceX.kind === "position"
       ? computePosScale(
           continuous({
@@ -296,7 +302,10 @@ export const gofish = (
     sizeDomains: [any, any];
     underlyingSpaceX: UnderlyingSpace;
     underlyingSpaceY: UnderlyingSpace;
-    posScales: [(pos: number) => number, (pos: number) => number];
+    posScales: [
+      ((pos: number) => number) | undefined,
+      ((pos: number) => number) | undefined,
+    ];
     ordinalScales: [OrdinalScale | undefined, OrdinalScale | undefined];
     child: GoFishNode;
     scaleContext: ScaleContext;
@@ -466,7 +475,10 @@ export const render = (
     sizeDomains?: [any, any];
     underlyingSpaceX: UnderlyingSpace;
     underlyingSpaceY: UnderlyingSpace;
-    posScales: [(pos: number) => number, (pos: number) => number];
+    posScales: [
+      ((pos: number) => number) | undefined,
+      ((pos: number) => number) | undefined,
+    ];
     ordinalScales: [OrdinalScale | undefined, OrdinalScale | undefined];
   },
   child: GoFishNode
@@ -552,6 +564,8 @@ export const render = (
               {(() => {
                 if (!isPOSITION(underlyingSpaceY)) return null;
                 const spaceY = underlyingSpaceY; // Type narrowed to POSITION_TYPE
+                const xPosScale = posScales[0];
+                const yPosScale = posScales[1];
                 const [yMin, yMax] = nice(
                   spaceY.domain.min,
                   spaceY.domain.max,
@@ -560,12 +574,12 @@ export const render = (
                 const yTicks = ticks(yMin, yMax, 10);
                 const coordTransform = spaceY.coordinateTransform;
 
-                if (coordTransform && posScales[0] && posScales[1]) {
+                if (coordTransform && xPosScale && yPosScale) {
                   // Map using posScales before applying coordinate transform
                   const xDomainMin = coordTransform.domain[0].min!;
-                  const screenYMin = posScales[1](yMin);
-                  const screenYMax = posScales[1](yMax);
-                  const screenX = posScales[0](xDomainMin);
+                  const screenYMin = yPosScale(yMin);
+                  const screenYMax = yPosScale(yMax);
+                  const screenX = xPosScale(xDomainMin);
 
                   // Create path in screen space, then transform
                   const screenPath = path(
@@ -590,7 +604,7 @@ export const render = (
                       />
                       <For each={yTicks}>
                         {(tick) => {
-                          const screenTickY = posScales[1](tick);
+                          const screenTickY = yPosScale(tick);
                           const [transformedX, transformedY] =
                             coordTransform.transform([screenX, screenTickY]);
                           return (
@@ -622,13 +636,14 @@ export const render = (
                   );
                 } else {
                   // Standard cartesian y-axis
+                  if (!yPosScale) return null;
                   return (
                     <g>
                       <line
                         x1={-PADDING}
-                        y1={posScales[1](yTicks[0]) - 0.5}
+                        y1={yPosScale(yTicks[0]) - 0.5}
                         x2={-PADDING}
-                        y2={posScales[1](yTicks[yTicks.length - 1]) + 0.5}
+                        y2={yPosScale(yTicks[yTicks.length - 1]) + 0.5}
                         stroke="gray"
                         stroke-width="1px"
                       />
@@ -638,7 +653,7 @@ export const render = (
                             <text
                               transform="scale(1, -1)"
                               x={-PADDING * 1.75}
-                              y={-posScales[1](tick)}
+                              y={-yPosScale(tick)}
                               text-anchor="end"
                               dominant-baseline="middle"
                               font-size="10px"
@@ -648,9 +663,9 @@ export const render = (
                             </text>
                             <line
                               x1={-PADDING * 1.5}
-                              y1={posScales[1](tick)}
+                              y1={yPosScale(tick)}
                               x2={-PADDING}
-                              y2={posScales[1](tick)}
+                              y2={yPosScale(tick)}
                               stroke="gray"
                             />
                           </>
@@ -673,6 +688,7 @@ export const render = (
                   domain: [number, number];
                   scaleFactor: number;
                 };
+                if (!isDIFFERENCE(underlyingSpaceY)) return null;
                 const [yMin, yMax] = nice(0, underlyingSpaceY.width, 10);
                 const yTicks = ticks(yMin, yMax, 10);
                 return (
@@ -743,6 +759,7 @@ export const render = (
               {(() => {
                 if (!isPOSITION(underlyingSpaceX)) return null;
                 const spaceX = underlyingSpaceX; // Type narrowed to POSITION_TYPE
+                const xPosScale = posScales[0];
                 const [xMin, xMax] = nice(
                   spaceX.domain.min,
                   spaceX.domain.max,
@@ -751,7 +768,7 @@ export const render = (
                 const xTicks = ticks(xMin, xMax, 10);
                 const coordTransform = spaceX.coordinateTransform;
 
-                if (coordTransform && posScales[0]) {
+                if (coordTransform && xPosScale) {
                   // Map the chart's data domain into the coordinate-space theta range.
                   // For clock/polar, the coord transform expects theta in [0, 2π] (or whatever its domain says),
                   // not raw data-domain values.
@@ -778,6 +795,10 @@ export const render = (
                       coordTransform.domain[1].size ??
                       100;
 
+                  const rAxis = rMax;
+                  const tickLen = PADDING * 0.5;
+                  const labelPad = PADDING * 1.25;
+
                   const axisDomainPath = path(
                     [
                       [thetaMin, rMax],
@@ -802,21 +823,32 @@ export const render = (
                       <For each={xTicks}>
                         {(tick) => {
                           const thetaTick = thetaScale(tick);
-                          // Place ticks at a fixed radius on the axis circle
-                          const rOuter = rMax;
-                          const rInner = rMax - PADDING * 0.5;
-                          const [tickOuterX, tickOuterY] = coordTransform.transform(
-                            [thetaTick, rOuter]
-                          );
-                          const [tickInnerX, tickInnerY] = coordTransform.transform(
-                            [thetaTick, rInner]
-                          );
+                          // Ticks/labels should point outward (increasing r), regardless of how the
+                          // coordinate transform distorts the space. Compute direction in screen space
+                          // by sampling at r and r+Δr.
+                          const [tickAxisX, tickAxisY] = coordTransform.transform([
+                            thetaTick,
+                            rAxis,
+                          ]);
+                          const [tickOutX, tickOutY] = coordTransform.transform([
+                            thetaTick,
+                            rAxis + tickLen,
+                          ]);
+
+                          const dx = tickOutX - tickAxisX;
+                          const dy = tickOutY - tickAxisY;
+                          const dLen = Math.hypot(dx, dy);
+                          const dirX = dLen > 1e-6 ? dx / dLen : 0;
+                          const dirY = dLen > 1e-6 ? dy / dLen : 1;
+
+                          const labelX = tickOutX + dirX * labelPad;
+                          const labelY = tickOutY + dirY * labelPad;
                           return (
                             <>
                               <text
                                 transform="scale(1, -1)"
-                                x={tickOuterX}
-                                y={-tickOuterY + PADDING * 1.75}
+                                x={labelX}
+                                y={-labelY}
                                 text-anchor="middle"
                                 dominant-baseline="hanging"
                                 font-size="10px"
@@ -826,10 +858,10 @@ export const render = (
                               </text>
                               {/* Tick mark - create a small line from the axis */}
                               <line
-                                x1={tickOuterX}
-                                y1={tickOuterY}
-                                x2={tickInnerX}
-                                y2={tickInnerY}
+                                x1={tickAxisX}
+                                y1={tickAxisY}
+                                x2={tickOutX}
+                                y2={tickOutY}
                                 stroke="gray"
                               />
                             </>
@@ -840,12 +872,13 @@ export const render = (
                   );
                 } else {
                   // Standard cartesian x-axis
+                  if (!xPosScale) return null;
                   return (
                     <g>
                       <line
-                        x1={posScales[0](xTicks[0]) - 0.5}
+                        x1={xPosScale(xTicks[0]) - 0.5}
                         y1={-PADDING}
-                        x2={posScales[0](xTicks[xTicks.length - 1]) + 0.5}
+                        x2={xPosScale(xTicks[xTicks.length - 1]) + 0.5}
                         y2={-PADDING}
                         stroke="gray"
                         stroke-width="1px"
@@ -855,7 +888,7 @@ export const render = (
                           <>
                             <text
                               transform="scale(1, -1)"
-                              x={posScales[0](tick)}
+                              x={xPosScale(tick)}
                               y={PADDING * 1.75}
                               text-anchor="middle"
                               dominant-baseline="hanging"
@@ -865,9 +898,9 @@ export const render = (
                               {tick}
                             </text>
                             <line
-                              x1={posScales[0](tick)}
+                              x1={xPosScale(tick)}
                               y1={-PADDING}
-                              x2={posScales[0](tick)}
+                              x2={xPosScale(tick)}
                               y2={-PADDING * 1.5}
                               stroke="gray"
                             />
@@ -893,6 +926,7 @@ export const render = (
                   domain: [number, number];
                   scaleFactor: number;
                 };
+                if (!isDIFFERENCE(underlyingSpaceX)) return null;
                 const [xMin, xMax] = nice(0, underlyingSpaceX.width, 10);
                 const xTicks = ticks(xMin, xMax, 10);
                 return (
