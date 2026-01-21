@@ -115,10 +115,31 @@ export const StackedBarChart: StoryObj<Args> = {
 
     chart(seafood)
       .flow(
-        spread("lake", { dir: "x" }), //
-        stack("species", { dir: "y" })
+        spread("lake", { dir: "x"}), //
+        stack("species", { dir: "y", })
       )
       .mark(rect({ h: "count", fill: "species" }))
+      .render(container, {
+        w: args.w,
+        h: args.h,
+        axes: true,
+      });
+
+    return container;
+  },
+};
+
+export const StackedBarChartStoryWithLabels: StoryObj<Args> = {
+  args: { w: 400, h: 400 },
+  render: (args: Args) => {
+    const container = initializeContainer();
+
+    chart(seafood)
+      .flow(
+        spread("lake", { dir: "x"}), //
+        stack("species", { dir: "y",  })
+      )
+      .mark(rect({ h: "count", fill: "species", label: true }))
       .render(container, {
         w: args.w,
         h: args.h,
