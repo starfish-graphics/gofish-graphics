@@ -5,12 +5,23 @@
  * https://github.com/d3/d3-geo/blob/8c53a90ae70c94bace73ecb02f2c792c649c86ba/src/projection/resample.js
  * https://observablehq.com/@d3/adaptive-sampling
  *
- * This implementation adapts the algorithm to work with PathSegments (lines and bezier curves)
- * and transforms points as it resamples, returning already-transformed points.
+ * This implementation is a generalized version (not specialized to spherical coordinates) and
+ * written in a more readable and functional style. It also works with PathSegments (lines and
+ * bezier curves).
  */
 
 import { CoordinateTransform } from "./ast/coordinateTransforms/coord";
-import { Path, PathSegment, LineSegment, BezierCurve, Point, segment, lerpPoint, subdivideCurve1 } from "./path";
+import {
+  Path,
+  PathSegment,
+  LineSegment,
+  BezierCurve,
+  Point,
+  segment,
+  curve,
+  lerpPoint,
+  subdivideCurve1,
+} from "./path";
 
 export interface ResamplingOptions {
   /** Squared distance threshold in projected space */
@@ -71,6 +82,55 @@ function bezierSourceDistance(curve: BezierCurve): number {
 }
 
 /**
+ * Converts a centripetal Catmull-Rom spline segment to a cubic Bezier curve.
+ * Given four control points P0, P1, P2, P3, creates a Bezier curve from P1 to P2.
+ * Uses centripetal parameterization (alpha = 0.5) for smooth, cusp-free curves.
+ *
+ * This uses a standard approximation that works well for centripetal Catmull-Rom splines.
+ */
+function catmullRomToBezier(
+  p0: Point,
+  p1: Point,
+  p2: Point,
+  p3: Point
+): BezierCurve {
+  // Centripetal parameterization: calculate distances with alpha = 0.5
+  // For centripetal: t_i = sqrt(|P_i - P_{i-1}|)
+  const d1 = Math.sqrt(distanceSquared(p0, p1));
+  const d2 = Math.sqrt(distanceSquared(p1, p2));
+  const d3 = Math.sqrt(distanceSquared(p2, p3));
+
+  // Avoid division by zero
+  const eps = 1e-6;
+  const d1Safe = Math.max(d1, eps);
+  const d2Safe = Math.max(d2, eps);
+  const d3Safe = Math.max(d3, eps);
+
+  // Calculate tangents at P1 and P2
+  // For centripetal Catmull-Rom, tangents are weighted by the centripetal distances
+  // Tangent at P1 points toward P2, weighted by distances from P0
+  // Tangent at P2 points from P1, weighted by distances to P3
+  const t1x = (p2[0] - p0[0]) / (d1Safe + d2Safe);
+  const t1y = (p2[1] - p0[1]) / (d1Safe + d2Safe);
+  const t2x = (p3[0] - p1[0]) / (d2Safe + d3Safe);
+  const t2y = (p3[1] - p1[1]) / (d2Safe + d3Safe);
+
+  // Convert to Bezier control points
+  // The control points are positioned along the tangent vectors
+  // The factor d2/3 ensures the Bezier curve approximates the Catmull-Rom segment length
+  const control1: Point = [
+    p1[0] + (d2Safe / 3) * t1x,
+    p1[1] + (d2Safe / 3) * t1y,
+  ];
+  const control2: Point = [
+    p2[0] - (d2Safe / 3) * t2x,
+    p2[1] - (d2Safe / 3) * t2y,
+  ];
+
+  return curve(p1, control1, control2, p2);
+}
+
+/**
  * Recursively resamples a line segment adaptively.
  */
 function resampleLineSegment(
@@ -112,7 +172,8 @@ function resampleLineSegment(
     const midpointCheck = Math.abs((dx * dx2 + dy * dy2) / d2 - 0.5) > 0.3;
 
     // 3. Source space distance exceeds threshold
-    const sourceDistanceCheck = lineSourceDistance(seg) > options.minSourceDistance;
+    const sourceDistanceCheck =
+      lineSourceDistance(seg) > options.minSourceDistance;
 
     if (perpendicularCheck || midpointCheck || sourceDistanceCheck) {
       // Create left and right segments
@@ -129,6 +190,84 @@ function resampleLineSegment(
       resampleLineSegment(rightSeg, transform, options, depth - 1, result);
     }
   }
+}
+
+/**
+ * Converts an array of points to Bezier curves using centripetal Catmull-Rom interpolation.
+ * This function handles the conversion for a single segment's resampled points,
+ * preserving boundaries by only smoothing within the point set.
+ */
+function convertPointsToBezierCurves(points: Point[]): PathSegment[] {
+  const segments: PathSegment[] = [];
+
+  if (points.length === 0) {
+    return segments;
+  }
+
+  if (points.length === 1) {
+    // Single point - can't create a segment
+    return segments;
+  }
+
+  if (points.length === 2) {
+    // Two points - can't create Catmull-Rom, use line segment
+    segments.push(segment(points[0], points[1]));
+    return segments;
+  }
+
+  if (points.length === 3) {
+    // Three points - create two segments with duplicated endpoints
+    // First segment: from points[0] to points[1]
+    segments.push(
+      catmullRomToBezier(
+        points[0], // P0 (duplicate for boundary)
+        points[0], // P1 (start of curve)
+        points[1], // P2 (end of curve)
+        points[2] // P3 (next point for tangent)
+      )
+    );
+
+    // Second segment: from points[1] to points[2]
+    segments.push(
+      catmullRomToBezier(
+        points[0], // P0 (previous point for tangent)
+        points[1], // P1 (start of curve)
+        points[2], // P2 (end of curve)
+        points[2] // P3 (duplicate for boundary)
+      )
+    );
+    return segments;
+  }
+
+  // Four or more points - apply Catmull-Rom conversion for each segment
+  for (let i = 0; i < points.length - 1; i++) {
+    // For each segment from points[i] to points[i+1], we need 4 points
+    let p0: Point, p1: Point, p2: Point, p3: Point;
+
+    if (i === 0) {
+      // First segment: duplicate first point for P0
+      p0 = points[0];
+      p1 = points[0];
+      p2 = points[1];
+      p3 = points[2];
+    } else if (i === points.length - 2) {
+      // Last segment: duplicate last point for P3
+      p0 = points[i - 1];
+      p1 = points[i];
+      p2 = points[i + 1];
+      p3 = points[i + 1];
+    } else {
+      // Interior segments: use 4 consecutive points
+      p0 = points[i - 1];
+      p1 = points[i];
+      p2 = points[i + 1];
+      p3 = points[i + 2];
+    }
+
+    segments.push(catmullRomToBezier(p0, p1, p2, p3));
+  }
+
+  return segments;
 }
 
 /**
@@ -176,7 +315,8 @@ function resampleBezierCurve(
     const midpointCheck = Math.abs((dx * dx2 + dy * dy2) / d2 - 0.5) > 0.3;
 
     // 3. Source space distance exceeds threshold
-    const sourceDistanceCheck = bezierSourceDistance(curve) > options.minSourceDistance;
+    const sourceDistanceCheck =
+      bezierSourceDistance(curve) > options.minSourceDistance;
 
     if (perpendicularCheck || midpointCheck || sourceDistanceCheck) {
       // Recursively process first half
@@ -193,7 +333,11 @@ function resampleBezierCurve(
 
 /**
  * Adaptively resamples a path, transforming points as it goes.
- * Returns a path with transformed, resampled segments (all as line segments).
+ * Returns a path with transformed, resampled segments converted to smooth Bezier curves
+ * using centripetal Catmull-Rom interpolation.
+ * 
+ * Each input segment is processed independently to preserve piecewise smoothness
+ * and prevent smoothing across segment boundaries.
  */
 export function adaptiveResamplePath(
   path: Path,
@@ -207,35 +351,33 @@ export function adaptiveResamplePath(
     return [];
   }
 
-  const result: Point[] = [];
+  const outputSegments: PathSegment[] = [];
 
-  // Process each segment
+  // Process each input segment independently
   for (let i = 0; i < path.length; i++) {
     const seg = path[i];
+    const segmentPoints: Point[] = [];
 
     // Add start point (transformed)
-    if (i === 0) {
-      const startPoint = seg.type === "line" ? seg.points[0] : seg.start;
-      result.push(transform(startPoint));
-    }
+    const startPoint = seg.type === "line" ? seg.points[0] : seg.start;
+    segmentPoints.push(transform(startPoint));
 
-    // Resample the segment
+    // Resample this segment only, collecting points into segmentPoints
     if (seg.type === "line") {
-      resampleLineSegment(seg, transform, opts, opts.maxDepth, result);
+      resampleLineSegment(seg, transform, opts, opts.maxDepth, segmentPoints);
     } else {
-      resampleBezierCurve(seg, transform, opts, opts.maxDepth, result);
+      resampleBezierCurve(seg, transform, opts, opts.maxDepth, segmentPoints);
     }
 
     // Add end point (transformed)
     const endPoint = seg.type === "line" ? seg.points[1] : seg.end;
-    result.push(transform(endPoint));
+    segmentPoints.push(transform(endPoint));
+
+    // Convert this segment's points to Bezier curves (within this segment only)
+    // This preserves boundaries - no smoothing across segments
+    const bezierSegments = convertPointsToBezierCurves(segmentPoints);
+    outputSegments.push(...bezierSegments);
   }
 
-  // Convert transformed points to line segments
-  const segments: PathSegment[] = [];
-  for (let i = 0; i < result.length - 1; i++) {
-    segments.push(segment(result[i], result[i + 1]));
-  }
-
-  return segments;
+  return outputSegments;
 }
