@@ -19,33 +19,57 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Need full history to check for recent commits
+
+      - name: Check for recent commits
+        id: check_commits
+        run: |
+          # Check if there are any commits in the last 24 hours
+          ONE_DAY_AGO=$(date -u -d '24 hours ago' +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -v-24H +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -d '1 day ago' +%Y-%m-%dT%H:%M:%SZ)
+          RECENT_COMMITS=$(git log --since="$ONE_DAY_AGO" --oneline | wc -l | tr -d ' ')
+
+          if [ "$RECENT_COMMITS" -gt 0 ]; then
+            echo "Found $RECENT_COMMITS commit(s) in the last 24 hours"
+            echo "has_recent_commits=true" >> $GITHUB_OUTPUT
+          else
+            echo "No commits in the last 24 hours, skipping nightly build"
+            echo "has_recent_commits=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Setup Node.js
+        if: steps.check_commits.outputs.has_recent_commits == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: "24"
           registry-url: "https://registry.npmjs.org"
 
       - name: Setup pnpm
+        if: steps.check_commits.outputs.has_recent_commits == 'true'
         uses: pnpm/action-setup@v4
         with:
           version: 9
 
       - name: Install dependencies
+        if: steps.check_commits.outputs.has_recent_commits == 'true'
         run: pnpm install --frozen-lockfile
 
       - name: Build gofish-graphics
+        if: steps.check_commits.outputs.has_recent_commits == 'true'
         run: pnpm --filter gofish-graphics build
         working-directory: .
 
       - name: Generate TypeScript declarations
+        if: steps.check_commits.outputs.has_recent_commits == 'true'
         run: pnpm exec tsc --project packages/gofish-graphics/tsconfig.build.json || true
 
       - name: Get current date
+        if: steps.check_commits.outputs.has_recent_commits == 'true'
         id: date
         run: echo "date=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
 
       - name: Read base version
+        if: steps.check_commits.outputs.has_recent_commits == 'true'
         id: version
         run: |
           BASE_VERSION=$(node -p "require('./packages/gofish-graphics/package.json').version")
@@ -53,6 +77,7 @@ jobs:
           echo "Base version: $BASE_VERSION"
 
       - name: Update package version
+        if: steps.check_commits.outputs.has_recent_commits == 'true'
         run: |
           cd packages/gofish-graphics
           NIGHTLY_VERSION="${{ steps.version.outputs.base }}-nightly.${{ steps.date.outputs.date }}"
@@ -60,6 +85,7 @@ jobs:
           echo "Updated version to: $NIGHTLY_VERSION"
 
       - name: Publish to npm
+        if: steps.check_commits.outputs.has_recent_commits == 'true'
         run: |
           cd packages/gofish-graphics
           npm publish --tag nightly --access public
