@@ -1,5 +1,6 @@
 import { CoordinateTransform } from "./ast/coordinateTransforms/coord";
 import { lerp } from "./util";
+import { adaptiveResamplePath } from "./adaptive-resampling";
 
 export const lerpPoint = (point1: Point, point2: Point, t: number): Point => {
   return [lerp(point1[0], point2[0], t), lerp(point1[1], point2[1], t)];
@@ -49,10 +50,20 @@ export const pathToSVGPath = (path: Path): string => {
   return `M${startPoint[0]},${startPoint[1]} ${path.map(segmentToSVG).join(" ")}`;
 };
 
-export const transformPath = (path: Path, space: CoordinateTransform): Path => {
-  return path.map((segment) => {
+export const transformPath = (
+  path: Path,
+  space: CoordinateTransform,
+  options?: { resample?: boolean }
+): Path => {
+  if (options?.resample) {
+    // Use adaptive resampling which transforms as it resamples
+    return adaptiveResamplePath(path, space);
+  }
+
+  // Default behavior: direct transformation without resampling
+  return path.map((segment): PathSegment => {
     if (segment.type === "line") {
-      return { type: "line", points: segment.points.map((p) => space.transform(p)) };
+      return { type: "line", points: [space.transform(segment.points[0]), space.transform(segment.points[1])] as [Point, Point] };
     } else {
       return {
         type: "bezier",
@@ -80,7 +91,7 @@ const subdivideSegment = (lineSegment: LineSegment, n: number): LineSegment[] =>
   return segments;
 };
 
-const subdivideCurve1 = (c: BezierCurve, t: number = 0.5): [BezierCurve, BezierCurve] => {
+export const subdivideCurve1 = (c: BezierCurve, t: number = 0.5): [BezierCurve, BezierCurve] => {
   // Apply de Casteljau's algorithm to find points on the curve
 
   // First level of interpolation
