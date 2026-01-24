@@ -1,12 +1,5 @@
 import { color6, color6_old } from "../../color";
-import {
-  path,
-  Path,
-  pathToSVGPath,
-  segment,
-  subdividePath,
-  transformPath,
-} from "../../path";
+import { path, Path, pathToSVGPath, segment, transformPath } from "../../path";
 import { GoFishNode } from "../_node";
 import { GoFishAST } from "../_ast";
 import { CoordinateTransform } from "../coordinateTransforms/coord";
@@ -381,10 +374,7 @@ export const rect = ({
             const x = rawWidth < 0 ? baseX + rawWidth : baseX;
             const y = rawHeight < 0 ? baseY + rawHeight : baseY;
 
-            const center: [number, number] = [
-              x + width / 2,
-              y + height / 2,
-            ];
+            const center: [number, number] = [x + width / 2, y + height / 2];
             const [transformedX, transformedY] = space.transform(center);
 
             return (
@@ -429,11 +419,13 @@ export const rect = ({
                 isXEmbedded ? aestheticMid : (displayDims[1].max ?? 0),
               ],
             ],
-            { subdivision: 1000 }
+            {}
           );
 
-          // Subdivide and transform path
-          const transformed = transformPath(linePath, space);
+          // Transform path
+          const transformed = transformPath(linePath, space, {
+            resample: true,
+          });
 
           // 0.5 removes weird white space at least for some charts
           return (
@@ -462,10 +454,7 @@ export const rect = ({
           const x = rawWidth < 0 ? baseX + rawWidth : baseX;
           const y = rawHeight < 0 ? baseY + rawHeight : baseY;
 
-          const center: [number, number] = [
-            x + width / 2,
-            y + height / 2,
-          ];
+          const center: [number, number] = [x + width / 2, y + height / 2];
           const [transformedX, transformedY] = space.transform(center);
 
           return (
@@ -502,10 +491,11 @@ export const rect = ({
             [displayDims[0].max ?? 0, displayDims[1].max ?? 0],
             [displayDims[0].min ?? 0, displayDims[1].max ?? 0],
           ],
-          { closed: true, subdivision: 1000 }
+          { closed: true }
         );
 
-        const transformed = transformPath(corners, space);
+        // Transform path
+        const transformed = transformPath(corners, space, { resample: true });
 
         return (
           <path
