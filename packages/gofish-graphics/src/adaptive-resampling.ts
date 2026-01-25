@@ -335,7 +335,7 @@ function resampleBezierCurve(
  * Adaptively resamples a path, transforming points as it goes.
  * Returns a path with transformed, resampled segments converted to smooth Bezier curves
  * using centripetal Catmull-Rom interpolation.
- * 
+ *
  * Each input segment is processed independently to preserve piecewise smoothness
  * and prevent smoothing across segment boundaries.
  */
