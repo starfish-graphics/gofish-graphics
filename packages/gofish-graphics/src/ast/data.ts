@@ -47,7 +47,7 @@ export const getMeasure = <T>(value: MaybeValue<T>): Measure => {
 export const inferEmbedded = <T>(interval: Interval<T>): Interval<T> => {
   // size must be a value && min must be undefined, aesthetic, or a value of the same type as size
   if (
-    isValue(interval.size) &&
+    (isValue(interval.size) || interval.size === undefined) &&
     (interval.min === undefined ||
       !isValue(interval.min) ||
       getMeasure(interval.min) === getMeasure(interval.size))

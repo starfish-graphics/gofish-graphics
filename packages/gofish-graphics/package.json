@@ -36,7 +36,9 @@
     "serve": "vite preview",
     "prepublishOnly": "pnpm run build",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "test": "tsx src/tests/path.test.ts",
+    "test:path": "tsx src/tests/path.test.ts"
   },
   "devDependencies": {
     "@storybook/addon-docs": "^9.1.6",
@@ -48,6 +50,7 @@
     "prettier": "^3.6.2",
     "storybook": "^9.1.6",
     "storybook-solidjs-vite": "^9.0.3",
+    "tsx": "^4.19.2",
     "typescript": "^5.7.2",
     "vite": "^6.0.0",
     "vite-plugin-solid": "^2.11.6"

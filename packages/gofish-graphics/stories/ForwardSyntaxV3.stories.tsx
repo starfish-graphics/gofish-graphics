@@ -115,8 +115,8 @@ export const StackedBarChart: StoryObj<Args> = {
 
     chart(seafood)
       .flow(
-        spread("lake", { dir: "x"}), //
-        stack("species", { dir: "y", })
+        spread("lake", { dir: "x" }), //
+        stack("species", { dir: "y" })
       )
       .mark(rect({ h: "count", fill: "species" }))
       .render(container, {
@@ -136,8 +136,8 @@ export const StackedBarChartStoryWithLabels: StoryObj<Args> = {
 
     chart(seafood)
       .flow(
-        spread("lake", { dir: "x"}), //
-        stack("species", { dir: "y",  })
+        spread("lake", { dir: "x" }), //
+        stack("species", { dir: "y" })
       )
       .mark(rect({ h: "count", fill: "species", label: true }))
       .render(container, {
@@ -336,7 +336,7 @@ export const PieChart: StoryObj<Args> = {
 
     chart(seafood, { coord: clock() })
       .flow(stack("species", { dir: "x" }))
-      .mark(rect({ w: "count", fill: "species", emY: true }))
+      .mark(rect({ w: "count", fill: "species" }))
       .render(container, {
         w: args.w,
         h: args.h,
