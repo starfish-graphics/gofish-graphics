@@ -383,6 +383,8 @@ export const rect = ({
                   transform={`scale(1, -1)`}
                   x={x}
                   y={-y - height}
+                  rx={rx}
+                  ry={ry}
                   width={width}
                   height={height}
                   fill={resolvedFill}
@@ -463,9 +465,14 @@ export const rect = ({
                 transform={`scale(1, -1)`}
                 x={x}
                 y={-y - height}
+                rx={rx}
+                ry={ry}
                 width={width}
                 height={height}
+                stroke={resolvedStroke}
+                stroke-width={strokeWidth ?? 0}
                 fill={resolvedFill}
+                filter={filter}
               />
               {labelText && (
                 <text
