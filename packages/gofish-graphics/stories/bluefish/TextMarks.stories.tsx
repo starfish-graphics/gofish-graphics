@@ -41,9 +41,9 @@ const loadFont = () => {
 };
 
 const labels = [
-  { text: "Gofish", color: "#22577a" },
+  { text: "GoFish", color: "#22577a" },
   { text: "Text", color: "#38a3a5" },
-  { text: "Stack", color: "#57cc99" },
+  { text: "Stacky", color: "#57cc99" },
   { text: "Mark", color: "#80ed99" },
 ];
 
@@ -56,6 +56,35 @@ export const TextStack: StoryObj<Args> = {
       container.innerHTML = "";
       Stack(
         { direction: "y", spacing: 18, alignment: "start" },
+        For(labels, (label) =>
+          Text({
+            text: label.text,
+            fill: label.color,
+            font,
+            fontSize: 28,
+            fontFamily,
+            textAnchor: "start",
+          })
+        )
+      ).render(container, {
+        w: args.w,
+        h: args.h,
+      });
+    });
+
+    return container;
+  },
+};
+
+export const TextStackHorizontal: StoryObj<Args> = {
+  args: { w: 500, h: 240 },
+  render: (args: Args) => {
+    const container = initializeContainer();
+
+    loadFont().then((font) => {
+      container.innerHTML = "";
+      Stack(
+        { direction: "x", spacing: 18, alignment: "start" },
         For(labels, (label) =>
           Text({
             text: label.text,
