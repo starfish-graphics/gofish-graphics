@@ -3,7 +3,7 @@ import { initializeContainer } from "../helper";
 import { Coord, For, Polar, Stack, Text } from "../../src/lib";
 
 const meta: Meta = {
-  title: "Bluefish/Text Marks",
+  title: "Shapes/Text Marks",
   argTypes: {
     w: {
       control: { type: "number", min: 100, max: 1000, step: 10 },
