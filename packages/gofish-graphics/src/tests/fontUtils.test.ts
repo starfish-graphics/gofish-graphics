@@ -10,6 +10,10 @@ import {
   FALLBACK_FONT_FAMILY,
 } from "../ast/shapes/fontUtils";
 
+// This file is runnable as a script in Node, but the repo doesn't necessarily
+// include Node type definitions in all TS contexts.
+declare const process: any;
+
 function testGetPrimaryFamily(): boolean {
   console.log("Test: getPrimaryFamily");
 
@@ -59,7 +63,6 @@ function testFontPresent(): boolean {
   const result = getEffectiveFontFamily({
     fontSize: 16,
     fontFamily: "Inter, sans-serif",
-    resolvedFont: undefined,
     fontsApi,
     warnedKeys,
     warn,
@@ -92,7 +95,6 @@ function testFontNotPresent(): boolean {
   const result = getEffectiveFontFamily({
     fontSize: 16,
     fontFamily: "SomeMissingFont, sans-serif",
-    resolvedFont: undefined,
     fontsApi,
     warnedKeys,
     warn,
@@ -123,39 +125,6 @@ function testFontNotPresent(): boolean {
   return true;
 }
 
-function testResolvedFontSkipsCheck(): boolean {
-  console.log("Test: resolvedFont set skips check and uses fontFamily");
-
-  const warnedKeys = new Set<string>();
-  const warnings: string[] = [];
-  const warn = (msg: string) => warnings.push(msg);
-  const fontsApi = { check: (_spec: string) => false };
-
-  const result = getEffectiveFontFamily({
-    fontSize: 16,
-    fontFamily: "SomeMissingFont, sans-serif",
-    resolvedFont: { layout: () => {} },
-    fontsApi,
-    warnedKeys,
-    warn,
-  });
-
-  if (result !== "SomeMissingFont, sans-serif") {
-    console.log(
-      `  ✗ expected fontFamily when resolvedFont set, got ${JSON.stringify(result)}`
-    );
-    return false;
-  }
-  if (warnings.length !== 0) {
-    console.log(
-      `  ✗ expected no warn when resolvedFont set, got ${warnings.length}`
-    );
-    return false;
-  }
-  console.log("  ✓ PASSED");
-  return true;
-}
-
 export function runFontUtilsTests(): boolean {
   console.log("Running font utils tests...\n");
 
@@ -164,7 +133,6 @@ export function runFontUtilsTests(): boolean {
     testBuildFontSpec(),
     testFontPresent(),
     testFontNotPresent(),
-    testResolvedFontSkipsCheck(),
   ];
 
   const allPassed = results.every((r) => r);

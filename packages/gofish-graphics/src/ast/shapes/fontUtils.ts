@@ -19,7 +19,6 @@ export type FontsApi = { check(spec: string): boolean };
 export type GetEffectiveFontFamilyOptions = {
   fontSize: number;
   fontFamily: string;
-  resolvedFont: unknown;
   fontsApi?: FontsApi | null;
   warnedKeys?: Set<string>;
   warn?: (msg: string) => void;
@@ -31,13 +30,10 @@ export function getEffectiveFontFamily(
   const {
     fontSize,
     fontFamily,
-    resolvedFont,
     fontsApi,
     warnedKeys = defaultWarnedKeys,
     warn = console.warn,
   } = opts;
-
-  if (resolvedFont) return fontFamily;
 
   const primaryFamily = getPrimaryFamily(fontFamily);
   const fontSpec = buildFontSpec(fontSize, primaryFamily);
