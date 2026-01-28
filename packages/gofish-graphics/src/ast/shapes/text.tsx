@@ -13,12 +13,7 @@ import {
   isValue,
   MaybeValue,
 } from "../data";
-import {
-  Dimensions,
-  elaborateDims,
-  FancyDims,
-  Transform,
-} from "../dims";
+import { Dimensions, elaborateDims, FancyDims, Transform } from "../dims";
 import { scaleContext } from "../gofish";
 import {
   DIFFERENCE,
@@ -27,11 +22,54 @@ import {
   SIZE,
   UNDEFINED,
 } from "../underlyingSpace";
+import { getEffectiveFontFamily } from "./fontUtils";
+
+type TextDimensions = {
+  width: number;
+  height: number;
+  ascent: number;
+  descent: number;
+};
+
+let _measureCtx: CanvasRenderingContext2D | null | undefined;
+
+const getMeasureContext = (): CanvasRenderingContext2D | null => {
+  if (_measureCtx !== undefined) return _measureCtx;
+  if (typeof document === "undefined") {
+    _measureCtx = null;
+    return _measureCtx;
+  }
+  const canvas = document.createElement("canvas");
+  _measureCtx = canvas.getContext("2d");
+  return _measureCtx ?? null;
+};
 
 const estimateTextDimensions = (
   text: string,
-  fontSize: number
-): { width: number; height: number; ascent: number; descent: number } => {
+  fontSize: number,
+  fontFamily: string
+): TextDimensions => {
+  const ctx = getMeasureContext();
+  if (ctx) {
+    // Measure using the same font-family that the <text> element will use.
+    // (We omit weight/style for now since this mark API doesn't expose them.)
+    ctx.font = `${fontSize}px ${fontFamily}`;
+    const metrics = ctx.measureText(text);
+    const width = metrics.width;
+    const ascent =
+      (metrics as any).actualBoundingBoxAscent ??
+      (metrics as any).fontBoundingBoxAscent ??
+      fontSize * 0.8;
+    const descent = -(
+      (metrics as any).actualBoundingBoxDescent ??
+      (metrics as any).fontBoundingBoxDescent ??
+      fontSize * 0.2
+    );
+    const height = ascent - descent;
+    return { width, height, ascent, descent };
+  }
+
+  // Non-DOM/SSR fallback: approximate based on font size.
   const avgCharWidth = fontSize * 0.6;
   const width = text.length * avgCharWidth;
   const ascent = fontSize * 0.8;
@@ -50,15 +88,23 @@ type FontLayout = {
   font?: any;
 };
 
+const rectPath = (x0: number, y0: number, x1: number, y1: number): Path => [
+  segment([x0, y0], [x1, y0]),
+  segment([x1, y0], [x1, y1]),
+  segment([x1, y1], [x0, y1]),
+  segment([x0, y1], [x0, y0]),
+];
+
 const resolveFontLayout = (
   font: any | undefined,
   text: string,
   fontSize: number,
+  fontFamily: string,
   textAnchor: "start" | "middle" | "end",
   dominantBaseline: "auto" | "central" | "hanging" | "mathematical"
 ): FontLayout => {
   if (!font || !text) {
-    const approx = estimateTextDimensions(text ?? "", fontSize);
+    const approx = estimateTextDimensions(text ?? "", fontSize, fontFamily);
     const bbox = {
       minX: 0,
       minY: approx.descent,
@@ -366,6 +412,7 @@ export const text = ({
   fontData,
   textAnchor = "middle",
   dominantBaseline = "central",
+  debugBoundingBox = false,
   ...fancyDims
 }: {
   key?: string;
@@ -381,6 +428,7 @@ export const text = ({
   fontData?: ArrayBuffer | Uint8Array;
   textAnchor?: "start" | "middle" | "end";
   dominantBaseline?: "auto" | "central" | "hanging" | "mathematical";
+  debugBoundingBox?: boolean;
 } & FancyDims<MaybeValue<number>>) => {
   const dims = elaborateDims(fancyDims).map(inferEmbedded);
 
@@ -393,6 +441,9 @@ export const text = ({
     } catch {
       resolvedFont = undefined;
     }
+  }
+  if (!resolvedFont && fontFamily) {
+    resolvedFont = undefined;
   }
 
   return new GoFishNode(
@@ -412,6 +463,7 @@ export const text = ({
         fontFamily,
         textAnchor,
         dominantBaseline,
+        debugBoundingBox,
         dims,
       },
       color: fill,
@@ -458,6 +510,7 @@ export const text = ({
           resolvedFont,
           finalText ?? "",
           fontSize,
+          fontFamily,
           textAnchor,
           dominantBaseline
         );
@@ -469,7 +522,14 @@ export const text = ({
           h: Monotonic.linear(height, 0),
         };
       },
-      layout: (shared, size, scaleFactors, children, measurement, posScales) => {
+      layout: (
+        shared,
+        size,
+        scaleFactors,
+        children,
+        measurement,
+        posScales
+      ) => {
         const finalText = isValue(textContent)
           ? getValue(textContent)
           : textContent;
@@ -477,6 +537,7 @@ export const text = ({
           resolvedFont,
           finalText ?? "",
           fontSize,
+          fontFamily,
           textAnchor,
           dominantBaseline
         );
@@ -538,17 +599,16 @@ export const text = ({
         const anchorX = transform?.translate?.[0] ?? 0;
         const anchorY = transform?.translate?.[1] ?? 0;
 
-        const originalFill = fill;
-        fill = isValue(fill)
-          ? scaleContext?.unit?.color
-            ? scaleContext.unit.color.get(getValue(fill))
+        const unit = scaleContext?.unit;
+        const unitColorScale = unit && "color" in unit ? unit.color : undefined;
+        const resolvedFill = isValue(fill)
+          ? unitColorScale
+            ? unitColorScale.get(getValue(fill))
             : getValue(fill)
-          : fill;
-
-        const resolvedFill = fill as string | undefined;
+          : (fill as string | undefined);
         const resolvedStroke = isValue(stroke)
-          ? scaleContext?.unit?.color
-            ? scaleContext.unit.color.get(getValue(stroke))
+          ? unitColorScale
+            ? unitColorScale.get(getValue(stroke))
             : getValue(stroke)
           : (stroke as string | undefined);
 
@@ -558,9 +618,21 @@ export const text = ({
             resolvedFont,
             finalText ?? "",
             fontSize,
+            fontFamily,
             textAnchor,
             dominantBaseline
           );
+
+        const bboxStroke = "#ff00aa";
+        const bboxStrokeWidth = 1;
+        const bboxDash = "4 3";
+
+        const anchorXLocal = layout.anchorEm.x * layout.scale;
+        const anchorYLocal = layout.anchorEm.y * layout.scale;
+        const minXRel = layout.bbox.minX - anchorXLocal;
+        const maxXRel = layout.bbox.maxX - anchorXLocal;
+        const minYRel = layout.bbox.minY - anchorYLocal;
+        const maxYRel = layout.bbox.maxY - anchorYLocal;
 
         if (space.type !== "linear" && layout.font) {
           const paths = buildTextPaths(layout, [anchorX, anchorY]);
@@ -571,15 +643,45 @@ export const text = ({
           );
           const flipped = transformed.map(flipPathY);
 
+          const bbox =
+            debugBoundingBox &&
+            Number.isFinite(minXRel) &&
+            Number.isFinite(minYRel)
+              ? (() => {
+                  const p = rectPath(
+                    anchorX + minXRel,
+                    anchorY + minYRel,
+                    anchorX + maxXRel,
+                    anchorY + maxYRel
+                  );
+                  const tp = transformPath(p, space, { resample: true });
+                  const fp = flipPathY(tp);
+                  return (
+                    <path
+                      transform="scale(1, -1)"
+                      d={pathToSVGPath(fp)}
+                      fill="none"
+                      stroke={bboxStroke}
+                      stroke-width={bboxStrokeWidth}
+                      stroke-dasharray={bboxDash}
+                      pointer-events="none"
+                    />
+                  );
+                })()
+              : null;
+
           return (
-            <path
-              transform="scale(1, -1)"
-              d={pathsToSVG(flipped)}
-              fill={resolvedFill}
-              stroke={resolvedStroke}
-              stroke-width={strokeWidth ?? 0}
-              filter={filter}
-            />
+            <>
+              {bbox}
+              <path
+                transform="scale(1, -1)"
+                d={pathsToSVG(flipped)}
+                fill={resolvedFill}
+                stroke={resolvedStroke}
+                stroke-width={strokeWidth ?? 0}
+                filter={filter}
+              />
+            </>
           );
         }
 
@@ -588,22 +690,49 @@ export const text = ({
           anchorY,
         ]);
 
+        const effectiveFontFamily = getEffectiveFontFamily({
+          fontSize,
+          fontFamily,
+          resolvedFont,
+        });
+
+        const bbox =
+          debugBoundingBox &&
+          Number.isFinite(minXRel) &&
+          Number.isFinite(minYRel) ? (
+            <rect
+              transform="scale(1, -1)"
+              x={transformedX + minXRel}
+              y={-(transformedY + maxYRel)}
+              width={maxXRel - minXRel}
+              height={maxYRel - minYRel}
+              fill="none"
+              stroke={bboxStroke}
+              stroke-width={bboxStrokeWidth}
+              stroke-dasharray={bboxDash}
+              pointer-events="none"
+            />
+          ) : null;
+
         return (
-          <text
-            transform="scale(1, -1)"
-            x={transformedX}
-            y={-transformedY}
-            fill={resolvedFill}
-            stroke={resolvedStroke}
-            stroke-width={strokeWidth ?? 0}
-            filter={filter}
-            font-size={fontSize}
-            font-family={fontFamily}
-            text-anchor={textAnchor}
-            dominant-baseline={dominantBaseline}
-          >
-            {finalText}
-          </text>
+          <>
+            {bbox}
+            <text
+              transform="scale(1, -1)"
+              x={transformedX}
+              y={-transformedY}
+              fill={resolvedFill}
+              stroke={resolvedStroke}
+              stroke-width={strokeWidth ?? 0}
+              filter={filter}
+              font-size={`${fontSize}px`}
+              font-family={effectiveFontFamily}
+              text-anchor={textAnchor}
+              dominant-baseline={dominantBaseline}
+            >
+              {finalText}
+            </text>
+          </>
         );
       },
     },
