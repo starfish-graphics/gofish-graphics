@@ -165,6 +165,13 @@ export async function layout(
     scopeContext = contexts.scopeCtx;
     keyContext = contexts.keyCtx;
   }
+  if (
+    typeof document !== "undefined" &&
+    document.fonts &&
+    typeof document.fonts.ready?.then === "function"
+  ) {
+    await document.fonts.ready;
+  }
   if (debug) {
     console.log("🌳 Input Scene Graph:");
     debugInputSceneGraph(child);

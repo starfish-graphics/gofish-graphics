@@ -12,6 +12,7 @@ export { For as map } from "./ast/iterators/for";
 export { ellipse } from "./ast/shapes/ellipse";
 export { petal } from "./ast/shapes/petal";
 export { ref } from "./ast/shapes/ref";
+export { text } from "./ast/shapes/text";
 
 // Graphical Operators
 // export { stack } from "./ast/graphicalOperators/stack";
@@ -57,6 +58,7 @@ export { rect as Rect } from "./ast/shapes/rect";
 export { ellipse as Ellipse } from "./ast/shapes/ellipse";
 export { petal as Petal } from "./ast/shapes/petal";
 export { ref as Ref } from "./ast/shapes/ref";
+export { text as Text } from "./ast/shapes/text";
 
 // Graphical Operators
 export { stack as Stack } from "./ast/graphicalOperators/stack";
