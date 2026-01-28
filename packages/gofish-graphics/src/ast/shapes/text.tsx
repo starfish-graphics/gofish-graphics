@@ -56,13 +56,15 @@ const estimateTextDimensions = (
     ctx.font = `${fontSize}px ${fontFamily}`;
     const metrics = ctx.measureText(text);
     const width = metrics.width;
+    // Prefer font-level metrics for stable line height across strings.
+    // actualBoundingBox* is glyph-dependent (e.g. descenders), which makes stacking look uneven.
     const ascent =
-      (metrics as any).actualBoundingBoxAscent ??
       (metrics as any).fontBoundingBoxAscent ??
+      (metrics as any).actualBoundingBoxAscent ??
       fontSize * 0.8;
     const descent = -(
-      (metrics as any).actualBoundingBoxDescent ??
       (metrics as any).fontBoundingBoxDescent ??
+      (metrics as any).actualBoundingBoxDescent ??
       fontSize * 0.2
     );
     const height = ascent - descent;
@@ -198,13 +200,15 @@ const resolveFontLayout = (
     anchorYEm = ascent * 0.5;
   }
 
+  const scaledBbox = {
+    minX: minX * scale,
+    minY: minY * scale,
+    maxX: maxX * scale,
+    maxY: maxY * scale,
+  };
+
   return {
-    bbox: {
-      minX: minX * scale,
-      minY: minY * scale,
-      maxX: maxX * scale,
-      maxY: maxY * scale,
-    },
+    bbox: scaledBbox,
     advanceWidth: advanceWidth * scale,
     anchorEm: { x: anchorXEm, y: anchorYEm },
     scale,
@@ -626,6 +630,7 @@ export const text = ({
         const bboxStroke = "#ff00aa";
         const bboxStrokeWidth = 1;
         const bboxDash = "4 3";
+        const showDebugBoundingBox = debugBoundingBox;
 
         const anchorXLocal = layout.anchorEm.x * layout.scale;
         const anchorYLocal = layout.anchorEm.y * layout.scale;
@@ -644,7 +649,7 @@ export const text = ({
           const flipped = transformed.map(flipPathY);
 
           const bbox =
-            debugBoundingBox &&
+            showDebugBoundingBox &&
             Number.isFinite(minXRel) &&
             Number.isFinite(minYRel)
               ? (() => {
@@ -697,7 +702,7 @@ export const text = ({
         });
 
         const bbox =
-          debugBoundingBox &&
+          showDebugBoundingBox &&
           Number.isFinite(minXRel) &&
           Number.isFinite(minYRel) ? (
             <rect
