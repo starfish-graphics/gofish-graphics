@@ -62,7 +62,6 @@
     "chroma-js": "^3.1.2",
     "culori": "^4.0.2",
     "d3-array": "^3.2.4",
-    "fontkit": "^2.0.2",
     "lodash": "^4.17.21",
     "rybitten": "^0.22.0",
     "solid-js": "^1.9.5",
