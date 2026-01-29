@@ -75,6 +75,8 @@ export const TextStackMiddleAlignment: StoryObj<Args> = {
       w: args.w,
       h: args.h,
     });
+
+    return container;
   },
 };
 
