@@ -314,11 +314,7 @@ export const stack = withGoFish(
             child.layout(modifiedSize, scaleFactors, posScales)
           );
 
-          // Fixed-position children have dims already defined (e.g. Ref from another branch)
-          // const isFixed = (child: (typeof childPlaceables)[0]) =>
-          //   child.dims[stackDir].min !== undefined &&
-          //   child.dims[alignDir].min !== undefined;
-
+          // Fixed-position children have dims already defined (e.g. Ref to another layer)
           const isFixed = (dir: Direction) => (child: Placeable) =>
             child.dims[dir].min !== undefined;
           const alignmentToDim = {

@@ -170,17 +170,18 @@ export class GoFishRef {
     const dim = (i: 0 | 1) => {
       const intrinsic = this.intrinsicDims?.[i];
       const translate = this.transform?.translate?.[i];
-      const hasPosition = translate !== undefined;
+      const hasTranslate = translate !== undefined;
       return {
-        min: hasPosition && intrinsic?.min !== undefined
-          ? (intrinsic!.min ?? 0) + translate!
-          : undefined,
+        min:
+          hasTranslate && intrinsic?.min !== undefined
+            ? (intrinsic!.min ?? 0) + translate!
+            : undefined,
         center:
-          hasPosition && intrinsic?.center !== undefined
+          hasTranslate && intrinsic?.center !== undefined
             ? (intrinsic!.center ?? 0) + translate!
             : undefined,
         max:
-          hasPosition && intrinsic?.max !== undefined
+          hasTranslate && intrinsic?.max !== undefined
             ? (intrinsic!.max ?? 0) + translate!
             : undefined,
         size: intrinsic?.size,
