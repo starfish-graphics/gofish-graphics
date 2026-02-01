@@ -1,5 +1,5 @@
 import { For } from "solid-js";
-import { GoFishNode } from "../_node";
+import { GoFishNode, Placeable } from "../_node";
 import { getMeasure, getValue, isValue, MaybeValue, Value } from "../data";
 import {
   Direction,
@@ -314,6 +314,37 @@ export const stack = withGoFish(
             child.layout(modifiedSize, scaleFactors, posScales)
           );
 
+          // Fixed-position children have dims already defined (e.g. Ref from another branch)
+          // const isFixed = (child: (typeof childPlaceables)[0]) =>
+          //   child.dims[stackDir].min !== undefined &&
+          //   child.dims[alignDir].min !== undefined;
+
+          const isFixed = (dir: Direction) => (child: Placeable) =>
+            child.dims[dir].min !== undefined;
+          const alignmentToDim = {
+            start: "min",
+            middle: "center",
+            end: "max",
+          } as const;
+          const getBaseline = (dir: Direction) => (child: Placeable) =>
+            child.dims[dir][alignmentToDim[alignment]!]!;
+          const isClose = (a: number, b: number) => Math.abs(a - b) < 1e-6;
+
+          // Align-direction consistency: check before placing (when >= 2 fixed)
+          const fixedChildren = childPlaceables.filter(isFixed(alignDir));
+          if (fixedChildren.length >= 2) {
+            const baselines = fixedChildren.map(getBaseline(alignDir));
+            const allSameBaseline = baselines.every((b) =>
+              isClose(b!, baselines[0]!)
+            );
+            if (!allSameBaseline) {
+              console.warn(
+                "Stack: fixed children have inconsistent align-direction positions",
+                { alignment, baselines }
+              );
+            }
+          }
+
           /* align */
           // Skip alignment if children have position scales (they already have data-driven positions),
           // UNLESS the align space came from SIZE (no inherent position) and we need baseline alignment,
@@ -324,45 +355,104 @@ export const stack = withGoFish(
             alignment === "middle"
           ) {
             if (alignment === "start") {
-              // For "start" alignment with mixed positive/negative bars, align at the baseline (0 in data space)
-              const baselinePos = posScales?.[alignDir]
-                ? posScales[alignDir](0)
-                : 0;
-              for (const child of childPlaceables) {
-                child.place({ [alignDir]: baselinePos });
+              const baseline =
+                fixedChildren.length > 0
+                  ? getBaseline(alignDir)(fixedChildren[0])
+                  : posScales?.[alignDir]
+                    ? posScales[alignDir](0)
+                    : 0;
+              for (let i = 0; i < childPlaceables.length; i++) {
+                const child = childPlaceables[i];
+                if (isFixed(alignDir)(child)) continue;
+                child.place({ [alignDir]: baseline });
               }
             } else if (alignment === "middle") {
-              // For "middle" alignment, center children in the available space
-              const centerPos = size[alignDir] / 2;
-              for (const child of childPlaceables) {
+              const baseline =
+                fixedChildren.length > 0
+                  ? getBaseline(alignDir)(fixedChildren[0])
+                  : size[alignDir] / 2;
+              for (let i = 0; i < childPlaceables.length; i++) {
+                const child = childPlaceables[i];
+                if (isFixed(alignDir)(child)) continue;
                 child.place({
-                  [alignDir]: centerPos - child.dims[alignDir].size! / 2,
+                  [alignDir]: baseline - child.dims[alignDir].size! / 2,
                 });
               }
             } else if (alignment === "end") {
-              // For "end" alignment with mixed positive/negative bars, align at the baseline (0 in data space)
-              const baselinePos = posScales?.[alignDir]
-                ? posScales[alignDir](0)
-                : 0;
-              for (const child of childPlaceables) {
+              const baseline =
+                fixedChildren.length > 0
+                  ? getBaseline(alignDir)(fixedChildren[0])
+                  : posScales?.[alignDir]
+                    ? posScales[alignDir](0)
+                    : 0;
+              for (let i = 0; i < childPlaceables.length; i++) {
+                const child = childPlaceables[i];
+                if (isFixed(alignDir)(child)) continue;
                 child.place({
-                  [alignDir]: baselinePos - child.dims[alignDir].size!,
+                  [alignDir]: baseline - child.dims[alignDir].size!,
                 });
               }
             }
           }
 
           /* distribute */
-          let pos = 0;
+          const firstFixedIdx = childPlaceables.findIndex(isFixed(stackDir));
+          let pos: number;
+          if (firstFixedIdx === -1) {
+            pos = 0;
+          } else {
+            const firstFixed = childPlaceables[firstFixedIdx];
+            const firstFixedMin = firstFixed.dims[stackDir].min as number;
+            const firstFixedMax = firstFixed.dims[stackDir].max as number;
+            const firstFixedCenter = (firstFixedMin + firstFixedMax) / 2;
+            if (mode === "edge-to-edge") {
+              pos =
+                firstFixedMin -
+                firstFixedIdx * spacing -
+                childPlaceables
+                  .slice(0, firstFixedIdx)
+                  .reduce((acc, c) => acc + c.dims[stackDir].size!, 0);
+            } else {
+              pos = firstFixedCenter - firstFixedIdx * spacing;
+            }
+          }
+
           if (mode === "edge-to-edge") {
             for (const child of childPlaceables) {
-              child.place({ [stackDir]: pos });
-              pos += child.dims[stackDir].size! + spacing;
+              if (isFixed(stackDir)(child)) {
+                const childMin = child.dims[stackDir].min as number;
+                const childMax = child.dims[stackDir].max as number;
+                if (Math.abs(childMin - pos) > 1e-6) {
+                  console.warn(
+                    "Stack: fixed child stack-direction position inconsistent with layout order",
+                    { expected: pos, actual: childMin }
+                  );
+                }
+                pos = childMax + spacing;
+              } else {
+                child.place({ [stackDir]: pos });
+                const sz = child.dims[stackDir].size ?? 0;
+                pos += sz + spacing;
+              }
             }
           } else if (mode === "center-to-center") {
             for (const child of childPlaceables) {
-              child.place({ [stackDir]: pos - child.dims[stackDir].size! / 2 });
-              pos += spacing;
+              if (isFixed(stackDir)(child)) {
+                const childMin = child.dims[stackDir].min as number;
+                const childMax = child.dims[stackDir].max as number;
+                const childCenter = (childMin + childMax) / 2;
+                if (Math.abs(childCenter - pos) > 1e-6) {
+                  console.warn(
+                    "Stack: fixed child stack-direction position inconsistent (center-to-center)",
+                    { expected: pos, actual: childCenter }
+                  );
+                }
+                pos = childCenter + spacing;
+              } else {
+                const sz = child.dims[stackDir].size ?? 0;
+                child.place({ [stackDir]: pos - sz / 2 });
+                pos += spacing;
+              }
             }
           }
 
@@ -373,7 +463,14 @@ export const stack = withGoFish(
           const alignMax = Math.max(
             ...childPlaceables.map((child) => child.dims[alignDir].max!)
           );
+          const stackMin = Math.min(
+            ...childPlaceables.map((child) => child.dims[stackDir].min!)
+          );
+          const stackMax = Math.max(
+            ...childPlaceables.map((child) => child.dims[stackDir].max!)
+          );
           const alignSize = alignMax - alignMin;
+          const stackSize = stackMax - stackMin;
           const translateAlign =
             alignPos !== undefined ? alignPos - alignMin : undefined;
 
@@ -386,16 +483,17 @@ export const stack = withGoFish(
                 max: alignMax,
               },
               [stackDir]: {
-                min: 0,
-                size: pos,
-                center: pos / 2,
-                max: pos,
+                min: stackMin,
+                size: stackSize,
+                center: stackMin + stackSize / 2,
+                max: stackMax,
               },
             },
             transform: {
               translate: {
                 [alignDir]: translateAlign,
-                [stackDir]: stackPos !== undefined ? stackPos : undefined,
+                [stackDir]:
+                  stackPos !== undefined ? stackPos - stackMin : undefined,
               },
             },
           };

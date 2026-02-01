@@ -125,7 +125,6 @@ export const text = ({
   filter,
   fontSize = 12,
   fontFamily = "system-ui, sans-serif",
-  dominantBaseline = "central",
   debugBoundingBox = false,
   ...fancyDims
 }: {
@@ -138,12 +137,12 @@ export const text = ({
   filter?: string;
   fontSize?: number;
   fontFamily?: string;
-  dominantBaseline?: "auto" | "central" | "hanging" | "mathematical";
   debugBoundingBox?: boolean;
 } & FancyDims<MaybeValue<number>>) => {
   const dims = elaborateDims(fancyDims).map(inferEmbedded);
 
   const textAnchor = "start";
+  const dominantBaseline = "auto";
 
   return new GoFishNode(
     {
@@ -161,7 +160,6 @@ export const text = ({
         fontSize,
         fontFamily,
         textAnchor,
-        dominantBaseline,
         debugBoundingBox,
         dims,
       },

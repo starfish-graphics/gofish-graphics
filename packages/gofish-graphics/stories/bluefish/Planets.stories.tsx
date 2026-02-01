@@ -49,7 +49,38 @@ export const PlanetsOnly: StoryObj<Args> = {
   },
 };
 
-export const PlanetsWithLabel: StoryObj<Args> = {
+export const PlanetsWithLabelAbove: StoryObj<Args> = {
+  args: { w: 800, h: 200 },
+  render: (args: Args) => {
+    const container = initializeContainer();
+
+    Layer([
+      Stack(
+        { direction: "x", spacing: 50 },
+        For(planets, (planet) =>
+          Ellipse({
+            w: planet.radius * 2,
+            h: planet.radius * 2,
+            fill: planet.color,
+            stroke: "#333",
+            strokeWidth: 3,
+          }).name(planet.name)
+        )
+      ),
+      Stack({ direction: "y", spacing: 60 }, [
+        Ref("Mercury"),
+        Text({ text: "Mercury" }),
+      ]),
+    ]).render(container, {
+      w: args.w,
+      h: args.h,
+    });
+
+    return container;
+  },
+};
+
+export const PlanetsWithLabelBelow: StoryObj<Args> = {
   args: { w: 800, h: 200 },
   render: (args: Args) => {
     const container = initializeContainer();
@@ -69,6 +100,68 @@ export const PlanetsWithLabel: StoryObj<Args> = {
       ),
       Stack({ direction: "y", spacing: 60 }, [
         Text({ text: "Mercury" }),
+        Ref("Mercury"),
+      ]),
+    ]).render(container, {
+      w: args.w,
+      h: args.h,
+    });
+
+    return container;
+  },
+};
+
+export const PlanetsWithLabelAboveNoSpacing: StoryObj<Args> = {
+  args: { w: 800, h: 200 },
+  render: (args: Args) => {
+    const container = initializeContainer();
+
+    Layer([
+      Stack(
+        { direction: "x", spacing: 50 },
+        For(planets, (planet) =>
+          Ellipse({
+            w: planet.radius * 2,
+            h: planet.radius * 2,
+            fill: planet.color,
+            stroke: "#333",
+            strokeWidth: 3,
+          }).name(planet.name)
+        )
+      ),
+      Stack({ direction: "y", spacing: 0 }, [
+        Ref("Mercury"),
+        Text({ text: "Mercury", debugBoundingBox: true }),
+      ]),
+    ]).render(container, {
+      w: args.w,
+      h: args.h,
+    });
+
+    return container;
+  },
+};
+
+export const PlanetsWithLabelBelowNoSpacing: StoryObj<Args> = {
+  args: { w: 800, h: 200 },
+  render: (args: Args) => {
+    const container = initializeContainer();
+
+    Layer([
+      Stack(
+        { direction: "x", spacing: 50 },
+        For(planets, (planet) =>
+          Ellipse({
+            w: planet.radius * 2,
+            h: planet.radius * 2,
+            fill: planet.color,
+            stroke: "#333",
+            strokeWidth: 3,
+          }).name(planet.name)
+        )
+      ),
+      Stack({ direction: "y", spacing: 0 }, [
+        Text({ text: "Mercury", debugBoundingBox: true }),
         Ref("Mercury"),
       ]),
     ]).render(container, {

@@ -164,33 +164,30 @@ export class GoFishRef {
   }
 
   public get dims(): Dimensions {
-    // combine inrinsicDims and transform into a single object
-    return [
-      {
-        min:
-          (this.intrinsicDims?.[0]?.min ?? 0) +
-          (this.transform?.translate?.[0] ?? 0),
+    // Combine intrinsicDims and transform. Return undefined for min/center/max/size
+    // when either the intrinsic dim or translation for that dimension is undefined,
+    // so callers can distinguish "not yet placed" from "at 0".
+    const dim = (i: 0 | 1) => {
+      const intrinsic = this.intrinsicDims?.[i];
+      const translate = this.transform?.translate?.[i];
+      const hasPosition = translate !== undefined;
+      return {
+        min: hasPosition && intrinsic?.min !== undefined
+          ? (intrinsic!.min ?? 0) + translate!
+          : undefined,
         center:
-          (this.intrinsicDims?.[0]?.center ?? 0) +
-          (this.transform?.translate?.[0] ?? 0),
+          hasPosition && intrinsic?.center !== undefined
+            ? (intrinsic!.center ?? 0) + translate!
+            : undefined,
         max:
-          (this.intrinsicDims?.[0]?.max ?? 0) +
-          (this.transform?.translate?.[0] ?? 0),
-        size: this.intrinsicDims?.[0]?.size ?? 0,
-      },
-      {
-        min:
-          (this.intrinsicDims?.[1]?.min ?? 0) +
-          (this.transform?.translate?.[1] ?? 0),
-        center:
-          (this.intrinsicDims?.[1]?.center ?? 0) +
-          (this.transform?.translate?.[1] ?? 0),
-        max:
-          (this.intrinsicDims?.[1]?.max ?? 0) +
-          (this.transform?.translate?.[1] ?? 0),
-        size: this.intrinsicDims?.[1]?.size ?? 0,
-      },
-    ];
+          hasPosition && intrinsic?.max !== undefined
+            ? (intrinsic!.max ?? 0) + translate!
+            : undefined,
+        size: intrinsic?.size,
+        embedded: intrinsic?.embedded,
+      };
+    };
+    return [dim(0), dim(1)];
   }
 
   public place(pos: FancyPosition): void {
