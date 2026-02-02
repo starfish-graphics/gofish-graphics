@@ -84,6 +84,9 @@ importers:
       lodash:
         specifier: ^4.17.21
         version: 4.17.21
+      perfect-arrows:
+        specifier: ^0.3.7
+        version: 0.3.7
       rybitten:
         specifier: ^0.22.0
         version: 0.22.0
@@ -1949,6 +1952,10 @@ packages:
   pathval@2.0.1:
     resolution: {integrity: sha512-//nshmD55c46FuFw26xV/xFAaB5HF9Xdap7HJBBnrKdAd6/GxDBaNA1870O79+9ueg61cZLSVc+OaFlfmObYVQ==}
     engines: {node: '>= 14.16'}
+
+  perfect-arrows@0.3.7:
+    resolution: {integrity: sha512-wEN2gerTPVWl3yqoFEF8OeGbg3aRe2sxNUi9rnyYrCsL4JcI6K2tBDezRtqVrYG0BNtsWLdYiiTrYm+X//8yLQ==}
+    engines: {node: '>=10'}
 
   perfect-debounce@1.0.0:
     resolution: {integrity: sha512-xCy9V055GLEqoFaHoC1SoLIaLmWctgCUaBaWxDZ7/Zx4CTyX7cJQLJOok/orfjZAh9kEYpjJa4d0KcJmCbctZA==}
@@ -4224,6 +4231,8 @@ snapshots:
       minipass: 7.1.2
 
   pathval@2.0.1: {}
+
+  perfect-arrows@0.3.7: {}
 
   perfect-debounce@1.0.0: {}
 

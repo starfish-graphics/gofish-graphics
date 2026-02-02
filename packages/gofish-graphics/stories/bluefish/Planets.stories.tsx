@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
-import { For, Stack, Ellipse, Layer, Text, Ref } from "../../src/lib";
+import { For, Stack, Ellipse, Layer, Text, Ref, Arrow } from "../../src/lib";
 
 const meta: Meta = {
   title: "Bluefish/Planets",
@@ -164,6 +164,38 @@ export const PlanetsWithLabelBelowNoSpacing: StoryObj<Args> = {
         Text({ text: "Mercury", debugBoundingBox: true }),
         Ref("Mercury"),
       ]),
+    ]).render(container, {
+      w: args.w,
+      h: args.h,
+    });
+
+    return container;
+  },
+};
+
+export const PlanetsWithArrow: StoryObj<Args> = {
+  args: { w: 800, h: 200 },
+  render: (args: Args) => {
+    const container = initializeContainer();
+
+    Layer([
+      Stack(
+        { direction: "x", spacing: 50 },
+        For(planets, (planet) =>
+          Ellipse({
+            w: planet.radius * 2,
+            h: planet.radius * 2,
+            fill: planet.color,
+            stroke: "#333",
+            strokeWidth: 3,
+          }).name(planet.name)
+        )
+      ),
+      Stack({ direction: "y", spacing: 60 }, [
+        Text({ text: "Mercury" }).name("label"),
+        Ref("Mercury"),
+      ]),
+      Arrow({}, [Ref("label"), Ref("Mercury")]),
     ]).render(container, {
       w: args.w,
       h: args.h,
