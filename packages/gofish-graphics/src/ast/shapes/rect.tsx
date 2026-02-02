@@ -1,12 +1,5 @@
 import { color6, color6_old } from "../../color";
-import {
-  path,
-  Path,
-  pathToSVGPath,
-  segment,
-  subdividePath,
-  transformPath,
-} from "../../path";
+import { path, Path, pathToSVGPath, segment, transformPath } from "../../path";
 import { GoFishNode } from "../_node";
 import { GoFishAST } from "../_ast";
 import { CoordinateTransform } from "../coordinateTransforms/coord";
@@ -60,6 +53,7 @@ export const rect = ({
   rx = 0,
   ry = 0,
   filter,
+  label,
   ...fancyDims
 }: {
   key?: string;
@@ -70,6 +64,7 @@ export const rect = ({
   rx?: number;
   ry?: number;
   filter?: string;
+  label?: boolean;
 } & FancyDims<MaybeValue<number>>) => {
   const dims = elaborateDims(fancyDims).map(inferEmbedded);
   return new GoFishNode(
@@ -86,6 +81,7 @@ export const rect = ({
         rx,
         ry,
         filter,
+        label,
         dims,
       },
       color: fill,
@@ -288,11 +284,21 @@ export const rect = ({
           },
         ];
 
+        const originalFill = fill;
         fill = isValue(fill)
           ? scaleContext?.unit?.color
             ? scaleContext.unit.color.get(getValue(fill))
             : getValue(fill)
           : fill;
+
+        const resolvedFill = fill as string | undefined;
+        const resolvedStroke =
+          (stroke as string | undefined) ?? resolvedFill ?? "black";
+
+        const labelText =
+          label && originalFill && isValue(originalFill)
+            ? String(getValue(originalFill) ?? "")
+            : undefined;
 
         // Both dimensions are aesthetic - render as transformed point
         if (!isXEmbedded && !isYEmbedded) {
@@ -305,19 +311,34 @@ export const rect = ({
           const height = displayDims[1].size ?? 0;
 
           return (
-            <rect
-              transform={`scale(1, -1)`}
-              x={transformedX - width / 2}
-              y={-(transformedY - height / 2) - height}
-              rx={rx}
-              ry={ry}
-              width={width}
-              height={height}
-              fill={fill}
-              stroke={stroke ?? fill ?? "black"}
-              stroke-width={strokeWidth ?? 0}
-              filter={filter}
-            />
+            <>
+              <rect
+                transform={`scale(1, -1)`}
+                x={transformedX - width / 2}
+                y={-(transformedY - height / 2) - height}
+                rx={rx}
+                ry={ry}
+                width={width}
+                height={height}
+                fill={resolvedFill}
+                stroke={resolvedStroke}
+                stroke-width={strokeWidth ?? 0}
+                filter={filter}
+              />
+              {labelText && (
+                <text
+                  transform="scale(1, -1)"
+                  x={transformedX}
+                  y={-transformedY}
+                  fill="white"
+                  font-size="12px"
+                  text-anchor="middle"
+                  dominant-baseline="central"
+                >
+                  {labelText}
+                </text>
+              )}
+            </>
           );
         }
 
@@ -353,18 +374,38 @@ export const rect = ({
             const x = rawWidth < 0 ? baseX + rawWidth : baseX;
             const y = rawHeight < 0 ? baseY + rawHeight : baseY;
 
+            const center: [number, number] = [x + width / 2, y + height / 2];
+            const [transformedX, transformedY] = space.transform(center);
+
             return (
-              <rect
-                transform={`scale(1, -1)`}
-                x={x}
-                y={-y - height}
-                width={width}
-                height={height}
-                fill={fill}
-                stroke={stroke ?? fill ?? "black"}
-                stroke-width={strokeWidth ?? 0}
-                filter={filter}
-              />
+              <>
+                <rect
+                  transform={`scale(1, -1)`}
+                  x={x}
+                  y={-y - height}
+                  rx={rx}
+                  ry={ry}
+                  width={width}
+                  height={height}
+                  fill={resolvedFill}
+                  stroke={resolvedStroke}
+                  stroke-width={strokeWidth ?? 0}
+                  filter={filter}
+                />
+                {labelText && (
+                  <text
+                    transform="scale(1, -1)"
+                    x={transformedX}
+                    y={-transformedY}
+                    fill="white"
+                    font-size="12px"
+                    text-anchor="middle"
+                    dominant-baseline="central"
+                  >
+                    {labelText}
+                  </text>
+                )}
+              </>
             );
           }
 
@@ -380,17 +421,19 @@ export const rect = ({
                 isXEmbedded ? aestheticMid : (displayDims[1].max ?? 0),
               ],
             ],
-            { subdivision: 1000 }
+            {}
           );
 
-          // Subdivide and transform path
-          const transformed = transformPath(linePath, space);
+          // Transform path
+          const transformed = transformPath(linePath, space, {
+            resample: true,
+          });
 
           // 0.5 removes weird white space at least for some charts
           return (
             <path
               d={pathToSVGPath(transformed)}
-              stroke={fill}
+              stroke={resolvedFill}
               stroke-width={thickness + 0.5}
               fill="none"
               filter={filter}
@@ -413,15 +456,38 @@ export const rect = ({
           const x = rawWidth < 0 ? baseX + rawWidth : baseX;
           const y = rawHeight < 0 ? baseY + rawHeight : baseY;
 
+          const center: [number, number] = [x + width / 2, y + height / 2];
+          const [transformedX, transformedY] = space.transform(center);
+
           return (
-            <rect
-              transform={`scale(1, -1)`}
-              x={x}
-              y={-y - height}
-              width={width}
-              height={height}
-              fill={fill}
-            />
+            <>
+              <rect
+                transform={`scale(1, -1)`}
+                x={x}
+                y={-y - height}
+                rx={rx}
+                ry={ry}
+                width={width}
+                height={height}
+                stroke={resolvedStroke}
+                stroke-width={strokeWidth ?? 0}
+                fill={resolvedFill}
+                filter={filter}
+              />
+              {labelText && (
+                <text
+                  transform="scale(1, -1)"
+                  x={transformedX}
+                  y={-transformedY}
+                  fill="white"
+                  font-size="12px"
+                  text-anchor="middle"
+                  dominant-baseline="central"
+                >
+                  {labelText}
+                </text>
+              )}
+            </>
           );
         }
 
@@ -432,16 +498,17 @@ export const rect = ({
             [displayDims[0].max ?? 0, displayDims[1].max ?? 0],
             [displayDims[0].min ?? 0, displayDims[1].max ?? 0],
           ],
-          { closed: true, subdivision: 1000 }
+          { closed: true }
         );
 
-        const transformed = transformPath(corners, space);
+        // Transform path
+        const transformed = transformPath(corners, space, { resample: true });
 
         return (
           <path
             d={pathToSVGPath(transformed)}
-            fill={fill}
-            stroke={stroke ?? fill ?? "black"}
+            fill={resolvedFill}
+            stroke={resolvedStroke}
             stroke-width={strokeWidth ?? 0}
             filter={filter}
           />

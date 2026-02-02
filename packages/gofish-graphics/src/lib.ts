@@ -12,6 +12,7 @@ export { For as map } from "./ast/iterators/for";
 export { ellipse } from "./ast/shapes/ellipse";
 export { petal } from "./ast/shapes/petal";
 export { ref } from "./ast/shapes/ref";
+export { text } from "./ast/shapes/text";
 
 // Graphical Operators
 // export { stack } from "./ast/graphicalOperators/stack";
@@ -29,6 +30,7 @@ export { connectY } from "./ast/graphicalOperators/connectY";
 export { enclose } from "./ast/graphicalOperators/enclose";
 export { frame } from "./ast/graphicalOperators/frame";
 export { position } from "./ast/graphicalOperators/position";
+export { arrow } from "./ast/graphicalOperators/arrow";
 
 // Coordinate Transforms
 export { coord } from "./ast/coordinateTransforms/coord";
@@ -57,6 +59,7 @@ export { rect as Rect } from "./ast/shapes/rect";
 export { ellipse as Ellipse } from "./ast/shapes/ellipse";
 export { petal as Petal } from "./ast/shapes/petal";
 export { ref as Ref } from "./ast/shapes/ref";
+export { text as Text } from "./ast/shapes/text";
 
 // Graphical Operators
 export { stack as Stack } from "./ast/graphicalOperators/stack";
@@ -70,6 +73,7 @@ export { connectY as ConnectY } from "./ast/graphicalOperators/connectY";
 export { enclose as Enclose } from "./ast/graphicalOperators/enclose";
 export { frame as Frame } from "./ast/graphicalOperators/frame";
 export { position as Position } from "./ast/graphicalOperators/position";
+export { arrow as Arrow } from "./ast/graphicalOperators/arrow";
 
 // Coordinate Transforms
 export { coord as Coord } from "./ast/coordinateTransforms/coord";

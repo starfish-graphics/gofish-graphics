@@ -23,6 +23,7 @@ import {
   initLayerContext,
   resetLayerContext,
 } from "./graphicalOperators/frame";
+import { path, pathToSVGPath, transformPath } from "../path";
 
 /* scope context */
 let scopeContext: ScopeContext | null = null;
@@ -149,7 +150,10 @@ export async function layout(
   sizeDomains: [any, any];
   underlyingSpaceX: UnderlyingSpace;
   underlyingSpaceY: UnderlyingSpace;
-  posScales: [(pos: number) => number, (pos: number) => number];
+  posScales: [
+    ((pos: number) => number) | undefined,
+    ((pos: number) => number) | undefined,
+  ];
   ordinalScales: [OrdinalScale | undefined, OrdinalScale | undefined];
   child: GoFishNode;
 }> {
@@ -160,6 +164,13 @@ export async function layout(
     scaleContext = contexts.scaleCtx;
     scopeContext = contexts.scopeCtx;
     keyContext = contexts.keyCtx;
+  }
+  if (
+    typeof document !== "undefined" &&
+    document.fonts &&
+    typeof document.fonts.ready?.then === "function"
+  ) {
+    await document.fonts.ready;
   }
   if (debug) {
     console.log("🌳 Input Scene Graph:");
@@ -209,11 +220,17 @@ export async function layout(
     debugUnderlyingSpaceTree(child);
   }
 
-  const posScales = [
+  const posScales: [
+    ((pos: number) => number) | undefined,
+    ((pos: number) => number) | undefined,
+  ] = [
     niceUnderlyingSpaceX.kind === "position"
       ? computePosScale(
           continuous({
-            value: [niceUnderlyingSpaceX.domain!.min, niceUnderlyingSpaceX.domain!.max],
+            value: [
+              niceUnderlyingSpaceX.domain!.min,
+              niceUnderlyingSpaceX.domain!.max,
+            ],
             measure: "unit",
           }),
           w
@@ -222,7 +239,10 @@ export async function layout(
     niceUnderlyingSpaceY.kind === "position"
       ? computePosScale(
           continuous({
-            value: [niceUnderlyingSpaceY.domain!.min, niceUnderlyingSpaceY.domain!.max],
+            value: [
+              niceUnderlyingSpaceY.domain!.min,
+              niceUnderlyingSpaceY.domain!.max,
+            ],
             measure: "unit",
           }),
           h
@@ -289,7 +309,10 @@ export const gofish = (
     sizeDomains: [any, any];
     underlyingSpaceX: UnderlyingSpace;
     underlyingSpaceY: UnderlyingSpace;
-    posScales: [(pos: number) => number, (pos: number) => number];
+    posScales: [
+      ((pos: number) => number) | undefined,
+      ((pos: number) => number) | undefined,
+    ];
     ordinalScales: [OrdinalScale | undefined, OrdinalScale | undefined];
     child: GoFishNode;
     scaleContext: ScaleContext;
@@ -372,6 +395,68 @@ export const gofish = (
 
 const PADDING = 10;
 
+/**
+ * Finds the translation from the top-level coord node.
+ * Checks the node itself first, then its immediate children.
+ * Returns the coord node's transform.translate values, or null if not found.
+ */
+function findCoordTranslation(node: GoFishNode): [number, number] | null {
+  // Check if the node itself is a coord node
+  if (node.type === "coord" && node.transform?.translate) {
+    return [
+      node.transform.translate[0] ?? 0,
+      node.transform.translate[1] ?? 0,
+    ];
+  }
+
+  // Check immediate children for a coord node
+  if (node.children) {
+    for (const child of node.children) {
+      // Check if child is a coord node (coord nodes are always GoFishNode, not GoFishRef)
+      if ("type" in child && child.type === "coord" && "transform" in child) {
+        const coordNode = child as GoFishNode;
+        if (coordNode.transform?.translate) {
+          return [
+            coordNode.transform.translate[0] ?? 0,
+            coordNode.transform.translate[1] ?? 0,
+          ];
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Finds the coordinate-space bounding box from the top-level coord node.
+ * Checks the node itself first, then its immediate children.
+ * Returns the coord node's coordinate-space bounding box, or null if not found.
+ */
+function findCoordBoundingBox(
+  node: GoFishNode
+): { thetaMin: number; thetaMax: number; rMin: number; rMax: number } | null {
+  // Check if the node itself is a coord node
+  if (node.type === "coord" && node.renderData?.coordinateSpaceBbox) {
+    return node.renderData.coordinateSpaceBbox;
+  }
+
+  // Check immediate children for a coord node
+  if (node.children) {
+    for (const child of node.children) {
+      // Check if child is a coord node (coord nodes are always GoFishNode, not GoFishRef)
+      if ("type" in child && child.type === "coord" && "renderData" in child) {
+        const coordNode = child as GoFishNode;
+        if (coordNode.renderData?.coordinateSpaceBbox) {
+          return coordNode.renderData.coordinateSpaceBbox;
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
 export const render = (
   {
     width,
@@ -397,7 +482,10 @@ export const render = (
     sizeDomains?: [any, any];
     underlyingSpaceX: UnderlyingSpace;
     underlyingSpaceY: UnderlyingSpace;
-    posScales: [(pos: number) => number, (pos: number) => number];
+    posScales: [
+      ((pos: number) => number) | undefined,
+      ((pos: number) => number) | undefined,
+    ];
     ordinalScales: [OrdinalScale | undefined, OrdinalScale | undefined];
   },
   child: GoFishNode
@@ -449,8 +537,28 @@ export const render = (
           <g transform={transform ?? ""}>{child.INTERNAL_render()}</g>
         </Show>
         <Show when={axes}>
-          <g>
-            {/* x axis */}
+          {(() => {
+            // Check if we have a coordinate transform (polar/clock coordinates)
+            const hasCoordTransform =
+              (isPOSITION(underlyingSpaceX) &&
+                underlyingSpaceX.coordinateTransform) ||
+              (isPOSITION(underlyingSpaceY) &&
+                underlyingSpaceY.coordinateTransform);
+            
+            // Find the coord node's translation if we have a coordinate transform
+            const coordTranslation = hasCoordTransform
+              ? findCoordTranslation(child)
+              : null;
+            
+            // Apply translation if found
+            const axesTransform = coordTranslation
+              ? `translate(${coordTranslation[0]}, ${coordTranslation[1]})`
+              : undefined;
+            
+            return (
+              <>
+              <g transform={axesTransform}>
+                {/* x axis */}
             {/* <line
               x1={0}
               y1={height + PADDING}
@@ -462,48 +570,118 @@ export const render = (
             {/* y axis (continuous) */}
             <Show when={isPOSITION(underlyingSpaceY)}>
               {(() => {
+                if (!isPOSITION(underlyingSpaceY)) return null;
+                const spaceY = underlyingSpaceY; // Type narrowed to POSITION_TYPE
+                const xPosScale = posScales[0];
+                const yPosScale = posScales[1];
                 const [yMin, yMax] = nice(
-                  underlyingSpaceY.domain!.min,
-                  underlyingSpaceY.domain!.max,
+                  spaceY.domain.min,
+                  spaceY.domain.max,
                   10
                 );
                 const yTicks = ticks(yMin, yMax, 10);
-                return (
-                  <g>
-                    <line
-                      x1={-PADDING}
-                      y1={posScales[1](yTicks[0]) - 0.5}
-                      x2={-PADDING}
-                      y2={posScales[1](yTicks[yTicks.length - 1]) + 0.5}
-                      stroke="gray"
-                      stroke-width="1px"
-                    />
-                    <For each={yTicks}>
-                      {(tick) => (
-                        <>
-                          <text
-                            transform="scale(1, -1)"
-                            x={-PADDING * 1.75}
-                            y={-posScales[1](tick)}
-                            text-anchor="end"
-                            dominant-baseline="middle"
-                            font-size="10px"
-                            fill="gray"
-                          >
-                            {tick}
-                          </text>
-                          <line
-                            x1={-PADDING * 1.5}
-                            y1={posScales[1](tick)}
-                            x2={-PADDING}
-                            y2={posScales[1](tick)}
-                            stroke="gray"
-                          />
-                        </>
-                      )}
-                    </For>
-                  </g>
-                );
+                const coordTransform = spaceY.coordinateTransform;
+
+                if (coordTransform && xPosScale && yPosScale) {
+                  // Map using posScales before applying coordinate transform
+                  const xDomainMin = coordTransform.domain[0].min!;
+                  const screenYMin = yPosScale(yMin);
+                  const screenYMax = yPosScale(yMax);
+                  const screenX = xPosScale(xDomainMin);
+
+                  // Create path in screen space, then transform
+                  const screenPath = path(
+                    [
+                      [screenX, screenYMin],
+                      [screenX, screenYMax],
+                    ],
+                    { subdivision: 100 }
+                  );
+                  const axisLinePath = transformPath(
+                    screenPath,
+                    coordTransform
+                  );
+
+                  return (
+                    <g>
+                      <path
+                        d={pathToSVGPath(axisLinePath)}
+                        stroke="gray"
+                        stroke-width="1px"
+                        fill="none"
+                      />
+                      <For each={yTicks}>
+                        {(tick) => {
+                          const screenTickY = yPosScale(tick);
+                          const [transformedX, transformedY] =
+                            coordTransform.transform([screenX, screenTickY]);
+                          return (
+                            <>
+                              <text
+                                transform="scale(1, -1)"
+                                x={transformedX - PADDING * 0.25}
+                                y={-transformedY}
+                                text-anchor="end"
+                                dominant-baseline="middle"
+                                font-size="10px"
+                                fill="gray"
+                              >
+                                {tick}
+                              </text>
+                              {/* Tick mark - create a small line from the axis */}
+                              <line
+                                x1={transformedX}
+                                y1={transformedY}
+                                x2={transformedX - PADDING * 0.5}
+                                y2={transformedY}
+                                stroke="gray"
+                              />
+                            </>
+                          );
+                        }}
+                      </For>
+                    </g>
+                  );
+                } else {
+                  // Standard cartesian y-axis
+                  if (!yPosScale) return null;
+                  return (
+                    <g>
+                      <line
+                        x1={-PADDING}
+                        y1={yPosScale(yTicks[0]) - 0.5}
+                        x2={-PADDING}
+                        y2={yPosScale(yTicks[yTicks.length - 1]) + 0.5}
+                        stroke="gray"
+                        stroke-width="1px"
+                      />
+                      <For each={yTicks}>
+                        {(tick) => (
+                          <>
+                            <text
+                              transform="scale(1, -1)"
+                              x={-PADDING * 1.75}
+                              y={-yPosScale(tick)}
+                              text-anchor="end"
+                              dominant-baseline="middle"
+                              font-size="10px"
+                              fill="gray"
+                            >
+                              {tick}
+                            </text>
+                            <line
+                              x1={-PADDING * 1.5}
+                              y1={yPosScale(tick)}
+                              x2={-PADDING}
+                              y2={yPosScale(tick)}
+                              stroke="gray"
+                            />
+                          </>
+                        )}
+                      </For>
+                    </g>
+                  );
+                }
               })()}
             </Show>
             <Show
@@ -518,6 +696,7 @@ export const render = (
                   domain: [number, number];
                   scaleFactor: number;
                 };
+                if (!isDIFFERENCE(underlyingSpaceY)) return null;
                 const [yMin, yMax] = nice(0, underlyingSpaceY.width, 10);
                 const yTicks = ticks(yMin, yMax, 10);
                 return (
@@ -586,48 +765,159 @@ export const render = (
             {/* x axis (position) */}
             <Show when={isPOSITION(underlyingSpaceX)}>
               {(() => {
+                if (!isPOSITION(underlyingSpaceX)) return null;
+                const spaceX = underlyingSpaceX; // Type narrowed to POSITION_TYPE
+                const xPosScale = posScales[0];
                 const [xMin, xMax] = nice(
-                  underlyingSpaceX.domain!.min,
-                  underlyingSpaceX.domain!.max,
+                  spaceX.domain.min,
+                  spaceX.domain.max,
                   10
                 );
                 const xTicks = ticks(xMin, xMax, 10);
-                return (
-                  <g>
-                    <line
-                      x1={posScales[0](xTicks[0]) - 0.5}
-                      y1={-PADDING}
-                      x2={posScales[0](xTicks[xTicks.length - 1]) + 0.5}
-                      y2={-PADDING}
-                      stroke="gray"
-                      stroke-width="1px"
-                    />
-                    <For each={xTicks}>
-                      {(tick) => (
-                        <>
-                          <text
-                            transform="scale(1, -1)"
-                            x={posScales[0](tick)}
-                            y={PADDING * 1.75}
-                            text-anchor="middle"
-                            dominant-baseline="hanging"
-                            font-size="10px"
-                            fill="gray"
-                          >
-                            {tick}
-                          </text>
-                          <line
-                            x1={posScales[0](tick)}
-                            y1={-PADDING}
-                            x2={posScales[0](tick)}
-                            y2={-PADDING * 1.5}
-                            stroke="gray"
-                          />
-                        </>
-                      )}
-                    </For>
-                  </g>
-                );
+                const coordTransform = spaceX.coordinateTransform;
+
+                if (coordTransform && xPosScale) {
+                  // Map the chart's data domain into the coordinate-space theta range.
+                  // For clock/polar, the coord transform expects theta in [0, 2π] (or whatever its domain says),
+                  // not raw data-domain values.
+                  const thetaSize =
+                    coordTransform.domain[0].size ??
+                    (coordTransform.domain[0].max! - coordTransform.domain[0].min!);
+                  const thetaScale = computePosScale(
+                    continuous({
+                      value: [xMin, xMax],
+                      measure: "unit",
+                    }),
+                    thetaSize
+                  );
+
+                  const thetaMin = thetaScale(xMin);
+                  const thetaMax = thetaScale(xMax);
+                  
+                  // Get the maximum radius from the coordinate-space bounding box
+                  // and add padding to position axis outside chart bounds
+                  const coordBbox = findCoordBoundingBox(child);
+                  const rMax = coordBbox
+                    ? coordBbox.rMax + PADDING * 2
+                    : coordTransform.domain[1].max ??
+                      coordTransform.domain[1].size ??
+                      100;
+
+                  const rAxis = rMax;
+                  const tickLen = PADDING * 0.5;
+                  const labelPad = PADDING * 1.25;
+
+                  const axisDomainPath = path(
+                    [
+                      [thetaMin, rMax],
+                      [thetaMax, rMax],
+                    ],
+                    { subdivision: 200 }
+                  );
+
+                  const axisLinePath = transformPath(
+                    axisDomainPath,
+                    coordTransform
+                  );
+
+                  return (
+                    <g>
+                      <path
+                        d={pathToSVGPath(axisLinePath)}
+                        stroke="gray"
+                        stroke-width="1px"
+                        fill="none"
+                      />
+                      <For each={xTicks}>
+                        {(tick) => {
+                          const thetaTick = thetaScale(tick);
+                          // Ticks/labels should point outward (increasing r), regardless of how the
+                          // coordinate transform distorts the space. Compute direction in screen space
+                          // by sampling at r and r+Δr.
+                          const [tickAxisX, tickAxisY] = coordTransform.transform([
+                            thetaTick,
+                            rAxis,
+                          ]);
+                          const [tickOutX, tickOutY] = coordTransform.transform([
+                            thetaTick,
+                            rAxis + tickLen,
+                          ]);
+
+                          const dx = tickOutX - tickAxisX;
+                          const dy = tickOutY - tickAxisY;
+                          const dLen = Math.hypot(dx, dy);
+                          const dirX = dLen > 1e-6 ? dx / dLen : 0;
+                          const dirY = dLen > 1e-6 ? dy / dLen : 1;
+
+                          const labelX = tickOutX + dirX * labelPad;
+                          const labelY = tickOutY + dirY * labelPad;
+                          return (
+                            <>
+                              <text
+                                transform="scale(1, -1)"
+                                x={labelX}
+                                y={-labelY}
+                                text-anchor="middle"
+                                dominant-baseline="hanging"
+                                font-size="10px"
+                                fill="gray"
+                              >
+                                {tick}
+                              </text>
+                              {/* Tick mark - create a small line from the axis */}
+                              <line
+                                x1={tickAxisX}
+                                y1={tickAxisY}
+                                x2={tickOutX}
+                                y2={tickOutY}
+                                stroke="gray"
+                              />
+                            </>
+                          );
+                        }}
+                      </For>
+                    </g>
+                  );
+                } else {
+                  // Standard cartesian x-axis
+                  if (!xPosScale) return null;
+                  return (
+                    <g>
+                      <line
+                        x1={xPosScale(xTicks[0]) - 0.5}
+                        y1={-PADDING}
+                        x2={xPosScale(xTicks[xTicks.length - 1]) + 0.5}
+                        y2={-PADDING}
+                        stroke="gray"
+                        stroke-width="1px"
+                      />
+                      <For each={xTicks}>
+                        {(tick) => (
+                          <>
+                            <text
+                              transform="scale(1, -1)"
+                              x={xPosScale(tick)}
+                              y={PADDING * 1.75}
+                              text-anchor="middle"
+                              dominant-baseline="hanging"
+                              font-size="10px"
+                              fill="gray"
+                            >
+                              {tick}
+                            </text>
+                            <line
+                              x1={xPosScale(tick)}
+                              y1={-PADDING}
+                              x2={xPosScale(tick)}
+                              y2={-PADDING * 1.5}
+                              stroke="gray"
+                            />
+                          </>
+                        )}
+                      </For>
+                    </g>
+                  );
+                }
               })()}
             </Show>
 
@@ -644,6 +934,7 @@ export const render = (
                   domain: [number, number];
                   scaleFactor: number;
                 };
+                if (!isDIFFERENCE(underlyingSpaceX)) return null;
                 const [xMin, xMax] = nice(0, underlyingSpaceX.width, 10);
                 const xTicks = ticks(xMin, xMax, 10);
                 return (
@@ -827,6 +1118,7 @@ export const render = (
                 );
               })()}
             </Show>
+              </g>
             {/* legend (discrete color for now) */}
             <g>
               <For
@@ -857,7 +1149,9 @@ export const render = (
                 )}
               </For>
             </g>
-          </g>
+              </>
+            );
+          })()}
         </Show>
       </g>
     </svg>

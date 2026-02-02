@@ -87,7 +87,12 @@ export const unionAll = (...bboxes: BoundingBox[]): BoundingBox => {
     return bbox(0, 0, 0, 0);
   }
 
-  return bboxes.reduce((acc, bbox) => union(acc, bbox));
+  return bbox(
+    Math.min(...bboxes.map((b) => b.minX)),
+    Math.max(...bboxes.map((b) => b.maxX)),
+    Math.min(...bboxes.map((b) => b.minY)),
+    Math.max(...bboxes.map((b) => b.maxY))
+  );
 };
 
 /**

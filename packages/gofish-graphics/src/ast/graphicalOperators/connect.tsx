@@ -1,11 +1,5 @@
 import { For } from "solid-js";
-import {
-  Path,
-  PathSegment,
-  pathToSVGPath,
-  transformPath,
-  subdividePath,
-} from "../../path";
+import { Path, PathSegment, pathToSVGPath, transformPath } from "../../path";
 import { GoFishAST } from "../_ast";
 import { GoFishNode } from "../_node";
 import { elaborateDirection, FancyDirection, Size } from "../dims";
@@ -49,7 +43,10 @@ export const connect = withGoFish(
         type: "connect",
         shared: [false, false],
         color: fill,
-        resolveUnderlyingSpace: (children: Size<UnderlyingSpace>[], _childNodes: GoFishAST[]) => {
+        resolveUnderlyingSpace: (
+          children: Size<UnderlyingSpace>[],
+          _childNodes: GoFishAST[]
+        ) => {
           return [UNDEFINED, UNDEFINED];
         },
         inferSizeDomains: (shared, children) => {
@@ -344,10 +341,9 @@ export const connect = withGoFish(
               <For each={renderData.paths}>
                 {(path) => {
                   const transformedPath = coordinateTransform
-                    ? transformPath(
-                        subdividePath(path, 1000),
-                        coordinateTransform
-                      )
+                    ? transformPath(path, coordinateTransform, {
+                        resample: true,
+                      })
                     : path;
                   const d = pathToSVGPath(transformedPath);
                   return (

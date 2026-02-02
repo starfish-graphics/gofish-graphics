@@ -433,6 +433,7 @@ export function rect<T extends Record<string, any>>({
   debug,
   stroke,
   strokeWidth,
+  label,
 }: {
   emX?: boolean;
   emY?: boolean;
@@ -446,6 +447,7 @@ export function rect<T extends Record<string, any>>({
   stroke?: string;
   strokeWidth?: number;
   debug?: boolean;
+  label?: boolean;
 }): Mark<T | T[] | { item: T | T[]; key: number | string }> {
   return async (input: T | T[] | { item: T | T[]; key: number | string }) => {
     let d: T | T[], key: number | string | undefined;
@@ -482,6 +484,7 @@ export function rect<T extends Record<string, any>>({
           : fill,
       stroke,
       strokeWidth,
+      label,
     }).name(key?.toString() ?? "");
     (node as any).datum = d;
     return node;

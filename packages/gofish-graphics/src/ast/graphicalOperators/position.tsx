@@ -64,8 +64,8 @@ export const position = withGoFish(
           childPlaceable.place({ x: 0, y: 0 });
 
           // Calculate the position offset based on the child's intrinsic dimensions
-          const childWidth = childPlaceable.dims[0].size || 0;
-          const childHeight = childPlaceable.dims[1].size || 0;
+          const childWidth = childPlaceable.dims[0].size ?? 0;
+          const childHeight = childPlaceable.dims[1].size ?? 0;
 
           // Handle x and y values (can be literal values or data-bound values)
           const xPos = options.x

@@ -129,6 +129,27 @@ export const StackedBarChart: StoryObj<Args> = {
   },
 };
 
+export const StackedBarChartStoryWithLabels: StoryObj<Args> = {
+  args: { w: 400, h: 400 },
+  render: (args: Args) => {
+    const container = initializeContainer();
+
+    chart(seafood)
+      .flow(
+        spread("lake", { dir: "x" }), //
+        stack("species", { dir: "y" })
+      )
+      .mark(rect({ h: "count", fill: "species", label: true }))
+      .render(container, {
+        w: args.w,
+        h: args.h,
+        axes: true,
+      });
+
+    return container;
+  },
+};
+
 export const SortedStackedBarChart: StoryObj<Args> = {
   args: { w: 400, h: 400 },
   render: (args: Args) => {
@@ -315,7 +336,7 @@ export const PieChart: StoryObj<Args> = {
 
     chart(seafood, { coord: clock() })
       .flow(stack("species", { dir: "x" }))
-      .mark(rect({ w: "count", fill: "species", emY: true }))
+      .mark(rect({ w: "count", fill: "species" }))
       .render(container, {
         w: args.w,
         h: args.h,
