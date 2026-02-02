@@ -29,6 +29,7 @@
     "monaco-editor": "^0.52.2",
     "sandpack-vue3": "^3.1.12",
     "spectral.js": "2.0.2",
+    "vite": "^6.0.0",
     "vite-plugin-monaco-editor": "^1.1.0"
   }
 }
