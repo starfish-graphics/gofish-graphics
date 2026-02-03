@@ -50,7 +50,6 @@ export default defineConfig({
       { text: "Get Started!", link: "/get-started" },
       { text: "Tutorial", link: "/tutorial" },
       { text: "Examples", link: "/examples/index.md" },
-      { text: "Cheat Sheet", link: "/cheat-sheet" },
       // { text: "Guides", link: "/guides/index.md" },
       // { text: "API Reference", link: "/api/index.md" },
     ],
@@ -98,10 +97,6 @@ export default defineConfig({
               })),
             },
           ],
-        },
-        {
-          text: "Cheat Sheet",
-          link: "/cheat-sheet",
         },
         // { text: "Examples", link: "/examples/" },
         // {
