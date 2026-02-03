@@ -13,13 +13,13 @@ import { computeSize } from "../../util";
 import { CoordinateTransform } from "../coordinateTransforms/coord";
 import { coord } from "../coordinateTransforms/coord";
 import { getLayerContext, resetLayerContext } from "./frame";
-import { withGoFishSequential } from "../withGoFish";
+import { createOperatorSequential } from "../withGoFish";
 import { GoFishAST } from "../_ast";
 
 // Re-export layer context functions for backward compatibility
 export { getLayerContext, resetLayerContext };
 
-export const layer = withGoFishSequential(
+export const layer = createOperatorSequential(
   async (
     childrenOrOptions:
       | ({

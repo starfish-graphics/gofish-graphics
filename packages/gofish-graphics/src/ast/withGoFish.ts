@@ -226,7 +226,7 @@ export async function reifyChildrenSequentially(
 - Allows opts to be optional
 - Supports arrays where individual elements can be promises
 */
-export function withGoFish<T extends Record<string, any>, R>(
+export function createOperator<T extends Record<string, any>, R>(
   func: (opts: T, children: GoFishAST[]) => R
 ): {
   (opts?: T, children?: GoFishChildrenInput): PromiseWithRender<R>;
@@ -247,7 +247,7 @@ export function withGoFish<T extends Record<string, any>, R>(
         children = undefined;
       } else {
         throw new Error(
-          `withGoFish: Expected 0, 1, or 2 arguments, got ${args.length}`
+          `createOperator: Expected 0, 1, or 2 arguments, got ${args.length}`
         );
       }
       // Flatten nested structures and await all promises
@@ -282,7 +282,7 @@ export function withGoFish<T extends Record<string, any>, R>(
  * - Supports arrays where individual elements can be promises or thunks
  * - Processes thunks sequentially to ensure proper execution order
  */
-export function withGoFishSequential<T extends Record<string, any>, R>(
+export function createOperatorSequential<T extends Record<string, any>, R>(
   func: (opts: T, children: GoFishAST[]) => R
 ): {
   (opts?: T, children?: GoFishChildrenInputWithThunks): PromiseWithRender<R>;
@@ -303,7 +303,7 @@ export function withGoFishSequential<T extends Record<string, any>, R>(
         children = undefined;
       } else {
         throw new Error(
-          `withGoFishSequential: Expected 0, 1, or 2 arguments, got ${args.length}`
+          `createOperatorSequential: Expected 0, 1, or 2 arguments, got ${args.length}`
         );
       }
       // First phase: flatten nested structures and await promises, preserving thunks and ChartBuilder instances
@@ -326,7 +326,7 @@ export function withGoFishSequential<T extends Record<string, any>, R>(
  * - Original: func(opts)
  * - Data style: func(data, opts) where data is passed through (for future use)
  */
-export function withGoFishNoChildren<T extends Record<string, any>, R>(
+export function createMark<T extends Record<string, any>, R>(
   func: (opts: T) => R
 ): {
   (opts: T): R;
@@ -343,7 +343,7 @@ export function withGoFishNoChildren<T extends Record<string, any>, R>(
       return func(opts);
     } else {
       throw new Error(
-        `withGoFishNoChildren: Expected 1 or 2 arguments, got ${args.length}`
+        `createMark: Expected 1 or 2 arguments, got ${args.length}`
       );
     }
   } as any;

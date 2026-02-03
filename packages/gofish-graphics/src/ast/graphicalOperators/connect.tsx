@@ -10,9 +10,9 @@ import { scaleContext } from "../gofish";
 import { Domain } from "../domain";
 import * as Monotonic from "../../util/monotonic";
 import { UNDEFINED, UnderlyingSpace } from "../underlyingSpace";
-import { withGoFish } from "../withGoFish";
+import { createOperator } from "../withGoFish";
 
-export const connect = withGoFish(
+export const connect = createOperator(
   (
     {
       direction,

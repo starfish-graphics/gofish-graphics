@@ -14,7 +14,7 @@ import _, { Collection, size } from "lodash";
 import { computeAesthetic, computeSize, findTargetMonotonic } from "../../util";
 import { GoFishAST } from "../_ast";
 import { getScaleContext } from "../gofish";
-import { withGoFish } from "../withGoFish";
+import { createOperator } from "../withGoFish";
 import * as Monotonic from "../../util/monotonic";
 import {
   DIFFERENCE,
@@ -36,7 +36,7 @@ const unwrapLodashArray = function <T>(value: T[] | Collection<T>): T[] {
   return value as T[];
 };
 
-export const stack = withGoFish(
+export const stack = createOperator(
   (
     {
       name,

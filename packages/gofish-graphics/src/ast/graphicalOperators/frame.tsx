@@ -3,7 +3,7 @@ import { FancyDims } from "../dims";
 import { CoordinateTransform } from "../coordinateTransforms/coord";
 import { coord } from "../coordinateTransforms/coord";
 import { layer } from "./layer";
-import { withGoFish } from "../withGoFish";
+import { createOperator } from "../withGoFish";
 import { GoFishAST } from "../_ast";
 
 /* layer context */
@@ -30,7 +30,7 @@ export const initLayerContext = (): void => {
 export const resetLayerContext = (): void => {
   layerContext = null;
 };
-export const frame = withGoFish(
+export const frame = createOperator(
   (
     options: {
       key?: string;
