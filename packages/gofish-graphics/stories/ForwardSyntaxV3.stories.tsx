@@ -16,6 +16,9 @@ import {
   select,
   line,
   scaffold,
+  Stack,
+  Text,
+  Ref,
 } from "../src/lib";
 import {
   area,
@@ -103,6 +106,35 @@ export const HorizontalBarChart: StoryObj<Args> = {
         h: args.h,
         axes: true,
       });
+
+    return container;
+  },
+};
+
+export const BarChartWithLabels: StoryObj<Args> = {
+  args: { w: 400, h: 400 },
+  render: (args: Args) => {
+    const container = initializeContainer();
+
+    layer([
+      chart(seafood)
+        .flow(spread("lake", { dir: "x" }))
+        .mark(rect({ h: "count" }))
+        .as("bars"),
+      chart(select("bars"))
+        .flow(group("lake"))
+        .mark((d) => {
+          console.log(d);
+          return Stack({ direction: "y", spacing: 10 }, [
+            Ref(d[0].__ref!),
+            Text({ text: d[0].count }),
+          ]);
+        }),
+    ]).render(container, {
+      w: args.w,
+      h: args.h,
+      axes: true,
+    });
 
     return container;
   },
