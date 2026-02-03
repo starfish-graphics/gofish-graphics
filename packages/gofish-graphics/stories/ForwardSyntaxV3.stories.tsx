@@ -6,6 +6,7 @@ import {
   seafood,
   catchDataWithLocations,
 } from "../src/data/catch";
+import { streamgraphData } from "../src/data/streamgraphData";
 import {
   chart,
   spread,
@@ -577,3 +578,25 @@ export const AreaChart: StoryObj<Args> = {
     return container;
   },
 };
+
+export const LayeredAreaChart: StoryObj<Args> = {
+  args: { w: 500, h: 300 },
+  render: (args: Args) => {
+    const container = initializeContainer();
+    layer([
+      chart(streamgraphData)
+        .flow(spread("x", { dir: "x", spacing: 50 }))
+        .mark(scaffold({ h: "y", fill: "c" }))
+        .as("points"),
+      chart(select("points"))
+        .flow(group("c"))
+        .mark(area({ opacity: 0.7 })),
+    ]).render(container, {
+      w: 500,
+      h: 300,
+      axes: true,
+    });
+
+    return container;
+  }
+}
