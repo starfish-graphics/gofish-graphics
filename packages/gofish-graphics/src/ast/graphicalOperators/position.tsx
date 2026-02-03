@@ -3,10 +3,10 @@ import { Size, elaborateDims, FancyDims } from "../dims";
 import { getMeasure, getValue, isValue, MaybeValue } from "../data";
 import { POSITION, UNDEFINED, UnderlyingSpace } from "../underlyingSpace";
 import { interval } from "../../util/interval";
-import { withGoFish } from "../withGoFish";
+import { createOperator } from "../withGoFish";
 import { GoFishAST } from "../_ast";
 
-export const position = withGoFish(
+export const position = createOperator(
   (
     childrenOrOptions:
       | { key?: string; x?: MaybeValue<number>; y?: MaybeValue<number> }
@@ -22,7 +22,10 @@ export const position = withGoFish(
         type: "position",
         key: options.key,
         shared: [false, false],
-        resolveUnderlyingSpace: (children: Size<UnderlyingSpace>[], _childNodes: GoFishAST[]) => {
+        resolveUnderlyingSpace: (
+          children: Size<UnderlyingSpace>[],
+          _childNodes: GoFishAST[]
+        ) => {
           return [
             isValue(options.x)
               ? POSITION(interval(getValue(options.x)!, getValue(options.x)!))

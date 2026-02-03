@@ -14,7 +14,7 @@ import {
   isORDINAL,
   isPOSITION,
 } from "../underlyingSpace";
-import { withGoFish } from "../withGoFish";
+import { createOperator } from "../withGoFish";
 import { computeTransformedBoundingBox } from "./coordUtils";
 import { empty, union } from "../../util/bbox";
 
@@ -89,7 +89,7 @@ const flattenLayout = (
   For now we'll just assume that it's a GoFishNode tho... maybe it's a GoFishNode that contains DisplayObjects
   inside it?
 */
-export const coord = withGoFish(
+export const coord = createOperator(
   (
     {
       key,

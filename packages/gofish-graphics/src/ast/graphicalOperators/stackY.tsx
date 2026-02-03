@@ -2,10 +2,10 @@ import { stack } from "./stack";
 import { GoFishAST } from "../_ast";
 import { FancyDims } from "../dims";
 import { Collection } from "lodash";
-import { withGoFish } from "../withGoFish";
+import { createOperator } from "../withGoFish";
 import { MaybeValue } from "../data";
 
-export const stackY = withGoFish(
+export const stackY = createOperator(
   (
     {
       name,
