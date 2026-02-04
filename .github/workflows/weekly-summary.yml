@@ -79,7 +79,7 @@ jobs:
 
           # Build Slack payload with proper escaping
           jq -n \
-            --arg text "🐟 *GoFish Weekly Update* (${{ steps.dates.outputs.week_ago }} → ${{ steps.dates.outputs.today }})" \
+            --arg header "🐟 GoFish Weekly Update (${{ steps.dates.outputs.week_ago }} → ${{ steps.dates.outputs.today }})" \
             --arg summary "$SUMMARY" \
             '{
               "blocks": [
@@ -87,18 +87,9 @@ jobs:
                   "type": "header",
                   "text": {
                     "type": "plain_text",
-                    "text": "🐟 GoFish Weekly Update",
+                    "text": $header,
                     "emoji": true
                   }
-                },
-                {
-                  "type": "context",
-                  "elements": [
-                    {
-                      "type": "mrkdwn",
-                      "text": $text | split("*") | join("")
-                    }
-                  ]
                 },
                 {
                   "type": "divider"
