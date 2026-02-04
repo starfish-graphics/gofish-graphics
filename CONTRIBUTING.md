@@ -11,6 +11,20 @@ Here are some easy ways to help make the project better without having to unders
 ## Your First Codebase Contribution
 If you want to start contributing to the codebase itself, **try the "good first codebase issue" tag.**
 
+### Installations
+[Ensure pnpm is installed](https://pnpm.io/installation), then build to setup the gofish-graphics package.
+```bash
+pnpm build
+```
+
+Use pnpm storybook to run the local storybook examples, and pnpm docs:dev to run local docs.
+```bash
+pnpm storybook
+```
+```bash
+pnpm docs:dev
+```
+
 ## Larger Contributions
 **Read our GitHub wiki** to learn more about the project's design philosophy. Major changes to the project (like adding a new intermediate representation or interaction/animation) will require a more back-and-forth conversation in the issues before we come to a consensus on what to do.
 
