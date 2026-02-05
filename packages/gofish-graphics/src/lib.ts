@@ -55,7 +55,7 @@ export { For } from "./ast/iterators/for";
 export { groupBy, sumBy, orderBy, meanBy } from "lodash";
 
 // Shapes
-export { rect as Rect } from "./ast/shapes/rect";
+export { Rect } from "./ast/shapes/rect";
 export { ellipse as Ellipse } from "./ast/shapes/ellipse";
 export { petal as Petal } from "./ast/shapes/petal";
 export { ref as Ref } from "./ast/shapes/ref";

@@ -10,6 +10,13 @@ import { GoFishAST } from "./_ast";
 import { GoFishNode } from "./_node";
 import _, { ListOfRecursiveArraysOrValues } from "lodash";
 import { ChartBuilder } from "./marks/chart";
+import {
+  ChannelAnnotations,
+  DeriveMarkProps,
+  inferSize,
+  inferColor,
+} from "./channels";
+import { Mark } from "./types";
 
 /**
  * Options for rendering a GoFish node
@@ -322,29 +329,65 @@ export function createOperatorSequential<T extends Record<string, any>, R>(
 }
 
 /**
- * Wraps a function that takes only (opts) to support both calling patterns:
- * - Original: func(opts)
- * - Data style: func(data, opts) where data is passed through (for future use)
+ * Creates a high-level mark function from a low-level shape function
+ * and channel annotations.
+ *
+ * Channel annotations describe how each prop encodes data:
+ * - "size": mark accepts `number | keyof T`, uses inferSize to convert
+ * - "color": mark accepts `string | keyof T`, uses inferColor to convert
+ * - unannotated props are passed through unchanged
  */
-export function createMark<T extends Record<string, any>, R>(
-  func: (opts: T) => R
-): {
-  (opts: T): R;
-  (data: any[], opts: T): R;
-} {
-  return function (...args: any[]): R {
-    if (args.length === 1) {
-      // Original calling pattern: func(opts)
-      const [opts] = args;
-      return func(opts);
-    } else if (args.length === 2) {
-      // Data style calling pattern: func(data, opts) - data is passed through for now
-      const [data, opts] = args;
-      return func(opts);
-    } else {
-      throw new Error(
-        `createMark: Expected 1 or 2 arguments, got ${args.length}`
-      );
-    }
-  } as any;
+export function createMark<
+  ShapeProps extends Record<string, any>,
+  C extends ChannelAnnotations<ShapeProps>,
+>(
+  shapeFn: (opts: ShapeProps) => GoFishNode,
+  channels: C
+): <T extends Record<string, any>>(
+  opts: DeriveMarkProps<ShapeProps, C, T>
+) => Mark<T | T[] | { item: T | T[]; key: number | string }> {
+  return <T extends Record<string, any>>(
+    markOpts: DeriveMarkProps<ShapeProps, C, T>
+  ): Mark<T | T[] | { item: T | T[]; key: number | string }> => {
+    return async (
+      input: T | T[] | { item: T | T[]; key: number | string }
+    ) => {
+      // Unwrap input: handles T, T[], or { item, key } patterns
+      let d: T | T[], key: number | string | undefined;
+      if (typeof input === "object" && input !== null && "item" in input) {
+        d = (input as { item: T | T[]; key: number | string }).item;
+        key = (input as { item: T | T[]; key: number | string }).key;
+      } else {
+        d = input as T | T[];
+        key = undefined;
+      }
+
+      if ((markOpts as any).debug) {
+        console.log("mark", key, d);
+      }
+
+      const data = Array.isArray(d) ? d : [d];
+
+      // Build shape props by encoding each channel
+      const shapeProps: Record<string, any> = {};
+      for (const propName of Object.keys(markOpts as any)) {
+        if (propName === "debug") continue;
+        const channelType = channels[propName as keyof C];
+        const markValue = (markOpts as any)[propName];
+
+        if (channelType === "size") {
+          shapeProps[propName] = inferSize(markValue, data);
+        } else if (channelType === "color") {
+          shapeProps[propName] = inferColor(markValue, data);
+        } else {
+          shapeProps[propName] = markValue;
+        }
+      }
+
+      const node = shapeFn(shapeProps as ShapeProps);
+      node.name(key?.toString() ?? "");
+      (node as any).datum = d;
+      return node;
+    };
+  };
 }

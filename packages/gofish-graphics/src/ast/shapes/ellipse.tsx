@@ -31,11 +31,8 @@ import {
 import { aesthetic, continuous } from "../domain";
 import { scaleContext } from "../gofish";
 import { ORDINAL, POSITION, UNDEFINED } from "../underlyingSpace";
-import { createMark } from "../withGoFish";
-
 /* TODO: what should default embedding behavior be when all values are aesthetic? */
-export const ellipse = createMark(
-  ({
+export const ellipse = ({
     name,
     fill = color6_old[0],
     stroke = fill,
@@ -330,5 +327,4 @@ export const ellipse = createMark(
       },
       []
     );
-  }
-);
+  };
