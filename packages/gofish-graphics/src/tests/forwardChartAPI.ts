@@ -1,7 +1,7 @@
 import { mix } from "spectral.js";
 import { Chart } from "../ast/marks/chart";
 import { seafood } from "../data/catch";
-import { color6_old, For, groupBy, Rect, StackX, StackY, v } from "../lib";
+import { color6_old, For, groupBy, Rect, SpreadX, StackX, StackY, v } from "../lib";
 import _ from "lodash";
 
 // export const testIcicleForwardChartAPI = () => {
@@ -88,7 +88,7 @@ pipe(
   ]); */
 
 export const chartRectBF = () =>
-  StackX(
+  SpreadX(
     { spacing: 2, sharedScale: true },
     For(groupBy(seafood, "species"), (d) =>
       Rect({ w: 32, h: v(_.sumBy(d, "count")), fill: v(d[0].species) })

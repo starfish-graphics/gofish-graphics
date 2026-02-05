@@ -6,7 +6,7 @@ import { d as $d } from "../components/data"; */
 import { value } from "../ast/data";
 import { gofish } from "../ast/gofish";
 import { rect } from "../ast/shapes/rect";
-import { stack } from "../ast/graphicalOperators/stack";
+
 import { color, color6 } from "../color";
 import { layer } from "../ast/graphicalOperators/layer";
 import { ellipse } from "../ast/shapes/ellipse";
@@ -25,7 +25,7 @@ export const testStreamgraph = () =>
   frame([
     stackX(
       {
-        spacing: 0,
+
         alignment: "middle",
         sharedScale: true,
       },
@@ -34,7 +34,7 @@ export const testStreamgraph = () =>
           .groupBy("x")
           .map((items, xCoord) =>
             stackY(
-              { spacing: 0, x: value(xCoord) },
+              { x: value(xCoord) },
               items.map((d) =>
                 rect({
                   h: value(d.y),

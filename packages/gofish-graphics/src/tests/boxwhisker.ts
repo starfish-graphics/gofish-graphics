@@ -7,8 +7,7 @@ import {
   groupBy,
   Rect,
   Ref,
-  StackX,
-  StackY,
+  SpreadX,
   v,
 } from "../lib";
 import { genderPayGap, payGrade } from "../data/genderPayGap";
@@ -60,7 +59,7 @@ export const testPairBoxWhisker = () => {
   const male = payGradeFive.find((d) => d.Gender === "Male")!;
   const female = payGradeFive.find((d) => d.Gender === "Female")!;
 
-  return StackX(
+  return SpreadX(
     {
       spacing: 8,
       sharedScale: true,
@@ -73,7 +72,7 @@ export const testPairBoxWhisker = () => {
         q1: male["25-Percentile"],
         q3: male["75-Percentile"],
         fill: v(male.Gender as string),
-      }) as any,
+      }),
       boxAndWhisker({
         median: female.Median,
         min: female.Min,
@@ -87,7 +86,7 @@ export const testPairBoxWhisker = () => {
 };
 
 export const testBoxWhiskerPlot = () =>
-  StackX(
+  SpreadX(
     {
       spacing: 8,
       sharedScale: true,
@@ -98,7 +97,7 @@ export const testBoxWhiskerPlot = () =>
         "Pay Grade"
       ),
       (d, key) =>
-        StackX(
+        SpreadX(
           {
             key,
             spacing: 8,

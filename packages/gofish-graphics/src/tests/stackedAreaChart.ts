@@ -23,12 +23,12 @@ const colorPalette = streamgraphColorPalette;
 
 export const testStackedAreaChart = () =>
   frame([
-    stackX({ spacing: 0, sharedScale: true }, [
+    stackX({ sharedScale: true }, [
       _(data)
         .groupBy("x")
         .map((items, xCoord) =>
           stackY(
-            { x: value(xCoord), spacing: 0 },
+            { x: value(xCoord) },
             items.map((d) =>
               rect({
                 name: `${xCoord}-${d.c}`,
@@ -59,10 +59,10 @@ export const testStackedAreaChart = () =>
 
 export const testStackedAreaChartV2API = () =>
   Frame([
-    StackX({ spacing: 0, sharedScale: true }, [
+    StackX({ sharedScale: true }, [
       For(groupBy(data, "x"), (items, xCoord) =>
         StackY(
-          { x: v(xCoord), spacing: 0 },
+          { x: v(xCoord) },
           For(items, (d) =>
             Rect({
               name: `${xCoord}-${d.c}`,

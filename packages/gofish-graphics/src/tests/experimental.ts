@@ -36,23 +36,23 @@ const internalSpacing = 2;
 const layerSpacing = 64;
 const test = gofish(
   titanic,
-  stackY("class", { spacing: internalSpacing }),
-  stackY("sex", { spacing: internalSpacing * 2 }),
-  stackY("survived", { spacing: internalSpacing * 4 }),
+  spreadY("class", { spacing: internalSpacing }),
+  spreadY("sex", { spacing: internalSpacing * 2 }),
+  spreadY("survived", { spacing: internalSpacing * 4 }),
   rect({ w: 40, h: "count", fill: "sex" })
 );
 
 const test2 = chart(
   titanic,
-  stackX({ spacing: layerSpacing, alignment: "middle" }, [
+  spreadX({ spacing: layerSpacing, alignment: "middle" }, [
     chart(stackY("class", { spacing: 0, alignment: "middle" }), rect({ w: 40, h: "count", fill: "gray" })),
     chart(
-      stackY("class", { spacing: internalSpacing }),
-      stackX({ spacing: layerSpacing, alignment: "middle" }, [
+      spreadY("class", { spacing: internalSpacing }),
+      spreadX({ spacing: layerSpacing, alignment: "middle" }, [
         chart(stackY("sex", { spacing: 0, alignment: "middle"}))
         chart(
-          stackY("sex", { spacing: internalSpacing * 2 }),
-          stackY("survived", { spacing: internalSpacing * 4 }),
+          spreadY("sex", { spacing: internalSpacing * 2 }),
+          spreadY("survived", { spacing: internalSpacing * 4 }),
           rect({ w: 40, h: "count", fill: "sex" })
         ),
       ])
@@ -61,13 +61,13 @@ const test2 = chart(
 );
 
 const test3 = gf(titanic)
-.stackX({ spacing: layerSpacing, alignment: "middle" }, [
+.spreadX({ spacing: layerSpacing, alignment: "middle" }, [
   gf()
     .stackY("class", { spacing: 0, alignment: "middle" })
     .rect({ w: 40, h: "count", fill: "gray" }),
   gf()
-    .stackY("class", { spacing: internalSpacing })
-    .stackX({ spacing: layerSpacing, alignment: "middle" }, [
+    .spreadY("class", { spacing: internalSpacing })
+    .spreadX({ spacing: layerSpacing, alignment: "middle" }, [
       gf()
         .stackY("sex", { spacing: 0, alignment: "middle" })
         .rect({ w: 40, h: "count", fill: "sex" }),

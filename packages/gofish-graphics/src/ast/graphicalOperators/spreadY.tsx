@@ -1,11 +1,13 @@
-import { stack } from "./stack";
+import { spread } from "./spread";
+import { GoFishAST } from "../_ast";
+import { Collection } from "lodash";
 
-export const stackY = (
+export const spreadY = (
   ...args: any[]
-): ReturnType<typeof stack> => {
+): ReturnType<typeof spread> => {
   if (args.length === 2) {
     const [props, children] = args;
-    return stack(
+    return spread(
       {
         ...props,
         direction: "y",
@@ -14,14 +16,14 @@ export const stackY = (
     );
   } else if (args.length === 1) {
     const [children] = args;
-    return stack(
+    return spread(
       {
         direction: "y",
       },
       children
     );
   } else {
-    return stack({
+    return spread({
       direction: "y",
     });
   }

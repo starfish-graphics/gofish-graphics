@@ -1,7 +1,7 @@
 import _ from "lodash";
 import { gofish } from "../ast/gofish";
 import { value } from "../ast/data";
-import { stack } from "../ast/graphicalOperators/stack";
+import { spread } from "../ast/graphicalOperators/spread";
 import { rect } from "../ast/shapes/rect";
 import { color } from "../color";
 
@@ -20,11 +20,11 @@ const data = [
 export const testStackedBarWithSpacing = (size: { width: number; height: number }) =>
   gofish(
     { width: size.width, height: size.height },
-    stack(
+    spread(
       { direction: 0, spacing: 8, alignment: "end", sharedScale: true },
       // TODO: I could probably make the width be uniform flexible basically
       Object.entries(_.groupBy(data, "category")).map(([category, items]) =>
-        stack(
+        spread(
           { direction: 1, spacing: 4, alignment: "middle" },
           items.toReversed().map((d) =>
             rect({

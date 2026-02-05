@@ -55,14 +55,14 @@ const classColor = {
 };
 
 export const testIcicle = () =>
-  stack({ direction: "x", spacing: 0, alignment: "middle" }, [
+  stack({ direction: "x", alignment: "middle" }, [
     rect({
       w: 40,
       h: _(titanic).sumBy("count") / 10,
       fill: neutral,
     }),
     StackY(
-      { dir: "ttb", spacing: 0, alignment: "middle" },
+        { alignment: "middle" },
       _(titanic)
         .groupBy("class")
         .map((items, cls) =>
@@ -70,17 +70,16 @@ export const testIcicle = () =>
             {
               direction: "x",
               h: _(items).sumBy("count") / 10,
-              spacing: 0,
               alignment: "start",
             },
             [
               rect({ w: 40, fill: classColor[cls as keyof typeof classColor] }),
               StackY(
-                { dir: "ttb", spacing: 0, alignment: "middle" },
+                  { alignment: "middle" },
                 _(items)
                   .groupBy("sex")
                   .map((items, sex) =>
-                    stack({ direction: "x", spacing: 0, alignment: "middle" }, [
+                    stack({ direction: "x", alignment: "middle" }, [
                       rect({
                         w: 0,
                         h: _(items).sumBy("count") / 10,
@@ -94,8 +93,6 @@ export const testIcicle = () =>
                       StackY(
                         {
                           w: 40,
-                          dir: "ttb",
-                          spacing: 0,
                           alignment: "middle",
                         },
                         _(items)
@@ -136,23 +133,23 @@ export const testIcicle = () =>
   ]);
 
 export const testIcicleAPIv2 = () =>
-  StackX({ spacing: 0, alignment: "middle" }, [
+  StackX({ alignment: "middle" }, [
     Rect({
       w: 40,
       h: _(titanic).sumBy("count") / 10,
       fill: gray,
     }),
     StackY(
-      { spacing: 0, alignment: "middle" },
+            { alignment: "middle" },
       For(groupBy(titanic, "class"), (items, cls) =>
         StackX(
-          { h: _(items).sumBy("count") / 10, spacing: 0, alignment: "start" },
+          { h: _(items).sumBy("count") / 10, alignment: "start" },
           [
             Rect({ w: 40, fill: classColor[cls as keyof typeof classColor] }),
             StackY(
-              { spacing: 0, alignment: "middle" },
+                    { alignment: "middle" },
               For(groupBy(items, "sex"), (items, sex) =>
-                StackX({ spacing: 0, alignment: "middle" }, [
+                StackX({ alignment: "middle" }, [
                   Rect({
                     w: 40,
                     h: _(items).sumBy("count") / 10,
@@ -161,8 +158,7 @@ export const testIcicleAPIv2 = () =>
                   StackY(
                     {
                       w: 40,
-                      spacing: 0,
-                      alignment: "middle",
+
                     },
                     For(
                       groupBy(items, "survived"),
