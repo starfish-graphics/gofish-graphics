@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
-import { For, Stack, Ellipse, Layer, Text, Ref, Arrow } from "../../src/lib";
+import { For, Stack, Spread, Ellipse, Layer, Text, Ref, Arrow } from "../../src/lib";
 
 const meta: Meta = {
   title: "Bluefish/Planets",
@@ -29,7 +29,7 @@ export const PlanetsOnly: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    Stack(
+    Spread(
       { direction: "x", spacing: 50 },
       For(planets, (planet) =>
         Ellipse({
@@ -55,7 +55,7 @@ export const PlanetsWithLabelAbove: StoryObj<Args> = {
     const container = initializeContainer();
 
     Layer([
-      Stack(
+      Spread(
         { direction: "x", spacing: 50 },
         For(planets, (planet) =>
           Ellipse({
@@ -67,7 +67,7 @@ export const PlanetsWithLabelAbove: StoryObj<Args> = {
           }).name(planet.name)
         )
       ),
-      Stack({ direction: "y", spacing: 60 }, [
+      Spread({ direction: "y", spacing: 60 }, [
         Ref("Mercury"),
         Text({ text: "Mercury" }),
       ]),
@@ -86,7 +86,7 @@ export const PlanetsWithLabelBelow: StoryObj<Args> = {
     const container = initializeContainer();
 
     Layer([
-      Stack(
+      Spread(
         { direction: "x", spacing: 50 },
         For(planets, (planet) =>
           Ellipse({
@@ -98,7 +98,7 @@ export const PlanetsWithLabelBelow: StoryObj<Args> = {
           }).name(planet.name)
         )
       ),
-      Stack({ direction: "y", spacing: 60 }, [
+      Spread({ direction: "y", spacing: 60 }, [
         Text({ text: "Mercury" }),
         Ref("Mercury"),
       ]),
@@ -117,7 +117,7 @@ export const PlanetsWithLabelAboveNoSpacing: StoryObj<Args> = {
     const container = initializeContainer();
 
     Layer([
-      Stack(
+      Spread(
         { direction: "x", spacing: 50 },
         For(planets, (planet) =>
           Ellipse({
@@ -148,7 +148,7 @@ export const PlanetsWithLabelBelowNoSpacing: StoryObj<Args> = {
     const container = initializeContainer();
 
     Layer([
-      Stack(
+      Spread(
         { direction: "x", spacing: 50 },
         For(planets, (planet) =>
           Ellipse({
@@ -179,7 +179,7 @@ export const PlanetsWithArrow: StoryObj<Args> = {
     const container = initializeContainer();
 
     Layer([
-      Stack(
+      Spread(
         { direction: "x", spacing: 50 },
         For(planets, (planet) =>
           Ellipse({
@@ -191,7 +191,7 @@ export const PlanetsWithArrow: StoryObj<Args> = {
           }).name(planet.name)
         )
       ),
-      Stack({ direction: "y", spacing: 60 }, [
+      Spread({ direction: "y", spacing: 60 }, [
         Text({ text: "Mercury" }).name("label"),
         Ref("Mercury"),
       ]),

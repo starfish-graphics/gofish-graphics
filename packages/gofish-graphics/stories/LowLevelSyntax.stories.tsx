@@ -32,6 +32,8 @@ import {
   Ref,
   ConnectX,
   ConnectY,
+  SpreadY,
+  SpreadX,
 } from "../src/lib";
 
 const meta: Meta = {
@@ -221,14 +223,14 @@ export const IcicleChart: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    StackX({ spacing: 0, alignment: "middle" }, [
+    StackX({ alignment: "middle" }, [
       Rect({
         w: 40,
         h: _(titanic).sumBy("count") / 10,
         fill: neutral,
       }),
       StackY(
-        { dir: "ttb", spacing: 0, alignment: "middle" },
+        { dir: "ttb", alignment: "middle" },
         _(titanic)
           .groupBy("class")
           .map((items, cls) =>
@@ -241,11 +243,11 @@ export const IcicleChart: StoryObj<Args> = {
               [
                 Rect({ w: 40, fill: classColor[cls] }),
                 StackY(
-                  { dir: "ttb", spacing: 0, alignment: "middle" },
+                  { dir: "ttb", alignment: "middle" },
                   _(items)
                     .groupBy("sex")
                     .map((items, sex) =>
-                      StackX({ spacing: 0, alignment: "middle" }, [
+                      StackX({ alignment: "middle" }, [
                         Rect({
                           w: 0,
                           h: _(items).sumBy("count") / 10,
@@ -255,7 +257,6 @@ export const IcicleChart: StoryObj<Args> = {
                           {
                             w: 40,
                             dir: "ttb",
-                            spacing: 0,
                             alignment: "middle",
                           },
                           _(items)
@@ -298,7 +299,7 @@ export const NestedMosaicChart: StoryObj<Args> = {
   args: { w: 500, h: 300 },
   render: (args: Args) => {
     const container = initializeContainer();
-    StackY(
+    SpreadY(
       { dir: "ttb", spacing: 4, alignment: "middle" },
       For(groupBy(titanic, "class"), (items, cls) =>
         StackX(
@@ -308,7 +309,6 @@ export const NestedMosaicChart: StoryObj<Args> = {
               {
                 dir: "ttb",
                 w: (_(sItems).sumBy("count") / _(items).sumBy("count")) * 100,
-                spacing: 0,
                 alignment: "middle",
                 sharedScale: true,
               },
@@ -335,18 +335,18 @@ export const NestedWaffleChart: StoryObj<Args> = {
   args: { w: 500, h: 340 },
   render: (args: Args) => {
     const container = initializeContainer();
-    StackY(
+    SpreadY(
       { direction: "y", spacing: 8, alignment: "middle", sharedScale: true },
       _(titanic)
         .groupBy("class")
         .map((cls) =>
-          StackX(
+          SpreadX(
             { spacing: 4, alignment: "end" },
             _(cls)
               .groupBy("sex")
               .map((sex) =>
                 Enclose({}, [
-                  StackY(
+                  SpreadY(
                     { spacing: 0.5, alignment: "end" },
                     _(sex) // Was missing this lodash chain before .reverse()
                       .reverse()
@@ -358,7 +358,7 @@ export const NestedWaffleChart: StoryObj<Args> = {
                       )
                       .reverse()
                       .map((d) =>
-                        StackX(
+                        SpreadX(
                           { spacing: 0.5, alignment: "end" },
                           d.map((d) =>
                             Ellipse({
@@ -396,7 +396,7 @@ export const SankeyTree: StoryObj<Args> = {
     const layerSpacing = 64;
     const internalSpacing = 2;
     Frame([
-      StackX({ spacing: layerSpacing, alignment: "middle" }, [
+      SpreadX({ spacing: layerSpacing, alignment: "middle" }, [
         StackY(
           { spacing: 0, alignment: "middle" },
           For(groupBy(titanic, "class"), (items, cls) =>
@@ -407,10 +407,10 @@ export const SankeyTree: StoryObj<Args> = {
             }).name(`${cls}-src`)
           )
         ),
-        StackY(
+        SpreadY(
           { spacing: internalSpacing, alignment: "middle" },
           For(groupBy(titanic, "class"), (items, cls) =>
-            StackX({ spacing: layerSpacing, alignment: "middle" }, [
+            SpreadX({ spacing: layerSpacing, alignment: "middle" }, [
               StackY(
                 { spacing: 0, alignment: "middle" },
                 For(groupBy(items, "sex"), (items, sex) =>
@@ -421,14 +421,14 @@ export const SankeyTree: StoryObj<Args> = {
                   }).name(`${cls}-${sex}-src`)
                 )
               ).name(`${cls}-tgt`),
-              StackY(
+              SpreadY(
                 {
                   h: _(items).sumBy("count") / 10,
                   spacing: internalSpacing * 2,
                   alignment: "middle",
                 },
                 For(groupBy(items, "sex"), (items, sex) =>
-                  StackX({ spacing: layerSpacing, alignment: "middle" }, [
+                  SpreadX({ spacing: layerSpacing, alignment: "middle" }, [
                     StackY(
                       {
                         spacing: 0,
@@ -442,7 +442,7 @@ export const SankeyTree: StoryObj<Args> = {
                         }).name(`${cls}-${sex}-${survived}-src`)
                       )
                     ).name(`${cls}-${sex}-tgt`),
-                    StackY(
+                    SpreadY(
                       {
                         w: 40,
                         spacing: internalSpacing * 4,
@@ -525,7 +525,7 @@ export const StringlineChart: StoryObj<Args> = {
     const caltrainProcessed = caltrain.filter((d) => d.Type !== "Bullet");
 
     Frame({}, [
-      StackY(
+      SpreadY(
         {
           dir: "ttb",
           spacing: 8,
@@ -571,7 +571,7 @@ export const ViolinPlot: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    StackX(
+    SpreadX(
       { spacing: 64, sharedScale: true },
       For(groupBy(penguins, "Species"), (d, species) => {
         const density = Array.from(

@@ -20,6 +20,7 @@ import {
   Stack,
   Text,
   Ref,
+  Spread,
 } from "../src/lib";
 import {
   area,
@@ -126,7 +127,7 @@ export const BarChartWithLabels: StoryObj<Args> = {
         .flow(group("lake"))
         .mark((d) => {
           console.log(d);
-          return Stack({ direction: "y", spacing: 10 }, [
+          return Spread({ direction: "y", spacing: 10 }, [
             Ref(d[0].__ref!),
             Text({ text: d[0].count }),
           ]);
