@@ -46,8 +46,7 @@ const computeIntrinsicSize = (
 };
 
 /* TODO: what should default embedding behavior be when all values are aesthetic? */
-export const rect = createMark(
-  ({
+export const Rect = ({
     key,
     name,
     fill = color6[0],
@@ -524,5 +523,10 @@ export const rect = createMark(
       },
       []
     );
-  }
-);
+  };
+
+export const rect = createMark(Rect, {
+  w: "size",
+  h: "size",
+  fill: "color",
+});

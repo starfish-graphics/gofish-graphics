@@ -1,7 +1,6 @@
-import { Dictionary, groupBy, ValueIteratee } from "lodash";
+import { groupBy, ValueIteratee } from "lodash";
 import {
   Frame,
-  Rect,
   Stack,
   sumBy,
   v,
@@ -10,33 +9,22 @@ import {
   getLayerContext,
   Connect,
   Ref,
-  gofish,
 } from "../../lib";
 import { GoFishNode } from "../_node";
-import { MaybeValue } from "../data";
 import { For } from "../iterators/for";
 import { CoordinateTransform } from "../coordinateTransforms/coord";
+import { inferSize } from "../channels";
+import { Rect } from "../shapes/rect";
+import { rect as generatedRect } from "../shapes/rect";
+import { Mark, Operator } from "../types";
 
-/* inference */
-const inferSize = <T>(
-  accessor: string | number | undefined,
-  d: T | T[]
-): MaybeValue<number> | undefined => {
-  return typeof accessor === "number"
-    ? accessor
-    : accessor !== undefined
-      ? v(sumBy(d as T[], accessor))
-      : undefined;
-};
+export type { Mark, Operator };
+export { generatedRect as rect };
 
 const connectXMode = {
   edge: "edge-to-edge",
   center: "center-to-center",
 } as const;
-
-export type Mark<T> = (d: T, key?: string | number) => Promise<GoFishNode>;
-
-export type Operator<T, U> = (_: Mark<U>) => Promise<Mark<T>>;
 
 // LayerSelector is a lazy selector that defers layer lookup until actually needed
 export class LayerSelector<T = any> {
@@ -420,77 +408,6 @@ export function group<T>(field: keyof T): Operator<T[], T[]> {
   };
 }
 
-export function rect<T extends Record<string, any>>({
-  emX,
-  emY,
-  w,
-  h,
-  rs,
-  ts,
-  rx,
-  ry,
-  fill,
-  debug,
-  stroke,
-  strokeWidth,
-  label,
-}: {
-  emX?: boolean;
-  emY?: boolean;
-  w?: number | keyof T;
-  h?: number | keyof T;
-  rs?: number;
-  ts?: number;
-  rx?: number;
-  ry?: number;
-  fill?: keyof T | string;
-  stroke?: string;
-  strokeWidth?: number;
-  debug?: boolean;
-  label?: boolean;
-}): Mark<T | T[] | { item: T | T[]; key: number | string }> {
-  return async (input: T | T[] | { item: T | T[]; key: number | string }) => {
-    let d: T | T[], key: number | string | undefined;
-    if (typeof input === "object" && input !== null && "item" in input) {
-      // @ts-ignore
-      d = input.item;
-      // @ts-ignore
-      key = input.key;
-    } else {
-      d = input;
-      key = undefined;
-    }
-    if (debug) console.log("rect", key, d);
-    const data = Array.isArray(d) ? d : [d];
-    const firstItem = data[0];
-    const node = Rect({
-      emX,
-      emY,
-      w:
-        w !== undefined
-          ? (inferSize(w as string | number, data) ??
-            (ts ? inferSize(ts, data) : undefined))
-          : undefined,
-      h:
-        h !== undefined
-          ? (inferSize(h as string | number, data) ??
-            (rs ? inferSize(rs, data) : undefined))
-          : undefined,
-      rx,
-      ry,
-      fill:
-        typeof fill === "string" && data.length > 0 && fill in firstItem
-          ? v(firstItem[fill as keyof T])
-          : fill,
-      stroke,
-      strokeWidth,
-      label,
-    }).name(key?.toString() ?? "");
-    (node as any).datum = d;
-    return node;
-  };
-}
-
 export function circle<T extends Record<string, any>>({
   r,
   fill,
@@ -602,8 +519,6 @@ export function scaffold<T extends Record<string, any>>({
   emY,
   w = 0,
   h = 0,
-  rs,
-  ts,
   rx,
   ry,
   fill,
@@ -613,25 +528,21 @@ export function scaffold<T extends Record<string, any>>({
 }: {
   emX?: boolean;
   emY?: boolean;
-  w?: number | keyof T;
-  h?: number | keyof T;
-  rs?: number;
-  ts?: number;
+  w?: number | (keyof T & string);
+  h?: number | (keyof T & string);
   rx?: number;
   ry?: number;
-  fill?: keyof T | string;
+  fill?: string | (keyof T & string);
   stroke?: string;
   strokeWidth?: number;
   debug?: boolean;
 } = {}): Mark<T | T[] | { item: T | T[]; key: number | string }> {
   // scaffold is essentially a transparent/zero-size rect
-  return rect({
+  return generatedRect({
     emX,
     emY,
     w,
     h,
-    rs,
-    ts,
     rx,
     ry,
     fill,

@@ -18,8 +18,6 @@ import {
   SIZE,
   UNDEFINED,
 } from "../underlyingSpace";
-import { createMark } from "../withGoFish";
-
 type TextDimensions = {
   width: number;
   height: number;
@@ -116,8 +114,7 @@ const resolveTextLayout = (
   return { dims, bbox, anchor: { x: anchorX, y: anchorY } };
 };
 
-export const text = createMark(
-  ({
+export const text = ({
     key,
     name,
     text: textContent,
@@ -366,5 +363,4 @@ export const text = createMark(
       },
       []
     );
-  }
-);
+  };
