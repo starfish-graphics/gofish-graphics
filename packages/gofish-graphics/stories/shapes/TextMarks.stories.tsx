@@ -113,7 +113,7 @@ export const TextStackWithEllipse: StoryObj<Args> = {
     const container = initializeContainer();
 
     container.innerHTML = "";
-    Spread({ direction: "y", spacing: 60 }, [
+    Spread({ direction: "y", spacing: 60, alignment: "middle" }, [
       // Text({ text: "Mercury" }),
       Ellipse({
         w: 10,
