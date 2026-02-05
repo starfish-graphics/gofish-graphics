@@ -169,14 +169,15 @@ export const FlowerChart: StoryObj<Args> = {
     const container = initializeContainer();
     Frame(
       For(scatterData, (sample) =>
-        Frame({ x: sample.x, y: sample.y }, [
+        Frame({ x: sample.x }, [
           Rect({
             w: 2,
-            h: 300 - sample.y,
+            h: sample.y,
             fill: color.green[5],
           }),
           Frame(
             {
+              y: sample.y,
               coord: Polar(),
             },
             [
@@ -190,7 +191,7 @@ export const FlowerChart: StoryObj<Args> = {
                 For(sample.collection, (d, i) =>
                   Petal({
                     w: v(d.count),
-                    fill: mix(color6[i % 6], white, 0.5),
+                    fill: mix(color6[i % 6], color.white, 0.5),
                   })
                 )
               ),
