@@ -214,7 +214,7 @@ export const petal = ({
           }
 
           // One dimension is data - render as line
-          if (isXEmbedded !== isYEmbedded) {
+          if (isXEmbedded !== isYEmbedded || isXEmbedded && isYEmbedded) {
             const dataAxis = isXEmbedded ? 0 : 1;
             const aestheticAxis = isXEmbedded ? 1 : 0;
             const thickness = displayDims[aestheticAxis].size ?? 0;
