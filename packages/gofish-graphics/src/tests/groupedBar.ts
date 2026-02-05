@@ -1,7 +1,7 @@
 import _ from "lodash";
 import { gofish } from "../ast/gofish";
 import { value } from "../ast/data";
-import { stack } from "../ast/graphicalOperators/stack";
+import { spread } from "../ast/graphicalOperators/spread";
 import { rect } from "../ast/shapes/rect";
 import { color, /* color6 */ color6_20250323 as color6 } from "../color";
 
@@ -21,10 +21,10 @@ export const testGroupedBar = (size: { width: number; height: number }) => {
   // Create the visualization structure first
   return gofish(
     { width: size.width, height: size.height },
-    stack(
+    spread(
       { x: 0, y: 0, direction: 0, spacing: 20, alignment: "end", sharedScale: true },
       Object.entries(_.groupBy(data, "category")).map(([category, items]) =>
-        stack(
+        spread(
           { direction: 0, spacing: 2, alignment: "end" },
           items.map((d) =>
             rect({

@@ -1,9 +1,9 @@
 import { streamgraphData } from "../data/streamgraphData";
 import {
-  StackY,
+  SpreadY,
   For,
   groupBy,
-  StackX,
+  SpreadX,
   Rect,
   v,
   Frame,
@@ -12,11 +12,11 @@ import {
 } from "../lib";
 
 export const testRidgeline = () =>
-  StackY(
+  SpreadY(
     { spacing: -30, sharedScale: true },
     For(groupBy(streamgraphData, "c"), (items, c) =>
       Frame([
-        StackX(
+        SpreadX(
           { spacing: 20 /* , sharedScale: true */ },
           For(items, (d) =>
             Rect({

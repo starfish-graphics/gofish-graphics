@@ -1,7 +1,7 @@
 import _ from "lodash";
 import { gofish } from "../ast/gofish";
 import { value } from "../ast/data";
-import { stack } from "../ast/graphicalOperators/stack";
+import { spread } from "../ast/graphicalOperators/spread";
 import { rect } from "../ast/shapes/rect";
 import {
   black,
@@ -28,6 +28,8 @@ import {
   For,
   ConnectX,
   Ref,
+  SpreadX,
+  SpreadY,
 } from "../lib";
 
 // const classColor = {
@@ -66,9 +68,9 @@ const internalSpacing = 2;
 
 export const testSankeyIcicle = () =>
   frame([
-    stack({ direction: "x", spacing: layerSpacing, alignment: "middle" }, [
+    spread({ direction: "x", spacing: layerSpacing, alignment: "middle" }, [
       StackY(
-        { dir: "ttb", spacing: 0, alignment: "middle" },
+        { dir: "ttb", alignment: "middle" },
         _(titanic)
           .groupBy("class")
           .map((items, cls) =>
@@ -81,19 +83,18 @@ export const testSankeyIcicle = () =>
           )
           .value()
       ),
-      StackY(
+      SpreadY(
         { dir: "ttb", spacing: internalSpacing, alignment: "middle" },
         _(titanic)
           .groupBy("class")
           .map((items, cls) =>
-            stack(
+            spread(
               { direction: "x", spacing: layerSpacing, alignment: "middle" },
               [
                 StackY(
                   {
                     name: `${cls}-tgt`,
                     dir: "ttb",
-                    spacing: 0,
                     alignment: "middle",
                   },
                   _(items)
@@ -108,7 +109,7 @@ export const testSankeyIcicle = () =>
                     )
                     .value()
                 ),
-                StackY(
+                SpreadY(
                   {
                     h: _(items).sumBy("count") / 10,
                     dir: "ttb",
@@ -118,7 +119,7 @@ export const testSankeyIcicle = () =>
                   _(items)
                     .groupBy("sex")
                     .map((items, sex) =>
-                      stack(
+                      spread(
                         {
                           direction: "x",
                           spacing: layerSpacing,
@@ -129,7 +130,6 @@ export const testSankeyIcicle = () =>
                             {
                               name: `${cls}-${sex}-tgt`,
                               dir: "ttb",
-                              spacing: 0,
                               alignment: "middle",
                             },
                             _(items)
@@ -157,7 +157,7 @@ export const testSankeyIcicle = () =>
                               )
                               .value()
                           ),
-                          StackY(
+                          SpreadY(
                             {
                               w: 40,
                               dir: "ttb",
@@ -286,9 +286,9 @@ export const testSankeyIcicle = () =>
 
 export const testSankeyIcicleAPIv2 = () =>
   Frame([
-    StackX({ spacing: layerSpacing, alignment: "middle" }, [
+    SpreadX({ spacing: layerSpacing, alignment: "middle" }, [
       StackY(
-        { spacing: 0, alignment: "middle" },
+        { alignment: "middle" },
         For(groupBy(titanic, "class"), (items, cls) =>
           Rect({
             w: 40,
@@ -297,12 +297,12 @@ export const testSankeyIcicleAPIv2 = () =>
           }).name(`${cls}-src`)
         )
       ),
-      StackY(
+      SpreadY(
         { spacing: internalSpacing, alignment: "middle" },
         For(groupBy(titanic, "class"), (items, cls) =>
-          StackX({ spacing: layerSpacing, alignment: "middle" }, [
+          SpreadX({ spacing: layerSpacing, alignment: "middle" }, [
             StackY(
-              { spacing: 0, alignment: "middle" },
+              { alignment: "middle" },
               For(groupBy(items, "sex"), (items, sex) =>
                 Rect({
                   w: 40,
@@ -311,17 +311,16 @@ export const testSankeyIcicleAPIv2 = () =>
                 }).name(`${cls}-${sex}-src`)
               )
             ).name(`${cls}-tgt`),
-            StackY(
+            SpreadY(
               {
                 h: _(items).sumBy("count") / 10,
                 spacing: internalSpacing * 2,
                 alignment: "middle",
               },
               For(groupBy(items, "sex"), (items, sex) =>
-                StackX({ spacing: layerSpacing, alignment: "middle" }, [
+                SpreadX({ spacing: layerSpacing, alignment: "middle" }, [
                   StackY(
                     {
-                      spacing: 0,
                       alignment: "middle",
                     },
                     For(groupBy(items, "survived"), (survivedItems, survived) =>
@@ -333,7 +332,7 @@ export const testSankeyIcicleAPIv2 = () =>
                       })
                     )
                   ).name(`${cls}-${sex}-tgt`),
-                  StackY(
+                  SpreadY(
                     {
                       w: 40,
                       spacing: internalSpacing * 4,

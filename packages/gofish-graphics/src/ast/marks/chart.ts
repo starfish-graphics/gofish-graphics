@@ -1,6 +1,7 @@
 import { groupBy, ValueIteratee } from "lodash";
 import {
   Frame,
+  Spread,
   Stack,
   sumBy,
   v,
@@ -314,7 +315,7 @@ export function spread<T>(
       // Group by the field if provided, otherwise iterate over raw data
       const grouped = field ? groupBy(d, field as ValueIteratee<T>) : d;
 
-      return Stack(
+      return Spread(
         {
           direction: finalOptions.dir === "x" ? 0 : 1,
           x: finalOptions?.x ?? finalOptions?.t,

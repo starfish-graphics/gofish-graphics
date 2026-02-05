@@ -3,7 +3,7 @@ import {
   tailwindColorsMuted,
   tailwindColorsVivid,
 } from "../color";
-import { Frame, Rect, StackX, StackY, layer, rect } from "../lib";
+import { Frame, Rect, SpreadX, SpreadY, StackX, StackY, layer, rect } from "../lib";
 
 export const tailwindColorGrid = () => {
   const colorNames = Object.keys(tailwindColors);
@@ -39,13 +39,13 @@ export const tailwindColorGrid = () => {
     //   // TODO: Add text label when text support is available
 
     //   // Stack the color squares
-    return StackX({ spacing: 2 }, shadeSquares);
+    return SpreadX({ spacing: 2 }, shadeSquares);
     //   // .translate(85, 0),
     // ]);
   });
 
   // Stack all rows vertically
-  return StackY({ spacing: 2 }, colorRows);
+  return SpreadY({ spacing: 2 }, colorRows);
   // .translate(20, 20);
 };
 
@@ -92,10 +92,10 @@ const createColorGrid = (palette: typeof tailwindColors, spacing = 2) => {
       });
     });
 
-    return StackX({ spacing }, shadeSquares);
+    return SpreadX({ spacing }, shadeSquares);
   });
 
-  return StackY({ spacing }, colorRows);
+  return SpreadY({ spacing }, colorRows);
 };
 
 const createColorGridCompact = (
@@ -139,16 +139,16 @@ export const tailwindColorGridVividCompact = () =>
 
 // Comparison grid showing all three variants side by side
 export const tailwindColorComparison = () => {
-  return StackX({ spacing: 40 }, [
-    StackY({ spacing: 10 }, [
+  return SpreadX({ spacing: 40 }, [
+    SpreadY({ spacing: 10 }, [
       // Text would go here: "Original"
       createColorGrid(tailwindColors),
     ]),
-    StackY({ spacing: 10 }, [
+    SpreadY({ spacing: 10 }, [
       // Text would go here: "Muted"
       createColorGrid(tailwindColorsMuted),
     ]),
-    StackY({ spacing: 10 }, [
+    SpreadY({ spacing: 10 }, [
       // Text would go here: "Vivid"
       createColorGrid(tailwindColors),
     ]),
@@ -156,7 +156,7 @@ export const tailwindColorComparison = () => {
 };
 
 export const tailwindColorComparisonCompact = () => {
-  return StackX({ spacing: 30 }, [
+  return SpreadX({ spacing: 30 }, [
     createColorGridCompact(tailwindColors),
     createColorGridCompact(tailwindColorsMuted),
     createColorGridCompact(tailwindColorsVivid),

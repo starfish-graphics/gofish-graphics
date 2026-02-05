@@ -6,11 +6,11 @@ import { d as $d } from "../components/data"; */
 import { value } from "../ast/data";
 import { gofish } from "../ast/gofish";
 import { rect } from "../ast/shapes/rect";
-import { stack } from "../ast/graphicalOperators/stack";
+
 import { color, color6, white } from "../color";
 import { seafood } from "../data/catch";
 import _ from "lodash";
-import { stackX } from "../ast/graphicalOperators/stackX";
+import { spreadX } from "../ast/graphicalOperators/spreadX";
 import { frame } from "../ast/graphicalOperators/frame";
 import { connectX } from "../ast/graphicalOperators/connectX";
 import { ref } from "../ast/shapes/ref";
@@ -29,7 +29,7 @@ export const testStacking = (size: { width: number; height: number }) =>
     { width: size.width, height: size.height },
     frame([
       enclose({}, [
-        stackX({ spacing: 64, sharedScale: true, alignment: "middle" }, [
+        spreadX({ spacing: 64, sharedScale: true, alignment: "middle" }, [
           rect({ name: "1", w: 32, h: 32 }),
           rect({ name: "2", w: 32, h: 64 }),
           rect({ name: "3", w: 32, h: 40 }),
