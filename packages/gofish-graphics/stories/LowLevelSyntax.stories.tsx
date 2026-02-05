@@ -6,7 +6,7 @@ import { clock } from "../src/ast/coordinateTransforms/clock";
 import { nightingale } from "../src/data/nightingale";
 import { drivingShifts } from "../src/data/drivingShifts";
 
-import { color, color6 } from "../src/color";
+import { color, color6, gray, neutral } from "../src/color";
 import { seafood, catchLocations, catchLocationsArray, CatchData, catchData } from "../src/data/catch";
 import { titanic } from "../src/data/titanic";
 import { streamgraphData } from '../src/data/streamgraphData';
@@ -224,7 +224,7 @@ export const IcicleChart: StoryObj<Args> = {
       Rect({
         w: 40,
         h: _(titanic).sumBy("count") / 10,
-        fill: color.neutral,
+        fill: neutral,
       }),
       StackY(
         { dir: "ttb", spacing: 0, alignment: "middle" },
@@ -265,10 +265,10 @@ export const IcicleChart: StoryObj<Args> = {
                                 fill:
                                   sex === "Female"
                                     ? survived === "No"
-                                      ? color.gray
+                                      ? gray
                                       : color6[4]
                                     : survived === "No"
-                                      ? color.gray
+                                      ? gray
                                       : color6[5],
                               });
                             })
@@ -298,13 +298,14 @@ export const NestedMosaicChart: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
     StackY(
-      { spacing: 4, alignment: "middle" },
+      { dir: "ttb", spacing: 4, alignment: "middle" },
       For(groupBy(titanic, "class"), (items, cls) =>
         StackX(
-          { h: _(items).sumBy("count") / 10, spacing: 2, alignment: "middle" },
+          { key: cls, h: _(items).sumBy("count") / 10, spacing: 2, alignment: "middle" },
           For(groupBy(items, "sex"), (sItems, sex) =>
             StackY(
               {
+                dir: "ttb",
                 w: (_(sItems).sumBy("count") / _(items).sumBy("count")) * 100,
                 spacing: 0,
                 alignment: "middle",
@@ -313,7 +314,7 @@ export const NestedMosaicChart: StoryObj<Args> = {
               For(groupBy(sItems, "survived"), (items, survived) =>
                 Rect({
                   h: v(_(items).sumBy("count")),
-                  fill: survived === "No" ? color.gray : classColor[cls],
+                  fill: survived === "No" ? gray : classColor[cls],
                 })
               )
             )
@@ -364,7 +365,7 @@ export const NestedWaffleChart: StoryObj<Args> = {
                               h: 4,
                               fill:
                                 d.survived === "No"
-                                  ? color.gray
+                                  ? gray
                                   : /* value(d.class) */ classColor[d.class],
                             })
                           )
@@ -401,7 +402,7 @@ export const SankeyTree: StoryObj<Args> = {
             Rect({
               w: 40,
               h: _(items).sumBy("count") / 10,
-              fill: color.neutral,
+              fill: neutral,
             }).name(`${cls}-src`)
           )
         ),
@@ -452,10 +453,10 @@ export const SankeyTree: StoryObj<Args> = {
                           fill:
                             sex === "Female"
                               ? survived === "No"
-                                ? color.gray
+                                ? gray
                                 : color6[4]
                               : survived === "No"
-                                ? color.gray
+                                ? gray
                                 : color6[5],
                         }).name(`${cls}-${sex}-${survived}-tgt`);
                       })
@@ -525,6 +526,7 @@ export const StringlineChart: StoryObj<Args> = {
     Frame({}, [
       StackY(
         {
+          dir: "ttb",
           spacing: 8,
           alignment: "start",
         },
