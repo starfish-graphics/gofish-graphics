@@ -43,10 +43,11 @@ export const spread = createOperator(
       key,
       direction,
       spacing = 0,
-      alignment = "middle",
+      alignment = "start",
       sharedScale = false,
       mode = "edge-to-edge",
       reverse = false,
+      dir = "btt",
       ...fancyDims
     }: {
       name?: string;
@@ -57,6 +58,7 @@ export const spread = createOperator(
       sharedScale?: boolean;
       mode?: "edge-to-edge" | "center-to-center";
       reverse?: boolean;
+      dir?: "ttb" | "btt";
     } & FancyDims<MaybeValue<number>>,
     children: GoFishAST[] | Collection<GoFishAST>
   ) => {
@@ -82,6 +84,7 @@ export const spread = createOperator(
           mode,
           reverse,
           dims,
+          dir,
         },
         key,
         name,
@@ -245,7 +248,7 @@ export const spread = createOperator(
           measurement,
           posScales
         ) => {
-          if (reverse) {
+          if (dir === "ttb" || reverse) {
             children = children.reverse();
           }
           const stackPos = computeAesthetic(

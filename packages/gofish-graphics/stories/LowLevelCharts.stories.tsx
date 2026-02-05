@@ -48,6 +48,7 @@ export const PairBoxWhisker: StoryObj<Args> = {
       w: args.w,
       h: args.h,
       axes: true,
+      debug: true,
     });
 
     return container;

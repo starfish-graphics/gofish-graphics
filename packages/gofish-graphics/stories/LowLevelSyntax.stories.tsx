@@ -237,7 +237,6 @@ export const IcicleChart: StoryObj<Args> = {
             StackX(
               {
                 h: _(items).sumBy("count") / 10,
-                spacing: 0,
                 alignment: "start",
               },
               [
@@ -302,7 +301,7 @@ export const NestedMosaicChart: StoryObj<Args> = {
     SpreadY(
       { dir: "ttb", spacing: 4, alignment: "middle" },
       For(groupBy(titanic, "class"), (items, cls) =>
-        StackX(
+        SpreadX(
           { key: cls, h: _(items).sumBy("count") / 10, spacing: 2, alignment: "middle" },
           For(groupBy(items, "sex"), (sItems, sex) =>
             StackY(
@@ -579,7 +578,7 @@ export const ViolinPlot: StoryObj<Args> = {
         );
         return Frame({}, [
           StackY(
-            { spacing: 0 },
+            { alignment: "middle" },
             For(density, (d) =>
               Rect({ y: d.x / 40, w: d.y * 100000, h: 0, fill: v(species) }).name(
                 `${species}-${d.x}`
