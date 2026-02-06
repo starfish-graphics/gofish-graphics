@@ -10,6 +10,7 @@ import { GoFishAST } from "./_ast";
 import { GoFishNode } from "./_node";
 import _, { ListOfRecursiveArraysOrValues } from "lodash";
 import { ChartBuilder } from "./marks/chart";
+import { GoFishRef } from "./_ref";
 import {
   ChannelAnnotations,
   DeriveMarkProps,
@@ -53,6 +54,16 @@ type GoFishChildrenInputWithThunks =
       >
     >
   | null;
+
+type OperatorArgs<T> = {
+  opts: T;
+  children?: GoFishChildrenInput;
+};
+
+type OperatorArgsWithThunks<T> = {
+  opts: T;
+  children?: GoFishChildrenInputWithThunks;
+};
 
 /**
  * A Promise-like object that also has chainable methods from GoFishNode.
@@ -141,6 +152,67 @@ export function addRenderMethod<T>(promise: Promise<T>): PromiseWithRender<T> {
   };
 
   return promise as PromiseWithRender<T>;
+}
+
+function isChildrenLike(value: unknown): boolean {
+  return (
+    value == null ||
+    Array.isArray(value) ||
+    value instanceof Promise ||
+    value instanceof GoFishNode ||
+    value instanceof GoFishRef ||
+    isChartBuilder(value) ||
+    typeof value === "function"
+  );
+}
+
+export function processOperatorArgs<T extends Record<string, any>>(
+  args: unknown[]
+): OperatorArgs<T> {
+  if (args.length === 2) {
+    return {
+      opts: (args[0] ?? {}) as T,
+      children: args[1] as GoFishChildrenInput,
+    };
+  }
+  if (args.length === 1) {
+    if (isChildrenLike(args[0])) {
+      return { opts: {} as T, children: args[0] as GoFishChildrenInput };
+    }
+    return { opts: (args[0] ?? {}) as T };
+  }
+  if (args.length === 0) {
+    return { opts: {} as T };
+  }
+  throw new Error(
+    `processOperatorArgs: Expected 0, 1, or 2 arguments, got ${args.length}`
+  );
+}
+
+export function processOperatorArgsSequential<T extends Record<string, any>>(
+  args: unknown[]
+): OperatorArgsWithThunks<T> {
+  if (args.length === 2) {
+    return {
+      opts: (args[0] ?? {}) as T,
+      children: args[1] as GoFishChildrenInputWithThunks,
+    };
+  }
+  if (args.length === 1) {
+    if (isChildrenLike(args[0])) {
+      return {
+        opts: {} as T,
+        children: args[0] as GoFishChildrenInputWithThunks,
+      };
+    }
+    return { opts: (args[0] ?? {}) as T };
+  }
+  if (args.length === 0) {
+    return { opts: {} as T };
+  }
+  throw new Error(
+    `processOperatorArgsSequential: Expected 0, 1, or 2 arguments, got ${args.length}`
+  );
 }
 
 /**
@@ -233,51 +305,32 @@ export async function reifyChildrenSequentially(
 - Allows opts to be optional
 - Supports arrays where individual elements can be promises
 */
-export function createOperator<T extends Record<string, any>, R>(
-  func: (opts: T, children: GoFishAST[]) => R
-): {
-  (opts?: T, children?: GoFishChildrenInput): PromiseWithRender<R>;
-  (children: GoFishChildrenInput): PromiseWithRender<R>;
-} {
-  return function (...args: any[]): PromiseWithRender<R> {
-    const promise = (async () => {
-      let opts: T;
-      let children: GoFishChildrenInput | undefined;
-      if (args.length === 2) {
-        opts = args[0] ?? ({} as T);
-        children = args[1];
-      } else if (args.length === 1) {
-        opts = {} as T;
-        children = args[0];
-      } else if (args.length === 0) {
-        opts = {} as T;
-        children = undefined;
-      } else {
-        throw new Error(
-          `createOperator: Expected 0, 1, or 2 arguments, got ${args.length}`
-        );
-      }
-      // Flatten nested structures and await all promises
-      const flattened = await flattenAndAwaitPromises<
-        GoFishAST | Promise<GoFishAST> | ChartBuilder<any, any>
-      >(children);
-      // Resolve any ChartBuilder instances and filter out promises
-      const resolvedBuilders = await Promise.all(
-        flattened.map(async (child) => {
-          if (isChartBuilder(child)) {
-            return await child.resolve();
-          }
-          return child;
-        })
-      );
-      const flatChildren = resolvedBuilders.filter(
-        (child): child is GoFishAST =>
-          child != null && !(child instanceof Promise)
-      ) as GoFishAST[];
-      return func(opts, flatChildren);
-    })();
-    return addRenderMethod(promise);
-  };
+export function createGoFishPrimitive(
+  nodeProps: ConstructorParameters<typeof GoFishNode>[0],
+  children?: GoFishChildrenInput
+): PromiseWithRender<GoFishNode> {
+  const promise = (async () => {
+    // Flatten nested structures and await all promises
+    const flattened = await flattenAndAwaitPromises<
+      GoFishAST | Promise<GoFishAST> | ChartBuilder<any, any>
+    >(children);
+    // Resolve any ChartBuilder instances and filter out promises
+    const resolvedBuilders = await Promise.all(
+      flattened.map(async (child) => {
+        if (isChartBuilder(child)) {
+          return await child.resolve();
+        }
+        return child;
+      })
+    );
+    const flatChildren = resolvedBuilders.filter(
+      (child): child is GoFishAST =>
+        child != null && !(child instanceof Promise)
+    ) as GoFishAST[];
+    return new GoFishNode(nodeProps, flatChildren);
+  })();
+
+  return addRenderMethod(promise);
 }
 
 /**
@@ -289,43 +342,24 @@ export function createOperator<T extends Record<string, any>, R>(
  * - Supports arrays where individual elements can be promises or thunks
  * - Processes thunks sequentially to ensure proper execution order
  */
-export function createOperatorSequential<T extends Record<string, any>, R>(
-  func: (opts: T, children: GoFishAST[]) => R
-): {
-  (opts?: T, children?: GoFishChildrenInputWithThunks): PromiseWithRender<R>;
-  (children: GoFishChildrenInputWithThunks): PromiseWithRender<R>;
-} {
-  return function (...args: any[]): PromiseWithRender<R> {
-    const promise = (async () => {
-      let opts: T;
-      let children: GoFishChildrenInputWithThunks | undefined;
-      if (args.length === 2) {
-        opts = args[0] ?? ({} as T);
-        children = args[1];
-      } else if (args.length === 1) {
-        opts = {} as T;
-        children = args[0];
-      } else if (args.length === 0) {
-        opts = {} as T;
-        children = undefined;
-      } else {
-        throw new Error(
-          `createOperatorSequential: Expected 0, 1, or 2 arguments, got ${args.length}`
-        );
-      }
-      // First phase: flatten nested structures and await promises, preserving thunks and ChartBuilder instances
-      const flattenedWithThunks = await flattenAndAwaitPromises<
-        | GoFishAST
-        | (() => GoFishAST | Promise<GoFishAST>)
-        | ChartBuilder<any, any>
-      >(children);
-      // Second phase: process thunks and ChartBuilder instances sequentially
-      const resolvedChildren =
-        await reifyChildrenSequentially(flattenedWithThunks);
-      return func(opts, resolvedChildren);
-    })();
-    return addRenderMethod(promise);
-  };
+export function createGoFishPrimitiveSequential(
+  nodeProps: ConstructorParameters<typeof GoFishNode>[0],
+  children?: GoFishChildrenInputWithThunks
+): PromiseWithRender<GoFishNode> {
+  const promise = (async () => {
+    // First phase: flatten nested structures and await promises, preserving thunks and ChartBuilder instances
+    const flattenedWithThunks = await flattenAndAwaitPromises<
+      | GoFishAST
+      | (() => GoFishAST | Promise<GoFishAST>)
+      | ChartBuilder<any, any>
+    >(children);
+    // Second phase: process thunks and ChartBuilder instances sequentially
+    const resolvedChildren =
+      await reifyChildrenSequentially(flattenedWithThunks);
+    return new GoFishNode(nodeProps, resolvedChildren);
+  })();
+
+  return addRenderMethod(promise);
 }
 
 /**
@@ -349,9 +383,7 @@ export function createMark<
   return <T extends Record<string, any>>(
     markOpts: DeriveMarkProps<ShapeProps, C, T>
   ): Mark<T | T[] | { item: T | T[]; key: number | string }> => {
-    return async (
-      input: T | T[] | { item: T | T[]; key: number | string }
-    ) => {
+    return async (input: T | T[] | { item: T | T[]; key: number | string }) => {
       // Unwrap input: handles T, T[], or { item, key } patterns
       let d: T | T[], key: number | string | undefined;
       if (typeof input === "object" && input !== null && "item" in input) {

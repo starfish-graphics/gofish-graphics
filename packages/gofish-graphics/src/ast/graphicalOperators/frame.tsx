@@ -3,7 +3,7 @@ import { FancyDims } from "../dims";
 import { CoordinateTransform } from "../coordinateTransforms/coord";
 import { coord } from "../coordinateTransforms/coord";
 import { layer } from "./layer";
-import { createOperator } from "../withGoFish";
+import { processOperatorArgs } from "../withGoFish";
 import { GoFishAST } from "../_ast";
 
 /* layer context */
@@ -30,30 +30,28 @@ export const initLayerContext = (): void => {
 export const resetLayerContext = (): void => {
   layerContext = null;
 };
-export const frame = createOperator(
-  (
-    options: {
+export const frame = (...args: unknown[]) => {
+  const { opts: options, children } = processOperatorArgs<
+    {
       key?: string;
       coord?: CoordinateTransform;
       x?: number;
       y?: number;
       transform?: { scale?: { x?: number; y?: number } };
       box?: boolean;
-    } & FancyDims,
-    children: GoFishAST[]
-  ) => {
-    if (options.coord !== undefined) {
-      return coord(
-        {
-          key: options.key,
-          x: options.x,
-          y: options.y,
-          transform: options.coord,
-        },
-        children
-      );
-    } else {
-      return layer(options, children);
-    }
+    } & FancyDims
+  >(args);
+  if (options.coord !== undefined) {
+    return coord(
+      {
+        key: options.key,
+        x: options.x,
+        y: options.y,
+        transform: options.coord,
+      },
+      children
+    );
+  } else {
+    return layer(options, children);
   }
-);
+};
