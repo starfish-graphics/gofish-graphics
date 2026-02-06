@@ -325,12 +325,12 @@ export const connect = (...args: unknown[]) => {
         { intrinsicDims, transform, renderData, coordinateTransform },
         children
       ) => {
-        fill = fill ?? renderData.defaultColor;
-        fill = isValue(fill)
+        let resolvedFill = fill ?? renderData.defaultColor;
+        resolvedFill = isValue(resolvedFill)
           ? scaleContext?.unit?.color
-            ? scaleContext.unit.color.get(getValue(fill))
-            : getValue(fill)
-          : fill;
+            ? scaleContext.unit.color.get(getValue(resolvedFill))
+            : getValue(resolvedFill)
+          : resolvedFill;
 
         return (
           <g
@@ -354,8 +354,8 @@ export const connect = (...args: unknown[]) => {
                           : "multiply",
                     }}
                     d={d}
-                    fill={fill ?? "none"}
-                    stroke={stroke ?? fill ?? "black"}
+                    fill={resolvedFill ?? "none"}
+                    stroke={stroke ?? resolvedFill ?? "black"}
                     stroke-width={strokeWidth ?? 0}
                     opacity={opacity ?? 1}
                   />
