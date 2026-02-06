@@ -14,7 +14,10 @@ import {
   isORDINAL,
   isPOSITION,
 } from "../underlyingSpace";
-import { createGoFishPrimitive, processOperatorArgs } from "../withGoFish";
+import {
+  createGoFishPrimitiveSequential,
+  processOperatorArgsSequential,
+} from "../withGoFish";
 import { computeTransformedBoundingBox } from "./coordUtils";
 import { empty, union } from "../../util/bbox";
 
@@ -90,7 +93,7 @@ const flattenLayout = (
   inside it?
 */
 export const coord = (...args: unknown[]) => {
-  const { opts, children } = processOperatorArgs<
+  const { opts, children } = processOperatorArgsSequential<
     {
       key?: string;
       name?: string;
@@ -107,7 +110,7 @@ export const coord = (...args: unknown[]) => {
   } = opts;
   const dims = elaborateDims(fancyDims);
 
-  return createGoFishPrimitive(
+  return createGoFishPrimitiveSequential(
     {
       type: "coord",
       key,
@@ -298,10 +301,13 @@ export const coord = (...args: unknown[]) => {
           },
           renderData: {
             coordinateSpaceBbox: coordSpaceBbox,
+            flattenedChildren: children.flatMap((child) =>
+              flattenLayout(child as unknown as GoFishAST)
+            ),
           },
         };
       },
-      render: ({ transform }) => {
+      render: ({ transform, renderData }) => {
         const gridLines = () => {
           /* take an evenly space net of lines covering the space, map them through the space, and
           render the paths */
@@ -372,9 +378,9 @@ export const coord = (...args: unknown[]) => {
           );
         };
 
-        const flattenedChildren = children.flatMap((child) =>
-          flattenLayout(child)
-        );
+        const flattenedChildren = (
+          renderData?.flattenedChildren ?? []
+        ) as GoFishAST[];
 
         return (
           <g
