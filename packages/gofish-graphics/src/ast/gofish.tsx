@@ -6,8 +6,8 @@ import {
   debugUnderlyingSpaceTree,
   findPathToRoot,
   type GoFishNode,
+  type RenderSession,
 } from "./_node";
-import { ScopeContext } from "./scopeContext";
 import { computePosScale } from "./domain";
 import { tickIncrement, ticks, nice } from "d3-array";
 import { isConstant } from "../util/monotonic";
@@ -19,48 +19,15 @@ import {
 } from "./underlyingSpace";
 import { continuous } from "./domain";
 import { interval } from "../util/interval";
-import {
-  initLayerContext,
-  resetLayerContext,
-} from "./graphicalOperators/frame";
 import { path, pathToSVGPath, transformPath } from "../path";
 
-/* scope context */
-let scopeContext: ScopeContext | null = null;
-
-export const getScopeContext = (): ScopeContext => {
-  if (!scopeContext) {
-    throw new Error("Scope context not set");
-  }
-  return scopeContext;
-};
-
-type ScaleContext = {
+export type ScaleContext = {
   [measure: string]:
     | { color: Map<any, string> }
     | { domain: [number, number]; scaleFactor: number };
 };
 
-/* scale context */
-export let scaleContext: ScaleContext | null = null;
-
-export const getScaleContext = (): ScaleContext => {
-  if (!scaleContext) {
-    throw new Error("Scale context not set");
-  }
-  return scaleContext;
-};
-
-type KeyContext = { [key: string]: GoFishNode };
-
-export let keyContext: KeyContext | null = null;
-
-export const getKeyContext = (): KeyContext => {
-  if (!keyContext) {
-    throw new Error("Key context not set");
-  }
-  return keyContext;
-};
+export type KeyContext = { [key: string]: GoFishNode };
 
 type OrdinalScale = (key: string) => number | undefined;
 
@@ -142,9 +109,7 @@ export async function layout(
   },
   child: GoFishNode | Promise<GoFishNode>,
   contexts?: {
-    scaleCtx: ScaleContext;
-    scopeCtx: ScopeContext;
-    keyCtx: KeyContext;
+    session: RenderSession;
   }
 ): Promise<{
   sizeDomains: [any, any];
@@ -158,12 +123,8 @@ export async function layout(
   child: GoFishNode;
 }> {
   child = await child;
-
-  // Restore contexts after await - they may have been cleared by another concurrent runGofish
-  if (contexts) {
-    scaleContext = contexts.scaleCtx;
-    scopeContext = contexts.scopeCtx;
-    keyContext = contexts.keyCtx;
+  if (contexts?.session) {
+    child.setRenderSession(contexts.session);
   }
   if (
     typeof document !== "undefined" &&
@@ -263,11 +224,11 @@ export async function layout(
   }
 
   const ordinalScales: [OrdinalScale | undefined, OrdinalScale | undefined] = [
-    isORDINAL(niceUnderlyingSpaceX) && keyContext
-      ? buildOrdinalScaleX(keyContext, child)
+    isORDINAL(niceUnderlyingSpaceX) && contexts?.session?.keyContext
+      ? buildOrdinalScaleX(contexts.session.keyContext, child)
       : undefined,
-    isORDINAL(niceUnderlyingSpaceY) && keyContext
-      ? buildOrdinalScaleY(keyContext, child)
+    isORDINAL(niceUnderlyingSpaceY) && contexts?.session?.keyContext
+      ? buildOrdinalScaleY(contexts.session.keyContext, child)
       : undefined,
   ];
 
@@ -320,17 +281,14 @@ export const gofish = (
   };
 
   const runGofish = async (): Promise<LayoutData> => {
+    const session: RenderSession = {
+      scopeContext: new Map(),
+      scaleContext: { unit: { color: new Map() } },
+      keyContext: {},
+    };
     try {
-      scopeContext = new Map();
-      scaleContext = { unit: { color: new Map() } };
-      keyContext = {};
-      initLayerContext();
-
-      // Capture context references to pass to layout - they will be restored after await
       const contexts = {
-        scaleCtx: scaleContext!,
-        scopeCtx: scopeContext!,
-        keyCtx: keyContext!,
+        session,
       };
 
       const layoutResult = await layout(
@@ -341,22 +299,16 @@ export const gofish = (
 
       const result = {
         ...layoutResult,
-        // Use the captured contexts, not the module variable which may have been overwritten
-        scaleContext: contexts.scaleCtx,
-        keyContext: contexts.keyCtx,
+        scaleContext: session.scaleContext,
+        keyContext: session.keyContext,
       };
 
       return result;
     } finally {
       if (debug) {
-        console.log("scaleContext", scaleContext);
-        console.log("scopeContext", scopeContext);
-        // console.log("keyContext", keyContext);
+        console.log("scaleContext", session.scaleContext);
+        console.log("scopeContext", session.scopeContext);
       }
-      scopeContext = null;
-      scaleContext = null;
-      keyContext = null;
-      resetLayerContext();
     }
   };
 
@@ -490,10 +442,8 @@ export const render = (
   },
   child: GoFishNode
 ): JSX.Element => {
-  // Restore global contexts for rendering (components access these via getScaleContext/getKeyContext)
-  // Note: scaleContext is always null here because runGofish() cleans it up in the finally block
-  scaleContext = scaleContextParam;
-  keyContext = keyContextParam;
+  const scaleContext = scaleContextParam;
+  const keyContext = keyContextParam;
 
   let yTicks: number[] = [];
   let xTicks: number[] = [];
@@ -1156,10 +1106,6 @@ export const render = (
       </g>
     </svg>
   );
-
-  // Clean up global contexts (they're already null from runGofish's finally block, but be explicit)
-  scaleContext = null;
-  keyContext = null;
 
   return result;
 };

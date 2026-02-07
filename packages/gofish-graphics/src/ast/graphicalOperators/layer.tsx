@@ -12,12 +12,8 @@ import * as Interval from "../../util/interval";
 import { computeSize } from "../../util";
 import { CoordinateTransform } from "../coordinateTransforms/coord";
 import { coord } from "../coordinateTransforms/coord";
-import { getLayerContext, resetLayerContext } from "./frame";
 import { createOperatorSequential } from "../withGoFish";
 import { GoFishAST } from "../_ast";
-
-// Re-export layer context functions for backward compatibility
-export { getLayerContext, resetLayerContext };
 
 export const layer = createOperatorSequential(
   async (

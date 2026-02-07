@@ -19,10 +19,6 @@ export { text } from "./ast/shapes/text";
 export { stackX } from "./ast/graphicalOperators/stackX";
 export { stackY } from "./ast/graphicalOperators/stackY";
 export { layer } from "./ast/graphicalOperators/layer";
-export {
-  getLayerContext,
-  resetLayerContext,
-} from "./ast/graphicalOperators/frame";
 export { wrap } from "./ast/graphicalOperators/wrap";
 export { connect } from "./ast/graphicalOperators/connect";
 export { connectX } from "./ast/graphicalOperators/connectX";

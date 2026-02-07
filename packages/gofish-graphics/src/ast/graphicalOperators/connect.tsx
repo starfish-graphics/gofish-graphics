@@ -6,7 +6,6 @@ import { elaborateDirection, FancyDirection, Size } from "../dims";
 import { pairs } from "../../util";
 import { linear } from "../coordinateTransforms/linear";
 import { getValue, isValue, MaybeValue } from "../data";
-import { scaleContext } from "../gofish";
 import { Domain } from "../domain";
 import * as Monotonic from "../../util/monotonic";
 import { UNDEFINED, UnderlyingSpace } from "../underlyingSpace";
@@ -325,8 +324,10 @@ export const connect = createOperator(
         },
         render: (
           { intrinsicDims, transform, renderData, coordinateTransform },
-          children
+          children,
+          node
         ) => {
+          const scaleContext = node.getRenderSession().scaleContext;
           fill = fill ?? renderData.defaultColor;
           fill = isValue(fill)
             ? scaleContext?.unit?.color

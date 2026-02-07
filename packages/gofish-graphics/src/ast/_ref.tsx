@@ -15,11 +15,11 @@ import {
   Transform,
 } from "./dims";
 import { Domain } from "./domain";
-import { getScopeContext } from "./gofish";
 import { GoFishNode, ScaleFactorFunction } from "./_node";
 import { GoFishAST } from "./_ast";
 import { MaybeValue } from "./data";
 import { ORDINAL, POSITION, UnderlyingSpace } from "./underlyingSpace";
+import type { RenderSession } from "./_node";
 
 /* TODO: resolveMeasures and layout feel pretty similar... */
 
@@ -57,6 +57,7 @@ export class GoFishRef {
   private selection?: string;
   private directNode?: GoFishNode;
   private selectedNode?: GoFishNode;
+  private renderSession?: RenderSession;
   public color?: MaybeValue<string>;
   constructor({
     name,
@@ -79,13 +80,14 @@ export class GoFishRef {
   }
 
   public resolveNames(): void {
+    const scopeContext = this.getRenderSession().scopeContext;
     if (this.directNode) {
       this.selectedNode = this.directNode;
     } else if (this.selection) {
-      this.selectedNode = getScopeContext().get(this.selection);
+      this.selectedNode = scopeContext.get(this.selection);
       if (this.selectedNode === undefined) {
         throw new Error(
-          `Can't find "${this.selection}". Available nodes: ${Array.from(getScopeContext().keys()).join(", ")}`
+          `Can't find "${this.selection}". Available nodes: ${Array.from(scopeContext.keys()).join(", ")}`
         );
       }
     }
@@ -213,6 +215,16 @@ export class GoFishRef {
 
   public INTERNAL_render(): JSX.Element {
     return <></>;
+  }
+
+  public setRenderSession(session: RenderSession): void {
+    this.renderSession = session;
+  }
+
+  private getRenderSession(): RenderSession {
+    if (this.renderSession) return this.renderSession;
+    if (this.parent) return this.parent.getRenderSession();
+    throw new Error("Render session not set");
   }
 }
 

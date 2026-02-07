@@ -29,7 +29,6 @@ import {
   Transform,
 } from "../dims";
 import { aesthetic, continuous } from "../domain";
-import { scaleContext } from "../gofish";
 import { ORDINAL, POSITION, UNDEFINED } from "../underlyingSpace";
 /* TODO: what should default embedding behavior be when all values are aesthetic? */
 export const ellipse = ({
@@ -158,7 +157,7 @@ export const ellipse = ({
           intrinsicDims?: Dimensions;
           transform?: Transform;
           coordinateTransform?: CoordinateTransform;
-        }) => {
+        }, _children, node) => {
           const space = coordinateTransform ?? linear();
 
           // const isDataX = isValue(dims[0].size);
@@ -194,6 +193,7 @@ export const ellipse = ({
             },
           ];
 
+          const scaleContext = node.getRenderSession().scaleContext;
           fill = isValue(fill)
             ? scaleContext?.unit?.color
               ? scaleContext.unit.color.get(getValue(fill))
