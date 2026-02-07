@@ -7,7 +7,6 @@ import {
   v,
   Position,
   meanBy,
-  getLayerContext,
   Connect,
   Ref,
 } from "../../lib";
@@ -27,13 +26,19 @@ const connectXMode = {
   center: "center-to-center",
 } as const;
 
+export type LayerContext = {
+  [name: string]: {
+    data: any[];
+    nodes: GoFishNode[];
+  };
+};
+
 // LayerSelector is a lazy selector that defers layer lookup until actually needed
 export class LayerSelector<T = any> {
   constructor(public readonly layerName: string) {}
 
   // Resolve the selector to actual data - throws if layer not found
-  resolve(): Array<T & { __ref: GoFishNode }> {
-    const layerContext = getLayerContext();
+  resolve(layerContext: LayerContext): Array<T & { __ref: GoFishNode }> {
     const layer = layerContext[this.layerName];
 
     if (!layer) {
@@ -126,19 +131,22 @@ export class ChartBuilder<TInput, TOutput = TInput> {
   private readonly operators: Operator<any, any>[] = [];
   private readonly finalMark?: Mark<TOutput>;
   private readonly layerName?: string;
+  private readonly layerContext: LayerContext;
 
   constructor(
     data: TInput,
     options?: ChartOptions,
     operators: Operator<any, any>[] = [],
     finalMark?: Mark<TOutput>,
-    layerName?: string
+    layerName?: string,
+    layerContext: LayerContext = {}
   ) {
     this.data = data;
     this.options = options;
     this.operators = operators;
     this.finalMark = finalMark;
     this.layerName = layerName;
+    this.layerContext = layerContext;
   }
 
   // flow accumulates operators and returns a new builder for chaining
@@ -188,7 +196,8 @@ export class ChartBuilder<TInput, TOutput = TInput> {
       this.options,
       [...this.operators, ...ops],
       this.finalMark,
-      this.layerName
+      this.layerName,
+      this.layerContext
     );
   }
 
@@ -199,7 +208,8 @@ export class ChartBuilder<TInput, TOutput = TInput> {
       this.options,
       this.operators,
       mark,
-      this.layerName
+      this.layerName,
+      this.layerContext
     );
   }
 
@@ -218,7 +228,7 @@ export class ChartBuilder<TInput, TOutput = TInput> {
     // Resolve LayerSelector just before calling mark
     let data = this.data;
     if (data instanceof LayerSelector) {
-      data = data.resolve() as any;
+      data = data.resolve(this.layerContext) as any;
     }
 
     // Create the node
@@ -228,11 +238,10 @@ export class ChartBuilder<TInput, TOutput = TInput> {
 
     // Register layer if .as() was called (layerName is set)
     if (this.layerName) {
-      const layerContext = getLayerContext();
       const rootNode = node.children[0] as GoFishNode;
       const leafNodes = collectLeafNodes(rootNode);
 
-      layerContext[this.layerName] = {
+      this.layerContext[this.layerName] = {
         data: leafNodes.map((n) => (n as any).datum),
         nodes: leafNodes,
       };
@@ -248,7 +257,19 @@ export class ChartBuilder<TInput, TOutput = TInput> {
       this.options,
       this.operators,
       this.finalMark,
-      name
+      name,
+      this.layerContext
+    );
+  }
+
+  withLayerContext(layerContext: LayerContext): ChartBuilder<TInput, TOutput> {
+    return new ChartBuilder(
+      this.data,
+      this.options,
+      this.operators,
+      this.finalMark,
+      this.layerName,
+      layerContext
     );
   }
 
@@ -262,7 +283,7 @@ export class ChartBuilder<TInput, TOutput = TInput> {
 }
 
 export function chart<T>(data: T, options?: ChartOptions): ChartBuilder<T, T> {
-  return new ChartBuilder<T, T>(data, options);
+  return new ChartBuilder<T, T>(data, options, [], undefined, undefined, {});
 }
 
 export function spread<T>(

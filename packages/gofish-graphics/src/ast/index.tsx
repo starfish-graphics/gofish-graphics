@@ -1,5 +1,5 @@
 // Core gofish API
-export { gofish, render, getScopeContext, getScaleContext } from "./gofish";
+export { gofish, render } from "./gofish";
 
 // SolidJS wrappers
 export { GoFishSolid } from "./GoFishSolid";

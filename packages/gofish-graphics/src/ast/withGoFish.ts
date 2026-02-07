@@ -10,6 +10,7 @@ import { GoFishAST } from "./_ast";
 import { GoFishNode } from "./_node";
 import _, { ListOfRecursiveArraysOrValues } from "lodash";
 import { ChartBuilder } from "./marks/chart";
+import type { LayerContext } from "./marks/chart";
 import {
   ChannelAnnotations,
   DeriveMarkProps,
@@ -196,10 +197,12 @@ export async function reifyChildrenSequentially(
     | GoFishAST
     | (() => GoFishAST | Promise<GoFishAST>)
     | ChartBuilder<any, any>
-  )[]
+  )[],
+  layerContext?: LayerContext
 ): Promise<GoFishAST[]> {
   // if the child is a thunked promise, it must be resolved before the next child is resolved
   const resolved: GoFishAST[] = [];
+  const sharedLayerContext = layerContext ?? {};
 
   for (const child of children) {
     if (typeof child === "function") {
@@ -209,7 +212,9 @@ export async function reifyChildrenSequentially(
       if (resolvedChild != null) {
         // If it's a ChartBuilder, resolve it
         if (isChartBuilder(resolvedChild)) {
-          const node = await resolvedChild.resolve();
+          const node = await resolvedChild
+            .withLayerContext(sharedLayerContext)
+            .resolve();
           resolved.push(node);
         } else {
           resolved.push(resolvedChild);
@@ -217,7 +222,7 @@ export async function reifyChildrenSequentially(
       }
     } else if (isChartBuilder(child)) {
       // If it's a ChartBuilder, resolve it sequentially
-      const node = await child.resolve();
+      const node = await child.withLayerContext(sharedLayerContext).resolve();
       resolved.push(node);
     } else {
       // It's already a GoFishAST, add it directly
@@ -261,11 +266,12 @@ export function createOperator<T extends Record<string, any>, R>(
       const flattened = await flattenAndAwaitPromises<
         GoFishAST | Promise<GoFishAST> | ChartBuilder<any, any>
       >(children);
+      const layerContext: LayerContext = {};
       // Resolve any ChartBuilder instances and filter out promises
       const resolvedBuilders = await Promise.all(
         flattened.map(async (child) => {
           if (isChartBuilder(child)) {
-            return await child.resolve();
+            return await child.withLayerContext(layerContext).resolve();
           }
           return child;
         })
@@ -319,9 +325,10 @@ export function createOperatorSequential<T extends Record<string, any>, R>(
         | (() => GoFishAST | Promise<GoFishAST>)
         | ChartBuilder<any, any>
       >(children);
+      const layerContext: LayerContext = {};
       // Second phase: process thunks and ChartBuilder instances sequentially
       const resolvedChildren =
-        await reifyChildrenSequentially(flattenedWithThunks);
+        await reifyChildrenSequentially(flattenedWithThunks, layerContext);
       return func(opts, resolvedChildren);
     })();
     return addRenderMethod(promise);

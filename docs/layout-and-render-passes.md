@@ -15,16 +15,15 @@ The rendering process begins with the `gofish()` function in [`packages/gofish-g
 
 ```typescript:270:342:packages/gofish-graphics/src/ast/gofish.tsx
 const runGofish = async (): Promise<LayoutData> => {
-  try {
-    scopeContext = new Map();
-    scaleContext = { unit: { color: new Map() } };
-    keyContext = {};
-    initLayerContext();
+  const session: RenderSession = {
+    scopeContext: new Map(),
+    scaleContext: { unit: { color: new Map() } },
+    keyContext: {},
+  };
 
+  try {
     const contexts = {
-      scaleCtx: scaleContext!,
-      scopeCtx: scopeContext!,
-      keyCtx: keyContext!,
+      session,
     };
 
     const layoutResult = await layout(
@@ -35,15 +34,11 @@ const runGofish = async (): Promise<LayoutData> => {
 
     return {
       ...layoutResult,
-      scaleContext: contexts.scaleCtx,
-      keyContext: contexts.keyCtx,
+      scaleContext: session.scaleContext,
+      keyContext: session.keyContext,
     };
   } finally {
-    // Cleanup contexts
-    scopeContext = null;
-    scaleContext = null;
-    keyContext = null;
-    resetLayerContext();
+    // session is per-run and naturally discarded here
   }
 };
 ```
@@ -56,11 +51,13 @@ The layout phase is handled by the `layout()` function, which performs multiple 
 
 **Location**: [`packages/gofish-graphics/src/ast/gofish.tsx:272-275`](packages/gofish-graphics/src/ast/gofish.tsx)
 
-Three global contexts are initialized:
+Three per-run session contexts are initialized:
 
 - **`scopeContext`**: Manages variable scoping and data bindings (type: `Map`)
 - **`scaleContext`**: Stores computed color scales and scale mappings (type: `{ unit: { color: Map<any, string> } }`)
 - **`keyContext`**: Maps string keys to nodes for axis labeling and legends (type: `{ [key: string]: GoFishNode }`)
+
+These are attached to the render session and propagated to the node tree, rather than stored as module-global mutable state.
 
 ### Pass 2: Color Scale Resolution
 

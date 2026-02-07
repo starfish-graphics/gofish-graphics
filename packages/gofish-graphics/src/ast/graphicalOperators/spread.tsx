@@ -13,7 +13,6 @@ import {
 import _, { Collection, size } from "lodash";
 import { computeAesthetic, computeSize, findTargetMonotonic } from "../../util";
 import { GoFishAST } from "../_ast";
-import { getScaleContext } from "../gofish";
 import { createOperator } from "../withGoFish";
 import * as Monotonic from "../../util/monotonic";
 import {
@@ -246,7 +245,8 @@ export const spread = createOperator(
           scaleFactors,
           children,
           measurement,
-          posScales
+          posScales,
+          node
         ) => {
           if (dir === "ttb" || reverse) {
             children = children.reverse();
@@ -292,7 +292,7 @@ export const spread = createOperator(
           }
 
           // console.log(size, scaleFactors, posScales);
-          const scaleContext = getScaleContext();
+          const scaleContext = node.getRenderSession().scaleContext;
           scaleContext.x = {
             domain: [0, size[0] / scaleFactors[0]],
             scaleFactor: scaleFactors[0],

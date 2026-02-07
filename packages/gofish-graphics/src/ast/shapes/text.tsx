@@ -10,7 +10,6 @@ import {
   MaybeValue,
 } from "../data";
 import { Dimensions, elaborateDims, FancyDims, Transform } from "../dims";
-import { scaleContext } from "../gofish";
 import {
   DIFFERENCE,
   ORDINAL,
@@ -279,7 +278,7 @@ export const text = ({
           intrinsicDims?: Dimensions;
           transform?: Transform;
           renderData?: { layout?: TextLayout };
-        }) => {
+        }, _children, node) => {
           const finalText = isValue(textContent)
             ? getValue(textContent)
             : textContent;
@@ -287,7 +286,7 @@ export const text = ({
           const anchorX = transform?.translate?.[0] ?? 0;
           const anchorY = transform?.translate?.[1] ?? 0;
 
-          const unit = scaleContext?.unit;
+          const unit = node.getRenderSession().scaleContext?.unit;
           const unitColorScale =
             unit && "color" in unit ? unit.color : undefined;
           const resolvedFill = isValue(fill)

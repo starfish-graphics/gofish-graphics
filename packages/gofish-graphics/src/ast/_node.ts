@@ -17,9 +17,6 @@ import {
 } from "./dims";
 import { ContinuousDomain } from "./domain";
 import {
-  getKeyContext,
-  getScaleContext,
-  getScopeContext,
   gofish,
 } from "./gofish";
 import { GoFishRef } from "./_ref";
@@ -37,6 +34,14 @@ import {
   UnderlyingSpace,
 } from "./underlyingSpace";
 import { toJSON } from "../util/interval";
+import type { KeyContext, ScaleContext } from "./gofish";
+import type { ScopeContext } from "./scopeContext";
+
+export type RenderSession = {
+  scopeContext: ScopeContext;
+  scaleContext: ScaleContext;
+  keyContext: KeyContext;
+};
 
 export type ScaleFactorFunction = Monotonic.Monotonic;
 
@@ -77,7 +82,8 @@ export type Layout = (
     ) => Placeable;
   }[],
   sizeDomains: Size<ScaleFactorFunction>,
-  posScales: Size<((pos: number) => number) | undefined>
+  posScales: Size<((pos: number) => number) | undefined>,
+  node: GoFishNode
 ) => { intrinsicDims: FancyDims; transform: FancyTransform; renderData?: any };
 
 export type Render = (
@@ -92,7 +98,8 @@ export type Render = (
     renderData?: any;
     coordinateTransform?: CoordinateTransform;
   },
-  children: JSX.Element[]
+  children: JSX.Element[],
+  node: GoFishNode
 ) => JSX.Element;
 
 export type ResolveUnderlyingSpace = (
@@ -124,6 +131,7 @@ export class GoFishNode {
   public renderData?: any;
   public coordinateTransform?: CoordinateTransform;
   public color?: MaybeValue<string>;
+  private renderSession?: RenderSession;
   constructor(
     {
       name,
@@ -173,7 +181,7 @@ export class GoFishNode {
   }
 
   public resolveColorScale(): void {
-    const scaleContext = getScaleContext();
+    const scaleContext = this.getRenderSession().scaleContext;
     if (this.color !== undefined && isValue(this.color)) {
       const color = getValue(this.color);
       if (!scaleContext.unit.color.has(color)) {
@@ -193,7 +201,7 @@ export class GoFishNode {
 
   public resolveNames(): void {
     if (this._name !== undefined) {
-      getScopeContext().set(this._name, this);
+      this.getRenderSession().scopeContext.set(this._name, this);
     }
     this.children.forEach((child) => {
       child.resolveNames();
@@ -202,7 +210,7 @@ export class GoFishNode {
 
   public resolveKeys(): void {
     if (this.key !== undefined) {
-      getKeyContext()[this.key] = this;
+      this.getRenderSession().keyContext[this.key] = this;
     }
     this.children.forEach((child) => {
       child.resolveKeys();
@@ -242,7 +250,8 @@ export class GoFishNode {
       scaleFactors,
       this.children,
       this.sizeDomains,
-      posScales
+      posScales,
+      this
     );
 
     this.intrinsicDims = elaborateDims(intrinsicDims);
@@ -325,8 +334,28 @@ export class GoFishNode {
         child.INTERNAL_render(
           this.type !== "box" ? coordinateTransform : undefined
         )
-      )
+      ),
+      this
     );
+  }
+
+  public setRenderSession(session: RenderSession): void {
+    this.renderSession = session;
+    this.children.forEach((child) => {
+      if ("setRenderSession" in child && typeof child.setRenderSession === "function") {
+        child.setRenderSession(session);
+      }
+    });
+  }
+
+  public getRenderSession(): RenderSession {
+    if (this.renderSession) {
+      return this.renderSession;
+    }
+    if (this.parent && "getRenderSession" in this.parent) {
+      return this.parent.getRenderSession();
+    }
+    throw new Error("Render session not set");
   }
 
   public render(

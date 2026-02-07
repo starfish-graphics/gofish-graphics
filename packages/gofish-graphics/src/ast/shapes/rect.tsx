@@ -23,7 +23,6 @@ import {
   Transform,
 } from "../dims";
 import { aesthetic, continuous, Domain } from "../domain";
-import { scaleContext } from "../gofish";
 import * as Monotonic from "../../util/monotonic";
 import { computeAesthetic, computeSize } from "../../util";
 import {
@@ -254,7 +253,7 @@ export const Rect = ({
           intrinsicDims?: Dimensions;
           transform?: Transform;
           coordinateTransform?: CoordinateTransform;
-        }) => {
+        }, _children, node: GoFishNode) => {
           const space = coordinateTransform ?? linear();
 
           // const isDataX = isValue(dims[0].size);
@@ -290,6 +289,7 @@ export const Rect = ({
             },
           ];
 
+          const scaleContext = node.getRenderSession().scaleContext;
           const originalFill = fill;
           fill = isValue(fill)
             ? scaleContext?.unit?.color
