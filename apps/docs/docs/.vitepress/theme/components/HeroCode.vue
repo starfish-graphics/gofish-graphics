@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, computed } from "vue";
+import { onMounted, ref, computed } from "vue";
 import {
   chart,
   spread,
@@ -18,8 +18,8 @@ const { orderBy } = _;
 const rootEl = ref<HTMLElement | null>(null);
 const copied = ref(false);
 const installCmd = "npm install gofish-graphics";
-const chartWidth = ref(500);
-const chartHeight = ref(300);
+const CHART_WIDTH = 500;
+const CHART_HEIGHT = 300;
 
 const seafood = [
   { lake: "Lake A", species: "Bass", count: 23 },
@@ -72,7 +72,7 @@ const code = `layer({ coord: clock() }, [
   chart(select("bars"))
     .flow(group("species"))
     .mark(area({ opacity: 0.8 })),
-]).render(root, { w: 500, h: 300, transform: { x: 200, y: 200 }, axes: true });`;
+]).render(root, { w: ${CHART_WIDTH}, h: ${CHART_HEIGHT}, transform: { x: 200, y: 200 }, axes: true });`;
 
 function escapeHtml(src: string): string {
   return src.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -111,27 +111,14 @@ function highlightTs(src: string): string {
 
 const highlighted = computed(() => highlightTs(code));
 
-function updateChartDimensions() {
+function renderFixedChart() {
   const root = rootEl.value;
   if (!root) return;
 
-  // Get the actual container width, including padding
-  const container = root.parentElement;
-  const containerWidth = container
-    ? Math.min(container.clientWidth - 16, 640) // Subtract padding
-    : Math.min(window.innerWidth - 32, 640); // Fallback with margin
-
-  // Use container width, ensuring it's at least 300px for very small screens
-  const availableWidth = Math.max(containerWidth, 300);
-
-  // Maintain aspect ratio (500:300 = 5:3)
-  chartWidth.value = availableWidth;
-  chartHeight.value = (availableWidth * 300 * 0.8) / 500;
-
   // Re-render chart with new dimensions
   root.innerHTML = "";
-  const centerX = chartWidth.value / 2;
-  const centerY = chartHeight.value / 2;
+  const centerX = CHART_WIDTH / 2;
+  const centerY = CHART_HEIGHT / 2;
 
   layer({ coord: clock() }, [
     chart(seafood)
@@ -152,47 +139,25 @@ function updateChartDimensions() {
       .flow(group("species"))
       .mark(area({ opacity: 0.8 })),
   ]).render(root, {
-    w: chartWidth.value,
-    h: chartHeight.value,
+    w: CHART_WIDTH,
+    h: CHART_HEIGHT,
     transform: { x: centerX, y: centerY },
     axes: true,
   });
 
-  // Ensure SVG is constrained to container width
+  // Render in a fixed coordinate system, then scale the SVG to fit available width.
   const svg = root.querySelector("svg");
   if (svg) {
+    svg.setAttribute("viewBox", `0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`);
+    svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
     svg.style.width = "100%";
     svg.style.height = "auto";
-    svg.style.maxWidth = `${chartWidth.value}px`;
+    svg.style.maxWidth = "100%";
   }
 }
 
-let resizeObserver: ResizeObserver | null = null;
-
 onMounted(() => {
-  // Wait for next tick to ensure container is properly sized
-  setTimeout(() => {
-    updateChartDimensions();
-
-    // Observe container size changes - observe parent container for better width detection
-    const container = rootEl.value?.parentElement;
-    if (container && window.ResizeObserver) {
-      resizeObserver = new ResizeObserver(() => {
-        updateChartDimensions();
-      });
-      resizeObserver.observe(container);
-    }
-
-    // Fallback for browsers without ResizeObserver
-    window.addEventListener("resize", updateChartDimensions);
-  }, 0);
-});
-
-onUnmounted(() => {
-  if (resizeObserver) {
-    resizeObserver.disconnect();
-  }
-  window.removeEventListener("resize", updateChartDimensions);
+  renderFixedChart();
 });
 
 async function copyInstall() {
@@ -217,7 +182,12 @@ async function copyInstall() {
 </script>
 
 <template>
-  <div class="hero-snippet">
+  <div
+    class="hero-snippet"
+    :style="{
+      '--hero-chart-width': `${CHART_WIDTH}px`,
+    }"
+  >
     <div
       class="install-pill"
       role="button"
@@ -296,8 +266,7 @@ async function copyInstall() {
 
 .viz {
   width: 100%;
-  max-width: 640px;
-  aspect-ratio: 5 / 3;
+  max-width: var(--hero-chart-width);
   border-radius: 12px;
   display: block;
   overflow: hidden;
@@ -309,19 +278,6 @@ async function copyInstall() {
   max-width: 100% !important;
 }
 
-@media (max-width: 640px) {
-  .viz {
-    aspect-ratio: 5 / 3;
-    height: auto;
-    max-width: 100%;
-  }
-
-  .viz :deep(svg) {
-    width: 100% !important;
-    max-width: 100% !important;
-  }
-}
-
 .code {
   margin: 0;
   padding: 16px;
@@ -329,6 +285,7 @@ async function copyInstall() {
   border: 1px solid var(--vp-c-divider);
   border-radius: 12px;
   overflow: auto;
+  text-align: left;
 }
 
 .code code {
@@ -337,6 +294,7 @@ async function copyInstall() {
   line-height: 1.7;
   white-space: pre;
   display: block;
+  text-align: left;
 }
 
 /* Token colors harmonized to example theme */
