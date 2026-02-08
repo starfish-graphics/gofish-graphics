@@ -14,9 +14,9 @@ const meta: Meta = {
     },
   },
 };
-// Test isolated change
 export default meta;
 
+// TEST ISOLATED CHANGE CHROMATIC
 type Args = { w: number; h: number };
 
 export const Default: StoryObj<Args> = {
