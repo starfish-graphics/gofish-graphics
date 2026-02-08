@@ -1,16 +1,13 @@
 import type { Meta, StoryObj } from "@storybook/html";
-import { rect } from "../src/ast/marks/chart";
-import { initializeContainer } from "./helper";
-import { catchData } from "../src/data/catch";
-import { orderBy } from "../src/lib";
+import { initializeContainer } from "../helper";
 import {
-  testBoxWhiskerPlot,
   testSingleBoxWhisker,
   testPairBoxWhisker,
-} from "../src/tests/boxwhisker";
+  testBoxWhiskerPlot,
+} from "../../src/tests/boxwhisker";
 
 const meta: Meta = {
-  title: "Charts/LowLevel",
+  title: "Low Level Syntax/Whisker",
   argTypes: {
     w: {
       control: { type: "number", min: 100, max: 1000, step: 10 },
