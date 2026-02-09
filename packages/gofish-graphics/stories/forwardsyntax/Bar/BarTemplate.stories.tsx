@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/html";
-import { initializeContainer } from "../helper";
-import { barChart } from "../../src/charts/bar";
-import { circle } from "../../src/lib";
+import { initializeContainer } from "../../helper";
+import { circle } from "../../../src/lib";
+import { barChart } from "../../../src/charts/bar";
 
 const meta: Meta = {
-  title: "Charts/Bar",
+  title: "Forward Syntax V3/Bar/Template",
   argTypes: {
     w: {
       control: { type: "number", min: 100, max: 1000, step: 10 },
@@ -17,8 +17,7 @@ const meta: Meta = {
 export default meta;
 
 type Args = { w: number; h: number };
-
-// Test data for bar charts
+// Test data for template-based bar charts
 const testData = [
   { category: "A", value: 30, color: "#ff6b6b" },
   { category: "B", value: 80, color: "#4ecdc4" },

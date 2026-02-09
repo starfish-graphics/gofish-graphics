@@ -1,0 +1,81 @@
+import type { Meta, StoryObj } from "@storybook/html";
+import { initializeContainer } from "../helper";
+import { seafood, catchLocations } from "../../src/data/catch";
+import { frame as Frame, Rect, For, Petal, StackX, Polar, v } from "../../src/lib";
+import { color, color6 } from "../../src/color";
+import { mix } from "spectral.js";
+import _ from "lodash";
+
+const meta: Meta = {
+  title: "Low Level Syntax/Flower Chart",
+  argTypes: {
+    w: {
+      control: { type: "number", min: 100, max: 1000, step: 10 },
+    },
+    h: {
+      control: { type: "number", min: 100, max: 1000, step: 10 },
+    },
+  },
+};
+export default meta;
+
+type Args = { w: number; h: number };
+
+const scatterData = _(seafood)
+  .groupBy("lake")
+  .map((lakeData, lake) => ({
+    lake,
+    x: catchLocations[lake].x,
+    y: catchLocations[lake].y,
+    collection: lakeData.map((item) => ({
+      species: item.species,
+      count: item.count,
+    })),
+  }))
+  .value();
+
+export const Default: StoryObj<Args> = {
+  args: { w: 400, h: 400 },
+  render: (args: Args) => {
+    const container = initializeContainer();
+    Frame(
+      For(scatterData, (sample) =>
+        Frame({ x: sample.x }, [
+          Rect({
+            w: 2,
+            h: sample.y,
+            fill: color.green[5],
+          }),
+          Frame(
+            {
+              y: sample.y,
+              coord: Polar(),
+            },
+            [
+              StackX(
+                {
+                  h: _(sample.collection).sumBy("count") / 7,
+                  spacing: 0,
+                  alignment: "start",
+                  sharedScale: true,
+                },
+                For(sample.collection, (d, i) =>
+                  Petal({
+                    w: v(d.count),
+                    fill: mix(color6[i % 6], color.white, 0.5),
+                  })
+                )
+              ),
+            ]
+          ),
+        ])
+      )
+    ).render(container, {
+      w: args.w,
+      h: args.h,
+      axes: true,
+    });
+
+    return container;
+  }
+}

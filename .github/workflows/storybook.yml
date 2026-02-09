@@ -1,10 +1,16 @@
 name: Storybook CI
 
+## Run chromatic only when there are changes in packages/gofish-graphics/
 on:
   push:
     branches:
       - main
+    paths:
+      - 'packages/gofish-graphics/**'
+
   pull_request:
+    paths:
+      - 'packages/gofish-graphics/**'
 
 jobs:
   chromatic:
