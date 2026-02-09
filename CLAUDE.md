@@ -88,16 +88,17 @@ The library exports three API versions from `src/lib.ts`:
 
 - **v3 (Fluent/Builder)**: Modern fluent API using method chaining (recommended for new projects)
   - Main function: `chart(data)` returns a builder with chainable methods
-  - Builder methods: `.flow()`, `.mark()`, `.render()`, `.as()`
+  - Builder methods: `.flow()`, `.mark()`, `.render()`
+  - Layer naming: call `.name("layerName")` on a mark so it can be referenced via `select("layerName")` in another chart (e.g. `rect({ h: "value" }).name("bars")`)
   - Operators (used within `.flow()`):
     - Visual layout: `spread()`, `stack()`, `scatter()`, `group()`
     - Data transformation: `derive()`. Takes a callback to do arbitrary data transforms
   - Utility functions (used within `.derive()`): Return data
     - `normalize()`, `repeat()`, etc.
   - Selection (used within `chart()`): `select()`
-  - Marks (used within `.mark()`): Return visual node
+  - Marks (used within `.mark()`): Return visual node; support `.name("layerName")` for layer selection
     - `rect()`, `circle()`, `line()`, `area()`, `scaffold()`, etc.
-  - Example: `chart(data).flow(spread("category", { dir: "x" })).mark(rect({ h: "value" })).render(container, { w: 400, h: 300 })`
+  - Example: `chart(data).flow(spread("category", { dir: "x" })).mark(rect({ h: "value" }).name("bars")).render(container, { w: 400, h: 300 })`
 
 ### Context System
 

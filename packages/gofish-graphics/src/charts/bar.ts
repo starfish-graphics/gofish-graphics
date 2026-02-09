@@ -24,10 +24,6 @@ class BarChartBuilder<TInput, TOutput = TInput>
     this.barOrientation = barOrientation;
   }
 
-  as(name: string): BarChartBuilder<TInput, TOutput> {
-    return new BarChartBuilder(this.builder.as(name), this.barOrientation);
-  }
-
   async resolve() {
     return this.builder.resolve();
   }

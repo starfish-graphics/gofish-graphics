@@ -21,6 +21,29 @@ import { Mark, Operator } from "../types";
 export type { Mark, Operator };
 export { generatedRect as rect };
 
+/** Attach .name(layerName) to a mark so it registers each produced node when used in a chart. */
+function nameableMark<T>(base: Mark<T>): Mark<T> & { name(layerName: string): Mark<T> } {
+  const withName = (layerName: string): Mark<T> => {
+    return async (d: T, key?: string | number, layerContext?: LayerContext) => {
+      const node = await base(d, key, layerContext);
+      if (layerContext && layerName) {
+        if (!layerContext[layerName]) {
+          layerContext[layerName] = { data: [], nodes: [] };
+        }
+        layerContext[layerName].nodes.push(node);
+        layerContext[layerName].data.push((node as any).datum);
+      }
+      return node;
+    };
+  };
+  Object.defineProperty(base, "name", {
+    value: withName,
+    writable: true,
+    configurable: true,
+  });
+  return base as Mark<T> & { name(layerName: string): Mark<T> };
+}
+
 const connectXMode = {
   edge: "edge-to-edge",
   center: "center-to-center",
@@ -43,7 +66,7 @@ export class LayerSelector<T = any> {
 
     if (!layer) {
       throw new Error(
-        `Layer "${this.layerName}" not found. Make sure to call .as("${this.layerName}") first.`
+        `Layer "${this.layerName}" not found. Make sure to call .name("${this.layerName}") on the mark first.`
       );
     }
 
@@ -69,8 +92,12 @@ export class LayerSelector<T = any> {
 /* Data Transformation Operators */
 export function derive<T, U>(fn: (d: T) => U | Promise<U>): Operator<T, U> {
   return async (mark: Mark<U>) => {
-    return async (d: T, key?: string | number) => {
-      return mark(await fn(d), key);
+    return async (
+      d: T,
+      key?: string | number,
+      layerContext?: LayerContext
+    ) => {
+      return mark(await fn(d), key, layerContext);
     };
   };
 }
@@ -98,13 +125,17 @@ export const normalize = <T, K extends keyof T>(
 
 export function log<T>(label?: string): Operator<T, T> {
   return async (mark: Mark<T>) => {
-    return async (d: T, key?: string | number) => {
+    return async (
+      d: T,
+      key?: string | number,
+      layerContext?: LayerContext
+    ) => {
       if (label) {
         console.log(label, d);
       } else {
         console.log(d);
       }
-      return mark(d, key);
+      return mark(d, key, layerContext);
     };
   };
 }
@@ -117,20 +148,11 @@ export type ChartOptions = {
   coord?: CoordinateTransform;
 };
 
-// Collect only leaf nodes (nodes with no children)
-const collectLeafNodes = (n: GoFishNode): GoFishNode[] => {
-  if (n.children && n.children.length > 0) {
-    return n.children.flatMap((child) => collectLeafNodes(child as GoFishNode));
-  }
-  return [n];
-};
-
 export class ChartBuilder<TInput, TOutput = TInput> {
   private readonly data: TInput;
   private readonly options?: ChartOptions;
   private readonly operators: Operator<any, any>[] = [];
   private readonly finalMark?: Mark<TOutput>;
-  private readonly layerName?: string;
   private readonly layerContext: LayerContext;
 
   constructor(
@@ -138,14 +160,12 @@ export class ChartBuilder<TInput, TOutput = TInput> {
     options?: ChartOptions,
     operators: Operator<any, any>[] = [],
     finalMark?: Mark<TOutput>,
-    layerName?: string,
     layerContext: LayerContext = {}
   ) {
     this.data = data;
     this.options = options;
     this.operators = operators;
     this.finalMark = finalMark;
-    this.layerName = layerName;
     this.layerContext = layerContext;
   }
 
@@ -196,24 +216,22 @@ export class ChartBuilder<TInput, TOutput = TInput> {
       this.options,
       [...this.operators, ...ops],
       this.finalMark,
-      this.layerName,
       this.layerContext
     );
   }
 
-  // mark stores the mark and returns a new builder
+  // mark stores the mark and returns a new builder for chaining
   mark(mark: Mark<TOutput>): ChartBuilder<TInput, TOutput> {
     return new ChartBuilder(
       this.data,
       this.options,
       this.operators,
       mark,
-      this.layerName,
       this.layerContext
     );
   }
 
-  // resolve creates the node and registers layers if .as() was called
+  // resolve creates the node; named marks register their nodes into layerContext when invoked
   async resolve(): Promise<GoFishNode> {
     if (!this.finalMark) {
       throw new Error("Cannot resolve: no mark specified. Call .mark() first.");
@@ -231,35 +249,14 @@ export class ChartBuilder<TInput, TOutput = TInput> {
       data = data.resolve(this.layerContext) as any;
     }
 
-    // Create the node
+    // Create the node; pass layerContext so named marks can register each produced node
     const node = await Frame(this.options ?? {}, [
-      (await composedMark(data as any)).setShared([true, true]),
+      (
+        await composedMark(data as any, undefined, this.layerContext)
+      ).setShared([true, true]),
     ]);
 
-    // Register layer if .as() was called (layerName is set)
-    if (this.layerName) {
-      const rootNode = node.children[0] as GoFishNode;
-      const leafNodes = collectLeafNodes(rootNode);
-
-      this.layerContext[this.layerName] = {
-        data: leafNodes.map((n) => (n as any).datum),
-        nodes: leafNodes,
-      };
-    }
-
     return node;
-  }
-
-  // as updates state and returns a new builder for chaining
-  as(name: string): ChartBuilder<TInput, TOutput> {
-    return new ChartBuilder(
-      this.data,
-      this.options,
-      this.operators,
-      this.finalMark,
-      name,
-      this.layerContext
-    );
   }
 
   withLayerContext(layerContext: LayerContext): ChartBuilder<TInput, TOutput> {
@@ -268,7 +265,6 @@ export class ChartBuilder<TInput, TOutput = TInput> {
       this.options,
       this.operators,
       this.finalMark,
-      this.layerName,
       layerContext
     );
   }
@@ -283,7 +279,7 @@ export class ChartBuilder<TInput, TOutput = TInput> {
 }
 
 export function chart<T>(data: T, options?: ChartOptions): ChartBuilder<T, T> {
-  return new ChartBuilder<T, T>(data, options, [], undefined, undefined, {});
+  return new ChartBuilder<T, T>(data, options, [], undefined, {});
 }
 
 export function spread<T>(
@@ -332,7 +328,11 @@ export function spread<T>(
   };
 
   return async (mark: Mark<T[]>) => {
-    return async (d: T[], key?: string | number) => {
+    return async (
+      d: T[],
+      key?: string | number,
+      layerContext?: LayerContext
+    ) => {
       // Group by the field if provided, otherwise iterate over raw data
       const grouped = field ? groupBy(d, field as ValueIteratee<T>) : d;
 
@@ -356,7 +356,7 @@ export function spread<T>(
         },
         For(grouped as any, async (groupData: T[], k) => {
           const currentKey = key != undefined ? `${key}-${k}` : k;
-          const node = await mark(groupData, currentKey);
+          const node = await mark(groupData, currentKey, layerContext);
           // Always set keys for ordinal axis mapping, regardless of label setting
           return node.setKey(currentKey?.toString() ?? "");
         })
@@ -389,7 +389,11 @@ export function scatter<T>(
   }
 ): Operator<T[], T[]> {
   return async (mark: Mark<T[]>) => {
-    return async (d: T[], key?: string | number) => {
+    return async (
+      d: T[],
+      key?: string | number,
+      layerContext?: LayerContext
+    ) => {
       // Group by the field
       const groups = groupBy(d, field as ValueIteratee<T>);
       if (options?.debug) console.log("scatter groups", groups);
@@ -404,7 +408,7 @@ export function scatter<T>(
           // Render the group items and wrap in Position operator
           const currentKey = key != undefined ? `${key}-${groupKey}` : groupKey;
           return Position({ x: v(avgX), y: v(avgY) }, [
-            mark(items, currentKey),
+            mark(items, currentKey, layerContext),
           ]);
         })
       );
@@ -414,7 +418,11 @@ export function scatter<T>(
 
 export function group<T>(field: keyof T): Operator<T[], T[]> {
   return async (mark: Mark<T[]>) => {
-    return async (d: T[], key?: string | number) => {
+    return async (
+      d: T[],
+      key?: string | number,
+      layerContext?: LayerContext
+    ) => {
       // Group by the field
       const groups = groupBy(d, field as ValueIteratee<T>);
 
@@ -423,7 +431,7 @@ export function group<T>(field: keyof T): Operator<T[], T[]> {
         For(groups, (items, groupKey) => {
           // Apply mark to each group
           const currentKey = key != undefined ? `${key}-${groupKey}` : groupKey;
-          return mark(items, currentKey);
+          return mark(items, currentKey, layerContext);
         })
       );
     };
@@ -442,8 +450,12 @@ export function circle<T extends Record<string, any>>({
   stroke?: string;
   strokeWidth?: number;
   debug?: boolean;
-}): Mark<T> {
-  return async (d: T, key?: string | number) => {
+}): Mark<T> & { name(layerName: string): Mark<T> } {
+  const base: Mark<T> = async (
+    d: T,
+    key?: string | number,
+    _layerContext?: LayerContext
+  ) => {
     if (debug) console.log("circle", key, d);
     const node = Rect({
       w: typeof r === "number" ? r * 2 : inferSize(r, d),
@@ -458,10 +470,11 @@ export function circle<T extends Record<string, any>>({
     (node as any).datum = d;
     return node;
   };
+  return nameableMark(base);
 }
 
 // select() returns a lazy selector that defers layer lookup until actually needed
-// This allows layers to be registered by .as() calls before select() tries to access them
+// This allows layers to be registered by .name() on marks before select() tries to access them
 export function select<T>(layerName: string): LayerSelector<T> {
   return new LayerSelector<T>(layerName);
 }
@@ -475,7 +488,8 @@ export function line<T extends Record<string, any>>(options?: {
 }): Mark<Array<T & { __ref?: GoFishNode }>> {
   return async (
     d: Array<T & { __ref?: GoFishNode }>,
-    key?: string | number
+    key?: string | number,
+    _layerContext?: LayerContext
   ) => {
     // Use refs from enriched data (lazy resolution via __ref)
     const refs = d.map((item) => {
@@ -510,7 +524,8 @@ export function area<T extends Record<string, any>>(options?: {
 }): Mark<Array<T & { __ref?: GoFishNode }>> {
   return async (
     d: Array<T & { __ref?: GoFishNode }>,
-    key?: string | number
+    key?: string | number,
+    _layerContext?: LayerContext
   ) => {
     // Use refs from enriched data (lazy resolution via __ref)
     const refs = d.map((item) => {

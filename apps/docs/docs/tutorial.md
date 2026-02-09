@@ -462,8 +462,7 @@ layer([
       derive((d) => orderBy(d, "count", "desc")),
       stack("species", { dir: "y", label: false })
     )
-    .mark(rect({ h: "count", fill: "species" }))
-    .as("bars"),
+    .mark(rect({ h: "count", fill: "species" }).name("bars")),
   chart(select("bars"))
     .flow(group("species"))
     .mark(area({ opacity: 0.8 })),
@@ -480,11 +479,11 @@ Great! This is already a ribbon chart but it's a little funky. We'll fix the fun
 but first let's understand what's going on.
 
 To add some ribbons, we first created a `layer` so we can add the ribbons as a second layer. Then
-we name the marks in the first layer using `as("bars")` and `select` those marks in the second
+we name the marks in the first layer using `.name("bars")` and `select` those marks in the second
 layer. We group them by species using `group("species")`, and finally draw an `area` mark for each group.
 
 <!-- First, we've added a `layer` operator that lets us layer on multiple elements in the same space.
-We create the bars with the first `chart` and use `.as("bars")` to give them a name so we can refer
+We create the bars with the first `chart` and use `.name("bars")` on the mark to give them a name so we can refer
 to them later. Then we use `select("bars")` in a second chart to reference those bars. Finally,
 we use `group("species")` to group by species and `area()` to connect the bars horizontally. -->
 
@@ -501,8 +500,7 @@ layer([
       derive((d) => orderBy(d, "count", "desc")),
       stack("species", { dir: "y", label: false })
     )
-    .mark(rect({ h: "count", fill: "species" }))
-    .as("bars"),
+    .mark(rect({ h: "count", fill: "species" }).name("bars")),
   chart(select("bars"))
     .flow(group("species"))
     .mark(area({ opacity: 0.8 })),
@@ -565,8 +563,7 @@ layer({ coord: clock() }, [
       derive((d) => orderBy(d, "count")),
       stack("species", { dir: "y", label: false })
     )
-    .mark(rect({ h: "count", fill: "species" }))
-    .as("bars"),
+    .mark(rect({ h: "count", fill: "species" }).name("bars")),
   chart(select("bars"))
     .flow(group("species"))
     .mark(area({ opacity: 0.8 })),

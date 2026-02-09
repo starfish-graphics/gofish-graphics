@@ -5,8 +5,7 @@ const catchLocationsArray = Object.entries(lakeLocations).map(
 layer([
   chart(catchLocationsArray)
     .flow(scatter("lake", { x: "x", y: "y" }))
-    .mark(scaffold())
-    .as("points"),
+    .mark(scaffold().name("points")),
   chart(select("points")).mark(line()),
 ]).render(root, {
   w: 500,

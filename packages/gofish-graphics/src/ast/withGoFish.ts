@@ -335,6 +335,11 @@ export function createOperatorSequential<T extends Record<string, any>, R>(
   };
 }
 
+/** A mark that can be named for layer selection via .name("layerName"). */
+export type NameableMark<T> = Mark<T> & {
+  name(layerName: string): Mark<T>;
+};
+
 /**
  * Creates a high-level mark function from a low-level shape function
  * and channel annotations.
@@ -343,6 +348,9 @@ export function createOperatorSequential<T extends Record<string, any>, R>(
  * - "size": mark accepts `number | keyof T`, uses inferSize to convert
  * - "color": mark accepts `string | keyof T`, uses inferColor to convert
  * - unannotated props are passed through unchanged
+ *
+ * The returned mark supports .name("layerName") so that when used in a chart,
+ * each produced node is registered for select("layerName").
  */
 export function createMark<
   ShapeProps extends Record<string, any>,
@@ -352,12 +360,16 @@ export function createMark<
   channels: C
 ): <T extends Record<string, any>>(
   opts: DeriveMarkProps<ShapeProps, C, T>
-) => Mark<T | T[] | { item: T | T[]; key: number | string }> {
+) => NameableMark<T | T[] | { item: T | T[]; key: number | string }> {
   return <T extends Record<string, any>>(
     markOpts: DeriveMarkProps<ShapeProps, C, T>
-  ): Mark<T | T[] | { item: T | T[]; key: number | string }> => {
-    return async (
-      input: T | T[] | { item: T | T[]; key: number | string }
+  ): NameableMark<T | T[] | { item: T | T[]; key: number | string }> => {
+    const baseMark: Mark<
+      T | T[] | { item: T | T[]; key: number | string }
+    > = async (
+      input: T | T[] | { item: T | T[]; key: number | string },
+      keyParam?: string | number,
+      layerContext?: LayerContext
     ) => {
       // Unwrap input: handles T, T[], or { item, key } patterns
       let d: T | T[], key: number | string | undefined;
@@ -366,7 +378,7 @@ export function createMark<
         key = (input as { item: T | T[]; key: number | string }).key;
       } else {
         d = input as T | T[];
-        key = undefined;
+        key = keyParam;
       }
 
       if ((markOpts as any).debug) {
@@ -396,5 +408,34 @@ export function createMark<
       (node as any).datum = d;
       return node;
     };
+
+    const nameMethod = (
+      layerName: string
+    ): Mark<T | T[] | { item: T | T[]; key: number | string }> => {
+      return async (
+        input: T | T[] | { item: T | T[]; key: number | string },
+        keyParam?: string | number,
+        layerContext?: LayerContext
+      ) => {
+        const node = await baseMark(input, keyParam, layerContext);
+        if (layerContext && layerName) {
+          if (!layerContext[layerName]) {
+            layerContext[layerName] = { data: [], nodes: [] };
+          }
+          layerContext[layerName].nodes.push(node);
+          layerContext[layerName].data.push((node as any).datum);
+        }
+        return node;
+      };
+    };
+    Object.defineProperty(baseMark, "name", {
+      value: nameMethod,
+      writable: true,
+      configurable: true,
+    });
+
+    return baseMark as NameableMark<
+      T | T[] | { item: T | T[]; key: number | string }
+    >;
   };
 }

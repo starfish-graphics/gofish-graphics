@@ -15,8 +15,7 @@ const container = document.getElementById("app");
 layer([
   chart(catchLocationsArray)
     .flow(scatter("lake", { x: "x", y: "y" }))
-    .mark(scaffold())
-    .as("points"),
+    .mark(scaffold().name("points")),
   chart(select("points")).mark(line()),
 ]).render(container, {
   w: 500,

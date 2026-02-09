@@ -110,3 +110,4 @@ export type {
   ChartOptions,
   ChartBuilder,
 } from "./ast/marks/chart";
+export type { NameableMark } from "./ast/withGoFish";
