@@ -17,7 +17,6 @@ const meta: Meta = {
 export default meta;
 
 type Args = { w: number; h: number };
-// test change
 // Test data for template-based bar charts
 const testData = [
   { category: "A", value: 30, color: "#ff6b6b" },

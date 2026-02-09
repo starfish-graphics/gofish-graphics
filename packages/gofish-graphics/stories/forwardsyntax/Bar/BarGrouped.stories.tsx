@@ -15,7 +15,7 @@ const meta: Meta = {
   },
 };
 export default meta;
-// test change
+
 type Args = { w: number; h: number };
 
 export const Default: StoryObj<Args> = {
