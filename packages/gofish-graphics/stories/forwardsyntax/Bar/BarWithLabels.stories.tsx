@@ -32,9 +32,8 @@ export const Default: StoryObj<Args> = {
       chart(select("bars"))
         .flow(group("lake"))
         .mark((d) => {
-          console.log(d);
           return Spread({ direction: "y", alignment: "middle", spacing: 10 }, [
-            Ref(d[0].__ref!),
+            Ref(d[0]),
             Text({ text: d[0].count }),
           ]);
         }),
