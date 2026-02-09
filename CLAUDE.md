@@ -91,7 +91,7 @@ The library exports three API versions from `src/lib.ts`:
   - Builder methods: `.flow()`, `.mark()`, `.render()`, `.as()`
   - Operators (used within `.flow()`):
     - Visual layout: `spread()`, `stack()`, `scatter()`, `group()`
-    - Data transformation: `group()`, `derive()`
+    - Data transformation: `derive()`. Takes a callback to do arbitrary data transforms
   - Utility functions (used within `.flow()`): Return data
     - `normalize()`, `select()`, `repeat()`, etc.
   - Marks (used within `.mark()`): Return visual node
