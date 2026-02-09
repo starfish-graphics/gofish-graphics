@@ -90,7 +90,7 @@ The library exports three API versions from `src/lib.ts`:
   - Main function: `chart(data)` returns a builder with chainable methods
   - Builder methods: `.flow()`, `.mark()`, `.render()`, `.as()`
   - Operators (used within `.flow()`):
-    - Visual layout: `spread()`, `stack()`, `scatter()`
+    - Visual layout: `spread()`, `stack()`, `scatter()`, `group()`
     - Data transformation: `group()`, `derive()`
   - Utility functions (used within `.flow()`): Return data
     - `normalize()`, `select()`, `repeat()`, etc.
