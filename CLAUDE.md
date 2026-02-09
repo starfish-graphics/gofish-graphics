@@ -6,20 +6,37 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 GoFish Graphics is a TypeScript/SolidJS library for creating charts and visualizations. It uses a declarative API based on an Abstract Syntax Tree (AST) approach where visual elements are composed through functional transformations.
 
+**This is a monorepo** with the following structure:
+- `packages/gofish-graphics/` - Main TypeScript/SolidJS library
+- `packages/gofish-python/` - Python bindings (in development)
+- `apps/docs/` - VitePress documentation site
+
 ## Development Commands
 
 ```bash
 # Install dependencies
 pnpm install
 
-# Start development server (runs on port 3000)
+# Start library development server (runs on port 3000)
 pnpm dev
 
 # Build the library
 pnpm build
 
-# Preview the build
+# Preview the library build
 pnpm serve
+
+# Run Storybook for visual development and testing
+pnpm storybook
+
+# Start documentation site development server
+pnpm docs:dev
+
+# Build documentation
+pnpm docs:build
+
+# Preview documentation build
+pnpm docs:preview
 ```
 
 ## Architecture
@@ -35,29 +52,52 @@ The library is built around several key architectural patterns:
    - Layout calculation (how to fit elements)
    - Placement/rendering (final positioning and SVG generation)
 
-### Key Directories
+### Key Directories (Main Library)
+
+All paths are relative to `packages/gofish-graphics/`:
 
 - `src/ast/` - Core AST implementation and rendering engine
-- `src/ast/shapes/` - Basic visual elements (rect, ellipse, petal, ref)
-- `src/ast/graphicalOperators/` - Composition operators (stack, layer, connect, wrap, etc.)
-- `src/ast/coordinateTransforms/` - Coordinate system transformations (polar, linear, bipolar, etc.)
-- `src/ast/marks/` - Higher-level chart APIs
-- `src/tests/` - Example charts and test cases (not unit tests, but visual examples)
+- `src/ast/shapes/` - Basic visual elements (rect, ellipse, petal, text, ref)
+- `src/ast/graphicalOperators/` - Composition operators (stack, stackX, stackY, spread, spreadX, spreadY, layer, connect, wrap, arrow, enclose, frame, position)
+- `src/ast/coordinateTransforms/` - Coordinate system transformations (linear, polar, bipolar, arcLengthPolar, wavy, clock)
+- `src/ast/marks/` - Higher-level fluent/builder chart API (v3)
+- `src/tests/` - Example charts and visual test cases (not automated unit tests)
 - `src/data/` - Sample datasets used in examples
 - `src/templates/` - Reusable chart templates
+- `stories/` - Storybook stories for visual development
 
-### Main Entry Points
+### Main Entry Points (packages/gofish-graphics/)
 
 - `src/lib.ts` - Main library exports (includes v1, v2, and v3 APIs)
 - `src/ast/gofish.tsx` - Core rendering engine and context management
-- `src/App.tsx` - Development playground showing various chart examples
+- `src/index.tsx` - Development entry point (imports and renders development examples)
+- `stories/` - Storybook stories providing visual development playground
 
 ### API Versions
 
-The library exports three API versions:
-- **v1**: Original lowercase functions (`rect`, `stack`, `polar`, etc.)
-- **v2**: Capitalized versions (`Rect`, `Stack`, `Polar`, etc.) 
-- **v3**: Chart-based API (`Chart`, `_Chart`)
+The library exports three API versions from `src/lib.ts`:
+
+- **v1 (Lowercase)**: Original functional API for backwards compatibility
+  - Functions: `ellipse()`, `petal()`, `text()`, `ref()`, `stackX()`, `stackY()`, `layer()`, `wrap()`, `connect()`, etc.
+  - Example: `gofish(stack([rect({ w: 10, h: 20 }), ellipse({ r: 5 })]), { w: 400, h: 300 })`
+
+- **v2 (Capitalized)**: Component-style API with capitalized function names
+  - Functions: `Rect()`, `Ellipse()`, `Petal()`, `Text()`, `Stack()`, `Spread()`, `Layer()`, etc.
+  - Same functionality as v1 but follows component naming conventions
+  - Example: `gofish(Stack([Rect({ w: 10, h: 20 }), Ellipse({ r: 5 })]), { w: 400, h: 300 })`
+
+- **v3 (Fluent/Builder)**: Modern fluent API using method chaining (recommended for new projects)
+  - Main function: `chart(data)` returns a builder with chainable methods
+  - Builder methods: `.flow()`, `.mark()`, `.render()`, `.as()`
+  - Operators (used within `.flow()`):
+    - Visual layout: `spread()`, `stack()`, `scatter()`, `group()`
+    - Data transformation: `derive()`. Takes a callback to do arbitrary data transforms
+  - Utility functions (used within `.derive()`): Return data
+    - `normalize()`, `repeat()`, etc.
+  - Selection (used within `chart()`): `select()`
+  - Marks (used within `.mark()`): Return visual node
+    - `rect()`, `circle()`, `line()`, `area()`, `scaffold()`, etc.
+  - Example: `chart(data).flow(spread("category", { dir: "x" })).mark(rect({ h: "value" })).render(container, { w: 400, h: 300 })`
 
 ### Context System
 
@@ -75,7 +115,7 @@ Key coordinate systems available:
 - `arcLengthPolar` - Arc-length based polar coordinates
 - `wavy` - Wavy/curved coordinate transformations
 
-### Build Configuration
+### Build Configuration (packages/gofish-graphics/)
 
 - Uses Vite for bundling with SolidJS plugin
 - TypeScript with strict mode enabled
@@ -83,12 +123,26 @@ Key coordinate systems available:
 - Entry point: `src/lib.ts`
 - External dependency: `solid-js` (peer dependency)
 - Build output: `dist/` directory
+- Configuration: `vite.config.ts`
 
 ## Development Notes
 
-- The `src/tests/` directory contains visual examples, not automated tests
-- Development server shows a playground of various chart types
-- The library uses pnpm for package management
-- SolidJS is used for reactive rendering and JSX
-- D3-array is used for domain calculations and scales
-- Lodash provides utility functions (groupBy, sumBy, orderBy)
+- **Monorepo Management**: Uses pnpm workspaces
+- **Visual Development**: Use Storybook (`pnpm storybook`) for interactive development and testing
+- **Documentation**: VitePress site in `apps/docs/` with live chart examples
+- **Testing**: The `src/tests/` directory contains visual chart examples for development, not automated unit tests
+- **Development Server**: `pnpm dev` runs Vite dev server on port 3000
+- **Key Dependencies**:
+  - SolidJS for reactive rendering and JSX
+  - D3-array for domain calculations and scales
+  - Lodash for utility functions (groupBy, sumBy, orderBy, meanBy)
+  - Chroma-js and Culori for color manipulation
+  - Perfect-arrows for arrow rendering
+  - Bubblesets-js for enclosure rendering
+
+## Additional Resources
+
+- **Technical Documentation**: See `docs/layout-and-render-passes.md` for detailed explanation of the rendering pipeline
+- **Package-specific CLAUDE.md files**:
+  - `apps/docs/CLAUDE.md` - Documentation site specific guidance
+  - Additional notes in `notes/` directory for design discussions
