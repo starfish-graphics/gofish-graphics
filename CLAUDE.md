@@ -88,10 +88,15 @@ The library exports three API versions from `src/lib.ts`:
 
 - **v3 (Fluent/Builder)**: Modern fluent API using method chaining (recommended for new projects)
   - Main function: `chart(data)` returns a builder with chainable methods
-  - Methods: `.flow()`, `.mark()`, `.group()`, `.derive()`, `.select()`, `.normalize()`, etc.
-  - Operators: `spread()`, `stack()`, `scatter()`, etc.
-  - Marks: `rect()`, `circle()`, `line()`, `area()`, etc.
-  - Example: `chart(data).flow(spread("category", { dir: "x" })).mark(rect({ h: "value" }))`
+  - Builder methods: `.flow()`, `.mark()`, `.render()`, `.as()`
+  - Operators (used within `.flow()`): Return marks
+    - Visual layout: `spread()`, `stack()`, `scatter()`
+    - Data transformation: `group()`, `derive()`
+  - Utility functions (used within `.flow()`): Return data
+    - `normalize()`, `select()`, `repeat()`, etc.
+  - Marks (used within `.mark()`): Return visual node
+    - `rect()`, `circle()`, `line()`, `area()`, `scaffold()`, etc.
+  - Example: `chart(data).flow(spread("category", { dir: "x" })).mark(rect({ h: "value" })).render(container, { w: 400, h: 300 })`
 
 ### Context System
 
