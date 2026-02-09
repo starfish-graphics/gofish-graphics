@@ -10,6 +10,7 @@ export { For as map } from "./ast/iterators/for";
 // Marks
 // export { rect } from "./ast/shapes/rect";
 export { ellipse } from "./ast/shapes/ellipse";
+export { image } from "./ast/shapes/image";
 export { petal } from "./ast/shapes/petal";
 export { ref } from "./ast/shapes/ref";
 export { text } from "./ast/shapes/text";
@@ -53,6 +54,7 @@ export { groupBy, sumBy, orderBy, meanBy } from "lodash";
 // Shapes
 export { Rect } from "./ast/shapes/rect";
 export { ellipse as Ellipse } from "./ast/shapes/ellipse";
+export { Image } from "./ast/shapes/image";
 export { petal as Petal } from "./ast/shapes/petal";
 export { ref as Ref } from "./ast/shapes/ref";
 export { text as Text } from "./ast/shapes/text";
