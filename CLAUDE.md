@@ -94,6 +94,7 @@ The library exports three API versions from `src/lib.ts`:
     - Data transformation: `derive()`. Takes a callback to do arbitrary data transforms
   - Utility functions (used within `.derive()`): Return data
     - `normalize()`, `repeat()`, etc.
+  - Selection (used within `chart()`): `select()`
   - Marks (used within `.mark()`): Return visual node
     - `rect()`, `circle()`, `line()`, `area()`, `scaffold()`, etc.
   - Example: `chart(data).flow(spread("category", { dir: "x" })).mark(rect({ h: "value" })).render(container, { w: 400, h: 300 })`
