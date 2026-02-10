@@ -107,7 +107,7 @@ PAYLOAD=$(jq -n \
   --arg prompt "$PROMPT" \
   '{
     "model": "claude-opus-4-6",
-    "max_tokens": 1024,
+    "max_tokens": 2048,
     "messages": [{"role": "user", "content": $prompt}]
   }'
 )
