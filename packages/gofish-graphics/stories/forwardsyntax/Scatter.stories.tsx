@@ -48,8 +48,7 @@ export const Connected: StoryObj<Args> = {
     layer([
       chart(drivingShifts)
         .flow(scatter("year", { x: "miles", y: "gas" }))
-        .mark(circle({ r: 4, fill: "white", stroke: "black", strokeWidth: 2 }))
-        .as("points"),
+        .mark(circle({ r: 4, fill: "white", stroke: "black", strokeWidth: 2 }).name("points")),
       chart(select("points")).mark(line({ stroke: "black", strokeWidth: 2 })),
       chart(drivingShifts)
         .flow(scatter("year", { x: "miles", y: "gas" }))

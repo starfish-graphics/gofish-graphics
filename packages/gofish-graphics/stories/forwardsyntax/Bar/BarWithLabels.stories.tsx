@@ -27,8 +27,7 @@ export const Default: StoryObj<Args> = {
     layer([
       chart(seafood)
         .flow(spread("lake", { dir: "x" }))
-        .mark(rect({ h: "count" }))
-        .as("bars"),
+        .mark(rect({ h: "count" }).name("bars")),
       chart(select("bars"))
         .flow(group("lake"))
         .mark((d) => {

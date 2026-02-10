@@ -30,8 +30,7 @@ export const Default: StoryObj<Args> = {
           spread("lake", { dir: "x", spacing: 64, alignment: "middle" }),
           stack("species", { dir: "y" })
         )
-        .mark(scaffold({ h: "count", fill: "species" }))
-        .as("bars"),
+        .mark(scaffold({ h: "count", fill: "species" }).name("bars")),
       chart(select("bars"))
         .flow(group("species"))
         .mark(area({ opacity: 0.8 })),

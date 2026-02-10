@@ -33,8 +33,7 @@ export const Basic: StoryObj<Args> = {
           derive((d) => orderBy(d, "count", "asc")),
           stack("species", { dir: "y" })
         )
-        .mark(rect({ h: "count", fill: "species" }))
-        .as("bars"),
+        .mark(rect({ h: "count", fill: "species" }).name("bars")),
       chart(select("bars"))
         .flow(group("species"))
         .mark(area({ opacity: 0.8 })),
@@ -66,8 +65,7 @@ export const Polar: StoryObj<Args> = {
           derive((d) => orderBy(d, "count", "asc")),
           stack("species", { dir: "y", label: false })
         )
-        .mark(rect({ w: 0.1, h: "count", fill: "species" }))
-        .as("bars"),
+        .mark(rect({ w: 0.1, h: "count", fill: "species" }).name("bars")),
       chart(select("bars"))
         .flow(group("species"))
         .mark(area({ opacity: 0.8 })),

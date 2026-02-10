@@ -26,8 +26,7 @@ layer([
       spread("lake", { dir: "x", spacing: 80 }),
       spread("species", { dir: "y", spacing: -16 })
     )
-    .mark(scaffold({ h: "count", fill: "species" }))
-    .as("points"),
+    .mark(scaffold({ h: "count", fill: "species" }).name("points")),
   chart(select("points"))
     .flow(group("species"))
     .mark(area({ opacity: 0.8, mixBlendMode: "normal" })),

@@ -67,8 +67,7 @@ const code = `layer({ coord: clock() }, [
       derive((d) => orderBy(d, "count")),
       stack("species", { dir: "y", label: false })
     )
-    .mark(rect({ h: "count", fill: "species" }))
-    .as("bars"),
+    .mark(rect({ h: "count", fill: "species" }).name("bars")),
   chart(select("bars"))
     .flow(group("species"))
     .mark(area({ opacity: 0.8 })),
@@ -133,8 +132,7 @@ function renderFixedChart() {
         derive((d) => orderBy(d, "count")),
         stack("species", { dir: "y", label: false })
       )
-      .mark(rect({ h: "count", fill: "species" }))
-      .as("bars"),
+      .mark(rect({ h: "count", fill: "species" }).name("bars")),
     chart(select("bars"))
       .flow(group("species"))
       .mark(area({ opacity: 0.8 })),

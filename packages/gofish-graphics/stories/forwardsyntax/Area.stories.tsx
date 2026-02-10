@@ -28,8 +28,7 @@ export const Basic: StoryObj<Args> = {
     layer([
       chart(seafood)
         .flow(spread("lake", { dir: "x", spacing: 64 }))
-        .mark(scaffold({ h: "count" }))
-        .as("points"),
+        .mark(scaffold({ h: "count" }).name("points")),
       chart(select("points")).mark(area({ opacity: 0.8 })),
     ]).render(container, {
       w: args.w,
@@ -52,8 +51,7 @@ export const Stacked: StoryObj<Args> = {
           spread("lake", { dir: "x", spacing: 64 }),
           stack("species", { dir: "y" })
         )
-        .mark(scaffold({ h: "count", fill: "species" }))
-        .as("bars"),
+        .mark(scaffold({ h: "count", fill: "species" }).name("bars")),
       chart(select("bars"))
         .flow(group("species"))
         .mark(area({ opacity: 0.8 })),
@@ -74,8 +72,7 @@ export const Layered: StoryObj<Args> = {
     layer([
       chart(streamgraphData)
         .flow(spread("x", { dir: "x", spacing: 50 }))
-        .mark(scaffold({ h: "y", fill: "c" }))
-        .as("points"),
+        .mark(scaffold({ h: "y", fill: "c" }).name("points")),
       chart(select("points"))
         .flow(group("c"))
         .mark(area({ opacity: 0.7 })),
