@@ -50,6 +50,17 @@ export default defineConfig({
       { text: "Get Started!", link: "/get-started" },
       { text: "Tutorial", link: "/tutorial" },
       { text: "Examples", link: "/examples/index.md" },
+      {
+        text: "Cheatsheets",
+        items: [
+          { text: "Overview", link: "/cheatsheet" },
+          { text: "Shapes", link: "/shapes-cheatsheet" },
+          {
+            text: "Coordinate Transforms",
+            link: "/coordinate-transforms-cheatsheet",
+          },
+        ],
+      },
       // { text: "Guides", link: "/guides/index.md" },
       // { text: "API Reference", link: "/api/index.md" },
     ],
@@ -95,6 +106,23 @@ export default defineConfig({
                 text: example.title,
                 link: example.demoUrl,
               })),
+            },
+          ],
+        },
+        {
+          text: "Reference",
+          items: [
+            {
+              text: "Cheatsheet Overview",
+              link: "/cheatsheet",
+            },
+            {
+              text: "Shapes Cheat Sheet",
+              link: "/shapes-cheatsheet",
+            },
+            {
+              text: "Coordinate Transforms Cheat Sheet",
+              link: "/coordinate-transforms-cheatsheet",
             },
           ],
         },
