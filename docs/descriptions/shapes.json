@@ -1,0 +1,28 @@
+{
+    "name": "Shapes",
+    "description": "Shapes are the basic building blocks of graphics. They are used to create the visual elements of a graphic.",
+    "usage": {
+        "mark": {
+            "description": "The mark method is used to specify the shapes we place in each of the regions created by the flow operator.",
+            "example": "chart(seafood).flow(spread('lake', { dir: 'x' })).mark(rect({ h: 'count' }));"
+        },
+        "ref": {
+            "description": "The ref method is used to reference a shape by its name.",
+            "example": "chart(seafood).flow(spread('lake', { dir: 'x' })).mark(ref('rect')).render(root, { w: 500, h: 300 });"
+        }
+    },
+    "components": {
+        "name": {
+            "type": "rect",
+            "description": "A rectangle shape."
+        },
+        "ellipse": {
+            "type": "ellipse",
+            "description": "An ellipse shape."
+        },
+        "petal": {
+            "type": "petal",
+            "description": "A petal shape."
+        }
+    }
+}

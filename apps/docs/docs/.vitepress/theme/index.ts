@@ -6,6 +6,9 @@ import "./style.css";
 import GoFishVue from "../../../components/GoFishVue.vue";
 import ExampleGallery from "../../../components/ExampleGallery.vue";
 import HomeGallery from "../../../components/HomeGallery.vue";
+import CheatSheet from "../../../components/ShapesCheatSheet.vue";
+import CoordinateTransformsCheatSheet from "../../../components/CoordinateTransformsCheatSheet.vue";
+import OverallCheatSheet from "../../../components/OverallCheatSheet.vue";
 import { Sandbox } from "vitepress-plugin-sandpack";
 import "vitepress-plugin-sandpack/dist/style.css";
 import { StarfishLive } from "../../../components/StarfishLive";
@@ -25,5 +28,11 @@ export default {
     app.component("HomeGallery", HomeGallery);
     app.component("Sandbox", Sandbox);
     app.component("StarfishLive", StarfishLive);
+    app.component("CheatSheet", CheatSheet);
+    app.component(
+      "CoordinateTransformsCheatSheet",
+      CoordinateTransformsCheatSheet,
+    );
+    app.component("OverallCheatSheet", OverallCheatSheet);
   },
 } satisfies Theme;
