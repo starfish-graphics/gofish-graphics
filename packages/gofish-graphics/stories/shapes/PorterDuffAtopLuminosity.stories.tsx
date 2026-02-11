@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
-import bottlePng from "../assets/maja7777-glass-bottle-free-2451180_1280.png";
+import bottlePng from "../assets/wilsonblanco.png";
 
 const meta: Meta = {
   title: "Shapes/Compositing/Porter-Duff Inspired",
@@ -25,8 +25,8 @@ type Args = {
 };
 
 const DEFAULT_ARGS: Args = {
-  w: 696 / 2,
-  h: 1280 / 2,
+  w: 193,
+  h: 678,
   splitY: 50,
   bgColor: "#1c7520",
   blendMode: "color",
@@ -49,8 +49,8 @@ function renderPorterDuff(args: Args, operator: "over" | "in" | "xor" | "out" | 
       ? `<feBlend in="compositeResult" in2="graySource" mode="${args.blendMode}" result="blendedIntersect"/>
          <feComposite in="blendedIntersect" in2="compositeResult" operator="in"/>`
       : operator === "over" || operator === "atop"
-      ? `<feBlend in="compositeResult" in2="graySource" mode="${args.blendMode}"/>`
-      : "";
+        ? `<feBlend in="compositeResult" in2="graySource" mode="${args.blendMode}"/>`
+        : "";
 
   frame.innerHTML = `
     <svg xmlns="http://www.w3.org/2000/svg" width="${args.w}" height="${args.h}" viewBox="0 0 ${args.w} ${args.h}" role="img" aria-label="${label}">
