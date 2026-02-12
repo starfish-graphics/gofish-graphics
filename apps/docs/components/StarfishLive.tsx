@@ -31,7 +31,7 @@ export const StarfishLive = defineComponent({
           }}
           customSetup={{
             deps: {
-              "gofish-graphics": "latest",
+              "gofish-graphics": "nightly",
             },
           }}
         >
