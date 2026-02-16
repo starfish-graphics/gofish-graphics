@@ -1,0 +1,29 @@
+{
+    "name": "Operators",
+    "description": "Graphical operators transform your dataset and specify a layout.",
+    "usage": {
+        "spread": {
+            "description": "The spread operator is used to spread the data across the x or y axis.",
+            "example": "chart(seafood).flow(spread('lake', { dir: 'x' })).mark(rect({ h: 'count' }));"
+        },
+        "stack": {
+            "description": "The stack operator is used to stack the data across the x or y axis.",
+            "example": "chart(seafood).flow(stack('lake', { dir: 'x' })).mark(rect({ h: 'count' }));"
+        },
+        "scatter": {
+            "description": "The scatter operator is used to scatter the data across the x or y axis.",
+            "example": "chart(seafood).flow(scatter('lake', { dir: 'x' })).mark(rect({ h: 'count' }));"
+        }, 
+        "group": {
+            "description": "The group operator is used to group the data by a given key.",
+            "example": "chart(seafood).flow(group('lake')).mark(rect({ h: 'count' }));"
+        },
+        "derive": {
+            "description": "The derive operator is used to derive a new column from the data.",
+            "example": "chart(seafood).flow(derive((d) => d.count * 2)).mark(rect({ h: 'count' }));"
+        }
+    },
+    "components": {
+        
+    }
+}

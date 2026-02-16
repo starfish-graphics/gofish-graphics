@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import marksDataRaw from '../../../docs/descriptions/marks.json';
 import coordDataRaw from '../../../docs/descriptions/coordinate_transforms.json';
+import operatorsDataRaw from '../../../docs/descriptions/operators.json';
 
 type UsageEntry = {
   description: string;
@@ -22,6 +23,7 @@ type DescriptionJson = {
 
 const marksData = marksDataRaw as DescriptionJson;
 const coordData = coordDataRaw as DescriptionJson;
+const operatorsData = operatorsDataRaw as DescriptionJson;
 
 type OperatorSummary = {
   name: string;
@@ -72,6 +74,25 @@ const sections = [
       }),
     ),
     link: '/coordinate-transforms-cheatsheet',
+  },
+  {
+    id: 'operators',
+    title: 'Operators',
+    description: operatorsData.description,
+    operators: Object.entries(operatorsData.usage ?? {}).map(
+      ([name, entry]): OperatorSummary => ({
+        name,
+        description: entry.description,
+      }),
+    ),
+    components: Object.entries(operatorsData.components ?? {}).map(
+      ([name, entry]): ComponentSummary => ({
+        name,
+        type: entry.type,
+        description: entry.description,
+      }),
+    ),
+    link: '/operators-cheatsheet',
   },
 ];
 </script>
@@ -247,7 +268,7 @@ const sections = [
 
 .overall-cheatsheet__operator-item {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: 1fr;
   column-gap: 0.5rem;
   align-items: baseline;
   font-size: 0.82rem;

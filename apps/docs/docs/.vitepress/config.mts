@@ -54,10 +54,14 @@ export default defineConfig({
         text: "Cheatsheets",
         items: [
           { text: "Overview", link: "/cheatsheet" },
-          { text: "Shapes", link: "/shapes-cheatsheet" },
+          { text: "Shapes", link: "/marks-cheatsheet" },
           {
             text: "Coordinate Transforms",
             link: "/coordinate-transforms-cheatsheet",
+          },
+          {
+            text: "Operators",
+            link: "/operators-cheatsheet",
           },
         ],
       },
