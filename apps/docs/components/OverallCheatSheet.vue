@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import shapesDataRaw from '../../../docs/descriptions/shapes.json';
+import marksDataRaw from '../../../docs/descriptions/marks.json';
 import coordDataRaw from '../../../docs/descriptions/coordinate_transforms.json';
 
 type UsageEntry = {
@@ -20,7 +20,7 @@ type DescriptionJson = {
   >;
 };
 
-const shapesData = shapesDataRaw as DescriptionJson;
+const marksData = marksDataRaw as DescriptionJson;
 const coordData = coordDataRaw as DescriptionJson;
 
 type OperatorSummary = {
@@ -36,23 +36,23 @@ type ComponentSummary = {
 
 const sections = [
   {
-    id: 'shapes',
-    title: 'Shapes',
-    description: shapesData.description,
-    operators: Object.entries(shapesData.usage ?? {}).map(
+    id: 'marks',
+    title: 'Marks',
+    description: marksData.description,
+    operators: Object.entries(marksData.usage ?? {}).map(
       ([name, entry]): OperatorSummary => ({
         name,
         description: entry.description,
       }),
     ),
-    components: Object.entries(shapesData.components ?? {}).map(
+    components: Object.entries(marksData.components ?? {}).map(
       ([name, entry]): ComponentSummary => ({
         name,
         type: entry.type,
         description: entry.description,
       }),
     ),
-    link: '/shapes-cheatsheet',
+    link: '/marks-cheatsheet',
   },
   {
     id: 'coordinate-transforms',
@@ -110,7 +110,7 @@ const sections = [
 
         <section class="overall-cheatsheet__operators">
           <h3 class="overall-cheatsheet__operators-title">
-            Operators
+            Usage
           </h3>
           <div class="overall-cheatsheet__operators-list">
             <div

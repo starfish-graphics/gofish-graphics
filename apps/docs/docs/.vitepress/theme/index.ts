@@ -6,7 +6,7 @@ import "./style.css";
 import GoFishVue from "../../../components/GoFishVue.vue";
 import ExampleGallery from "../../../components/ExampleGallery.vue";
 import HomeGallery from "../../../components/HomeGallery.vue";
-import CheatSheet from "../../../components/ShapesCheatSheet.vue";
+import CheatSheet from "../../../components/MarksCheatSheet.vue";
 import CoordinateTransformsCheatSheet from "../../../components/CoordinateTransformsCheatSheet.vue";
 import OverallCheatSheet from "../../../components/OverallCheatSheet.vue";
 import { Sandbox } from "vitepress-plugin-sandpack";
