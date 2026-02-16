@@ -1,6 +1,6 @@
 {
     "name": "Operators",
-    "description": "Graphical operators transform your dataset and specify a layout.",
+    "description": "Graphical operators are used to used to arrange, overlay, and connect visual elements.",
     "usage": {
         "spread": {
             "description": "The spread operator is used to spread the data across the x or y axis.",

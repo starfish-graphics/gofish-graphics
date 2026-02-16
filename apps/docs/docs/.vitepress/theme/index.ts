@@ -2,6 +2,7 @@
 import { h } from "vue";
 import type { Theme } from "vitepress";
 import DefaultTheme from "vitepress/theme";
+import custom from './custom.css'
 import "./style.css";
 import GoFishVue from "../../../components/GoFishVue.vue";
 import ExampleGallery from "../../../components/ExampleGallery.vue";

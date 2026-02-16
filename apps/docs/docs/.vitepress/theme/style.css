@@ -256,3 +256,16 @@ a.starfish-codepen:hover {
     margin-top: 16px;
   }
 }
+
+/* Wider doc container ONLY on cheatsheet pages */
+.cheatsheet-page .VPDoc .container,
+.cheatsheet-page .VPDoc .container > .content {
+  max-width: 1200px !important;    /* or none for full-width */
+  width: 100% !important;
+}
+
+/* Optional: relax padding so the width is actually used */
+.cheatsheet-page .VPDoc .container {
+  padding-left: 2rem;
+  padding-right: 2rem;
+}

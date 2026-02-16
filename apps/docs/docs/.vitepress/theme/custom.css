@@ -1,0 +1,12 @@
+/* Cheat Sheet CSS */
+
+/* Make cheatsheet pages use a wider content column */
+.cheatsheet-page .VPDoc .container .VPContent {
+    max-width: 1200px !important; /* or 100%, or whatever you want */
+  }
+  
+  /* Optional: also relax padding if you want more horizontal space */
+.cheatsheet-page .VPDoc .container .VPContent {
+padding-left: 2rem !important;
+padding-right: 2rem !important;
+}

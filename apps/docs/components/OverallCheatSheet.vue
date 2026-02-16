@@ -207,7 +207,7 @@ const sections = [
 .overall-cheatsheet__grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 1.25rem;
+  gap: 1rem;
 }
 
 .overall-cheatsheet__card {
