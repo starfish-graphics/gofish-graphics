@@ -142,12 +142,9 @@ const sections = [
               class="overall-cheatsheet__component-item"
             >
               <code class="overall-cheatsheet__component-name">
-                {{ comp.name }}
+                {{ comp.type }}({...})
               </code>
               <span class="overall-cheatsheet__component-meta">
-                <!-- <span class="overall-cheatsheet__component-type">
-                  {{ comp.type }}
-                </span> -->
                 <span class="overall-cheatsheet__component-description">
                   {{ comp.description }}
                 </span>
@@ -284,7 +281,7 @@ const sections = [
 
 .overall-cheatsheet__component-item {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: 1fr;
   column-gap: 0.5rem;
   align-items: baseline;
   font-size: 0.8rem;
