@@ -1,6 +1,6 @@
 {
     "name": "Coordinate Transforms",
-    "description": "Coordinate transforms are used to transform the coordinate system of a shape.",
+    "description": "Coordinate transforms are used to transform the coordinate system of your data representation.",
     "usage": {
         "coord": {
             "description": "The coord method is used to specify the coordinate transform of a layer.",

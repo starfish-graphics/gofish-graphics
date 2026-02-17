@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import rawData from '../../../docs/descriptions/shapes.json';
+import rawData from '../../../docs/descriptions/marks.json';
 import CheatSheetTemplate, {
   type DescriptionJson,
 } from './CheatSheetTemplate.vue';
