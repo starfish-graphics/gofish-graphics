@@ -1,7 +1,8 @@
 Frame({}, [
   For(groupBy(newCarColors, "Year"), (d, key) =>
-    StackY(
+    Spread(
       {
+        dir: "y",
         x: (key - 2000) * 30,
         spacing: 16,
         alignment: "start",

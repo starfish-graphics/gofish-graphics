@@ -52,6 +52,7 @@ const {
   neutral,
   Enclose,
   Chart,
+  Spread,
   spread,
   derive,
   Layer,
@@ -134,6 +135,7 @@ onMounted(() => {
       // New API symbols available to example code
       "Chart",
       "chart",
+      "Spread",
       "spread",
       "stack",
       "derive",
@@ -218,6 +220,7 @@ onMounted(() => {
       // New API symbol values
       Chart,
       chart,
+      Spread,
       spread,
       stack,
       derive,

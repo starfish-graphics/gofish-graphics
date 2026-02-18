@@ -8,7 +8,7 @@ StackX(
     );
     return Frame({}, [
       StackY(
-        { spacing: 0 },
+        { spacing: 0, alignment: "middle" },
         For(density, (d) =>
           Rect({ y: d.x / 40, w: d.y * 100000, h: 0, fill: v(species) }).name(
             `${species}-${d.x}`
