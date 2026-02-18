@@ -1,8 +1,8 @@
-layer([
-  chart(streamgraphData)
+Layer([
+  Chart(streamgraphData)
     .flow(spread("x", { dir: "x", spacing: 50 }))
     .mark(scaffold({ h: "y", fill: "c" }).name("points")),
-  chart(select("points"))
+  Chart(select("points"))
     .flow(group("c"))
     .mark(area({ opacity: 0.7 })),
 ]).render(root, {

@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
 import { catchLocationsArray, seafood, catchLocations } from "../../src/data/catch";
 import { drivingShifts } from "../../src/data/drivingShifts";
-import { chart, layer, select, line, rect, stack } from "../../src/lib";
+import { Chart, Layer, select, line, rect, stack } from "../../src/lib";
 import { circle, scatter } from "../../src/ast/marks/chart";
 import { clock } from "../../src/ast/coordinateTransforms/clock";
 import _ from "lodash";
@@ -27,7 +27,7 @@ export const Basic: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    chart(catchLocationsArray)
+    Chart(catchLocationsArray)
       .flow(scatter("lake", { x: "x", y: "y" }))
       .mark(circle({ r: 5 }))
       .render(container, {
@@ -45,12 +45,12 @@ export const Connected: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    layer([
-      chart(drivingShifts)
+    Layer([
+      Chart(drivingShifts)
         .flow(scatter("year", { x: "miles", y: "gas" }))
         .mark(circle({ r: 4, fill: "white", stroke: "black", strokeWidth: 2 }).name("points")),
-      chart(select("points")).mark(line({ stroke: "black", strokeWidth: 2 })),
-      chart(drivingShifts)
+      Chart(select("points")).mark(line({ stroke: "black", strokeWidth: 2 })),
+      Chart(drivingShifts)
         .flow(scatter("year", { x: "miles", y: "gas" }))
         .mark(circle({ r: 4, fill: "white", stroke: "black", strokeWidth: 2 })),
     ]).render(container, {
@@ -81,10 +81,10 @@ export const WithPieGlyphs: StoryObj<Args> = {
       }))
       .value();
 
-    chart(scatterData)
+    Chart(scatterData)
       .flow(scatter("lake", { x: "x", y: "y" }))
       .mark((data) =>
-        chart(data[0].collection, { coord: clock() })
+        Chart(data[0].collection, { coord: clock() })
           .flow(stack("species", { dir: "x", /* h: "count" */ h: 20 }))
           .mark(rect({ w: "count", fill: "species" }))
       )

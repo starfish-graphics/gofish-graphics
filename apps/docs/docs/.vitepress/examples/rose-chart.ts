@@ -1,4 +1,4 @@
-chart(nightingale, { coord: clock() })
+Chart(nightingale, { coord: clock() })
   .flow(
     stack("Month", { dir: "x" }),
     stack("Type", { dir: "y" }),

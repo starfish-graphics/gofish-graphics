@@ -1,5 +1,5 @@
-layer({ coord: clock() }, [
-  chart(seafood)
+Layer({ coord: clock() }, [
+  Chart(seafood)
     .flow(
       spread("lake", {
         dir: "x",
@@ -12,7 +12,7 @@ layer({ coord: clock() }, [
       stack("species", { dir: "y", label: false })
     )
     .mark(rect({ h: "count", fill: "species" }).name("bars")),
-  chart(select("bars"))
+  Chart(select("bars"))
     .flow(group("species"))
     .mark(area({ opacity: 0.8 })),
 ]).render(root, {

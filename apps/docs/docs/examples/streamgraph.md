@@ -8,10 +8,10 @@
 
 ```ts index.ts
 import {
-  chart,
+  Chart,
   spread,
   stack,
-  layer,
+  Layer,
   select,
   scaffold,
   area,
@@ -21,14 +21,14 @@ import { seafood } from "./dataset";
 
 const container = document.getElementById("app");
 
-layer([
-  chart(seafood)
+Layer([
+  Chart(seafood)
     .flow(
       spread("lake", { dir: "x", spacing: 64, alignment: "middle" }),
       stack("species", { dir: "y", label: false })
     )
     .mark(scaffold({ h: "count", fill: "species" }).name("bars")),
-  chart(select("bars"))
+  Chart(select("bars"))
     .flow(group("species"))
     .mark(area({ opacity: 0.8 })),
 ]).render(container, {

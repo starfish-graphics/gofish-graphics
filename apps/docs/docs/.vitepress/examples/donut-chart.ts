@@ -1,4 +1,4 @@
-chart(seafood, { coord: clock() })
+Chart(seafood, { coord: clock() })
   .flow(stack("species", { dir: "x", y: 50, h: 50 }))
   .mark(rect({ w: "count", fill: "species" }))
   .render(root, {

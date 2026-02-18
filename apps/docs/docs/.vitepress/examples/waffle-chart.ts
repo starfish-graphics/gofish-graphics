@@ -1,4 +1,4 @@
-chart(seafood)
+Chart(seafood)
   .flow(
     spread("lake", { spacing: 8, dir: "x" }),
     derive((d) => d.flatMap((d) => repeat(d, "count"))),

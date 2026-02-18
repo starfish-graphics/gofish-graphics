@@ -67,7 +67,7 @@ const Balloon = (options) =>
   );
 
 Frame(
-  { coord: Wavy(), x: 0, y: 0 },
+  { coord: wavy(), x: 0, y: 0 },
   scatterData.map((data, i) =>
     Frame({ x: data.x }, [
       Rect({

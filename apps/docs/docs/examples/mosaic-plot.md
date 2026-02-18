@@ -7,12 +7,12 @@
 ::: starfish-live {template=vanilla-ts rtl lightTheme=aquaBlue darkTheme=atomDark previewHeight=400 coderHeight=512}
 
 ```ts index.ts
-import { chart, spread, stack, derive, rect, normalize } from "gofish-graphics";
+import { Chart, spread, stack, derive, rect, normalize } from "gofish-graphics";
 import { data } from "./dataset";
 
 const container = document.getElementById("app");
 
-chart(data)
+Chart(data)
   .flow(
     spread("origin", { dir: "x" }),
     derive((d) => normalize(d, "count")),

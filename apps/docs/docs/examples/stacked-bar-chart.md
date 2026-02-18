@@ -7,12 +7,12 @@
 ::: starfish-live {template=vanilla-ts rtl lightTheme=aquaBlue darkTheme=atomDark previewHeight=400 coderHeight=512}
 
 ```ts index.ts
-import { chart, spread, stack, rect } from "gofish-graphics";
+import { Chart, spread, stack, rect } from "gofish-graphics";
 import { seafood } from "./dataset";
 
 const container = document.getElementById("app");
 
-chart(seafood)
+Chart(seafood)
   .flow(
     spread("lake", { dir: "x" }), //
     stack("species", { dir: "y", label: false })

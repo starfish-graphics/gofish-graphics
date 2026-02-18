@@ -5,30 +5,8 @@ export * from "./util";
 
 // Data utilities
 export { value } from "./ast/data";
+export { value as v } from "./ast/data";
 export { For as map } from "./ast/iterators/for";
-
-// Marks
-// export { rect } from "./ast/shapes/rect";
-export { ellipse } from "./ast/shapes/ellipse";
-export { image } from "./ast/shapes/image";
-export { petal } from "./ast/shapes/petal";
-export { ref } from "./ast/shapes/ref";
-export { text } from "./ast/shapes/text";
-
-// Graphical Operators
-// export { stack } from "./ast/graphicalOperators/stack";
-export { stackX } from "./ast/graphicalOperators/stackX";
-export { stackY } from "./ast/graphicalOperators/stackY";
-export { layer } from "./ast/graphicalOperators/layer";
-export { wrap } from "./ast/graphicalOperators/wrap";
-export { connect } from "./ast/graphicalOperators/connect";
-export { connectX } from "./ast/graphicalOperators/connectX";
-export { connectY } from "./ast/graphicalOperators/connectY";
-export { enclose } from "./ast/graphicalOperators/enclose";
-export { frame } from "./ast/graphicalOperators/frame";
-export { position } from "./ast/graphicalOperators/position";
-export { arrow } from "./ast/graphicalOperators/arrow";
-export { over, inside, xor, out, atop, mask } from "./ast/graphicalOperators/porterDuff";
 
 // Coordinate Transforms
 export { coord } from "./ast/coordinateTransforms/coord";
@@ -42,12 +20,11 @@ export { bipolar } from "./ast/coordinateTransforms/bipolar";
 export { wavy } from "./ast/coordinateTransforms/wavy";
 
 // Main API
-export { gofish } from "./ast/gofish";
+export { gofish as GoFish } from "./ast/gofish";
 export { GoFishSolid } from "./ast/GoFishSolid";
 
 /* API v2 */
 // Data
-export { value as v } from "./ast/data";
 export { For } from "./ast/iterators/for";
 // export { groupBy } from "./ast/iterators/groupBy";
 export { groupBy, sumBy, orderBy, meanBy } from "lodash";
@@ -65,8 +42,8 @@ export { stack as Stack } from "./ast/graphicalOperators/stack";
 export { stackX as StackX } from "./ast/graphicalOperators/stackX";
 export { stackY as StackY } from "./ast/graphicalOperators/stackY";
 export { spread as Spread } from "./ast/graphicalOperators/spread";
-export { spreadX, spreadX as SpreadX } from "./ast/graphicalOperators/spreadX";
-export { spreadY, spreadY as SpreadY } from "./ast/graphicalOperators/spreadY";
+export { spreadX as SpreadX } from "./ast/graphicalOperators/spreadX";
+export { spreadY as SpreadY } from "./ast/graphicalOperators/spreadY";
 export { layer as Layer } from "./ast/graphicalOperators/layer";
 export { wrap as Wrap } from "./ast/graphicalOperators/wrap";
 export { connect as Connect } from "./ast/graphicalOperators/connect";
@@ -78,19 +55,9 @@ export { position as Position } from "./ast/graphicalOperators/position";
 export { arrow as Arrow } from "./ast/graphicalOperators/arrow";
 export { over as Over, inside as In, xor as Xor, out as Out, atop as Atop, mask as Mask } from "./ast/graphicalOperators/porterDuff";
 
-// Coordinate Transforms
-export { coord as Coord } from "./ast/coordinateTransforms/coord";
-export { linear as Linear } from "./ast/coordinateTransforms/linear";
-export { polar as Polar } from "./ast/coordinateTransforms/polar";
-export { polar_DEPRECATED as Polar_DEPRECATED } from "./ast/coordinateTransforms/polar_DEPRECATED";
-export { polarTransposed as PolarTransposed } from "./ast/coordinateTransforms/polarTransposed";
-export { arcLengthPolar as ArcLengthPolar } from "./ast/coordinateTransforms/arcLengthPolar";
-export { bipolar as Bipolar } from "./ast/coordinateTransforms/bipolar";
-export { wavy as Wavy } from "./ast/coordinateTransforms/wavy";
-
 /* Chart Syntax */
 export {
-  chart,
+  chart as Chart,
   spread,
   stack,
   scatter,

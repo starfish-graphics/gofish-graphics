@@ -10,7 +10,7 @@ const data = [
   { origin: "USA", cylinders: "8", count: 108 },
 ];
 
-chart(data)
+Chart(data)
   .flow(
     spread("origin", { dir: "x" }),
     derive((d) => normalize(d, "count")),

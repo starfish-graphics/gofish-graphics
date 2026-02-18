@@ -7,12 +7,12 @@
 ::: starfish-live {template=vanilla-ts rtl lightTheme=aquaBlue darkTheme=atomDark previewHeight=400 coderHeight=512}
 
 ```ts index.ts
-import { chart, scatter, circle } from "gofish-graphics";
+import { Chart, scatter, circle } from "gofish-graphics";
 import { catchLocationsArray } from "./dataset";
 
 const container = document.getElementById("app");
 
-chart(catchLocationsArray)
+Chart(catchLocationsArray)
   .flow(scatter("lake", { x: "x", y: "y" }))
   .mark(circle({ r: 5 }))
   .render(container, {

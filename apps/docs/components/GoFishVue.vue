@@ -1,60 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
-import {
-  gofish,
-  stackX,
-  stackY,
-  rect,
-  value,
-  ref as gofishRef,
-  connectX,
-  frame,
-  ellipse,
-  stack,
-  coord,
-  polar_DEPRECATED,
-  color,
-  black,
-  StackX,
-  StackY,
-  Rect,
-  For,
-  ConnectX,
-  Frame,
-  v,
-  Ref,
-  groupBy,
-  Polar_DEPRECATED,
-  Ellipse,
-  ConnectY,
-  color6_old,
-  white,
-  Wavy,
-  Polar,
-  color6,
-  Petal,
-  sumBy,
-  orderBy,
-  polar,
-  gray,
-  neutral,
-  Enclose,
-  // New API exports used by examples
-  chart,
-  spread,
-  derive,
-  layer,
-  select,
-  line,
-  scaffold,
-  area,
-  circle,
-  group,
-  normalize,
-  repeat,
-  scatter,
-  clock,
-} from "gofish-graphics";
+import * as gf from "gofish-graphics";
 import { mix } from "spectral.js";
 import _ from "lodash";
 import { streamgraphData } from "./data/streamgraphData";
@@ -74,6 +20,65 @@ const props = defineProps<{
 }>();
 
 const container = ref<HTMLElement | null>(null);
+const {
+  GoFish,
+  StackX,
+  StackY,
+  rect,
+  value,
+  Ref,
+  ConnectX,
+  Frame,
+  Ellipse,
+  Stack,
+  coord,
+  polar_DEPRECATED,
+  color,
+  black,
+  Rect,
+  For,
+  v,
+  groupBy,
+  ConnectY,
+  color6_old,
+  white,
+  wavy,
+  color6,
+  Petal,
+  sumBy,
+  orderBy,
+  polar,
+  gray,
+  neutral,
+  Enclose,
+  Chart,
+  spread,
+  derive,
+  Layer,
+  select,
+  line,
+  scaffold,
+  area,
+  circle,
+  group,
+  normalize,
+  repeat,
+  scatter,
+  clock,
+} = gf;
+const gofishRef = Ref;
+const gofish = GoFish;
+const stackX = StackX;
+const stackY = StackY;
+const connectX = ConnectX;
+const frame = Frame;
+const ellipse = Ellipse;
+const stack = Stack;
+const chart = Chart;
+const layer = Layer;
+const Polar_DEPRECATED = polar_DEPRECATED;
+const Wavy = wavy;
+const Polar = polar;
 
 onMounted(() => {
   if (!container.value) return;
@@ -127,10 +132,12 @@ onMounted(() => {
       "neutral",
       "Enclose",
       // New API symbols available to example code
+      "Chart",
       "chart",
       "spread",
       "stack",
       "derive",
+      "Layer",
       "layer",
       "select",
       "line",
@@ -209,10 +216,12 @@ onMounted(() => {
       neutral,
       Enclose,
       // New API symbol values
+      Chart,
       chart,
       spread,
       stack,
       derive,
+      Layer,
       layer,
       select,
       line,

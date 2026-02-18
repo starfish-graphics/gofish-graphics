@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
-import { chart, spread, rect, stack, derive } from "../../src/lib";
+import { Chart, spread, rect, stack, derive } from "../../src/lib";
 import { normalize } from "../../src/ast/marks/chart";
 
 const meta: Meta = {
@@ -35,7 +35,7 @@ export const Default: StoryObj<Args> = {
       { origin: "USA", cylinders: "8", count: 108 },
     ];
 
-    chart(data)
+    Chart(data)
       .flow(
         spread("origin", { dir: "x" }),
         derive((d) => normalize(d, "count")),

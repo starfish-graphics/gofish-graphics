@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
 import { caltrain, caltrainStopOrder } from "../../src/data/caltrain";
-import { frame as Frame, SpreadY, For, Rect, Ellipse, ConnectY, Ref, v } from "../../src/lib";
+import { Frame, SpreadY, For, Rect, Ellipse, ConnectY, Ref, v } from "../../src/lib";
 import { groupBy, orderBy } from "lodash";
 import _ from "lodash";
 

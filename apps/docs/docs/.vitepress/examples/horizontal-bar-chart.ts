@@ -1,4 +1,4 @@
-chart(seafood)
+Chart(seafood)
   .flow(spread("lake", { dir: "y" }))
   .mark(rect({ w: "count" }))
   .render(root, {

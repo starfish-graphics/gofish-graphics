@@ -1,4 +1,4 @@
-chart(seafood)
+Chart(seafood)
   .flow(
     spread("lake", { dir: "x" }), //
     stack("species", { dir: "x", label: false })

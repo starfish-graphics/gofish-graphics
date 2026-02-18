@@ -11,10 +11,10 @@ const scatterData = Object.entries(groupBy(seafood, "lake")).map(
 );
 
 
-chart(scatterData)
+Chart(scatterData)
   .flow(scatter("lake", { x: "x", y: "y" }))
   .mark((data) =>
-    chart(data[0].collection, { coord: clock() })
+    Chart(data[0].collection, { coord: clock() })
       .flow(stack("species", { dir: "x", h: 20 }))
       .mark(rect({ w: "count", fill: "species" }))
   )

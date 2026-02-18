@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { onMounted, ref, computed } from "vue";
 import {
-  chart,
+  Chart,
   spread,
   stack,
   derive,
-  layer,
+  Layer,
   select,
   rect,
   area,
@@ -54,8 +54,8 @@ const seafood = [
   { lake: "Lake F", species: "Salmon", count: 47 },
 ];
 
-const code = `layer({ coord: clock() }, [
-  chart(seafood)
+const code = `Layer({ coord: clock() }, [
+  Chart(seafood)
     .flow(
       spread("lake", {
         dir: "x",
@@ -68,7 +68,7 @@ const code = `layer({ coord: clock() }, [
       stack("species", { dir: "y", label: false })
     )
     .mark(rect({ h: "count", fill: "species" }).name("bars")),
-  chart(select("bars"))
+  Chart(select("bars"))
     .flow(group("species"))
     .mark(area({ opacity: 0.8 })),
 ]).render(root, { w: ${CHART_WIDTH}, h: ${CHART_HEIGHT}, transform: { x: 200, y: 200 }, axes: true });`;
@@ -119,8 +119,8 @@ function renderFixedChart() {
   const centerX = CHART_WIDTH / 2;
   const centerY = CHART_HEIGHT / 2;
 
-  layer({ coord: clock() }, [
-    chart(seafood)
+  Layer({ coord: clock() }, [
+    Chart(seafood)
       .flow(
         spread("lake", {
           dir: "x",
@@ -133,7 +133,7 @@ function renderFixedChart() {
         stack("species", { dir: "y", label: false })
       )
       .mark(rect({ h: "count", fill: "species" }).name("bars")),
-    chart(select("bars"))
+    Chart(select("bars"))
       .flow(group("species"))
       .mark(area({ opacity: 0.8 })),
   ]).render(root, {

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
 import { seafood, catchLocations } from "../../src/data/catch";
-import { frame as Frame, Rect, For, Petal, StackX, Polar, v } from "../../src/lib";
+import { Frame, Rect, For, Petal, StackX, polar, v } from "../../src/lib";
 import { color, color6 } from "../../src/color";
 import { mix } from "spectral.js";
 import _ from "lodash";
@@ -49,7 +49,7 @@ export const Default: StoryObj<Args> = {
           Frame(
             {
               y: sample.y,
-              coord: Polar(),
+              coord: polar(),
             },
             [
               StackX(
