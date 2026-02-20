@@ -2,7 +2,7 @@ gf.Layer([
   gf.Chart(seafood)
     .flow(
       gf.spread("lake", { dir: "x", spacing: 64 }),
-      gf.derive((d) => gf.orderBy(d, "count")),
+      gf.derive((d) => _.orderBy(d, "count")),
       gf.stack("species", { dir: "y", label: false })
     )
     .mark(gf.rect({ h: "count", fill: "species" }).name("bars")),

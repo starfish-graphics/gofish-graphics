@@ -20,7 +20,7 @@ gf.StackX(
   },
   gf.For(
     _.groupBy(
-      gf.orderBy(genderPayGap, (d) => payGrade.indexOf(d["Pay Grade"])),
+      _.orderBy(genderPayGap, (d) => payGrade.indexOf(d["Pay Grade"])),
       "Pay Grade"
     ),
     (d, key) =>

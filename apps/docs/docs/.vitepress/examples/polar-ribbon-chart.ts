@@ -8,7 +8,7 @@ gf.Layer({ coord: gf.clock() }, [
         y: 50,
         label: false,
       }),
-      gf.derive((d) => gf.orderBy(d, "count")),
+      gf.derive((d) => _.orderBy(d, "count")),
       gf.stack("species", { dir: "y", label: false })
     )
     .mark(gf.rect({ h: "count", fill: "species" }).name("bars")),
