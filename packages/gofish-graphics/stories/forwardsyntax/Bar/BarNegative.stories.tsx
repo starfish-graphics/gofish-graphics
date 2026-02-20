@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../../helper";
-import { chart, spread, rect } from "../../../src/lib";
+import { Chart, spread, rect } from "../../../src/lib";
 
 const meta: Meta = {
   title: "Forward Syntax V3/Bar/Negative",
@@ -30,7 +30,7 @@ export const Default: StoryObj<Args> = {
       { category: "E", value: 20 },
     ];
 
-    chart(testData)
+    Chart(testData)
       .flow(spread("category", { dir: "x" }))
       .mark(rect({ h: "value" }))
       .render(container, {

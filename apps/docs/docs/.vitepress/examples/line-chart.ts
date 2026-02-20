@@ -2,11 +2,11 @@ const catchLocationsArray = Object.entries(lakeLocations).map(
   ([lake, { x, y }]) => ({ lake, x, y })
 );
 
-layer([
-  chart(catchLocationsArray)
-    .flow(scatter("lake", { x: "x", y: "y" }))
-    .mark(scaffold().name("points")),
-  chart(select("points")).mark(line()),
+gf.Layer([
+  gf.Chart(catchLocationsArray)
+    .flow(gf.scatter("lake", { x: "x", y: "y" }))
+    .mark(gf.scaffold().name("points")),
+  gf.Chart(gf.select("points")).mark(gf.line()),
 ]).render(root, {
   w: 500,
   h: 300,

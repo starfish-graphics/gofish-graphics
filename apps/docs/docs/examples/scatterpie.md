@@ -5,7 +5,7 @@
 ::: starfish-live {template=vanilla-ts rtl lightTheme=aquaBlue darkTheme=atomDark previewHeight=400 coderHeight=512}
 
 ```ts index.ts
-import { chart, scatter, stack, rect } from "gofish-graphics";
+import { Chart, scatter, stack, rect } from "gofish-graphics";
 import { clock } from "gofish-graphics";
 import { groupBy } from "lodash";
 import { seafood, lakeLocations } from "./dataset";
@@ -24,10 +24,10 @@ const scatterData = Object.entries(groupBy(seafood, "lake")).map(
   })
 );
 
-chart(scatterData)
+Chart(scatterData)
   .flow(scatter("lake", { x: "x", y: "y" }))
   .mark((data) =>
-    chart(data[0].collection, { coord: clock() })
+    Chart(data[0].collection, { coord: clock() })
       .flow(stack("species", { dir: "x", h: 20 }))
       .mark(rect({ w: "count", fill: "species" }))
   )

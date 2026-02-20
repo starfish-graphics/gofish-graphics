@@ -1,4 +1,4 @@
-const scatterData = Object.entries(groupBy(seafood, "lake")).map(
+const scatterData = Object.entries(_.groupBy(seafood, "lake")).map(
   ([lake, lakeData]) => ({
     lake: lake,
     x: lakeLocations[lake].x,
@@ -11,12 +11,12 @@ const scatterData = Object.entries(groupBy(seafood, "lake")).map(
 );
 
 
-chart(scatterData)
-  .flow(scatter("lake", { x: "x", y: "y" }))
+gf.Chart(scatterData)
+  .flow(gf.scatter("lake", { x: "x", y: "y" }))
   .mark((data) =>
-    chart(data[0].collection, { coord: clock() })
-      .flow(stack("species", { dir: "x", h: 20 }))
-      .mark(rect({ w: "count", fill: "species" }))
+    gf.Chart(data[0].collection, { coord: gf.clock() })
+      .flow(gf.stack("species", { dir: "x", h: 20 }))
+      .mark(gf.rect({ w: "count", fill: "species" }))
   )
   .render(root, {
     w: 500,

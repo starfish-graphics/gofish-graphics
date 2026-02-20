@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
 import { seafood } from "../../src/data/catch";
 import { nightingale } from "../../src/data/nightingale";
-import { chart, rect, stack, derive } from "../../src/lib";
+import { Chart, rect, stack, derive } from "../../src/lib";
 import { clock } from "../../src/ast/coordinateTransforms/clock";
 
 const meta: Meta = {
@@ -25,7 +25,7 @@ export const Basic: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    chart(seafood, { coord: clock() })
+    Chart(seafood, { coord: clock() })
       .flow(stack("species", { dir: "x" }))
       .mark(rect({ w: "count", fill: "species" }))
       .render(container, {
@@ -43,7 +43,7 @@ export const Donut: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    chart(seafood, { coord: clock() })
+    Chart(seafood, { coord: clock() })
       .flow(stack("species", { dir: "x", y: 50, h: 50 }))
       .mark(rect({ w: "count", fill: "species" }))
       .render(container, {
@@ -61,7 +61,7 @@ export const Rose: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    chart(nightingale, { coord: clock() })
+    Chart(nightingale, { coord: clock() })
       .flow(
         stack("Month", { dir: "x" }),
         stack("Type", { dir: "y" }),

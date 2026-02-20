@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
 import { seafood } from "../../src/data/catch";
-import { chart, spread, rect, stack, derive, layer, select } from "../../src/lib";
+import { Chart, spread, rect, stack, derive, Layer, select } from "../../src/lib";
 import { area, group } from "../../src/ast/marks/chart";
 import { orderBy } from "lodash";
 import { clock } from "../../src/ast/coordinateTransforms/clock";
@@ -26,15 +26,15 @@ export const Basic: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    layer([
-      chart(seafood)
+    Layer([
+      Chart(seafood)
         .flow(
           spread("lake", { dir: "x", spacing: 64 }),
           derive((d) => orderBy(d, "count", "asc")),
           stack("species", { dir: "y" })
         )
         .mark(rect({ h: "count", fill: "species" }).name("bars")),
-      chart(select("bars"))
+      Chart(select("bars"))
         .flow(group("species"))
         .mark(area({ opacity: 0.8 })),
     ]).render(container, {
@@ -52,8 +52,8 @@ export const Polar: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    layer({ coord: clock() }, [
-      chart(seafood)
+    Layer({ coord: clock() }, [
+      Chart(seafood)
         .flow(
           spread("lake", {
             dir: "x",
@@ -66,7 +66,7 @@ export const Polar: StoryObj<Args> = {
           stack("species", { dir: "y", label: false })
         )
         .mark(rect({ w: 0.1, h: "count", fill: "species" }).name("bars")),
-      chart(select("bars"))
+      Chart(select("bars"))
         .flow(group("species"))
         .mark(area({ opacity: 0.8 })),
     ]).render(container, {

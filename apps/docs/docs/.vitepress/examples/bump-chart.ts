@@ -1,20 +1,21 @@
-Frame({}, [
-  For(groupBy(newCarColors, "Year"), (d, key) =>
-    StackY(
+gf.Frame({}, [
+  gf.For(_.groupBy(newCarColors, "Year"), (d, key) =>
+    gf.Spread(
       {
+        direction: "y",
         x: (key - 2000) * 30,
         spacing: 16,
         alignment: "start",
       },
-      For(_.sortBy(d, "Rank"), (d) =>
-        Ellipse({ w: 8, h: 8, fill: v(d.Color) }).name(`${d.Color}-${d.Year}`)
+      gf.For(_.sortBy(d, "Rank"), (d) =>
+        gf.Ellipse({ w: 8, h: 8, fill: gf.v(d.Color) }).name(`${d.Color}-${d.Year}`)
       )
     )
   ),
-  For(groupBy(newCarColors, "Color"), (d) =>
-    ConnectY(
+  gf.For(_.groupBy(newCarColors, "Color"), (d) =>
+    gf.ConnectY(
       { strokeWidth: 2, mode: "center-to-center" },
-      For(d, (d) => Ref(`${d.Color}-${d.Year}`))
+      gf.For(d, (d) => gf.Ref(`${d.Color}-${d.Year}`))
     )
   ),
 ]).render(root, { w: 500, h: 300 });

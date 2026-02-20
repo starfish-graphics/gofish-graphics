@@ -7,16 +7,16 @@
 ::: starfish-live {template=vanilla-ts rtl lightTheme=aquaBlue darkTheme=atomDark previewHeight=400 coderHeight=512}
 
 ```ts index.ts
-import { chart, scatter, layer, select, scaffold, line } from "gofish-graphics";
+import { Chart, scatter, Layer, select, scaffold, line } from "gofish-graphics";
 import { catchLocationsArray } from "./dataset";
 
 const container = document.getElementById("app");
 
-layer([
-  chart(catchLocationsArray)
+Layer([
+  Chart(catchLocationsArray)
     .flow(scatter("lake", { x: "x", y: "y" }))
     .mark(scaffold().name("points")),
-  chart(select("points")).mark(line()),
+  Chart(select("points")).mark(line()),
 ]).render(container, {
   w: 500,
   h: 300,
