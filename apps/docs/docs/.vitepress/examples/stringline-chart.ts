@@ -7,7 +7,7 @@ gf.Frame({}, [
       alignment: "start",
     },
     gf.For(
-      gf.groupBy(
+      _.groupBy(
         _.orderBy(
           caltrainProcessed,
           (d) => caltrainStopOrder.indexOf(d.Station),
@@ -26,7 +26,7 @@ gf.Frame({}, [
         ])
     )
   ),
-  gf.For(gf.groupBy(caltrainProcessed, "Train"), (d) =>
+  gf.For(_.groupBy(caltrainProcessed, "Train"), (d) =>
     gf.ConnectY(
       { strokeWidth: 1, mode: "center-to-center" },
       gf.For(d, (d) => gf.Ref(`${d.Train}-${d.Station}-${d.Time}`))

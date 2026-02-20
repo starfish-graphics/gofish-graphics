@@ -1,5 +1,5 @@
 gf.Frame({}, [
-  gf.For(gf.groupBy(newCarColors, "Year"), (d, key) =>
+  gf.For(_.groupBy(newCarColors, "Year"), (d, key) =>
     gf.Spread(
       {
         direction: "y",
@@ -12,7 +12,7 @@ gf.Frame({}, [
       )
     )
   ),
-  gf.For(gf.groupBy(newCarColors, "Color"), (d) =>
+  gf.For(_.groupBy(newCarColors, "Color"), (d) =>
     gf.ConnectY(
       { strokeWidth: 2, mode: "center-to-center" },
       gf.For(d, (d) => gf.Ref(`${d.Color}-${d.Year}`))

@@ -7,10 +7,10 @@ const classColor = {
 
 gf.StackY(
   { spacing: 4, alignment: "middle" },
-  gf.For(gf.groupBy(titanic, "class"), (items, cls) =>
+  gf.For(_.groupBy(titanic, "class"), (items, cls) =>
     gf.StackX(
       { h: _(items).sumBy("count") / 10, spacing: 2, alignment: "middle" },
-      gf.For(gf.groupBy(items, "sex"), (sItems, sex) =>
+      gf.For(_.groupBy(items, "sex"), (sItems, sex) =>
         gf.StackY(
           {
             w: (_(sItems).sumBy("count") / _(items).sumBy("count")) * 100,
@@ -18,7 +18,7 @@ gf.StackY(
             alignment: "middle",
             sharedScale: true,
           },
-          gf.For(gf.groupBy(sItems, "survived"), (items, survived) =>
+          gf.For(_.groupBy(sItems, "survived"), (items, survived) =>
             gf.Rect({
               h: gf.v(_(items).sumBy("count")),
               fill: survived === "No" ? gf.gray : classColor[cls],

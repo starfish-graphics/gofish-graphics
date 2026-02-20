@@ -2,7 +2,7 @@
 
 gf.StackX(
   { spacing: 64, sharedScale: true },
-  gf.For(gf.groupBy(penguins, "Species"), (d, species) => {
+  gf.For(_.groupBy(penguins, "Species"), (d, species) => {
     const density = Array.from(
       density1d(d.map((p) => p["Body Mass (g)"]).filter((w) => w !== null))
     );

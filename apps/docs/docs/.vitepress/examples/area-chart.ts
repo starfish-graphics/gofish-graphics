@@ -1,5 +1,5 @@
 // Aggregate total count per lake
-const lakeTotals = Object.entries(gf.groupBy(seafood, "lake")).map(
+const lakeTotals = Object.entries(_.groupBy(seafood, "lake")).map(
   ([lake, items]) => ({
     lake: lake,
     count: items.reduce((sum, item) => sum + item.count, 0),

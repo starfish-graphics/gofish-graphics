@@ -1,4 +1,4 @@
-const scatterData = Object.entries(gf.groupBy(seafood, "lake")).map(
+const scatterData = Object.entries(_.groupBy(seafood, "lake")).map(
   ([lake, lakeData]) => ({
     lake: lake,
     x: lakeLocations[lake].x,

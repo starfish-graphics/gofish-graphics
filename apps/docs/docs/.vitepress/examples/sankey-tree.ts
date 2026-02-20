@@ -12,7 +12,7 @@ gf.Frame([
   gf.StackX({ spacing: layerSpacing, alignment: "middle" }, [
     gf.StackY(
       { spacing: 0, alignment: "middle" },
-      gf.For(gf.groupBy(titanic, "class"), (items, cls) =>
+      gf.For(_.groupBy(titanic, "class"), (items, cls) =>
         gf.Rect({
           w: 40,
           h: _(items).sumBy("count") / 10,
@@ -22,11 +22,11 @@ gf.Frame([
     ),
     gf.StackY(
       { spacing: internalSpacing, alignment: "middle" },
-      gf.For(gf.groupBy(titanic, "class"), (items, cls) =>
+      gf.For(_.groupBy(titanic, "class"), (items, cls) =>
         gf.StackX({ spacing: layerSpacing, alignment: "middle" }, [
           gf.StackY(
             { spacing: 0, alignment: "middle" },
-            gf.For(gf.groupBy(items, "sex"), (items, sex) =>
+            gf.For(_.groupBy(items, "sex"), (items, sex) =>
               gf.Rect({
                 w: 40,
                 h: _(items).sumBy("count") / 10,
@@ -40,14 +40,14 @@ gf.Frame([
               spacing: internalSpacing * 2,
               alignment: "middle",
             },
-            gf.For(gf.groupBy(items, "sex"), (items, sex) =>
+            gf.For(_.groupBy(items, "sex"), (items, sex) =>
               gf.StackX({ spacing: layerSpacing, alignment: "middle" }, [
                 gf.StackY(
                   {
                     spacing: 0,
                     alignment: "middle",
                   },
-                  gf.For(gf.groupBy(items, "survived"), (survivedItems, survived) =>
+                  gf.For(_.groupBy(items, "survived"), (survivedItems, survived) =>
                     gf.Rect({
                       w: 40,
                       h: _(survivedItems).sumBy("count") / 10,
@@ -61,7 +61,7 @@ gf.Frame([
                     spacing: internalSpacing * 4,
                     alignment: "middle",
                   },
-                  gf.For(gf.groupBy(items, "survived"), (survivedItems, survived) => {
+                  gf.For(_.groupBy(items, "survived"), (survivedItems, survived) => {
                     return gf.Rect({
                       h: _(survivedItems).sumBy("count") / 10,
                       fill:
@@ -82,7 +82,7 @@ gf.Frame([
       )
     ),
   ]),
-  gf.For(gf.groupBy(titanic, "class"), (items, cls) => [
+  gf.For(_.groupBy(titanic, "class"), (items, cls) => [
     gf.ConnectX(
       {
         fill: classColor[cls],
@@ -91,7 +91,7 @@ gf.Frame([
       },
       [gf.Ref(`${cls}-src`), gf.Ref(`${cls}-tgt`)]
     ),
-    gf.For(gf.groupBy(items, "sex"), (sexItems, sex) => [
+    gf.For(_.groupBy(items, "sex"), (sexItems, sex) => [
       gf.ConnectX(
         {
           fill: sex === "Female" ? gf.color6[4] : gf.color6[5],
@@ -100,7 +100,7 @@ gf.Frame([
         },
         [gf.Ref(`${cls}-${sex}-src`), gf.Ref(`${cls}-${sex}-tgt`)]
       ),
-      gf.For(gf.groupBy(sexItems, "survived"), (survivedItems, survived) =>
+      gf.For(_.groupBy(sexItems, "survived"), (survivedItems, survived) =>
         gf.ConnectX(
           {
             fill:

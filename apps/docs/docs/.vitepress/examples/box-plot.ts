@@ -19,7 +19,7 @@ gf.StackX(
     sharedScale: true,
   },
   gf.For(
-    gf.groupBy(
+    _.groupBy(
       gf.orderBy(genderPayGap, (d) => payGrade.indexOf(d["Pay Grade"])),
       "Pay Grade"
     ),
@@ -29,7 +29,7 @@ gf.StackX(
           key,
           spacing: 8,
         },
-        gf.For(gf.groupBy(d, "Gender"), (d, key) =>
+        gf.For(_.groupBy(d, "Gender"), (d, key) =>
           boxAndWhisker({
             median: d[0].Median,
             min: d[0].Min,
@@ -49,7 +49,7 @@ gf.StackX(
 //     sharedScale: true,
 //   },
 //   gf.For(
-//     gf.groupBy(
+//     _.groupBy(
 //       _.orderBy(genderPayGap, (d) => payGrade.indexOf(d["Pay Grade"])),
 //       "Pay Grade"
 //     ),
@@ -59,7 +59,7 @@ gf.StackX(
 //           key,
 //           spacing: 16,
 //         },
-//         gf.For(gf.groupBy(d, "Gender"), (d, key) =>
+//         gf.For(_.groupBy(d, "Gender"), (d, key) =>
 //           boxAndWhisker({
 //             median: d[0].Median / 150,
 //             min: d[0].Min / 150,
