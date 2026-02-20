@@ -1,27 +1,27 @@
 const classColor = {
-  First: color6[0],
-  Second: color6[1],
-  Third: color6[2],
-  Crew: color6[3],
+  First: gf.color6[0],
+  Second: gf.color6[1],
+  Third: gf.color6[2],
+  Crew: gf.color6[3],
 };
 
-StackY(
+gf.StackY(
   { spacing: 4, alignment: "middle" },
-  For(groupBy(titanic, "class"), (items, cls) =>
-    StackX(
+  gf.For(gf.groupBy(titanic, "class"), (items, cls) =>
+    gf.StackX(
       { h: _(items).sumBy("count") / 10, spacing: 2, alignment: "middle" },
-      For(groupBy(items, "sex"), (sItems, sex) =>
-        StackY(
+      gf.For(gf.groupBy(items, "sex"), (sItems, sex) =>
+        gf.StackY(
           {
             w: (_(sItems).sumBy("count") / _(items).sumBy("count")) * 100,
             spacing: 0,
             alignment: "middle",
             sharedScale: true,
           },
-          For(groupBy(sItems, "survived"), (items, survived) =>
-            Rect({
-              h: v(_(items).sumBy("count")),
-              fill: survived === "No" ? gray : classColor[cls],
+          gf.For(gf.groupBy(sItems, "survived"), (items, survived) =>
+            gf.Rect({
+              h: gf.v(_(items).sumBy("count")),
+              fill: survived === "No" ? gf.gray : classColor[cls],
             })
           )
         )

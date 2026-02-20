@@ -1,14 +1,14 @@
-Layer([
-  Chart(seafood)
+gf.Layer([
+  gf.Chart(seafood)
     .flow(
-      spread("lake", { dir: "x", spacing: 64 }),
-      derive((d) => orderBy(d, "count")),
-      stack("species", { dir: "y", label: false })
+      gf.spread("lake", { dir: "x", spacing: 64 }),
+      gf.derive((d) => gf.orderBy(d, "count")),
+      gf.stack("species", { dir: "y", label: false })
     )
-    .mark(rect({ h: "count", fill: "species" }).name("bars")),
-  Chart(select("bars"))
-    .flow(group("species"))
-    .mark(area({ opacity: 0.8 })),
+    .mark(gf.rect({ h: "count", fill: "species" }).name("bars")),
+  gf.Chart(gf.select("bars"))
+    .flow(gf.group("species"))
+    .mark(gf.area({ opacity: 0.8 })),
 ]).render(root, {
   w: 400,
   h: 400,

@@ -2,76 +2,76 @@ const layerSpacing = 64;
 const internalSpacing = 2;
 
 const classColor = {
-  First: color6[0],
-  Second: color6[1],
-  Third: color6[2],
-  Crew: color6[3],
+  First: gf.color6[0],
+  Second: gf.color6[1],
+  Third: gf.color6[2],
+  Crew: gf.color6[3],
 };
 
-Frame([
-  StackX({ spacing: layerSpacing, alignment: "middle" }, [
-    StackY(
+gf.Frame([
+  gf.StackX({ spacing: layerSpacing, alignment: "middle" }, [
+    gf.StackY(
       { spacing: 0, alignment: "middle" },
-      For(groupBy(titanic, "class"), (items, cls) =>
-        Rect({
+      gf.For(gf.groupBy(titanic, "class"), (items, cls) =>
+        gf.Rect({
           w: 40,
           h: _(items).sumBy("count") / 10,
-          fill: neutral,
+          fill: gf.neutral,
         }).name(`${cls}-src`)
       )
     ),
-    StackY(
+    gf.StackY(
       { spacing: internalSpacing, alignment: "middle" },
-      For(groupBy(titanic, "class"), (items, cls) =>
-        StackX({ spacing: layerSpacing, alignment: "middle" }, [
-          StackY(
+      gf.For(gf.groupBy(titanic, "class"), (items, cls) =>
+        gf.StackX({ spacing: layerSpacing, alignment: "middle" }, [
+          gf.StackY(
             { spacing: 0, alignment: "middle" },
-            For(groupBy(items, "sex"), (items, sex) =>
-              Rect({
+            gf.For(gf.groupBy(items, "sex"), (items, sex) =>
+              gf.Rect({
                 w: 40,
                 h: _(items).sumBy("count") / 10,
                 fill: classColor[cls],
               }).name(`${cls}-${sex}-src`)
             )
           ).name(`${cls}-tgt`),
-          StackY(
+          gf.StackY(
             {
               h: _(items).sumBy("count") / 10,
               spacing: internalSpacing * 2,
               alignment: "middle",
             },
-            For(groupBy(items, "sex"), (items, sex) =>
-              StackX({ spacing: layerSpacing, alignment: "middle" }, [
-                StackY(
+            gf.For(gf.groupBy(items, "sex"), (items, sex) =>
+              gf.StackX({ spacing: layerSpacing, alignment: "middle" }, [
+                gf.StackY(
                   {
                     spacing: 0,
                     alignment: "middle",
                   },
-                  For(groupBy(items, "survived"), (survivedItems, survived) =>
-                    Rect({
+                  gf.For(gf.groupBy(items, "survived"), (survivedItems, survived) =>
+                    gf.Rect({
                       w: 40,
                       h: _(survivedItems).sumBy("count") / 10,
-                      fill: sex === "Female" ? color6[4] : color6[5],
+                      fill: sex === "Female" ? gf.color6[4] : gf.color6[5],
                     }).name(`${cls}-${sex}-${survived}-src`)
                   )
                 ).name(`${cls}-${sex}-tgt`),
-                StackY(
+                gf.StackY(
                   {
                     w: 40,
                     spacing: internalSpacing * 4,
                     alignment: "middle",
                   },
-                  For(groupBy(items, "survived"), (survivedItems, survived) => {
-                    return Rect({
+                  gf.For(gf.groupBy(items, "survived"), (survivedItems, survived) => {
+                    return gf.Rect({
                       h: _(survivedItems).sumBy("count") / 10,
                       fill:
                         sex === "Female"
                           ? survived === "No"
-                            ? gray
-                            : color6[4]
+                            ? gf.gray
+                            : gf.color6[4]
                           : survived === "No"
-                          ? gray
-                          : color6[5],
+                          ? gf.gray
+                          : gf.color6[5],
                     }).name(`${cls}-${sex}-${survived}-tgt`);
                   })
                 ),
@@ -82,41 +82,41 @@ Frame([
       )
     ),
   ]),
-  For(groupBy(titanic, "class"), (items, cls) => [
-    ConnectX(
+  gf.For(gf.groupBy(titanic, "class"), (items, cls) => [
+    gf.ConnectX(
       {
         fill: classColor[cls],
         interpolation: "bezier",
         opacity: 0.7,
       },
-      [Ref(`${cls}-src`), Ref(`${cls}-tgt`)]
+      [gf.Ref(`${cls}-src`), gf.Ref(`${cls}-tgt`)]
     ),
-    For(groupBy(items, "sex"), (sexItems, sex) => [
-      ConnectX(
+    gf.For(gf.groupBy(items, "sex"), (sexItems, sex) => [
+      gf.ConnectX(
         {
-          fill: sex === "Female" ? color6[4] : color6[5],
+          fill: sex === "Female" ? gf.color6[4] : gf.color6[5],
           interpolation: "bezier",
           opacity: 0.7,
         },
-        [Ref(`${cls}-${sex}-src`), Ref(`${cls}-${sex}-tgt`)]
+        [gf.Ref(`${cls}-${sex}-src`), gf.Ref(`${cls}-${sex}-tgt`)]
       ),
-      For(groupBy(sexItems, "survived"), (survivedItems, survived) =>
-        ConnectX(
+      gf.For(gf.groupBy(sexItems, "survived"), (survivedItems, survived) =>
+        gf.ConnectX(
           {
             fill:
               sex === "Female"
                 ? survived === "No"
-                  ? gray
-                  : color6[4]
+                  ? gf.gray
+                  : gf.color6[4]
                 : survived === "No"
-                ? gray
-                : color6[5],
+                ? gf.gray
+                : gf.color6[5],
             interpolation: "bezier",
             opacity: 0.7,
           },
           [
-            Ref(`${cls}-${sex}-${survived}-src`),
-            Ref(`${cls}-${sex}-${survived}-tgt`),
+            gf.Ref(`${cls}-${sex}-${survived}-src`),
+            gf.Ref(`${cls}-${sex}-${survived}-tgt`),
           ]
         )
       ),

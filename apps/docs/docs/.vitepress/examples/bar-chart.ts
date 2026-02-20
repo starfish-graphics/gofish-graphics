@@ -1,6 +1,6 @@
-Chart(seafood)
-  .flow(spread("lake", { dir: "x" }))
-  .mark(rect({ h: "count" }))
+gf.Chart(seafood)
+  .flow(gf.spread("lake", { dir: "x" }))
+  .mark(gf.rect({ h: "count" }))
   .render(root, {
     w: 500,
     h: 300,

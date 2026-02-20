@@ -1,15 +1,15 @@
-Layer([
-  Chart(drivingShifts)
-    .flow(scatter("year", { x: "miles", y: "gas" }))
+gf.Layer([
+  gf.Chart(drivingShifts)
+    .flow(gf.scatter("year", { x: "miles", y: "gas" }))
     .mark(
-      circle({ r: 4, fill: "white", stroke: "black", strokeWidth: 2 }).name(
+      gf.circle({ r: 4, fill: "white", stroke: "black", strokeWidth: 2 }).name(
         "points"
       )
     ),
-  Chart(select("points")).mark(line({ stroke: "black", strokeWidth: 2 })),
-  Chart(drivingShifts)
-    .flow(scatter("year", { x: "miles", y: "gas" }))
-    .mark(circle({ r: 4, fill: "white", stroke: "black", strokeWidth: 2 })),
+  gf.Chart(gf.select("points")).mark(gf.line({ stroke: "black", strokeWidth: 2 })),
+  gf.Chart(drivingShifts)
+    .flow(gf.scatter("year", { x: "miles", y: "gas" }))
+    .mark(gf.circle({ r: 4, fill: "white", stroke: "black", strokeWidth: 2 })),
 ]).render(root, {
   w: 500,
   h: 300,

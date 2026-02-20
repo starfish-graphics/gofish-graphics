@@ -10,9 +10,9 @@ const alphabet = [
   { letter: "I", frequency: 52 },
 ];
 
-Chart(alphabet)
-  .flow(spread("letter", { dir: "x" }))
-  .mark(rect({ h: "frequency" }))
+gf.Chart(alphabet)
+  .flow(gf.spread("letter", { dir: "x" }))
+  .mark(gf.rect({ h: "frequency" }))
   .render(root, {
     w: 500,
     h: 300,

@@ -1,9 +1,9 @@
-Chart(seafood)
+gf.Chart(seafood)
   .flow(
-    spread("lake", { dir: "x" }), //
-    stack("species", { dir: "y", label: false })
+    gf.spread("lake", { dir: "x" }), //
+    gf.stack("species", { dir: "y", label: false })
   )
-  .mark(rect({ h: "count", fill: "species" }))
+  .mark(gf.rect({ h: "count", fill: "species" }))
   .render(root, {
     w: 500,
     h: 300,

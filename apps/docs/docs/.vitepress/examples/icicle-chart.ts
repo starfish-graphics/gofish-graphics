@@ -1,41 +1,41 @@
 const classColor = {
-  First: color6[0],
-  Second: color6[1],
-  Third: color6[2],
-  Crew: color6[3],
+  First: gf.color6[0],
+  Second: gf.color6[1],
+  Third: gf.color6[2],
+  Crew: gf.color6[3],
 };
 
-StackX({ spacing: 0, alignment: "middle" }, [
-  Rect({
+gf.StackX({ spacing: 0, alignment: "middle" }, [
+  gf.Rect({
     w: 40,
     h: _(titanic).sumBy("count") / 10,
-    fill: neutral,
+    fill: gf.neutral,
   }),
-  StackY(
+  gf.StackY(
     { dir: "ttb", spacing: 0, alignment: "middle" },
     _(titanic)
       .groupBy("class")
       .map((items, cls) =>
-        StackX(
+        gf.StackX(
           {
             h: _(items).sumBy("count") / 10,
             spacing: 0,
             alignment: "start",
           },
           [
-            Rect({ w: 40, fill: classColor[cls] }),
-            StackY(
+            gf.Rect({ w: 40, fill: classColor[cls] }),
+            gf.StackY(
               { dir: "ttb", spacing: 0, alignment: "middle" },
               _(items)
                 .groupBy("sex")
                 .map((items, sex) =>
-                  StackX({ spacing: 0, alignment: "middle" }, [
-                    Rect({
+                  gf.StackX({ spacing: 0, alignment: "middle" }, [
+                    gf.Rect({
                       w: 0,
                       h: _(items).sumBy("count") / 10,
-                      fill: sex === "Female" ? color6[4] : color6[5],
+                      fill: sex === "Female" ? gf.color6[4] : gf.color6[5],
                     }),
-                    StackY(
+                    gf.StackY(
                       {
                         w: 40,
                         dir: "ttb",
@@ -45,16 +45,16 @@ StackX({ spacing: 0, alignment: "middle" }, [
                       _(items)
                         .groupBy("survived")
                         .map((survivedItems, survived) => {
-                          return Rect({
+                          return gf.Rect({
                             h: _(survivedItems).sumBy("count") / 10,
                             fill:
                               sex === "Female"
                                 ? survived === "No"
-                                  ? gray
-                                  : color6[4]
+                                  ? gf.gray
+                                  : gf.color6[4]
                                 : survived === "No"
-                                ? gray
-                                : color6[5],
+                                ? gf.gray
+                                : gf.color6[5],
                           });
                         })
                         .value()

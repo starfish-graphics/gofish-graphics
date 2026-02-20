@@ -11,30 +11,30 @@ const scatterData = _(seafood)
   }))
   .value();
 
-Frame(
-  For(scatterData, (sample) =>
-    Frame({ x: sample.x, y: sample.y }, [
-      Rect({
+gf.Frame(
+  gf.For(scatterData, (sample) =>
+    gf.Frame({ x: sample.x, y: sample.y }, [
+      gf.Rect({
         w: 2,
         h: 300 - sample.y,
-        fill: color.green[5],
+        fill: gf.color.green[5],
       }),
-      Frame(
+      gf.Frame(
         {
-          coord: polar(),
+          coord: gf.polar(),
         },
         [
-          StackX(
+          gf.StackX(
             {
               h: _(sample.collection).sumBy("count") / 7,
               spacing: 0,
               alignment: "start",
               sharedScale: true,
             },
-            For(sample.collection, (d, i) =>
-              Petal({
-                w: v(d.count),
-                fill: mix(color6[i % 6], white, 0.5),
+            gf.For(sample.collection, (d, i) =>
+              gf.Petal({
+                w: gf.v(d.count),
+                fill: mix(gf.color6[i % 6], gf.white, 0.5),
               })
             )
           ),
