@@ -174,14 +174,17 @@ export const spread = createOperator(
             const totalSize = sizeValues.reduce((a, b) => a + b, 0);
             stackSpace = POSITION(Interval.interval(0, totalSize));
           }
-          // if children are all UNDEFINED or POSITION and spacing is > 0, return ORDINAL
+          // if children are all the SAME kind (all undefined, all position, or all size) and spacing is > 0, return ORDINAL
           else if (
-            children.every(
-              (child) =>
-                child[stackDir].kind === "undefined" ||
-                child[stackDir].kind === "position" ||
-                child[stackDir].kind === "size" // SIZE along stackDir behaves like position extents for spacing
-            ) &&
+            (() => {
+              const firstKind = children[0]?.[stackDir].kind;
+              return (
+                (firstKind === "undefined" ||
+                  firstKind === "position" ||
+                  firstKind === "size") &&
+                children.every((child) => child[stackDir].kind === firstKind)
+              );
+            })() &&
             spacing > 0
           ) {
             // Extract top-level keys from child nodes for ordinal domain
@@ -190,14 +193,7 @@ export const spread = createOperator(
               .map((node) => node.key)
               .filter((key): key is string => key !== undefined);
             stackSpace = ORDINAL(topLevelKeys);
-          } else {
-            // Extract top-level keys from child nodes for ordinal domain
-            const topLevelKeys = childNodes
-              .filter((node): node is GoFishNode => node instanceof GoFishNode)
-              .map((node) => node.key)
-              .filter((key): key is string => key !== undefined);
-            stackSpace = ORDINAL(topLevelKeys);
-          }
+          } 
 
           return {
             [stackDir]: stackSpace,
