@@ -177,18 +177,37 @@ export const layer = createOperatorSequential(
             // Constraint-based placement:
             // Build name -> placeable map from named children
             const nameToPlaceable = new Map<string, (typeof childPlaceables)[number]>();
+            const constrainedNames = new Set<string>();
             for (let i = 0; i < node.children.length; i++) {
               const childNode = node.children[i];
               if ("_name" in childNode && (childNode as GoFishNode)._name) {
-                nameToPlaceable.set(
-                  (childNode as GoFishNode)._name!,
-                  childPlaceables[i]
-                );
+                const childName = (childNode as GoFishNode)._name!;
+                nameToPlaceable.set(childName, childPlaceables[i]);
+              }
+            }
+            for (const constraint of node.constraints) {
+              for (const ref of constraint.children) {
+                constrainedNames.add(ref.name);
               }
             }
 
-            // Apply constraints in declaration order
-            applyConstraints(node.constraints, nameToPlaceable);
+            // Apply constraints in declaration order. When a constraint has no
+            // pre-placed target, fall back to this layer's own box baselines.
+            applyConstraints(node.constraints, nameToPlaceable, {
+              x: { start: 0, middle: size[0] / 2, end: size[0] },
+              y: { start: 0, middle: size[1] / 2, end: size[1] },
+            });
+
+            // Re-layout unconstrained children so internal Ref() nodes observe
+            // final constrained sibling positions. Constrained children are
+            // intentionally left untouched to preserve "placed once" semantics.
+            for (let i = 0; i < children.length; i++) {
+              const childNode = node.children[i];
+              const childName =
+                "_name" in childNode ? (childNode as GoFishNode)._name : undefined;
+              if (childName && constrainedNames.has(childName)) continue;
+              childPlaceables[i] = children[i].layout(size, scaleFactors, posScales);
+            }
 
             // Default any unplaced axes to 0
             for (const cp of childPlaceables) {

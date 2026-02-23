@@ -23,7 +23,17 @@ export const createAlignConstraint = (
   children,
 });
 
-export function applyAlign(constraint: AlignConstraint, targets: Placeable[]): void {
+export interface AlignFallbackBaseline {
+  start?: number;
+  middle?: number;
+  end?: number;
+}
+
+export function applyAlign(
+  constraint: AlignConstraint,
+  targets: Placeable[],
+  fallback?: AlignFallbackBaseline
+): void {
   const idx = axisIndex(constraint.dir);
 
   // Find baseline from first already-placed child, or default to 0
@@ -31,13 +41,13 @@ export function applyAlign(constraint: AlignConstraint, targets: Placeable[]): v
   const placed = targets.find((t) => isPlacedOn(t, idx));
 
   if (constraint.alignment === "start") {
-    baseline = placed ? placed.dims[idx].min! : 0;
+    baseline = placed ? placed.dims[idx].min! : (fallback?.start ?? 0);
     for (const target of targets) {
       if (isPlacedOn(target, idx)) continue;
       target.place({ [constraint.dir]: baseline });
     }
   } else if (constraint.alignment === "middle") {
-    baseline = placed ? placed.dims[idx].center! : 0;
+    baseline = placed ? placed.dims[idx].center! : (fallback?.middle ?? 0);
     for (const target of targets) {
       if (isPlacedOn(target, idx)) continue;
       target.place({
@@ -46,7 +56,7 @@ export function applyAlign(constraint: AlignConstraint, targets: Placeable[]): v
     }
   } else {
     // "end"
-    baseline = placed ? placed.dims[idx].max! : 0;
+    baseline = placed ? placed.dims[idx].max! : (fallback?.end ?? 0);
     for (const target of targets) {
       if (isPlacedOn(target, idx)) continue;
       target.place({

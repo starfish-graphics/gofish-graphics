@@ -35,10 +35,13 @@ export const GlobalFrame: StoryObj<Args> = {
         fill: "black",
         text: "Global Frame",
       }).name("label"),
-      Spread({ direction: "y", dir: "ttb", alignment: "end", spacing: 10 }, [
-        Ref("label"),
+      Spread({ direction: "y", alignment: "end", spacing: 10 }, [
         Spread(
-          { direction: "y", alignment: "end", spacing: 10 },
+          {
+            direction: "y",
+            alignment: "start",
+            /* TODO: changing this wildly changes other positions... */ spacing: 10,
+          },
           For(variables, (variable, i) =>
             Text({
               fontSize: 24,
@@ -48,11 +51,13 @@ export const GlobalFrame: StoryObj<Args> = {
             })
           )
         ),
+        /* TODO: this should really be on top... */
+        Ref("label"),
       ]),
     ])
       .constrain(({ label, frame, frameBorder }) => [
         Constraint.align({ dir: "x", alignment: "middle" }, [label, frame]),
-        Constraint.align({ dir: "y", alignment: "start" }, [label, frame]),
+        Constraint.align({ dir: "y", alignment: "end" }, [label, frame]),
         Constraint.align({ dir: "x", alignment: "start" }, [
           frameBorder,
           frame,

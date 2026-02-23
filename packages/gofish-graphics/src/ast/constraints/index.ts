@@ -55,7 +55,11 @@ export function collectConstraintRefs(
  */
 export function applyConstraints(
   constraints: ConstraintSpec[],
-  nameToPlaceable: Map<string, Placeable>
+  nameToPlaceable: Map<string, Placeable>,
+  fallbackBaselines?: {
+    x?: { start?: number; middle?: number; end?: number };
+    y?: { start?: number; middle?: number; end?: number };
+  }
 ): void {
   for (const constraint of constraints) {
     const targets = constraint.children
@@ -65,7 +69,11 @@ export function applyConstraints(
     if (targets.length === 0) continue;
 
     if (constraint.type === "align") {
-      applyAlign(constraint, targets);
+      const axisFallback =
+        constraint.dir === "x"
+          ? fallbackBaselines?.x
+          : fallbackBaselines?.y;
+      applyAlign(constraint, targets, axisFallback);
     } else {
       applyDistribute(constraint, targets);
     }
