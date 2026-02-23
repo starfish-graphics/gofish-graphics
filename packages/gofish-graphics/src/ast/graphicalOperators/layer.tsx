@@ -14,6 +14,7 @@ import { CoordinateTransform } from "../coordinateTransforms/coord";
 import { coord } from "../coordinateTransforms/coord";
 import { createOperatorSequential } from "../withGoFish";
 import { GoFishAST } from "../_ast";
+import { applyConstraints } from "../constraints";
 
 export const layer = createOperatorSequential(
   async (
@@ -155,7 +156,8 @@ export const layer = createOperatorSequential(
           scaleFactors,
           children,
           measurement,
-          posScales
+          posScales,
+          node
         ) => {
           // Compute size using dims (w and h) before passing to children
           size = [
@@ -168,9 +170,43 @@ export const layer = createOperatorSequential(
           for (let i = 0; i < children.length; i++) {
             const child = children[i];
             const childPlaceable = child.layout(size, scaleFactors, posScales);
-
-            childPlaceable.place({ x: 0, y: 0 });
             childPlaceables.push(childPlaceable);
+          }
+
+          if (node.constraints.length > 0) {
+            // Constraint-based placement:
+            // Build name -> placeable map from named children
+            const nameToPlaceable = new Map<string, (typeof childPlaceables)[number]>();
+            for (let i = 0; i < node.children.length; i++) {
+              const childNode = node.children[i];
+              if ("_name" in childNode && (childNode as GoFishNode)._name) {
+                nameToPlaceable.set(
+                  (childNode as GoFishNode)._name!,
+                  childPlaceables[i]
+                );
+              }
+            }
+
+            // Apply constraints in declaration order
+            applyConstraints(node.constraints, nameToPlaceable);
+
+            // Default any unplaced axes to 0
+            for (const cp of childPlaceables) {
+              const needsX = cp.dims[0].min === undefined;
+              const needsY = cp.dims[1].min === undefined;
+              if (needsX && needsY) {
+                cp.place({ x: 0, y: 0 });
+              } else if (needsX) {
+                cp.place({ x: 0 });
+              } else if (needsY) {
+                cp.place({ y: 0 });
+              }
+            }
+          } else {
+            // Default layer behavior: place all children at (0, 0)
+            for (const cp of childPlaceables) {
+              cp.place({ x: 0, y: 0 });
+            }
           }
 
           // Calculate the bounding box of all children
@@ -197,14 +233,6 @@ export const layer = createOperatorSequential(
 
           const scaleX = options.transform?.scale?.x ?? 1;
           const scaleY = options.transform?.scale?.y ?? 1;
-
-          const childYPositions = childPlaceables.map((cp, i) => ({
-            index: i,
-            min: cp.dims[1].min,
-            max: cp.dims[1].max,
-            center: cp.dims[1].center,
-            size: cp.dims[1].size,
-          }));
 
           const translateY =
             dims[1].min !== undefined ? dims[1].min - minY : undefined;

@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:dl.acm.org)",
+      "WebFetch(domain:www.yunhaiwang.net)",
+      "WebFetch(domain:bluefishjs.org)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:arxiv.org)",
+      "WebFetch(domain:vis.csail.mit.edu)",
+      "WebFetch(domain:pubmed.ncbi.nlm.nih.gov)",
+      "WebFetch(domain:www.computer.org)",
+      "WebFetch(domain:proandroiddev.com)",
+      "WebFetch(domain:osf.io)",
+      "Bash(git log:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(gh api:*)",
+      "WebFetch(domain:vita.had.co.nz)",
+      "WebFetch(domain:piccl.github.io)",
+      "Bash(pnpm build:*)",
+      "Bash(npx tsc:*)"
+    ]
+  }
+}
