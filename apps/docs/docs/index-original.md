@@ -39,5 +39,5 @@ features:
 **Install**
 
 ```
-npm install starfish-graphics
+npm install gofish-graphics@nightly
 ```
