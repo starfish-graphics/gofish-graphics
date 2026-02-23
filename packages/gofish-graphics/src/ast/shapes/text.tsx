@@ -165,6 +165,8 @@ export const text = ({
         resolveUnderlyingSpace: () => {
           const xPos = dims[0].center ?? dims[0].min;
           const yPos = dims[1].center ?? dims[1].min;
+
+          // Keep undefined if no value, not ordinal
           let underlyingSpaceX = UNDEFINED;
           if (isValue(xPos)) {
             const min = getValue(xPos) ?? 0;
