@@ -522,7 +522,7 @@ export const debugUnderlyingSpaceTree = (
           } else if (isDIFFERENCE(s)) {
             return `difference(${s.width})`;
           } else if (isORDINAL(s)) {
-            return `ordinal(${s.spacing})`;
+            return `ordinal(${s.domain})`;
           } else if (isUNDEFINED(s)) {
             return `undefined`;
           } else {
@@ -536,7 +536,7 @@ export const debugUnderlyingSpaceTree = (
       } else if (isDIFFERENCE(space)) {
         return `difference(${space.width})`;
       } else if (isORDINAL(space)) {
-        return `ordinal(${space.spacing})`;
+        return `ordinal(${space.domain})`;
       } else if (isUNDEFINED(space)) {
         return `undefined`;
       } else {
