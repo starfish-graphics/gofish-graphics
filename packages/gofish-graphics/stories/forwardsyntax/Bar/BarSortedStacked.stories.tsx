@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../../helper";
 import { seafood } from "../../../src/data/catch";
-import { chart, spread, rect, stack, derive } from "../../../src/lib";
+import { Chart, spread, rect, stack, derive } from "../../../src/lib";
 import { orderBy } from "lodash";
 
 const meta: Meta = {
@@ -24,7 +24,7 @@ export const Default: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    chart(seafood)
+    Chart(seafood)
       .flow(
         spread("lake", { dir: "x" }),
         derive((d) => orderBy(d, "count", "asc")),

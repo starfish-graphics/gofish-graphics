@@ -28,7 +28,7 @@ const alphabet = [
 
 const root = document.createElement("div");
 
-chart(seafood)
+Chart(seafood)
   .flow(spread("letter", { dir: "x" }))
   .mark(rect({ h: "frequency" }))
   .render(root, {
@@ -46,14 +46,14 @@ Make sure to create or select a DOM element to render your chart to!
 
 ## 3. Anatomy of a GoFish specification
 
-A basic GoFish spec has four pieces: `chart`, `flow`, `mark`, and `render`.
+A basic GoFish spec has four pieces: `Chart`, `flow`, `mark`, and `render`.
 
-### `chart`: Data
+### `Chart`: Data
 
-The `chart` function is how you start your specification. It's where you put your data.
+The `Chart` function is how you start your specification. It's where you put your data.
 
 ```ts
-chart(alphabet);
+Chart(alphabet);
 ```
 
 ### `flow`: Graphical Operators
@@ -124,14 +124,14 @@ live editor below!
 ::: starfish-live {template=vanilla-ts rtl lightTheme=aquaBlue darkTheme=atomDark previewHeight=400 coderHeight=400}
 
 ```ts index.ts
-import { chart, spread, rect } from "gofish-graphics";
+import { Chart, spread, rect } from "gofish-graphics";
 import { alphabet } from "./dataset";
 
 const root = document.getElementById("app");
 
 // - Try changing `dir` to `y` and use `rect`'s `w` channel instead of `h`.
 // - What happens when you map both `w` and `h` to "frequency"?
-chart(alphabet)
+Chart(alphabet)
   .flow(spread("letter", { dir: "x" }))
   .mark(rect({ h: "frequency" }))
   .render(root, {

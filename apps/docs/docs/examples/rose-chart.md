@@ -7,13 +7,13 @@
 ::: starfish-live {template=vanilla-ts rtl lightTheme=aquaBlue darkTheme=atomDark previewHeight=400 coderHeight=512}
 
 ```ts index.ts
-import { chart, stack, derive, rect } from "gofish-graphics";
+import { Chart, stack, derive, rect } from "gofish-graphics";
 import { clock } from "gofish-graphics";
 import { nightingale } from "./dataset";
 
 const container = document.getElementById("app");
 
-chart(nightingale, { coord: clock() })
+Chart(nightingale, { coord: clock() })
   .flow(
     stack("Month", { dir: "x" }),
     stack("Type", { dir: "y" }),

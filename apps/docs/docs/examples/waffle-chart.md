@@ -7,13 +7,13 @@
 ::: starfish-live {template=vanilla-ts rtl lightTheme=aquaBlue darkTheme=atomDark previewHeight=400 coderHeight=512}
 
 ```ts index.ts
-import { chart, spread, derive, rect, repeat } from "gofish-graphics";
+import { Chart, spread, derive, rect, repeat } from "gofish-graphics";
 import _ from "lodash";
 import { seafood } from "./dataset";
 
 const container = document.getElementById("app");
 
-chart(seafood)
+Chart(seafood)
   .flow(
     spread("lake", { spacing: 8, dir: "x" }),
     derive((d) => d.flatMap((d) => repeat(d, "count"))),

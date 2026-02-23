@@ -1,10 +1,10 @@
 const colorMap = {
-  0: color.red,
-  1: color.blue,
-  2: color.green,
-  3: color.yellow,
-  4: color.purple,
-  5: color.orange,
+  0: gf.color.red,
+  1: gf.color.blue,
+  2: gf.color.green,
+  3: gf.color.yellow,
+  4: gf.color.purple,
+  5: gf.color.orange,
 };
 
 const scatterData = _(seafood)
@@ -21,7 +21,7 @@ const scatterData = _(seafood)
   .value();
 
 const Balloon = (options) =>
-  Frame(
+  gf.Frame(
     {
       x: options?.x - 15 * (options?.scale ?? 1),
       y: options?.y + 27 * (options?.scale ?? 1),
@@ -31,46 +31,46 @@ const Balloon = (options) =>
       },
     },
     [
-      Ellipse({
+      gf.Ellipse({
         cx: 15,
         cy: 15,
         w: 24,
         h: 30,
-        fill: (options?.color ?? color.red)[4],
+        fill: (options?.color ?? gf.color.red)[4],
       }),
-      Ellipse({
+      gf.Ellipse({
         cx: 12,
         cy: 11,
         w: 7,
         h: 11,
-        fill: (options?.color ?? color.red)[3],
+        fill: (options?.color ?? gf.color.red)[3],
       }),
-      Rect({
+      gf.Rect({
         cx: 15,
         cy: 32,
         w: 8,
         h: 4,
-        fill: (options?.color ?? color.red)[5],
+        fill: (options?.color ?? gf.color.red)[5],
         rx: 3,
         ry: 2,
       }),
-      Rect({
+      gf.Rect({
         cx: 15,
         cy: 32,
         w: 5,
         h: 2.4,
-        fill: (options?.color ?? color.red)[6],
+        fill: (options?.color ?? gf.color.red)[6],
         rx: 2,
         ry: 1,
       }),
     ]
   );
 
-Frame(
-  { coord: Wavy(), x: 0, y: 0 },
+gf.Frame(
+  { coord: gf.wavy(), x: 0, y: 0 },
   scatterData.map((data, i) =>
-    Frame({ x: data.x }, [
-      Rect({
+    gf.Frame({ x: data.x }, [
+      gf.Rect({
         x: 0,
         y: 0,
         // x: data.x,
@@ -78,7 +78,7 @@ Frame(
         w: 1,
         h: data.y,
         emY: true,
-        fill: black,
+        fill: gf.black,
       }),
       Balloon({
         scale: 1,
@@ -88,10 +88,10 @@ Frame(
           null,
           null,
           null,
-          mix(color6[i % 6], white, 0.5),
-          color6[i % 6],
-          mix(color6[i % 6], black, 0.1),
-          mix(color6[i % 6], black, 0.35),
+          mix(gf.color6[i % 6], gf.white, 0.5),
+          gf.color6[i % 6],
+          mix(gf.color6[i % 6], gf.black, 0.1),
+          mix(gf.color6[i % 6], gf.black, 0.35),
         ],
       }),
     ])

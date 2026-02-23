@@ -3,7 +3,7 @@ import {
   tailwindColorsMuted,
   tailwindColorsVivid,
 } from "../color";
-import { Frame, Rect, SpreadX, SpreadY, StackX, StackY, layer, rect } from "../lib";
+import { Rect, SpreadX, SpreadY, StackX, StackY } from "../lib";
 
 export const tailwindColorGrid = () => {
   const colorNames = Object.keys(tailwindColors);

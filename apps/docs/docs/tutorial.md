@@ -10,7 +10,7 @@ To start, duplicate this tab to follow along in the live editor!
 
 <!-- ```ts index.ts
 // prettier-ignore
-import { StackX, StackY, ConnectX, Rect, Ref, For, v, color, Frame, Polar, groupBy, sumBy, orderBy } from "gofish-graphics";
+import { StackX, StackY, ConnectX, Rect, Ref, For, v, color, Frame, polar, groupBy, sumBy, orderBy } from "gofish-graphics";
 import { seafood } from "./dataset";
 
 const root = document.getElementById("app");
@@ -25,12 +25,12 @@ Rect({ x: 0, y: 0, w: 32, h: 300, fill: color.green[5] }).render(root, {
 
 ```ts index.ts
 // prettier-ignore
-import { chart, rect, color, spread, orderBy, derive, stack, layer, select, area, group } from "gofish-graphics";
+import { Chart, rect, color, spread, orderBy, derive, stack, Layer, select, area, group } from "gofish-graphics";
 import { seafood } from "./dataset";
 
 const root = document.getElementById("app");
 
-chart(seafood)
+Chart(seafood)
   .mark(rect({ fill: color.green[5] }))
   .render(root, { w: 500, h: 300 });
 ```
@@ -261,14 +261,14 @@ Next, we render a rectangle into it!
 :::starfish
 
 ```ts
-chart(seafood)
+Chart(seafood)
   .mark(rect({ fill: color.green[5] }))
   .render(root, { w: 500, h: 300 });
 ```
 
 :::
 
-`chart()` creates a chart from data. We pass an array with a single object containing the rectangle's
+`Chart()` creates a chart from data. We pass an array with a single object containing the rectangle's
 position and size. Then we use `.mark()` to specify that we want to render `rect` shapes. The `fill` parameter specifies the color.
 We are using a green from GoFish's default color palette for this chart. Try changing `green` to `blue`
 or changing `5` to a higher or lower number.
@@ -286,7 +286,7 @@ each lake in the dataset:
 :::starfish
 
 ```ts
-chart(seafood)
+Chart(seafood)
   .flow(spread("lake", { dir: "x" }))
   .mark(rect({ w: 32, h: 300, fill: color.green[5] }))
   .render(root, { w: 500, h: 300 });
@@ -311,7 +311,7 @@ quantity.
 :::starfish
 
 ```ts
-chart(seafood)
+Chart(seafood)
   .flow(spread("lake", { dir: "x" }))
   .mark(rect({ w: 32, h: "count", fill: color.green[5] }))
   .render(root, { w: 500, h: 300 });
@@ -328,7 +328,7 @@ width of each rectangle.
 :::starfish
 
 ```ts
-chart(seafood)
+Chart(seafood)
   .flow(spread("lake", { dir: "x" }))
   .mark(rect({ h: "count", fill: color.green[5] }))
   .render(root, { w: 500, h: 300 });
@@ -344,7 +344,7 @@ your spec as long as you put `axes: true` in the `render` method like so:
 :::starfish
 
 ```ts
-chart(seafood)
+Chart(seafood)
   .flow(spread("lake", { dir: "x" }))
   .mark(rect({ h: "count", fill: color.green[5] }))
   .render(root, { w: 500, h: 300, axes: true });
@@ -382,7 +382,7 @@ like a normal bar chart, except instead of a line of rectangles, it's a line of 
 :::starfish
 
 ```ts
-chart(seafood)
+Chart(seafood)
   .flow(
     spread("lake", { dir: "x" }), //
     stack("species", { dir: "y", label: false })
@@ -402,7 +402,7 @@ color encoding so that each rectangle's color corresponds to the species of fish
 :::starfish
 
 ```ts
-chart(seafood)
+Chart(seafood)
   .flow(
     spread("lake", { dir: "x" }), //
     stack("species", { dir: "y", label: false })
@@ -432,7 +432,7 @@ their counts:
 :::starfish
 
 ```ts
-chart(seafood)
+Chart(seafood)
   .flow(
     spread("lake", { dir: "x" }),
     derive((d) => orderBy(d, "count")),
@@ -455,15 +455,15 @@ together.
 :::starfish
 
 ```ts
-layer([
-  chart(seafood)
+Layer([
+  Chart(seafood)
     .flow(
       spread("lake", { dir: "x" }),
       derive((d) => orderBy(d, "count", "desc")),
       stack("species", { dir: "y", label: false })
     )
     .mark(rect({ h: "count", fill: "species" }).name("bars")),
-  chart(select("bars"))
+  Chart(select("bars"))
     .flow(group("species"))
     .mark(area({ opacity: 0.8 })),
 ]).render(root, {
@@ -478,7 +478,7 @@ layer([
 Great! This is already a ribbon chart but it's a little funky. We'll fix the funkiness in a second,
 but first let's understand what's going on.
 
-To add some ribbons, we first created a `layer` so we can add the ribbons as a second layer. Then
+To add some ribbons, we first created a `Layer` so we can add the ribbons as a second layer. Then
 we name the marks in the first layer using `.name("bars")` and `select` those marks in the second
 layer. We group them by species using `group("species")`, and finally draw an `area` mark for each group.
 
@@ -493,15 +493,15 @@ the `spread` operator.
 :::starfish
 
 ```ts
-layer([
-  chart(seafood)
+Layer([
+  Chart(seafood)
     .flow(
       spread("lake", { dir: "x", spacing: 64 }),
       derive((d) => orderBy(d, "count", "desc")),
       stack("species", { dir: "y", label: false })
     )
     .mark(rect({ h: "count", fill: "species" }).name("bars")),
-  chart(select("bars"))
+  Chart(select("bars"))
     .flow(group("species"))
     .mark(area({ opacity: 0.8 })),
 ]).render(root, {
@@ -544,14 +544,14 @@ Frame([
 ## Polar Ribbon Chart
 
 Finally it's time to make our polar ribbon chart! To do so, we'll add a `clock` coordinate transform
-to the `layer` and adjust the parameters to `spread`
+to the `Layer` and adjust the parameters to `spread`
 so that it looks better in polar space.
 
 :::starfish
 
 ```ts
-layer({ coord: clock() }, [
-  chart(seafood)
+Layer({ coord: clock() }, [
+  Chart(seafood)
     .flow(
       spread("lake", {
         dir: "x",
@@ -564,7 +564,7 @@ layer({ coord: clock() }, [
       stack("species", { dir: "y", label: false })
     )
     .mark(rect({ h: "count", fill: "species" }).name("bars")),
-  chart(select("bars"))
+  Chart(select("bars"))
     .flow(group("species"))
     .mark(area({ opacity: 0.8 })),
 ]).render(root, {

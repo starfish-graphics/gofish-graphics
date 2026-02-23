@@ -2,13 +2,15 @@
 import { h } from "vue";
 import type { Theme } from "vitepress";
 import DefaultTheme from "vitepress/theme";
+import custom from './custom.css'
 import "./style.css";
 import GoFishVue from "../../../components/GoFishVue.vue";
 import ExampleGallery from "../../../components/ExampleGallery.vue";
 import HomeGallery from "../../../components/HomeGallery.vue";
-import CheatSheet from "../../../components/ShapesCheatSheet.vue";
+import CheatSheet from "../../../components/MarksCheatSheet.vue";
 import CoordinateTransformsCheatSheet from "../../../components/CoordinateTransformsCheatSheet.vue";
 import OverallCheatSheet from "../../../components/OverallCheatSheet.vue";
+import OperatorsCheatSheet from "../../../components/OperatorsCheatSheet.vue";
 import { Sandbox } from "vitepress-plugin-sandpack";
 import "vitepress-plugin-sandpack/dist/style.css";
 import { StarfishLive } from "../../../components/StarfishLive";
@@ -34,5 +36,9 @@ export default {
       CoordinateTransformsCheatSheet,
     );
     app.component("OverallCheatSheet", OverallCheatSheet);
+    app.component(
+      "OperatorsCheatSheet",
+      OperatorsCheatSheet,
+    );
   },
 } satisfies Theme;

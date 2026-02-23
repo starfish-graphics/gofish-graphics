@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
 import { seafood } from "../../src/data/catch";
-import { chart, spread, scaffold, stack, layer, select } from "../../src/lib";
+import { Chart, spread, scaffold, stack, Layer, select } from "../../src/lib";
 import { area, group } from "../../src/ast/marks/chart";
 
 const meta: Meta = {
@@ -24,14 +24,14 @@ export const Default: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    layer([
-      chart(seafood)
+    Layer([
+      Chart(seafood)
         .flow(
           spread("lake", { dir: "x", spacing: 64, alignment: "middle" }),
           stack("species", { dir: "y" })
         )
         .mark(scaffold({ h: "count", fill: "species" }).name("bars")),
-      chart(select("bars"))
+      Chart(select("bars"))
         .flow(group("species"))
         .mark(area({ opacity: 0.8 })),
     ]).render(container, {

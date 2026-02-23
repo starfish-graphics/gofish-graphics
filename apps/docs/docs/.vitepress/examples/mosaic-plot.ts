@@ -10,13 +10,13 @@ const data = [
   { origin: "USA", cylinders: "8", count: 108 },
 ];
 
-chart(data)
+gf.Chart(data)
   .flow(
-    spread("origin", { dir: "x" }),
-    derive((d) => normalize(d, "count")),
-    stack("cylinders", { dir: "y" })
+    gf.spread("origin", { dir: "x" }),
+    gf.derive((d) => gf.normalize(d, "count")),
+    gf.stack("cylinders", { dir: "y" })
   )
-  .mark(rect({ h: "count", fill: "origin", stroke: "white", strokeWidth: 2 }))
+  .mark(gf.rect({ h: "count", fill: "origin", stroke: "white", strokeWidth: 2 }))
   .render(root, {
     w: 500,
     h: 300,

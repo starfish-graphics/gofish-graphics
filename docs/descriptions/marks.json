@@ -1,6 +1,6 @@
 {
-    "name": "Shapes",
-    "description": "Shapes are the basic building blocks of graphics. They are used to create the visual elements of a graphic.",
+    "name": "Marks",
+    "description": "Marks are the basic building blocks of graphics. They are used to create the visual elements of a graphic.",
     "usage": {
         "mark": {
             "description": "The mark method is used to specify the shapes we place in each of the regions created by the flow operator.",
@@ -23,6 +23,18 @@
         "petal": {
             "type": "petal",
             "description": "A petal shape."
+        },
+        "scaffold": {
+            "type": "scaffold",
+            "description": "..."
+        },
+        "area": {
+            "type": "area",
+            "description": "..."
+        },
+        "line": {
+            "type": "line",
+            "description": "..."
         }
     }
 }

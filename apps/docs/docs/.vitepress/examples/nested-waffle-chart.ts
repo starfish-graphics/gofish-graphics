@@ -1,22 +1,22 @@
 const classColor = {
-  First: color6[0],
-  Second: color6[1],
-  Third: color6[2],
-  Crew: color6[3],
+  First: gf.color6[0],
+  Second: gf.color6[1],
+  Third: gf.color6[2],
+  Crew: gf.color6[3],
 };
 
-StackY(
+gf.StackY(
   { direction: "y", spacing: 8, alignment: "middle", sharedScale: true },
   _(titanic)
     .groupBy("class")
     .map((cls) =>
-      StackX(
+      gf.StackX(
         { spacing: 4, alignment: "end" },
         _(cls)
           .groupBy("sex")
           .map((sex) =>
-            Enclose({}, [
-              StackY(
+            gf.Enclose({}, [
+              gf.StackY(
                 { spacing: 0.5, alignment: "end" },
                 _(sex) // Was missing this lodash chain before .reverse()
                   .reverse()
@@ -28,16 +28,16 @@ StackY(
                   )
                   .reverse()
                   .map((d) =>
-                    StackX(
+                    gf.StackX(
                       { spacing: 0.5, alignment: "end" },
                       d.map((d) =>
-                        Ellipse({
+                        gf.Ellipse({
                           w: 4,
                           h: 4,
                           fill:
                             d.survived === "No"
-                              ? gray
-                              : /* value(d.class) */ classColor[d.class],
+                              ? gf.gray
+                              : /* gf.value(d.class) */ classColor[d.class],
                         })
                       )
                     )

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
 import { penguins } from "../../src/data/penguins";
-import { SpreadX, For, frame as Frame, StackY, Rect, ConnectY, Ref, v } from "../../src/lib";
+import { SpreadX, For, Frame, StackY, Rect, ConnectY, Ref, v } from "../../src/lib";
 import { groupBy } from "lodash";
 import { density1d } from 'fast-kde';
 

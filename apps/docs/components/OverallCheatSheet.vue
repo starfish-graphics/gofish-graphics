@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import shapesDataRaw from '../../../docs/descriptions/shapes.json';
+import marksDataRaw from '../../../docs/descriptions/marks.json';
 import coordDataRaw from '../../../docs/descriptions/coordinate_transforms.json';
+import operatorsDataRaw from '../../../docs/descriptions/operators.json';
 
 type UsageEntry = {
   description: string;
@@ -20,8 +21,9 @@ type DescriptionJson = {
   >;
 };
 
-const shapesData = shapesDataRaw as DescriptionJson;
+const marksData = marksDataRaw as DescriptionJson;
 const coordData = coordDataRaw as DescriptionJson;
+const operatorsData = operatorsDataRaw as DescriptionJson;
 
 type OperatorSummary = {
   name: string;
@@ -36,23 +38,23 @@ type ComponentSummary = {
 
 const sections = [
   {
-    id: 'shapes',
-    title: 'Shapes',
-    description: shapesData.description,
-    operators: Object.entries(shapesData.usage ?? {}).map(
+    id: 'marks',
+    title: 'Marks',
+    description: marksData.description,
+    operators: Object.entries(marksData.usage ?? {}).map(
       ([name, entry]): OperatorSummary => ({
         name,
         description: entry.description,
       }),
     ),
-    components: Object.entries(shapesData.components ?? {}).map(
+    components: Object.entries(marksData.components ?? {}).map(
       ([name, entry]): ComponentSummary => ({
         name,
         type: entry.type,
         description: entry.description,
       }),
     ),
-    link: '/shapes-cheatsheet',
+    link: '/marks-cheatsheet',
   },
   {
     id: 'coordinate-transforms',
@@ -72,6 +74,25 @@ const sections = [
       }),
     ),
     link: '/coordinate-transforms-cheatsheet',
+  },
+  {
+    id: 'operators',
+    title: 'Operators',
+    description: operatorsData.description,
+    operators: Object.entries(operatorsData.usage ?? {}).map(
+      ([name, entry]): OperatorSummary => ({
+        name,
+        description: entry.description,
+      }),
+    ),
+    components: Object.entries(operatorsData.components ?? {}).map(
+      ([name, entry]): ComponentSummary => ({
+        name,
+        type: entry.type,
+        description: entry.description,
+      }),
+    ),
+    link: '/operators-cheatsheet',
   },
 ];
 </script>
@@ -110,7 +131,7 @@ const sections = [
 
         <section class="overall-cheatsheet__operators">
           <h3 class="overall-cheatsheet__operators-title">
-            Operators
+            Usage
           </h3>
           <div class="overall-cheatsheet__operators-list">
             <div
@@ -142,12 +163,9 @@ const sections = [
               class="overall-cheatsheet__component-item"
             >
               <code class="overall-cheatsheet__component-name">
-                {{ comp.name }}
+                {{ comp.type }}({...})
               </code>
               <span class="overall-cheatsheet__component-meta">
-                <!-- <span class="overall-cheatsheet__component-type">
-                  {{ comp.type }}
-                </span> -->
                 <span class="overall-cheatsheet__component-description">
                   {{ comp.description }}
                 </span>
@@ -189,7 +207,7 @@ const sections = [
 .overall-cheatsheet__grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 1.25rem;
+  gap: 1rem;
 }
 
 .overall-cheatsheet__card {
@@ -250,7 +268,7 @@ const sections = [
 
 .overall-cheatsheet__operator-item {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: 1fr;
   column-gap: 0.5rem;
   align-items: baseline;
   font-size: 0.82rem;
@@ -284,7 +302,7 @@ const sections = [
 
 .overall-cheatsheet__component-item {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: 1fr;
   column-gap: 0.5rem;
   align-items: baseline;
   font-size: 0.8rem;

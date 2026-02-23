@@ -8,9 +8,9 @@
 
 ```ts index.ts
 import {
-  chart,
+  Chart,
   spread,
-  layer,
+  Layer,
   select,
   scaffold,
   area,
@@ -20,14 +20,14 @@ import { seafood } from "./dataset";
 
 const container = document.getElementById("app");
 
-layer([
-  chart(seafood)
+Layer([
+  Chart(seafood)
     .flow(
       spread("lake", { dir: "x", spacing: 80 }),
       spread("species", { dir: "y", spacing: -16 })
     )
     .mark(scaffold({ h: "count", fill: "species" }).name("points")),
-  chart(select("points"))
+  Chart(select("points"))
     .flow(group("species"))
     .mark(area({ opacity: 0.8, mixBlendMode: "normal" })),
 ]).render(container, { w: 500, h: 300, axes: true });

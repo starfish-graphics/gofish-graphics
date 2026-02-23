@@ -7,13 +7,13 @@
 ::: starfish-live {template=vanilla-ts rtl lightTheme=aquaBlue darkTheme=atomDark previewHeight=400 coderHeight=512}
 
 ```ts index.ts
-import { chart, stack, rect } from "gofish-graphics";
+import { Chart, stack, rect } from "gofish-graphics";
 import { clock } from "gofish-graphics";
 import { seafood } from "./dataset";
 
 const container = document.getElementById("app");
 
-chart(seafood, { coord: clock() })
+Chart(seafood, { coord: clock() })
   .flow(stack("species", { dir: "x", y: 50, h: 50 }))
   .mark(rect({ w: "count", fill: "species" }))
   .render(container, {

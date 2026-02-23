@@ -7,21 +7,21 @@
 ::: starfish-live {template=vanilla-ts rtl lightTheme=aquaBlue darkTheme=atomDark previewHeight=400 coderHeight=512}
 
 ```ts index.ts
-import { chart, scatter, layer, select, circle, line } from "gofish-graphics";
+import { Chart, scatter, Layer, select, circle, line } from "gofish-graphics";
 import { drivingShifts } from "./dataset";
 
 const container = document.getElementById("app");
 
-layer([
-  chart(drivingShifts)
+Layer([
+  Chart(drivingShifts)
     .flow(scatter("year", { x: "miles", y: "gas" }))
     .mark(
       circle({ r: 4, fill: "white", stroke: "black", strokeWidth: 2 }).name(
         "points"
       )
     ),
-  chart(select("points")).mark(line({ stroke: "black", strokeWidth: 2 })),
-  chart(drivingShifts)
+  Chart(select("points")).mark(line({ stroke: "black", strokeWidth: 2 })),
+  Chart(drivingShifts)
     .flow(scatter("year", { x: "miles", y: "gas" }))
     .mark(circle({ r: 4, fill: "white", stroke: "black", strokeWidth: 2 })),
 ]).render(container, {

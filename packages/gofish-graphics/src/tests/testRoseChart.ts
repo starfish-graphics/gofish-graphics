@@ -1,8 +1,8 @@
-import { Coord, For, groupBy, Polar_DEPRECATED, Rect, Stack, StackX, v } from "../lib";
+import { coord, For, groupBy, polar_DEPRECATED, Rect, Stack, StackX, v } from "../lib";
 import { nightingale } from "../data/nightingale";
 
 export const testRoseChart = () =>
-  Coord({ transform: Polar_DEPRECATED() }, [
+  coord({ transform: polar_DEPRECATED() }, [
     Stack(
       { y: -Math.PI / 2, direction: 1, spacing: 0, alignment: "start" },
       For(groupBy(nightingale, "Month"), (d, i) =>
