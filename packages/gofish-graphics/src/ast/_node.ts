@@ -36,6 +36,8 @@ import {
 import { toJSON } from "../util/interval";
 import type { KeyContext, ScaleContext } from "./gofish";
 import type { ScopeContext } from "./scopeContext";
+import type { ConstraintSpec, ConstraintRef } from "./constraints";
+import { collectConstraintRefs } from "./constraints";
 
 export type RenderSession = {
   scopeContext: ScopeContext;
@@ -131,6 +133,7 @@ export class GoFishNode {
   public renderData?: any;
   public coordinateTransform?: CoordinateTransform;
   public color?: MaybeValue<string>;
+  public constraints: ConstraintSpec[] = [];
   private renderSession?: RenderSession;
   constructor(
     {
@@ -399,6 +402,14 @@ export class GoFishNode {
 
   public setShared(shared: Size<boolean>): this {
     this.shared = shared;
+    return this;
+  }
+
+  public constrain(
+    fn: (refs: Record<string, ConstraintRef>) => ConstraintSpec[]
+  ): this {
+    const refs = collectConstraintRefs(this.children);
+    this.constraints = fn(refs);
     return this;
   }
 }

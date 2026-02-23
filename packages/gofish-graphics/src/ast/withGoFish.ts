@@ -18,6 +18,7 @@ import {
   inferColor,
 } from "./channels";
 import { Mark } from "./types";
+import type { ConstraintSpec, ConstraintRef } from "./constraints";
 
 /**
  * Options for rendering a GoFish node
@@ -67,6 +68,9 @@ export interface PromiseWithRender<T> extends Promise<T> {
   name(name: string): PromiseWithRender<T>;
   setKey(key: string): PromiseWithRender<T>;
   setShared(shared: [boolean, boolean]): PromiseWithRender<T>;
+  constrain(
+    fn: (refs: Record<string, ConstraintRef>) => ConstraintSpec[]
+  ): PromiseWithRender<T>;
 }
 
 /**
@@ -135,6 +139,19 @@ export function addRenderMethod<T>(promise: Promise<T>): PromiseWithRender<T> {
       promise.then((result) => {
         if (result instanceof GoFishNode) {
           return result.setShared(shared) as T;
+        }
+        return result;
+      })
+    );
+  };
+
+  (promise as any).constrain = function (
+    fn: (refs: Record<string, ConstraintRef>) => ConstraintSpec[]
+  ): PromiseWithRender<T> {
+    return addRenderMethod(
+      promise.then((result) => {
+        if (result instanceof GoFishNode) {
+          return result.constrain(fn) as T;
         }
         return result;
       })

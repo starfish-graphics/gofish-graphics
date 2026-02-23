@@ -37,6 +37,10 @@ export { petal as Petal } from "./ast/shapes/petal";
 export { ref as Ref } from "./ast/shapes/ref";
 export { text as Text } from "./ast/shapes/text";
 
+// Constraints
+export { Constraint } from "./ast/constraints";
+export type { ConstraintRef, ConstraintSpec, AlignConstraint, DistributeConstraint, DistributeOptions, Axis, Alignment } from "./ast/constraints";
+
 // Graphical Operators
 export { stack as Stack } from "./ast/graphicalOperators/stack";
 export { stackX as StackX } from "./ast/graphicalOperators/stackX";

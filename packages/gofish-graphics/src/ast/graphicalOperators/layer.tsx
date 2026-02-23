@@ -14,6 +14,7 @@ import { CoordinateTransform } from "../coordinateTransforms/coord";
 import { coord } from "../coordinateTransforms/coord";
 import { createOperatorSequential } from "../withGoFish";
 import { GoFishAST } from "../_ast";
+import { applyConstraints } from "../constraints";
 
 export const layer = createOperatorSequential(
   async (
@@ -155,7 +156,8 @@ export const layer = createOperatorSequential(
           scaleFactors,
           children,
           measurement,
-          posScales
+          posScales,
+          node
         ) => {
           // Compute size using dims (w and h) before passing to children
           size = [
@@ -168,9 +170,62 @@ export const layer = createOperatorSequential(
           for (let i = 0; i < children.length; i++) {
             const child = children[i];
             const childPlaceable = child.layout(size, scaleFactors, posScales);
-
-            childPlaceable.place({ x: 0, y: 0 });
             childPlaceables.push(childPlaceable);
+          }
+
+          if (node.constraints.length > 0) {
+            // Constraint-based placement:
+            // Build name -> placeable map from named children
+            const nameToPlaceable = new Map<string, (typeof childPlaceables)[number]>();
+            const constrainedNames = new Set<string>();
+            for (let i = 0; i < node.children.length; i++) {
+              const childNode = node.children[i];
+              if ("_name" in childNode && (childNode as GoFishNode)._name) {
+                const childName = (childNode as GoFishNode)._name!;
+                nameToPlaceable.set(childName, childPlaceables[i]);
+              }
+            }
+            for (const constraint of node.constraints) {
+              for (const ref of constraint.children) {
+                constrainedNames.add(ref.name);
+              }
+            }
+
+            // Apply constraints in declaration order. When a constraint has no
+            // pre-placed target, fall back to this layer's own box baselines.
+            applyConstraints(node.constraints, nameToPlaceable, {
+              x: { start: 0, middle: size[0] / 2, end: size[0] },
+              y: { start: 0, middle: size[1] / 2, end: size[1] },
+            });
+
+            // Re-layout unconstrained children so internal Ref() nodes observe
+            // final constrained sibling positions. Constrained children are
+            // intentionally left untouched to preserve "placed once" semantics.
+            for (let i = 0; i < children.length; i++) {
+              const childNode = node.children[i];
+              const childName =
+                "_name" in childNode ? (childNode as GoFishNode)._name : undefined;
+              if (childName && constrainedNames.has(childName)) continue;
+              childPlaceables[i] = children[i].layout(size, scaleFactors, posScales);
+            }
+
+            // Default any unplaced axes to 0
+            for (const cp of childPlaceables) {
+              const needsX = cp.dims[0].min === undefined;
+              const needsY = cp.dims[1].min === undefined;
+              if (needsX && needsY) {
+                cp.place({ x: 0, y: 0 });
+              } else if (needsX) {
+                cp.place({ x: 0 });
+              } else if (needsY) {
+                cp.place({ y: 0 });
+              }
+            }
+          } else {
+            // Default layer behavior: place all children at (0, 0)
+            for (const cp of childPlaceables) {
+              cp.place({ x: 0, y: 0 });
+            }
           }
 
           // Calculate the bounding box of all children
@@ -197,14 +252,6 @@ export const layer = createOperatorSequential(
 
           const scaleX = options.transform?.scale?.x ?? 1;
           const scaleY = options.transform?.scale?.y ?? 1;
-
-          const childYPositions = childPlaceables.map((cp, i) => ({
-            index: i,
-            min: cp.dims[1].min,
-            max: cp.dims[1].max,
-            center: cp.dims[1].center,
-            size: cp.dims[1].size,
-          }));
 
           const translateY =
             dims[1].min !== undefined ? dims[1].min - minY : undefined;
