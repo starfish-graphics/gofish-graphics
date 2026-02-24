@@ -44,6 +44,8 @@ const computeIntrinsicSize = (
     : Monotonic.linear(0, input ?? 0);
 };
 
+const DEFAULT_RECT_SIZE = 16;
+
 /* TODO: what should default embedding behavior be when all values are aesthetic? */
 export const Rect = ({
     key,
@@ -182,7 +184,7 @@ export const Rect = ({
           const x = computeAesthetic(dims[0].min, posScales?.[0]!, undefined);
           const y = computeAesthetic(dims[1].min, posScales?.[1]!, undefined);
 
-          let w: number;
+          let w: number | undefined;
           if (isValue(dims[0].min) && isValue(dims[0].size)) {
             // If posScales for x exists, scale min and min+size, then subtract
             const min = x;
@@ -201,8 +203,13 @@ export const Rect = ({
           } else {
             w = computeSize(dims[0].size, scaleFactors?.[0]!, size[0]);
           }
+          // When parent constraints are unresolved and rect width is unspecified,
+          // keep a visible default instead of propagating undefined.
+          if (w === undefined || !Number.isFinite(w)) {
+            w = DEFAULT_RECT_SIZE;
+          }
 
-          let h: number;
+          let h: number | undefined;
           if (isValue(dims[1].min) && isValue(dims[1].size)) {
             // If posScales for y exists, scale min and min+size, then subtract
             const min = y;
@@ -220,6 +227,9 @@ export const Rect = ({
             h = maxPos - minPos;
           } else {
             h = computeSize(dims[1].size, scaleFactors?.[1]!, size[1]);
+          }
+          if (h === undefined || !Number.isFinite(h)) {
+            h = DEFAULT_RECT_SIZE;
           }
 
           const result = {
