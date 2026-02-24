@@ -269,7 +269,7 @@ gf.Chart(seafood)
 :::
 
 `gf.Chart()` creates a chart from data. We pass an array with a single object containing the rectangle's
-position and size. Then we use `.mark()` to specify that we want to render `rect` shapes. The `fill` parameter specifies the gf.color.
+position and size. Then we use `.mark()` to specify that we want to render `rect` shapes. The `fill` parameter specifies the color.
 We are using a green from GoFish's default color palette for this chart. Try changing `green` to `blue`
 or changing `5` to a higher or lower number.
 
