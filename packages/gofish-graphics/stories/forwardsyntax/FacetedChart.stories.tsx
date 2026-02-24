@@ -25,12 +25,11 @@ export const Default: StoryObj<Args> = {
 
     Chart(seafood)
       .flow(spread("lake", { dir: "x", spacing: 48 }))
-      .mark(async (data) => {
-        return Chart(data)
+      .mark((data) => 
+        Chart(data)
           .flow(spread("species", { dir: "x" }))
           .mark(rect({ h: "count", w: 20 }))
-          .resolve();
-      })
+      )
       .render(container, {
         w: args.w,
         h: args.h,
