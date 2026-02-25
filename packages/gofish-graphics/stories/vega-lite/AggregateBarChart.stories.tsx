@@ -25,10 +25,6 @@ export const Default: StoryObj<Args> = {
       (d) => d.year === 2000
     );
 
-    // Mirrors: https://vega.github.io/vega-lite/examples/bar_aggregate.html
-    // US population distribution by age group in year 2000, displayed as horizontal bars.
-    // Vega-Lite uses `aggregate: "sum"` declaratively in the encoding.
-    // GoFish equivalent: filter in derive(), then groupBy + sumBy to pre-aggregate.
     Chart(year2000)
       .flow(spread("age", { dir: "y", reverse: true }))
       .mark(rect({ w: "people" }))
