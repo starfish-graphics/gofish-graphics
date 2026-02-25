@@ -1,6 +1,16 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
-import { Chart, spread, stack, rect, derive } from "../../src/lib";
+import {
+  Chart,
+  spread,
+  stack,
+  rect,
+  derive,
+  Rect,
+  Spread,
+  SpreadX,
+  v,
+} from "../../src/lib";
 import { groupBy, sumBy } from "lodash";
 import data from "vega-datasets";
 
@@ -22,40 +32,25 @@ export const Default: StoryObj<Args> = {
   render: (args: Args, context: any) => {
     const container = initializeContainer();
 
-    // Mirrors: https://vega.github.io/vega-lite/examples/bar_grouped_repeated.html
-    // Vega-Lite uses `repeat: { layer: ["Worldwide Gross", "US Gross"] }` to create
-    // side-by-side bars for multiple measures within each genre category.
-    //
-    // MISSING FEATURE: GoFish has no built-in repeat.layer / wide-to-long pivot operator.
-    // Equivalent approach: manually reshape wide-format data to long-format in derive(),
-    // then use spread + stack for the grouped layout.
+    // TODO: you have to drop down all the way to low-level syntax to do this!
+    /* maybe it would make more sense to do
+    spread({ dir: "x" }, [
+      rect({ h: "Worldwide Gross", fill: v("Worldwide Gross") }),
+      rect({ h: "US Gross", fill: v("US Gross") })
+    )])
+    */
+    // TODO: the labels run into each other!
     Chart(context.loaded.movies as any[])
-      .flow(
-        derive((d: any[]) => {
-          const filtered = d.filter(
-            (row) =>
-              row["Major Genre"] != null &&
-              row["Worldwide Gross"] != null &&
-              row["US Gross"] != null
-          );
-          const byGenre = groupBy(filtered, "Major Genre");
-          return Object.entries(byGenre).flatMap(([genre, rows]) => [
-            {
-              genre,
-              measure: "Worldwide Gross",
-              value: sumBy(rows as any[], "Worldwide Gross"),
-            },
-            {
-              genre,
-              measure: "US Gross",
-              value: sumBy(rows as any[], "US Gross"),
-            },
-          ]);
-        }),
-        spread("genre", { dir: "x" }),
-        stack("measure", { dir: "x" })
+      .flow(spread("Major Genre", { dir: "x" }))
+      .mark((data) =>
+        SpreadX([
+          Rect({
+            h: v(sumBy(data, "Worldwide Gross")),
+            fill: v("Worldwide Gross"),
+          }),
+          Rect({ h: v(sumBy(data, "US Gross")), fill: v("US Gross") }),
+        ])
       )
-      .mark(rect({ h: "value", fill: "measure" }))
       .render(container, { w: args.w, h: args.h, axes: true });
 
     return container;

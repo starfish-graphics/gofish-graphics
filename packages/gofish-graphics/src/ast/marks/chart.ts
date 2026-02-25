@@ -306,6 +306,7 @@ export function spread<T>(
         spacing?: number;
         sharedScale?: boolean;
         alignment?: "start" | "middle" | "end";
+        reverse?: boolean;
         debug?: boolean;
         label?: boolean;
       },
@@ -321,6 +322,7 @@ export function spread<T>(
     spacing?: number;
     sharedScale?: boolean;
     alignment?: "start" | "middle" | "end";
+    reverse?: boolean;
     debug?: boolean;
     label?: boolean;
   }
@@ -356,6 +358,7 @@ export function spread<T>(
           spacing: finalOptions?.spacing ?? 8,
           sharedScale: finalOptions?.sharedScale,
           alignment: finalOptions?.alignment,
+          reverse: finalOptions?.reverse,
           w: finalOptions?.w
             ? inferSize(finalOptions?.w as string | number, d)
             : undefined,

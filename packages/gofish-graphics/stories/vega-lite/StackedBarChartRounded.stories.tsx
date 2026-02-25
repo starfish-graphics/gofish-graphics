@@ -5,8 +5,18 @@ import { groupBy } from "lodash";
 import data from "vega-datasets";
 
 const MONTHS = [
-  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
 ];
 
 const meta: Meta = {
@@ -27,13 +37,11 @@ export const Default: StoryObj<Args> = {
   render: (args: Args, context: any) => {
     const container = initializeContainer();
 
-    // Mirrors: https://vega.github.io/vega-lite/examples/stacked_bar_count_corner_radius_mark.html
-    // Same Seattle weather stacked bar chart, but with rounded bar corners.
-    //
     // MISSING FEATURE: Per-corner radius is not supported. Vega-Lite supports
     // `cornerRadiusTopLeft` and `cornerRadiusTopRight` to round only the top corners
     // of each bar segment. GoFish's `rx`/`ry` applies the same radius to all four
     // corners of every bar.
+    // arguably this should be done with some kind of clip path or something.
     Chart(context.loaded.weather as any[])
       .flow(
         derive((d: any[]) => {
@@ -41,7 +49,8 @@ export const Default: StoryObj<Args> = {
             month: MONTHS[new Date(row.date).getMonth()],
             weather: row.weather,
           }));
-          const result: { month: string; weather: string; count: number }[] = [];
+          const result: { month: string; weather: string; count: number }[] =
+            [];
           const byMonth = groupBy(withMonth, "month");
           for (const month of MONTHS) {
             if (!byMonth[month]) continue;

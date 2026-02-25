@@ -22,23 +22,8 @@ export const Default: StoryObj<Args> = {
   render: (args: Args, context: any) => {
     const container = initializeContainer();
 
-    // Mirrors: https://vega.github.io/vega-lite/examples/stacked_bar_h.html
-    // Barley trial data: total yield per variety stacked by site, displayed as
-    // horizontal bars (x = sum(yield), y = variety, color = site).
-    // Vega-Lite uses `aggregate: "sum"` on yield; GoFish pre-aggregates with derive().
     Chart(context.loaded.barley as any[])
-      .flow(
-        derive((d: any[]) => {
-          const grouped = groupBy(d, (row) => `${row.variety}||${row.site}`);
-          return Object.values(grouped).map((rows: any) => ({
-            variety: rows[0].variety,
-            site: rows[0].site,
-            yield: sumBy(rows, "yield"),
-          }));
-        }),
-        spread("variety", { dir: "y" }),
-        stack("site", { dir: "x" })
-      )
+      .flow(spread("variety", { dir: "y" }), stack("site", { dir: "x" }))
       .mark(rect({ w: "yield", fill: "site" }))
       .render(container, { w: args.w, h: args.h, axes: true });
 

@@ -5,8 +5,18 @@ import { groupBy } from "lodash";
 import data from "vega-datasets";
 
 const MONTHS = [
-  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
 ];
 
 const meta: Meta = {
@@ -36,6 +46,8 @@ export const Default: StoryObj<Args> = {
     // Vega-Lite maps weather types to specific colors (sun → "#e7ba52", fog → "#c7c7c7",
     // drizzle → "#aec7e8", rain → "#1f77b4", snow → "#9467bd").
     // GoFish assigns colors automatically from its default palette.
+
+    // TODO: need a better way of aggregating by count or whatever.
     Chart(context.loaded.weather as any[])
       .flow(
         derive((d: any[]) => {
@@ -45,7 +57,8 @@ export const Default: StoryObj<Args> = {
             weather: row.weather,
           }));
           // Aggregate: count occurrences per month × weather, preserving month order
-          const result: { month: string; weather: string; count: number }[] = [];
+          const result: { month: string; weather: string; count: number }[] =
+            [];
           const byMonth = groupBy(withMonth, "month");
           for (const month of MONTHS) {
             if (!byMonth[month]) continue;

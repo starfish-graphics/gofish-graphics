@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
-import { Chart, spread, rect, derive } from "../../src/lib";
+import { Chart, spread, rect, derive, log } from "../../src/lib";
 import { groupBy, sumBy, orderBy } from "lodash";
 import data from "vega-datasets";
 
@@ -25,21 +25,25 @@ export const Default: StoryObj<Args> = {
       (d) => d.year === 2000
     );
 
-    // Mirrors: https://vega.github.io/vega-lite/examples/bar_aggregate_sort_by_encoding.html
-    // Same population data, but age groups are sorted by descending population total.
-    // Vega-Lite uses `sort: "-x"` on the y-axis encoding.
-    // GoFish equivalent: orderBy() the aggregated data before spreading.
+    // We'll pre-aggregate (sum people by age) and then sort age groups by that sum in descending order.
+    // This ordering will apply to spread("age", { dir: "y" }) for sorted bars.
+    // Derive returns a new array [{ age, people }], sorted descending by people.
+    /* TODO: grouping doesn't preserve order (and also it's hard to sort after aggregation... partly
+    b/c we can't pop out to the previous level at that point) */
     Chart(year2000)
       .flow(
-        derive((d: any[]) => {
-          const grouped = groupBy(d, "age");
-          const aggregated = Object.entries(grouped).map(([age, rows]) => ({
-            age: `${age}`,
-            people: sumBy(rows as any[], "people"),
-          }));
-          return orderBy(aggregated, "people", "desc");
+        derive((data: any[]) => {
+          const aggregated = Object.entries(groupBy(data, "age")).map(
+            ([age, rows]) => ({
+              age,
+              people: sumBy(rows, "people"),
+            })
+          );
+          return orderBy(aggregated, ["people"], ["desc"]);
         }),
-        spread("age", { dir: "y" })
+        log("aggregated data"),
+        spread("age", { dir: "y", reverse: true }),
+        log("spread data")
       )
       .mark(rect({ w: "people" }))
       .render(container, { w: args.w, h: args.h, axes: true });
