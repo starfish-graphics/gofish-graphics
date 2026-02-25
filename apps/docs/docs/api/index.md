@@ -10,6 +10,8 @@ By combining operators and marks, you can create complex and automatic chart lay
 
 ## How To
 
+- [Create a chart](/api/howto/create-chart) Build charts using Chart, flow, mark, and render.
+- [Create a glyph](/api/howto/create-glyph) Compose custom shapes with Layer.
 - [Pick a layout operator](/api/howto/operators) Choose between spread, stack, and scatter.
 - [Use selection](/api/howto/selection) Connect marks across charts for overlays and annotations.
 
