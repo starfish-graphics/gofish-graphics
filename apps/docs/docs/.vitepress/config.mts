@@ -50,6 +50,7 @@ export default defineConfig({
       { text: "Get Started!", link: "/get-started" },
       { text: "Tutorial", link: "/tutorial" },
       { text: "Examples", link: "/examples/index.md" },
+      { text: "API", link: "/api/" },
       {
         text: "Cheatsheets",
         items: [
@@ -70,24 +71,60 @@ export default defineConfig({
     ],
 
     sidebar: {
-      // "/examples/": [
-      //   {
-      //     text: "Examples",
-      //     items: [
-      //       {
-      //         text: "Search",
-      //         link: "/examples/",
-      //       },
-      //       {
-      //         text: "All Examples",
-      //         items: examplesData.load().examples.map((example) => ({
-      //           text: example.title,
-      //           link: example.demoUrl,
-      //         })),
-      //       },
-      //     ],
-      //   },
-      // ],
+      "/api/": [
+        {
+          text: "Core",
+          items: [
+            { text: "chart", link: "/api/core/chart" },
+            { text: "flow", link: "/api/core/flow" },
+            { text: "mark", link: "/api/core/mark" },
+            { text: "render", link: "/api/core/render" },
+          ],
+        },
+        {
+          text: "Marks",
+          items: [
+            { text: "rect", link: "/api/marks/rect" },
+            { text: "circle", link: "/api/marks/circle" },
+            { text: "ellipse", link: "/api/marks/ellipse" },
+            { text: "line", link: "/api/marks/line" },
+            { text: "area", link: "/api/marks/area" },
+            { text: "scaffold", link: "/api/marks/scaffold" },
+            { text: "ref", link: "/api/marks/ref" },
+          ],
+        },
+        {
+          text: "Operators",
+          items: [
+            { text: "spread", link: "/api/operators/spread" },
+            { text: "stack", link: "/api/operators/stack" },
+            { text: "scatter", link: "/api/operators/scatter" },
+            { text: "layer", link: "/api/operators/layer" },
+            { text: "derive", link: "/api/operators/derive" },
+            { text: "log", link: "/api/operators/log" },
+          ],
+        },
+        {
+          text: "Selection",
+          items: [
+            { text: "select", link: "/api/selection/select" },
+          ],
+        },
+        {
+          text: "Coordinates",
+          items: [
+            { text: "polar", link: "/api/coords/polar" },
+            { text: "clock", link: "/api/coords/clock" },
+          ],
+        },
+        {
+          text: "How To",
+          items: [
+            { text: "Pick a layout operator", link: "/api/howto/operators" },
+            { text: "Use selection", link: "/api/howto/selection" },
+          ],
+        },
+      ],
       "/": [
         {
           text: "Get Started!",
@@ -112,6 +149,10 @@ export default defineConfig({
               })),
             },
           ],
+        },
+        {
+          text: "API Reference",
+          link: "/api/",
         },
         {
           text: "Reference",
