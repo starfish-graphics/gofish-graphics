@@ -30,7 +30,7 @@ export const Default: StoryObj<Args> = {
     // Vega-Lite uses `aggregate: "sum"` declaratively in the encoding.
     // GoFish equivalent: filter in derive(), then groupBy + sumBy to pre-aggregate.
     Chart(year2000)
-      .flow(spread("age", { dir: "y" }))
+      .flow(spread("age", { dir: "y", reverse: true }))
       .mark(rect({ w: "people" }))
       .render(container, { w: args.w, h: args.h, axes: true });
 
