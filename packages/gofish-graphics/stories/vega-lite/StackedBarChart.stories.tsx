@@ -5,6 +5,8 @@ import { groupBy } from "lodash";
 import data from "vega-datasets";
 import _ from "lodash";
 
+// Mirrors: https://vega.github.io/vega-lite/examples/stacked_bar_weather.html
+
 const MONTHS = [
   "Jan",
   "Feb",
@@ -38,7 +40,6 @@ export const Default: StoryObj<Args> = {
   render: (args: Args, context: any) => {
     const container = initializeContainer();
 
-    // Mirrors: https://vega.github.io/vega-lite/examples/stacked_bar_weather.html
     // Seattle weather data: count of days per weather type per month.
     // Vega-Lite uses `timeUnit: "month"` and `aggregate: "count"` declaratively.
     // GoFish equivalent: use derive() to extract month from date, then group and count.

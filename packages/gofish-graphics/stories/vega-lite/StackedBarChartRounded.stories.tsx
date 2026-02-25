@@ -4,6 +4,8 @@ import { Chart, spread, stack, rect, derive } from "../../src/lib";
 import { groupBy } from "lodash";
 import data from "vega-datasets";
 
+// Mirrors: https://vega.github.io/vega-lite/examples/stacked_bar_count_corner_radius_mark.html
+
 const MONTHS = [
   "Jan",
   "Feb",

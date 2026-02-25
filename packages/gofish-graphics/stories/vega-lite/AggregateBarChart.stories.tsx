@@ -4,6 +4,8 @@ import { Chart, spread, rect, derive } from "../../src/lib";
 import { groupBy, sumBy } from "lodash";
 import data from "vega-datasets";
 
+// Mirrors: https://vega.github.io/vega-lite/examples/bar_aggregate.html
+
 const meta: Meta = {
   title: "Vega-Lite/Aggregate Bar Chart",
   argTypes: {

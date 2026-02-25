@@ -4,6 +4,8 @@ import { Chart, spread, stack, rect, derive, log } from "../../src/lib";
 import { groupBy, sumBy } from "lodash";
 import data from "vega-datasets";
 
+// Mirrors: https://vega.github.io/vega-lite/examples/stacked_bar_normalize.html
+
 const meta: Meta = {
   title: "Vega-Lite/Normalized Stacked Bar Chart",
   argTypes: {

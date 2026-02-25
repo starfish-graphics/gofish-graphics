@@ -14,6 +14,8 @@ import {
 import { groupBy, sumBy } from "lodash";
 import data from "vega-datasets";
 
+// Mirrors: https://vega.github.io/vega-lite/examples/bar_grouped_repeated.html
+
 const meta: Meta = {
   title: "Vega-Lite/Grouped Bar Chart (Multiple Measure with Repeat)",
   argTypes: {

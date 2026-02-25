@@ -2,7 +2,8 @@ import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
 import { Chart, spread, stack, rect } from "../../src/lib";
 
-// Exact inline data from https://vega.github.io/vega-lite/examples/bar_grouped.html
+// Mirrors: https://vega.github.io/vega-lite/examples/bar_grouped.html
+
 const values = [
   { category: "A", group: "x", value: 0.1 },
   { category: "A", group: "y", value: 0.6 },

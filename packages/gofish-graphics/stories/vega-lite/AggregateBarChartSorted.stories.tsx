@@ -4,6 +4,8 @@ import { Chart, spread, rect, derive, log } from "../../src/lib";
 import { groupBy, sumBy, orderBy } from "lodash";
 import data from "vega-datasets";
 
+// Mirrors: https://vega.github.io/vega-lite/examples/bar_aggregate_sort_by_encoding.html
+
 const meta: Meta = {
   title: "Vega-Lite/Aggregate Bar Chart (Sorted)",
   argTypes: {
