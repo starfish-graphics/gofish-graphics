@@ -26,16 +26,26 @@ async function resolveMarkResult(
   raw: ReturnType<Mark<any>>,
   layerContext?: LayerContext
 ): Promise<GoFishNode> {
-  if (raw instanceof ChartBuilder) return raw.withLayerContext(layerContext ?? {}).resolve();
-  if (typeof raw === "function") return resolveMarkResult((raw as () => ReturnType<Mark<any>>)(), layerContext);
+  if (raw instanceof ChartBuilder)
+    return raw.withLayerContext(layerContext ?? {}).resolve();
+  if (typeof raw === "function")
+    return resolveMarkResult(
+      (raw as () => ReturnType<Mark<any>>)(),
+      layerContext
+    );
   return raw as unknown as GoFishNode;
 }
 
 /** Attach .name(layerName) to a mark so it registers each produced node when used in a chart. */
-function nameableMark<T>(base: Mark<T>): Mark<T> & { name(layerName: string): Mark<T> } {
+function nameableMark<T>(
+  base: Mark<T>
+): Mark<T> & { name(layerName: string): Mark<T> } {
   const withName = (layerName: string): Mark<T> => {
     return async (d: T, key?: string | number, layerContext?: LayerContext) => {
-      const node = await resolveMarkResult(base(d, key, layerContext), layerContext);
+      const node = await resolveMarkResult(
+        base(d, key, layerContext),
+        layerContext
+      );
       if (layerContext && layerName) {
         if (!layerContext[layerName]) {
           layerContext[layerName] = { data: [], nodes: [] };
@@ -261,8 +271,12 @@ export class ChartBuilder<TInput, TOutput = TInput> {
 
     // Create the node; pass layerContext so named marks can register each produced node
     const node = await Frame(this.options ?? {}, [
-      (await resolveMarkResult(composedMark(data as any, undefined, this.layerContext), this.layerContext))
-        .setShared([true, true]),
+      (
+        await resolveMarkResult(
+          composedMark(data as any, undefined, this.layerContext),
+          this.layerContext
+        )
+      ).setShared([true, true]),
     ]);
 
     return node;
@@ -306,6 +320,7 @@ export function spread<T>(
         spacing?: number;
         sharedScale?: boolean;
         alignment?: "start" | "middle" | "end";
+        reverse?: boolean;
         debug?: boolean;
         label?: boolean;
       },
@@ -321,6 +336,7 @@ export function spread<T>(
     spacing?: number;
     sharedScale?: boolean;
     alignment?: "start" | "middle" | "end";
+    reverse?: boolean;
     debug?: boolean;
     label?: boolean;
   }
@@ -343,7 +359,11 @@ export function spread<T>(
       layerContext?: LayerContext
     ) => {
       // Group by the field if provided, otherwise iterate over raw data
-      const grouped = field ? groupBy(d, field as ValueIteratee<T>) : d;
+      const grouped = field
+        ? typeof field === "string"
+          ? Map.groupBy(d, (row) => (row as any)[field])
+          : Map.groupBy(d, field)
+        : d;
 
       return Spread(
         {
@@ -356,6 +376,7 @@ export function spread<T>(
           spacing: finalOptions?.spacing ?? 8,
           sharedScale: finalOptions?.sharedScale,
           alignment: finalOptions?.alignment,
+          reverse: finalOptions?.reverse,
           w: finalOptions?.w
             ? inferSize(finalOptions?.w as string | number, d)
             : undefined,
@@ -365,7 +386,10 @@ export function spread<T>(
         },
         For(grouped as any, async (groupData: T[], k) => {
           const currentKey = key != undefined ? `${key}-${k}` : k;
-          const node = await resolveMarkResult(mark(groupData, currentKey, layerContext), layerContext);
+          const node = await resolveMarkResult(
+            mark(groupData, currentKey, layerContext),
+            layerContext
+          );
           // Always set keys for ordinal axis mapping, regardless of label setting
           return node.setKey(currentKey?.toString() ?? "");
         })
