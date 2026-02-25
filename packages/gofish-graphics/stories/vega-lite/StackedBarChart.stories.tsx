@@ -1,8 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
-import { Chart, spread, stack, rect, derive } from "../../src/lib";
+import { Chart, spread, stack, rect, derive, log } from "../../src/lib";
 import { groupBy } from "lodash";
 import data from "vega-datasets";
+import _ from "lodash";
 
 const MONTHS = [
   "Jan",
@@ -50,27 +51,31 @@ export const Default: StoryObj<Args> = {
     // TODO: need a better way of aggregating by count or whatever.
     Chart(context.loaded.weather as any[])
       .flow(
-        derive((d: any[]) => {
-          // vega-datasets parses date strings to Date objects via autoType
-          const withMonth = d.map((row) => ({
+        derive((d: any[]) =>
+          d.map((row) => ({
             month: MONTHS[new Date(row.date).getMonth()],
-            weather: row.weather,
-          }));
-          // Aggregate: count occurrences per month × weather, preserving month order
-          const result: { month: string; weather: string; count: number }[] =
-            [];
-          const byMonth = groupBy(withMonth, "month");
-          for (const month of MONTHS) {
-            if (!byMonth[month]) continue;
-            const byWeather = groupBy(byMonth[month], "weather");
-            for (const [weather, rows] of Object.entries(byWeather)) {
-              result.push({ month, weather, count: (rows as any[]).length });
-            }
-          }
-          return result;
-        }),
+            ...row,
+          }))
+        ),
         spread("month", { dir: "x" }),
-        stack("weather", { dir: "y" })
+        derive((d: any[]) => {
+          // Enforce specific weather order for stacking
+          const WEATHER_ORDER = ["sun", "fog", "drizzle", "rain", "snow"];
+          // If d is already grouped into [{month, weather, count}], just sort on weather
+          if (d.length && d[0].weather !== undefined) {
+            return [...d].sort(
+              (a, b) =>
+                WEATHER_ORDER.indexOf(a.weather) -
+                WEATHER_ORDER.indexOf(b.weather)
+            );
+          }
+          return d;
+        }),
+        stack("weather", { dir: "y" }),
+        log("spread data"),
+        // log("spread data"),
+        // stack("date", { dir: "y" })
+        derive((d) => ({ count: d.length, weather: d[0].weather }))
       )
       .mark(rect({ h: "count", fill: "weather" }))
       .render(container, { w: args.w, h: args.h, axes: true });
