@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/html";
-import { initializeContainer } from "../helper";
-import { Chart, spread, stack, rect, derive } from "../../src/lib";
+import { initializeContainer } from "../../helper";
+import { Chart, spread, stack, rect, derive } from "../../../src/lib";
 import { groupBy } from "lodash";
 import data from "vega-datasets";
 
@@ -22,7 +22,7 @@ const MONTHS = [
 ];
 
 const meta: Meta = {
-  title: "Vega-Lite/Stacked Bar Chart (Rounded Corners)",
+  title: "Vega-Lite/Bar/Stacked Bar Chart (Rounded Corners)",
   argTypes: {
     w: { control: { type: "number", min: 100, max: 1000, step: 10 } },
     h: { control: { type: "number", min: 100, max: 1000, step: 10 } },

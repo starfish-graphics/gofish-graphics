@@ -1,13 +1,13 @@
 import type { Meta, StoryObj } from "@storybook/html";
-import { initializeContainer } from "../helper";
-import { Chart, spread, stack, rect, derive } from "../../src/lib";
+import { initializeContainer } from "../../helper";
+import { Chart, spread, stack, rect, derive } from "../../../src/lib";
 import { groupBy, sumBy } from "lodash";
 import data from "vega-datasets";
 
 // Mirrors: https://vega.github.io/vega-lite/examples/stacked_bar_h.html
 
 const meta: Meta = {
-  title: "Vega-Lite/Horizontal Stacked Bar Chart",
+  title: "Vega-Lite/Bar/Horizontal Stacked Bar Chart",
   argTypes: {
     w: { control: { type: "number", min: 100, max: 1000, step: 10 } },
     h: { control: { type: "number", min: 100, max: 1000, step: 10 } },
