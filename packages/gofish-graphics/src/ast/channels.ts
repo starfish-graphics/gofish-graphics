@@ -1,4 +1,4 @@
-import { sumBy } from "lodash";
+import { sumBy, meanBy } from "lodash";
 import { MaybeValue, value } from "./data";
 
 export type ChannelType = "size" | "color";
@@ -41,6 +41,22 @@ export const inferSize = <T>(
     ? accessor
     : accessor !== undefined
       ? value(sumBy(d as T[], accessor))
+      : undefined;
+};
+
+/**
+ * Infer a position value from a field name or literal number.
+ * If accessor is a number, passes it through as a constant.
+ * If accessor is a string (field name), averages the field across the data array.
+ */
+export const inferPos = <T>(
+  accessor: string | number | undefined,
+  d: T | T[],
+): MaybeValue<number> | undefined => {
+  return typeof accessor === "number"
+    ? accessor
+    : accessor !== undefined
+      ? value(meanBy(Array.isArray(d) ? d : [d], accessor))
       : undefined;
 };
 

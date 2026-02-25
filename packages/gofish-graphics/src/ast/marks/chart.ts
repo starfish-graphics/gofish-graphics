@@ -1,4 +1,5 @@
 import { groupBy, ValueIteratee } from "lodash";
+import { bin as d3bin } from "d3-array";
 import {
   Frame,
   Spread,
@@ -13,7 +14,7 @@ import {
 import { GoFishNode } from "../_node";
 import { For } from "../iterators/for";
 import { CoordinateTransform } from "../coordinateTransforms/coord";
-import { inferSize } from "../channels";
+import { inferSize, inferPos } from "../channels";
 import { Rect } from "../shapes/rect";
 import { rect as generatedRect } from "../shapes/rect";
 import { Mark, Operator } from "../types";
@@ -158,6 +159,26 @@ export function log<T>(label?: string): Operator<T, T> {
       return mark(d, key, layerContext);
     }) as Mark<T>;
   };
+}
+
+export function bin<T extends Record<string, any>>(
+  field: keyof T & string,
+  options?: { thresholds?: number | number[] }
+): Operator<T[], { start: number; end: number; size: number; count: number }[]> {
+  return derive((data: T[]) => {
+    const binner = d3bin<T, number>()
+      .value((d) => d[field] as number)
+      .thresholds(options?.thresholds ?? 10);
+    const bins = binner(data.filter((d) => d[field] != null));
+    return bins
+      .filter((b) => b.x0 !== undefined && b.x1 !== undefined)
+      .map((b) => ({
+        start: b.x0!,
+        end: b.x1!,
+        size: b.x1! - b.x0!,
+        count: b.length,
+      }));
+  });
 }
 
 /* END Data Transformation Operators */
@@ -399,8 +420,18 @@ export function spread<T>(
 }
 
 export function stack<T>(
-  field: keyof T,
-  options: {
+  fieldOrOptions:
+    | keyof T
+    | {
+        dir: "x" | "y";
+        x?: number;
+        y?: number;
+        w?: number | keyof T;
+        h?: number | keyof T;
+        spacing?: number;
+        alignment?: "start" | "middle" | "end";
+      },
+  options?: {
     dir: "x" | "y";
     x?: number;
     y?: number;
@@ -410,41 +441,68 @@ export function stack<T>(
     alignment?: "start" | "middle" | "end";
   }
 ): Operator<T[], T[]> {
-  return spread(field, { ...options, spacing: 0 });
+  if (typeof fieldOrOptions === "object") {
+    return spread({ ...fieldOrOptions, spacing: 0 });
+  }
+  return spread(fieldOrOptions, { ...options!, spacing: 0 });
 }
 
 export function scatter<T>(
-  field: keyof T,
-  options: {
-    x: keyof T;
-    y: keyof T;
+  fieldOrOptions:
+    | keyof T
+    | {
+        x: number | (keyof T & string);
+        y: number | (keyof T & string);
+        debug?: boolean;
+      },
+  options?: {
+    x: number | (keyof T & string);
+    y: number | (keyof T & string);
     debug?: boolean;
   }
 ): Operator<T[], T[]> {
+  const field: keyof T | undefined =
+    typeof fieldOrOptions === "object" ? undefined : fieldOrOptions;
+  const opts = (typeof fieldOrOptions === "object" ? fieldOrOptions : options)!;
+
   return async (mark: Mark<T[]>) => {
     return async (
       d: T[],
       key?: string | number,
       layerContext?: LayerContext
     ) => {
-      // Group by the field
-      const groups = groupBy(d, field as ValueIteratee<T>);
-      if (options?.debug) console.log("scatter groups", groups);
-      return Frame(
-        For(groups, async (items, groupKey) => {
-          // Calculate average x and y values for this group
-          const avgX = meanBy(items, options.x as string);
-          const avgY = meanBy(items, options.y as string);
-          if (options?.debug)
-            console.log(`Group ${groupKey}: avgX=${avgX}, avgY=${avgY}`);
-
-          // Render the group items and wrap in Position operator
-          const currentKey = key != undefined ? `${key}-${groupKey}` : groupKey;
-          return Position({ x: v(avgX), y: v(avgY) }, [
-            mark(items, currentKey, layerContext) as any,
-          ]);
-        })
-      );
+      if (field !== undefined) {
+        // Group by field, position each group at its mean x/y
+        const groups = groupBy(d, field as ValueIteratee<T>);
+        if (opts?.debug) console.log("scatter groups", groups);
+        return Frame(
+          For(groups, async (items, groupKey) => {
+            const x = inferPos(opts.x, items);
+            const y = inferPos(opts.y, items);
+            if (opts?.debug)
+              console.log(`Group ${groupKey}: x=${x}, y=${y}`);
+            const currentKey =
+              key != undefined ? `${key}-${groupKey}` : groupKey;
+            return Position({ x: x!, y: y! }, [
+              mark(items, currentKey, layerContext) as any,
+            ]);
+          })
+        );
+      } else {
+        // No grouping — position each item at its own x/y
+        if (opts?.debug) console.log("scatter items", d);
+        return Frame(
+          d.map((item, i) => {
+            const x = inferPos(opts.x, [item]);
+            const y = inferPos(opts.y, [item]);
+            if (opts?.debug) console.log(`Item ${i}: x=${x}, y=${y}`);
+            const currentKey = key != undefined ? `${key}-${i}` : i;
+            return Position({ x: x!, y: y! }, [
+              mark([item], currentKey as any, layerContext) as any,
+            ]);
+          })
+        );
+      }
     };
   };
 }
