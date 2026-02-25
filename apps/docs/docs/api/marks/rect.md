@@ -15,7 +15,7 @@ gf.Chart([{ value: 80 }])
 ## Signature
 
 ```ts
-rect({ w?, h?, fill?, stroke?, strokeWidth?, rx?, ry?, label? })
+rect({ w?, h?, fill?, stroke?, strokeWidth = 0, rx?, ry?, label? })
 ```
 
 ## Parameters
@@ -26,7 +26,7 @@ rect({ w?, h?, fill?, stroke?, strokeWidth?, rx?, ry?, label? })
 | `h` | `number \| string` | Height — number for fixed, field name to encode data |
 | `fill` | `string` | Fill color or field name for color encoding |
 | `stroke` | `string` | Stroke color (defaults to `fill`) |
-| `strokeWidth` | `number` | Stroke width (default `0`) |
+| `strokeWidth` | `number` | Stroke width |
 | `rx` | `number` | Horizontal border radius |
 | `ry` | `number` | Vertical border radius |
 | `label` | `boolean` | Render field value as text label inside rect |

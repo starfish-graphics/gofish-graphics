@@ -19,13 +19,14 @@ gf.Chart(seafood)
 ## Signature
 
 ```ts
-stack(field, { dir, alignment?, w?, h? })
+stack(field, { dir, alignment = "start", w?, h? })
 ```
 
 ## Parameters
 
 | Option | Type | Description |
 |--------|------|-------------|
+| `field` | `string` | Field to group by before stacking |
 | `dir` | `"x" \| "y"` | **Required.** Stack direction |
 | `alignment` | `"start" \| "middle" \| "end"` | Alignment within each slot |
 | `w` | `number \| string` | Width or field |

@@ -23,7 +23,7 @@ gf.Layer([
 ## Signature
 
 ```ts
-line({ stroke?, strokeWidth?, opacity?, interpolation? })
+line({ stroke?, strokeWidth = 1, opacity?, interpolation = "linear" })
 ```
 
 ## Parameters
@@ -31,9 +31,9 @@ line({ stroke?, strokeWidth?, opacity?, interpolation? })
 | Option | Type | Description |
 |--------|------|-------------|
 | `stroke` | `string` | Line color |
-| `strokeWidth` | `number` | Line thickness (default `1`) |
+| `strokeWidth` | `number` | Line thickness |
 | `opacity` | `number` | Opacity (0–1) |
-| `interpolation` | `"linear" \| "bezier"` | Line interpolation (default `"linear"`) |
+| `interpolation` | `"linear" \| "bezier"` | Line interpolation |
 
 ## Example
 

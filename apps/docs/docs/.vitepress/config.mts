@@ -26,8 +26,7 @@ export default defineConfig({
         href: "https://fonts.googleapis.com/css2?family=Balsamiq+Sans:ital,wght@0,400;0,700;1,400;1,700&family=Comic+Neue:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&family=Fira+Code:wght@300..700&family=Source+Sans+3:ital,wght@0,200..900;1,200..900&display=swap",
       },
     ],
-    ['link', { rel: 'icon', href: '/gofish-logo.png' }]
-
+    ["link", { rel: "icon", href: "/gofish-logo.png" }],
   ],
   markdown: {
     config: (md) => {
@@ -73,6 +72,17 @@ export default defineConfig({
     sidebar: {
       "/api/": [
         {
+          text: "Overview",
+          link: "/api/",
+        },
+        {
+          text: "How To",
+          items: [
+            { text: "Pick a layout operator", link: "/api/howto/operators" },
+            { text: "Use selection", link: "/api/howto/selection" },
+          ],
+        },
+        {
           text: "Core",
           items: [
             { text: "chart", link: "/api/core/chart" },
@@ -106,22 +116,13 @@ export default defineConfig({
         },
         {
           text: "Selection",
-          items: [
-            { text: "select", link: "/api/selection/select" },
-          ],
+          items: [{ text: "select", link: "/api/selection/select" }],
         },
         {
           text: "Coordinates",
           items: [
             { text: "polar", link: "/api/coords/polar" },
             { text: "clock", link: "/api/coords/clock" },
-          ],
-        },
-        {
-          text: "How To",
-          items: [
-            { text: "Pick a layout operator", link: "/api/howto/operators" },
-            { text: "Use selection", link: "/api/howto/selection" },
           ],
         },
       ],

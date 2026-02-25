@@ -27,6 +27,7 @@ scatter(field, { x, y, debug? })
 
 | Option | Type | Description |
 |--------|------|-------------|
+| `field` | `string` | Field to group by |
 | `x` | `string` | Field to use for horizontal position |
 | `y` | `string` | Field to use for vertical position |
 | `debug` | `boolean` | Log group positions to console |

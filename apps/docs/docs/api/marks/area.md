@@ -26,7 +26,7 @@ gf.Layer([
 ## Signature
 
 ```ts
-area({ stroke?, strokeWidth?, opacity?, mixBlendMode?, dir?, interpolation? })
+area({ stroke?, strokeWidth = 0, opacity?, mixBlendMode = "normal", dir = "x", interpolation = "bezier" })
 ```
 
 ## Parameters
@@ -34,11 +34,11 @@ area({ stroke?, strokeWidth?, opacity?, mixBlendMode?, dir?, interpolation? })
 | Option | Type | Description |
 |--------|------|-------------|
 | `stroke` | `string` | Stroke color |
-| `strokeWidth` | `number` | Stroke width (default `0`) |
+| `strokeWidth` | `number` | Stroke width |
 | `opacity` | `number` | Opacity (0–1) |
-| `mixBlendMode` | `"normal" \| "multiply"` | Blend mode (default `"normal"`) |
-| `dir` | `"x" \| "y"` | Direction axis (default `"x"`) |
-| `interpolation` | `"linear" \| "bezier"` | Curve interpolation (default `"bezier"`) |
+| `mixBlendMode` | `"normal" \| "multiply"` | Blend mode |
+| `dir` | `"x" \| "y"` | Direction axis |
+| `interpolation` | `"linear" \| "bezier"` | Curve interpolation |
 
 ## Example
 

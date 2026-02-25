@@ -16,17 +16,18 @@ gf.Chart(seafood)
 ## Signature
 
 ```ts
-spread(field, { dir, spacing?, alignment?, sharedScale?, reverse?, w?, h? })
-spread({ dir, spacing?, alignment?, ... })  // no grouping
+spread(field, { dir, spacing = 8, alignment = "start", sharedScale?, reverse?, w?, h? })
+spread({ dir, spacing = 8, alignment = "start", ... })  // no grouping
 ```
 
 ## Parameters
 
 | Option | Type | Description |
 |--------|------|-------------|
+| `field` | `string` | Field to group by before laying out |
 | `dir` | `"x" \| "y"` | **Required.** Layout direction |
-| `spacing` | `number` | Gap between groups (default `8`) |
-| `alignment` | `"start" \| "middle" \| "end"` | Alignment within each slot (default `"start"`) |
+| `spacing` | `number` | Gap between groups |
+| `alignment` | `"start" \| "middle" \| "end"` | Alignment within each slot |
 | `sharedScale` | `boolean` | Share scale across all groups |
 | `reverse` | `boolean` | Reverse group order |
 | `w` | `number \| string` | Fixed width or field for width encoding |
