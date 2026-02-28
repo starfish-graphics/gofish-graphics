@@ -16,9 +16,7 @@ import {
   Transform,
 } from "./dims";
 import { ContinuousDomain } from "./domain";
-import {
-  gofish,
-} from "./gofish";
+import { gofish } from "./gofish";
 import { GoFishRef } from "./_ref";
 import { GoFishAST } from "./_ast";
 import { CoordinateTransform } from "./coordinateTransforms/coord";
@@ -291,26 +289,17 @@ export class GoFishNode {
   public place(pos: FancyPosition): void {
     const elabPos = elaboratePosition(pos);
     /* For each dimension, if intrinsic dim is not defined, assign pos to that.
-     * Otherwise, compute translation to position the implicit anchor point.
-     *
-     * The anchor point is always the local origin (0). Shapes set up their
-     * intrinsic dimensions so that one edge is at 0:
-     * - For positive sizes: min = 0 (anchor at bottom)
-     * - For negative sizes: max = 0 (anchor at top)
+     * Otherwise, compute translation to position the node's min at pos.
      */
     for (let i = 0; i < elabPos.length; i++) {
       if (elabPos[i] === undefined) continue;
       if (this.intrinsicDims?.[i]?.min === undefined) {
         this.intrinsicDims![i].min = elabPos[i]!;
       } else if (this.transform?.translate?.[i] === undefined) {
-        this.transform!.translate![i] = elabPos[i]!;
+        this.transform!.translate![i] =
+          elabPos[i]! - (this.intrinsicDims![i].min ?? 0);
       } else {
-        // console.warn(
-        //   "placing node with both intrinsic and transform defined:",
-        //   this.type,
-        //   this.transform!.translate![i]
-        // );
-        // this.transform!.translate![i] = elabPos[i]! - (this.intrinsicDims![i].min ?? 0);
+        // Already placed - could warn or update translation
       }
     }
   }
@@ -342,7 +331,10 @@ export class GoFishNode {
   public setRenderSession(session: RenderSession): void {
     this.renderSession = session;
     this.children.forEach((child) => {
-      if ("setRenderSession" in child && typeof child.setRenderSession === "function") {
+      if (
+        "setRenderSession" in child &&
+        typeof child.setRenderSession === "function"
+      ) {
         child.setRenderSession(session);
       }
     });

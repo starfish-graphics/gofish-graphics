@@ -42,7 +42,7 @@ export const spread = createOperator(
       key,
       direction,
       spacing = 0,
-      alignment = "start",
+      alignment = "baseline",
       sharedScale = false,
       mode = "edge-to-edge",
       reverse = false,
@@ -53,7 +53,7 @@ export const spread = createOperator(
       key?: string;
       direction: FancyDirection;
       spacing?: number;
-      alignment?: "start" | "middle" | "end";
+      alignment?: "start" | "middle" | "end" | "baseline";
       sharedScale?: boolean;
       mode?: "edge-to-edge" | "center-to-center";
       reverse?: boolean;
@@ -104,7 +104,7 @@ export const spread = createOperator(
               (s) => (s as any).value as number
             );
 
-            if (alignment === "start" || alignment === "end") {
+            if (alignment === "start" || alignment === "end" || alignment === "baseline") {
               // Merge SIZE into POSITION by treating each size as an interval from 0 to size
               const intervals = sizeValues.map((v) => Interval.interval(0, v));
               const domain = Interval.unionAll(...intervals);
@@ -324,6 +324,7 @@ export const spread = createOperator(
             start: "min",
             middle: "center",
             end: "max",
+            baseline: "min",
           } as const;
           const getBaseline = (dir: Direction) => (child: Placeable) =>
             child.dims[dir][alignmentToDim[alignment]!]!;
@@ -347,11 +348,12 @@ export const spread = createOperator(
           /* align */
           // Skip alignment if children have position scales (they already have data-driven positions),
           // UNLESS the align space came from SIZE (no inherent position) and we need baseline alignment,
-          // OR alignment is "middle" (which requires centering regardless of position scales).
+          // OR alignment is "middle" or "baseline" (which requires special handling regardless of position scales).
           if (
             !posScales?.[alignDir] ||
             alignFromSize ||
-            alignment === "middle"
+            alignment === "middle" ||
+            alignment === "baseline"
           ) {
             if (alignment === "start") {
               const baseline =
@@ -364,6 +366,22 @@ export const spread = createOperator(
                 const child = childPlaceables[i];
                 if (isFixed(alignDir)(child)) continue;
                 child.place({ [alignDir]: baseline });
+              }
+            } else if (alignment === "baseline") {
+              // Baseline alignment places each child's local origin (0) at the baseline position.
+              // Since place() uses min-based positioning, we compensate by adding the child's min.
+              const baseline =
+                fixedChildren.length > 0
+                  ? getBaseline(alignDir)(fixedChildren[0])
+                  : posScales?.[alignDir]
+                    ? posScales[alignDir](0)
+                    : 0;
+              for (let i = 0; i < childPlaceables.length; i++) {
+                const child = childPlaceables[i];
+                if (isFixed(alignDir)(child)) continue;
+                const childNode = child as GoFishNode;
+                const childMin = childNode.intrinsicDims?.[alignDir]?.min ?? 0;
+                child.place({ [alignDir]: baseline + childMin });
               }
             } else if (alignment === "middle") {
               const baseline =

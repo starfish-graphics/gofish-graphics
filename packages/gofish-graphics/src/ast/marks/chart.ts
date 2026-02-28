@@ -319,7 +319,7 @@ export function spread<T>(
         mode?: "edge" | "center";
         spacing?: number;
         sharedScale?: boolean;
-        alignment?: "start" | "middle" | "end";
+        alignment?: "start" | "middle" | "end" | "baseline";
         reverse?: boolean;
         debug?: boolean;
         label?: boolean;
@@ -335,7 +335,7 @@ export function spread<T>(
     mode?: "edge" | "center";
     spacing?: number;
     sharedScale?: boolean;
-    alignment?: "start" | "middle" | "end";
+    alignment?: "start" | "middle" | "end" | "baseline";
     reverse?: boolean;
     debug?: boolean;
     label?: boolean;
@@ -349,7 +349,7 @@ export function spread<T>(
   const finalOptions = {
     ...opts,
     label: opts?.label ?? false,
-    alignment: opts?.alignment ?? "start",
+    alignment: opts?.alignment ?? "baseline",
   };
 
   return async (mark: Mark<T[]>) => {
@@ -407,7 +407,7 @@ export function stack<T>(
     w?: number | keyof T;
     h?: number | keyof T;
     spacing?: number;
-    alignment?: "start" | "middle" | "end";
+    alignment?: "start" | "middle" | "end" | "baseline";
   }
 ): Operator<T[], T[]> {
   return spread(field, { ...options, spacing: 0 });
