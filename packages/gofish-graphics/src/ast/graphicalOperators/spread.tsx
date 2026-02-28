@@ -365,11 +365,9 @@ export const spread = createOperator(
               for (let i = 0; i < childPlaceables.length; i++) {
                 const child = childPlaceables[i];
                 if (isFixed(alignDir)(child)) continue;
-                child.place({ [alignDir]: baseline });
+                child.place(alignDir, baseline, "min");
               }
             } else if (alignment === "baseline") {
-              // Baseline alignment places each child's local origin (0) at the baseline position.
-              // Since place() uses min-based positioning, we compensate by adding the child's min.
               const baseline =
                 fixedChildren.length > 0
                   ? getBaseline(alignDir)(fixedChildren[0])
@@ -379,9 +377,7 @@ export const spread = createOperator(
               for (let i = 0; i < childPlaceables.length; i++) {
                 const child = childPlaceables[i];
                 if (isFixed(alignDir)(child)) continue;
-                const childNode = child as GoFishNode;
-                const childMin = childNode.intrinsicDims?.[alignDir]?.min ?? 0;
-                child.place({ [alignDir]: baseline + childMin });
+                child.place(alignDir, baseline, "baseline");
               }
             } else if (alignment === "middle") {
               const baseline =
@@ -391,9 +387,7 @@ export const spread = createOperator(
               for (let i = 0; i < childPlaceables.length; i++) {
                 const child = childPlaceables[i];
                 if (isFixed(alignDir)(child)) continue;
-                child.place({
-                  [alignDir]: baseline - child.dims[alignDir].size! / 2,
-                });
+                child.place(alignDir, baseline, "center");
               }
             } else if (alignment === "end") {
               const baseline =
@@ -405,9 +399,7 @@ export const spread = createOperator(
               for (let i = 0; i < childPlaceables.length; i++) {
                 const child = childPlaceables[i];
                 if (isFixed(alignDir)(child)) continue;
-                child.place({
-                  [alignDir]: baseline - child.dims[alignDir].size!,
-                });
+                child.place(alignDir, baseline, "max");
               }
             }
           }
@@ -447,7 +439,7 @@ export const spread = createOperator(
                 }
                 pos = childMax + spacing;
               } else {
-                child.place({ [stackDir]: pos });
+                child.place(stackDir, pos, "min");
                 const sz = child.dims[stackDir].size ?? 0;
                 pos += sz + spacing;
               }
@@ -466,8 +458,7 @@ export const spread = createOperator(
                 }
                 pos = childCenter + spacing;
               } else {
-                const sz = child.dims[stackDir].size ?? 0;
-                child.place({ [stackDir]: pos - sz / 2 });
+                child.place(stackDir, pos, "center");
                 pos += spacing;
               }
             }

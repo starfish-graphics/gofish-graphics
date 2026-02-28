@@ -144,7 +144,10 @@ const createCompositeRelation = (
             const childPlaceables = layoutChildren.map((child) =>
               child.layout(size, scaleFactors, posScales)
             );
-            childPlaceables.forEach((child) => child.place({ x: 0, y: 0 }));
+            childPlaceables.forEach((child) => {
+              child.place("x", 0);
+              child.place("y", 0);
+            });
 
             const { minX, maxX, minY, maxY } = maxChildBounds(childPlaceables);
             return {
@@ -203,7 +206,10 @@ export const mask = createOperator((_: Record<string, never>, children: GoFishAS
         const childPlaceables = layoutChildren.map((child) =>
           child.layout(size, scaleFactors, posScales)
         );
-        childPlaceables.forEach((child) => child.place({ x: 0, y: 0 }));
+        childPlaceables.forEach((child) => {
+          child.place("x", 0);
+          child.place("y", 0);
+        });
 
         const { minX, maxX, minY, maxY } = maxChildBounds(childPlaceables);
         return {

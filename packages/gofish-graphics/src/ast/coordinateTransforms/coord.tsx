@@ -214,7 +214,10 @@ export const coord = createOperator(
           const childPlaceables = children.map((child) =>
             child.layout(size, [1, 1], [undefined, undefined])
           );
-          childPlaceables.forEach((c) => c.place({ x: 0, y: 0 }));
+          childPlaceables.forEach((c) => {
+            c.place("x", 0);
+            c.place("y", 0);
+          });
 
           // Compute bounding box in screen space by transforming sample points
           // For each child placeable, compute its transformed bounding box and union them
