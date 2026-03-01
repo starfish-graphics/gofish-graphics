@@ -51,8 +51,8 @@ export const enclose = createOperator(
 
           for (const child of children) {
             const childPlaceable = child.layout(size, scaleFactors);
-            childPlaceable.place("x", 0);
-            childPlaceable.place("y", 0);
+            childPlaceable.place("x", 0, "baseline");
+            childPlaceable.place("y", 0, "baseline");
             childPlaceables.push(childPlaceable);
           }
 

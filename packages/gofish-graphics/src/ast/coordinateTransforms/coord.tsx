@@ -215,8 +215,8 @@ export const coord = createOperator(
             child.layout(size, [1, 1], [undefined, undefined])
           );
           childPlaceables.forEach((c) => {
-            c.place("x", 0);
-            c.place("y", 0);
+            c.place("x", 0, "baseline");
+            c.place("y", 0, "baseline");
           });
 
           // Compute bounding box in screen space by transforming sample points

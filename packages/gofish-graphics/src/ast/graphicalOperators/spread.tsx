@@ -104,7 +104,11 @@ export const spread = createOperator(
               (s) => (s as any).value as number
             );
 
-            if (alignment === "start" || alignment === "end" || alignment === "baseline") {
+            if (
+              alignment === "start" ||
+              alignment === "end" ||
+              alignment === "baseline"
+            ) {
               // Merge SIZE into POSITION by treating each size as an interval from 0 to size
               const intervals = sizeValues.map((v) => Interval.interval(0, v));
               const domain = Interval.unionAll(...intervals);
