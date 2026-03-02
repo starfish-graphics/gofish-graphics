@@ -216,7 +216,8 @@ export async function layout(
   }
 
   child.layout([w, h], [undefined, undefined], posScales);
-  child.place({ x: x ?? transform?.x ?? 0, y: y ?? transform?.y ?? 0 });
+  child.place("x", x ?? transform?.x ?? 0, "baseline");
+  child.place("y", y ?? transform?.y ?? 0, "baseline");
 
   if (debug) {
     console.log("🌳 Node Tree:");

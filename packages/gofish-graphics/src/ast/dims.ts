@@ -62,6 +62,8 @@ export const elaborateDims = <T>(dims: FancyDims<T>): Dimensions<T> => {
 export type Direction = 0 | 1;
 export type FancyDirection = "x" | "y" | Direction;
 
+export type Anchor = "min" | "max" | "center" | "baseline";
+
 export const elaborateDirection = (direction: FancyDirection): Direction => {
   switch (direction) {
     case "x":

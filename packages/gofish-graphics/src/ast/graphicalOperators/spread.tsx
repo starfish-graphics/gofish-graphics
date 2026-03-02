@@ -42,7 +42,7 @@ export const spread = createOperator(
       key,
       direction,
       spacing = 0,
-      alignment = "start",
+      alignment = "baseline",
       sharedScale = false,
       mode = "edge-to-edge",
       reverse = false,
@@ -53,7 +53,7 @@ export const spread = createOperator(
       key?: string;
       direction: FancyDirection;
       spacing?: number;
-      alignment?: "start" | "middle" | "end";
+      alignment?: "start" | "middle" | "end" | "baseline";
       sharedScale?: boolean;
       mode?: "edge-to-edge" | "center-to-center";
       reverse?: boolean;
@@ -104,7 +104,11 @@ export const spread = createOperator(
               (s) => (s as any).value as number
             );
 
-            if (alignment === "start" || alignment === "end") {
+            if (
+              alignment === "start" ||
+              alignment === "end" ||
+              alignment === "baseline"
+            ) {
               // Merge SIZE into POSITION by treating each size as an interval from 0 to size
               const intervals = sizeValues.map((v) => Interval.interval(0, v));
               const domain = Interval.unionAll(...intervals);
@@ -324,6 +328,7 @@ export const spread = createOperator(
             start: "min",
             middle: "center",
             end: "max",
+            baseline: "min",
           } as const;
           const getBaseline = (dir: Direction) => (child: Placeable) =>
             child.dims[dir][alignmentToDim[alignment]!]!;
@@ -346,8 +351,10 @@ export const spread = createOperator(
 
           /* align */
           // Skip alignment if children have position scales (they already have data-driven positions),
-          // UNLESS the align space came from SIZE (no inherent position) and we need baseline alignment,
-          // OR alignment is "middle" (which requires centering regardless of position scales).
+          // UNLESS the align space came from SIZE (no inherent position) — alignFromSize handles that —
+          // OR alignment is "middle" (which always requires centering regardless of position scales).
+          // NOTE: "baseline" does NOT force the block to run; when posScales are present and children
+          // are POSITION-based, their positions are already data-driven and no shift should be applied.
           if (
             !posScales?.[alignDir] ||
             alignFromSize ||
@@ -363,7 +370,19 @@ export const spread = createOperator(
               for (let i = 0; i < childPlaceables.length; i++) {
                 const child = childPlaceables[i];
                 if (isFixed(alignDir)(child)) continue;
-                child.place({ [alignDir]: baseline });
+                child.place(alignDir, baseline, "min");
+              }
+            } else if (alignment === "baseline") {
+              const baseline =
+                fixedChildren.length > 0
+                  ? getBaseline(alignDir)(fixedChildren[0])
+                  : posScales?.[alignDir]
+                    ? posScales[alignDir](0)
+                    : 0;
+              for (let i = 0; i < childPlaceables.length; i++) {
+                const child = childPlaceables[i];
+                if (isFixed(alignDir)(child)) continue;
+                child.place(alignDir, baseline, "baseline");
               }
             } else if (alignment === "middle") {
               const baseline =
@@ -373,9 +392,7 @@ export const spread = createOperator(
               for (let i = 0; i < childPlaceables.length; i++) {
                 const child = childPlaceables[i];
                 if (isFixed(alignDir)(child)) continue;
-                child.place({
-                  [alignDir]: baseline - child.dims[alignDir].size! / 2,
-                });
+                child.place(alignDir, baseline, "center");
               }
             } else if (alignment === "end") {
               const baseline =
@@ -387,9 +404,7 @@ export const spread = createOperator(
               for (let i = 0; i < childPlaceables.length; i++) {
                 const child = childPlaceables[i];
                 if (isFixed(alignDir)(child)) continue;
-                child.place({
-                  [alignDir]: baseline - child.dims[alignDir].size!,
-                });
+                child.place(alignDir, baseline, "max");
               }
             }
           }
@@ -429,7 +444,7 @@ export const spread = createOperator(
                 }
                 pos = childMax + spacing;
               } else {
-                child.place({ [stackDir]: pos });
+                child.place(stackDir, pos, "min");
                 const sz = child.dims[stackDir].size ?? 0;
                 pos += sz + spacing;
               }
@@ -448,8 +463,7 @@ export const spread = createOperator(
                 }
                 pos = childCenter + spacing;
               } else {
-                const sz = child.dims[stackDir].size ?? 0;
-                child.place({ [stackDir]: pos - sz / 2 });
+                child.place(stackDir, pos, "center");
                 pos += spacing;
               }
             }

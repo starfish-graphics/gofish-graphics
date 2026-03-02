@@ -27,6 +27,39 @@ const classColor = {
   Crew: color6[3],
 };
 
+export const Simplified: StoryObj<Args> = {
+  args: { w: 500, h: 300 },
+  render: (args: Args) => {
+    const container = initializeContainer();
+
+    StackX({ alignment: "middle" }, [
+      Rect({
+        w: 40,
+        h: _(titanic).sumBy("count") / 10,
+        fill: neutral,
+      }),
+      StackY(
+        { dir: "ttb", alignment: "middle" },
+        _(titanic)
+          .groupBy("class")
+          .map((items, cls) =>
+            Rect({
+              w: 40,
+              h: _(items).sumBy("count") / 10,
+              fill: classColor[cls],
+            })
+          )
+          .value()
+      ),
+    ]).render(container, {
+      w: args.w,
+      h: args.h,
+      axes: true,
+    });
+    return container;
+  },
+};
+
 export const Default: StoryObj<Args> = {
   args: { w: 500, h: 300 },
   render: (args: Args) => {
@@ -99,6 +132,5 @@ export const Default: StoryObj<Args> = {
       axes: true,
     });
     return container;
-
-  }
-}
+  },
+};

@@ -169,7 +169,8 @@ export const layer = createOperatorSequential(
             const child = children[i];
             const childPlaceable = child.layout(size, scaleFactors, posScales);
 
-            childPlaceable.place({ x: 0, y: 0 });
+            childPlaceable.place("x", 0, "baseline");
+            childPlaceable.place("y", 0, "baseline");
             childPlaceables.push(childPlaceable);
           }
 
