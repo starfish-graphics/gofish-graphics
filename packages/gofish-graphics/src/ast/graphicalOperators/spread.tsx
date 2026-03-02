@@ -178,29 +178,16 @@ export const spread = createOperator(
             const totalSize = sizeValues.reduce((a, b) => a + b, 0);
             stackSpace = POSITION(Interval.interval(0, totalSize));
           }
-          // if children are all UNDEFINED or POSITION and spacing is > 0, return ORDINAL
-          else if (
-            children.every(
-              (child) =>
-                child[stackDir].kind === "undefined" ||
-                child[stackDir].kind === "position" ||
-                child[stackDir].kind === "size" // SIZE along stackDir behaves like position extents for spacing
-            ) &&
-            spacing > 0
-          ) {
-            // Extract top-level keys from child nodes for ordinal domain
+          // if children are named (data-driven) and free (no inherent position), return ORDINAL
+          else {
             const topLevelKeys = childNodes
               .filter((node): node is GoFishNode => node instanceof GoFishNode)
               .map((node) => node.key)
               .filter((key): key is string => key !== undefined);
-            stackSpace = ORDINAL(topLevelKeys);
-          } else {
-            // Extract top-level keys from child nodes for ordinal domain
-            const topLevelKeys = childNodes
-              .filter((node): node is GoFishNode => node instanceof GoFishNode)
-              .map((node) => node.key)
-              .filter((key): key is string => key !== undefined);
-            stackSpace = ORDINAL(topLevelKeys);
+
+            if (topLevelKeys.length > 0) {
+              stackSpace = ORDINAL(topLevelKeys);
+            }
           }
 
           return {

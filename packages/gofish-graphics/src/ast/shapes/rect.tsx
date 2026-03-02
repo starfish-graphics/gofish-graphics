@@ -129,7 +129,7 @@ export const Rect = ({
           let underlyingSpaceX = UNDEFINED;
           if (!isValue(dims[0].min) && !isValue(dims[0].size)) {
             // nothing is data-driven
-            underlyingSpaceX = ORDINAL([]);
+            // keep undefined if no values
           } else if (isAesthetic(dims[0].min) && isValue(dims[0].size)) {
             // aesthetic position + data-driven size -> DIFFERENCE
             underlyingSpaceX = DIFFERENCE(getValue(dims[0].size)!);
@@ -147,7 +147,7 @@ export const Rect = ({
           let underlyingSpaceY = UNDEFINED;
           if (!isValue(dims[1].min) && !isValue(dims[1].size)) {
             // nothing is data-driven
-            underlyingSpaceY = ORDINAL([]);
+            // keep undefined if no values
           } else if (isAesthetic(dims[1].min) && isValue(dims[1].size)) {
             // aesthetic position + data-driven size -> DIFFERENCE
             underlyingSpaceY = DIFFERENCE(getValue(dims[1].size)!);
