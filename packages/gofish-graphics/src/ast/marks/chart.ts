@@ -21,11 +21,31 @@ import { Mark, Operator } from "../types";
 export type { Mark, Operator };
 export { generatedRect as rect };
 
+/** Resolves whatever a Mark returns into a GoFishNode. */
+async function resolveMarkResult(
+  raw: ReturnType<Mark<any>>,
+  layerContext?: LayerContext
+): Promise<GoFishNode> {
+  if (raw instanceof ChartBuilder)
+    return raw.withLayerContext(layerContext ?? {}).resolve();
+  if (typeof raw === "function")
+    return resolveMarkResult(
+      (raw as () => ReturnType<Mark<any>>)(),
+      layerContext
+    );
+  return raw as unknown as GoFishNode;
+}
+
 /** Attach .name(layerName) to a mark so it registers each produced node when used in a chart. */
-function nameableMark<T>(base: Mark<T>): Mark<T> & { name(layerName: string): Mark<T> } {
+function nameableMark<T>(
+  base: Mark<T>
+): Mark<T> & { name(layerName: string): Mark<T> } {
   const withName = (layerName: string): Mark<T> => {
     return async (d: T, key?: string | number, layerContext?: LayerContext) => {
-      const node = await base(d, key, layerContext);
+      const node = await resolveMarkResult(
+        base(d, key, layerContext),
+        layerContext
+      );
       if (layerContext && layerName) {
         if (!layerContext[layerName]) {
           layerContext[layerName] = { data: [], nodes: [] };
@@ -92,13 +112,13 @@ export class LayerSelector<T = any> {
 /* Data Transformation Operators */
 export function derive<T, U>(fn: (d: T) => U | Promise<U>): Operator<T, U> {
   return async (mark: Mark<U>) => {
-    return async (
+    return (async (
       d: T,
       key?: string | number,
       layerContext?: LayerContext
     ) => {
       return mark(await fn(d), key, layerContext);
-    };
+    }) as Mark<T>;
   };
 }
 
@@ -125,7 +145,7 @@ export const normalize = <T, K extends keyof T>(
 
 export function log<T>(label?: string): Operator<T, T> {
   return async (mark: Mark<T>) => {
-    return async (
+    return (async (
       d: T,
       key?: string | number,
       layerContext?: LayerContext
@@ -136,7 +156,7 @@ export function log<T>(label?: string): Operator<T, T> {
         console.log(d);
       }
       return mark(d, key, layerContext);
-    };
+    }) as Mark<T>;
   };
 }
 
@@ -252,7 +272,10 @@ export class ChartBuilder<TInput, TOutput = TInput> {
     // Create the node; pass layerContext so named marks can register each produced node
     const node = await Frame(this.options ?? {}, [
       (
-        await composedMark(data as any, undefined, this.layerContext)
+        await resolveMarkResult(
+          composedMark(data as any, undefined, this.layerContext),
+          this.layerContext
+        )
       ).setShared([true, true]),
     ]);
 
@@ -297,6 +320,7 @@ export function spread<T>(
         spacing?: number;
         sharedScale?: boolean;
         alignment?: "start" | "middle" | "end";
+        reverse?: boolean;
         debug?: boolean;
         label?: boolean;
       },
@@ -312,6 +336,7 @@ export function spread<T>(
     spacing?: number;
     sharedScale?: boolean;
     alignment?: "start" | "middle" | "end";
+    reverse?: boolean;
     debug?: boolean;
     label?: boolean;
   }
@@ -334,7 +359,11 @@ export function spread<T>(
       layerContext?: LayerContext
     ) => {
       // Group by the field if provided, otherwise iterate over raw data
-      const grouped = field ? groupBy(d, field as ValueIteratee<T>) : d;
+      const grouped = field
+        ? typeof field === "string"
+          ? Map.groupBy(d, (row) => (row as any)[field])
+          : Map.groupBy(d, field)
+        : d;
 
       return Spread(
         {
@@ -347,6 +376,7 @@ export function spread<T>(
           spacing: finalOptions?.spacing ?? 8,
           sharedScale: finalOptions?.sharedScale,
           alignment: finalOptions?.alignment,
+          reverse: finalOptions?.reverse,
           w: finalOptions?.w
             ? inferSize(finalOptions?.w as string | number, d)
             : undefined,
@@ -356,7 +386,10 @@ export function spread<T>(
         },
         For(grouped as any, async (groupData: T[], k) => {
           const currentKey = key != undefined ? `${key}-${k}` : k;
-          const node = await mark(groupData, currentKey, layerContext);
+          const node = await resolveMarkResult(
+            mark(groupData, currentKey, layerContext),
+            layerContext
+          );
           // Always set keys for ordinal axis mapping, regardless of label setting
           return node.setKey(currentKey?.toString() ?? "");
         })
@@ -408,7 +441,7 @@ export function scatter<T>(
           // Render the group items and wrap in Position operator
           const currentKey = key != undefined ? `${key}-${groupKey}` : groupKey;
           return Position({ x: v(avgX), y: v(avgY) }, [
-            mark(items, currentKey, layerContext),
+            mark(items, currentKey, layerContext) as any,
           ]);
         })
       );
@@ -431,7 +464,7 @@ export function group<T>(field: keyof T): Operator<T[], T[]> {
         For(groups, (items, groupKey) => {
           // Apply mark to each group
           const currentKey = key != undefined ? `${key}-${groupKey}` : groupKey;
-          return mark(items, currentKey, layerContext);
+          return mark(items, currentKey, layerContext) as any;
         })
       );
     };

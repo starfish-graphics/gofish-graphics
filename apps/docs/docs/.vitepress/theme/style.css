@@ -257,6 +257,13 @@ a.starfish-codepen:hover {
   }
 }
 
+/* Remove green code styling on API reference page */
+.api-page {
+  --vp-code-color: var(--vp-c-text-2);
+  --vp-code-bg: var(--vp-c-default-soft);
+  --vp-code-block-bg: var(--vp-c-bg-alt);
+}
+
 /* Wider doc container ONLY on cheatsheet pages */
 .cheatsheet-page .VPDoc .container,
 .cheatsheet-page .VPDoc .container > .content {
