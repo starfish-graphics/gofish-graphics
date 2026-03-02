@@ -180,12 +180,8 @@ export const spread = createOperator(
               .filter((node): node is GoFishNode => node instanceof GoFishNode)
               .map((node) => node.key)
               .filter((key): key is string => key !== undefined);
-            const childrenAreFree = children.every(
-              (child) =>
-                child[stackDir].kind === "undefined" ||
-                child[stackDir].kind === "size"
-            );
-            if (topLevelKeys.length > 0 && childrenAreFree) {
+
+            if (topLevelKeys.length > 0) {
               stackSpace = ORDINAL(topLevelKeys);
             }
           }
