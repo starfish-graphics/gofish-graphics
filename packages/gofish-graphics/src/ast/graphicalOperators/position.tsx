@@ -64,7 +64,8 @@ export const position = createOperator(
           const childPlaceable = child.layout(size, scaleFactors, posScales);
 
           // Place child at origin first to get its dimensions
-          childPlaceable.place({ x: 0, y: 0 });
+          childPlaceable.place("x", 0);
+          childPlaceable.place("y", 0);
 
           // Calculate the position offset based on the child's intrinsic dimensions
           const childWidth = childPlaceable.dims[0].size ?? 0;
@@ -87,7 +88,8 @@ export const position = createOperator(
           const offsetY = yPos - childHeight / 2;
 
           // Update child position
-          childPlaceable.place({ x: offsetX, y: offsetY });
+          childPlaceable.place("x", offsetX);
+          childPlaceable.place("y", offsetY);
 
           return {
             intrinsicDims: [
