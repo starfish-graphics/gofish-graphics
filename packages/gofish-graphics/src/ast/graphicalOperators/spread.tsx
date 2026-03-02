@@ -351,13 +351,14 @@ export const spread = createOperator(
 
           /* align */
           // Skip alignment if children have position scales (they already have data-driven positions),
-          // UNLESS the align space came from SIZE (no inherent position) and we need baseline alignment,
-          // OR alignment is "middle" or "baseline" (which requires special handling regardless of position scales).
+          // UNLESS the align space came from SIZE (no inherent position) — alignFromSize handles that —
+          // OR alignment is "middle" (which always requires centering regardless of position scales).
+          // NOTE: "baseline" does NOT force the block to run; when posScales are present and children
+          // are POSITION-based, their positions are already data-driven and no shift should be applied.
           if (
             !posScales?.[alignDir] ||
             alignFromSize ||
-            alignment === "middle" ||
-            alignment === "baseline"
+            alignment === "middle"
           ) {
             if (alignment === "start") {
               const baseline =
