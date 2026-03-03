@@ -76,6 +76,26 @@ export type LayerContext = {
   };
 };
 
+// Helper to propagate __ref from input data to derived outputs when possible.
+function attachRef<TIn, TOut>(input: TIn, output: TOut): TOut {
+  if (!output || typeof output !== "object") return output;
+
+  // If input is an array, use the first element as the ref source.
+  const source: any =
+    Array.isArray(input) && input.length > 0 ? input[0] : (input as any);
+
+  if (
+    source &&
+    typeof source === "object" &&
+    "__ref" in source &&
+    !(output as any).__ref
+  ) {
+    return { ...(output as any), __ref: (source as any).__ref } as TOut;
+  }
+
+  return output;
+}
+
 // LayerSelector is a lazy selector that defers layer lookup until actually needed
 export class LayerSelector<T = any> {
   constructor(public readonly layerName: string) {}
@@ -94,16 +114,20 @@ export class LayerSelector<T = any> {
     // If keyContext is not available, fall back to stored nodes
     let resolvedNodes: GoFishNode[] = layer.nodes;
 
-    // Return node-attached data enriched with refs to nodes
-    const result = resolvedNodes.map((node: GoFishNode) => {
+    // Return node-attached data enriched with refs to nodes.
+    // Option 3: flatten arrays and duplicate __ref per underlying datum.
+    const result = resolvedNodes.flatMap((node: GoFishNode) => {
       const datum: any = (node as any).datum;
-      if (datum && typeof datum === "object") {
-        const datumHack = { ...datum[0], __ref: node };
-        return datumHack as T & { __ref: GoFishNode };
-      }
-      return { item: datum, __ref: node } as unknown as T & {
-        __ref: GoFishNode;
-      };
+
+      // Always convert datum to an array of node-attached objects for consistency.
+      const arr = Array.isArray(datum)
+        ? datum
+        : [{ ...(typeof datum === "object" && datum !== null ? datum : { item: datum }) }];
+      return arr.map((item: any) => ({
+        ...(item as object),
+        __ref: node,
+      })) as Array<T & { __ref: GoFishNode }>;
+      
     });
     return result;
   }
@@ -117,7 +141,9 @@ export function derive<T, U>(fn: (d: T) => U | Promise<U>): Operator<T, U> {
       key?: string | number,
       layerContext?: LayerContext
     ) => {
-      return mark(await fn(d), key, layerContext);
+      const raw = await fn(d);
+      const enriched = attachRef(d, raw);
+      return mark(enriched, key, layerContext);
     }) as Mark<T>;
   };
 }
@@ -359,11 +385,14 @@ export function spread<T>(
       layerContext?: LayerContext
     ) => {
       // Group by the field if provided, otherwise iterate over raw data
-      const grouped = field
-        ? typeof field === "string"
-          ? Map.groupBy(d, (row) => (row as any)[field])
-          : Map.groupBy(d, field)
-        : d;
+      const grouped =
+        field != null
+          ? Map.groupBy(d, (row) =>
+              typeof field === "string"
+                ? (row as any)[field]
+                : (row as any)[field as keyof T]
+            )
+          : d;
 
       return Spread(
         {
