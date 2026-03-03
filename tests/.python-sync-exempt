@@ -1,0 +1,50 @@
+# Stories exempt from Python parity requirement.
+# These use v1/v2 APIs, Layer/select, or features not yet available in gofish-python.
+#
+# Remove entries as Python support is added.
+
+# Low-level API stories (v1/v2)
+packages/gofish-graphics/stories/lowlevel/BalloonChart.stories.tsx
+packages/gofish-graphics/stories/lowlevel/FlowerChart.stories.tsx
+packages/gofish-graphics/stories/lowlevel/IcicleChart.stories.tsx
+packages/gofish-graphics/stories/lowlevel/ImageMixedPrimitives.stories.tsx
+packages/gofish-graphics/stories/lowlevel/NestedMosaicChart.stories.tsx
+packages/gofish-graphics/stories/lowlevel/NestedWaffleChart.stories.tsx
+packages/gofish-graphics/stories/lowlevel/PorterDuffRelations.stories.tsx
+packages/gofish-graphics/stories/lowlevel/SankeyTree.stories.tsx
+packages/gofish-graphics/stories/lowlevel/StringlineChart.stories.tsx
+packages/gofish-graphics/stories/lowlevel/ViolinPlot.stories.tsx
+packages/gofish-graphics/stories/lowlevel/Whisker.stories.tsx
+
+# Bluefish examples
+packages/gofish-graphics/stories/bluefish/Planets.stories.tsx
+
+# Shape primitives
+packages/gofish-graphics/stories/shapes/TextMarks.stories.tsx
+packages/gofish-graphics/stories/shapes/ImageMarks.stories.tsx
+
+# Docs regression test
+packages/gofish-graphics/stories/DocsContextRegression.stories.tsx
+
+# Forward syntax stories needing Layer/select or unsupported features
+packages/gofish-graphics/stories/forwardsyntax/Area.stories.tsx
+packages/gofish-graphics/stories/forwardsyntax/LineChart.stories.tsx
+packages/gofish-graphics/stories/forwardsyntax/Scatter.stories.tsx
+packages/gofish-graphics/stories/forwardsyntax/Ribbon.stories.tsx
+packages/gofish-graphics/stories/forwardsyntax/Streamgraph.stories.tsx
+packages/gofish-graphics/stories/forwardsyntax/Bar/BarWithLabels.stories.tsx
+packages/gofish-graphics/stories/forwardsyntax/Bar/BarTemplate.stories.tsx
+
+# Forward syntax stories needing coord transforms (clock)
+packages/gofish-graphics/stories/forwardsyntax/Pie.stories.tsx
+packages/gofish-graphics/stories/forwardsyntax/MosaicChart.stories.tsx
+packages/gofish-graphics/stories/forwardsyntax/WaffleChart.stories.tsx
+
+# Vega-Lite stories needing external datasets or complex derives
+packages/gofish-graphics/stories/vega-lite/AggregateBarChart.stories.tsx
+packages/gofish-graphics/stories/vega-lite/AggregateBarChartSorted.stories.tsx
+packages/gofish-graphics/stories/vega-lite/GroupedBarChartRepeat.stories.tsx
+packages/gofish-graphics/stories/vega-lite/HorizontalStackedBarChart.stories.tsx
+packages/gofish-graphics/stories/vega-lite/StackedBarChart.stories.tsx
+packages/gofish-graphics/stories/vega-lite/StackedBarChartRounded.stories.tsx
+packages/gofish-graphics/stories/vega-lite/NormalizedStackedBarChart.stories.tsx

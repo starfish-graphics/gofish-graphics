@@ -1,0 +1,23 @@
+{
+  "name": "@gofish/tests",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "tsx scripts/capture-js-dom.ts && tsx scripts/capture-python-dom.ts && tsx scripts/compare.ts",
+    "test:js": "tsx scripts/capture-js-dom.ts && tsx scripts/compare.ts --js-only",
+    "update": "tsx scripts/capture-js-dom.ts && tsx scripts/update-baselines.ts",
+    "check-sync": "bash scripts/check-python-sync.sh"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "diff": "^7.0.0",
+    "playwright": "^1.58.2",
+    "prettier": "^3.8.1",
+    "solid-js": "^1.9.11",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "vite": "^6.4.1",
+    "vite-plugin-solid": "^2.11.10"
+  }
+}
