@@ -69,7 +69,7 @@ export const barChart = <T extends Record<string, any>>(
       w?: string | number | keyof T;
       fill?: string | keyof T;
       [key: string]: any;
-    }) => Mark<T | T[] | { item: T | T[]; key: number | string }>;
+    }) => Mark<T[]>;
   }
 ) => {
   // Both x and y are required

@@ -41,7 +41,11 @@ function nameableMark<T>(
   base: Mark<T>
 ): Mark<T> & { name(layerName: string): Mark<T> } {
   const withName = (layerName: string): Mark<T> => {
-    return async (d: T, key?: string | number, layerContext?: LayerContext) => {
+    return async (
+      d: T | undefined,
+      key?: string | number,
+      layerContext?: LayerContext
+    ) => {
       const node = await resolveMarkResult(
         base(d, key, layerContext),
         layerContext
@@ -113,10 +117,13 @@ export class LayerSelector<T = any> {
 export function derive<T, U>(fn: (d: T) => U | Promise<U>): Operator<T, U> {
   return async (mark: Mark<U>) => {
     return (async (
-      d: T,
+      d: T | undefined,
       key?: string | number,
       layerContext?: LayerContext
     ) => {
+      if (d === undefined) {
+        return mark(undefined, key, layerContext);
+      }
       return mark(await fn(d), key, layerContext);
     }) as Mark<T>;
   };
@@ -146,7 +153,7 @@ export const normalize = <T, K extends keyof T>(
 export function log<T>(label?: string): Operator<T, T> {
   return async (mark: Mark<T>) => {
     return (async (
-      d: T,
+      d: T | undefined,
       key?: string | number,
       layerContext?: LayerContext
     ) => {
@@ -354,10 +361,13 @@ export function spread<T>(
 
   return async (mark: Mark<T[]>) => {
     return async (
-      d: T[],
+      d: T[] | undefined,
       key?: string | number,
       layerContext?: LayerContext
     ) => {
+      if (d === undefined) {
+        throw new Error("spread operator requires data but received undefined.");
+      }
       // Group by the field if provided, otherwise iterate over raw data
       const grouped = field
         ? typeof field === "string"
@@ -423,15 +433,21 @@ export function scatter<T>(
 ): Operator<T[], T[]> {
   return async (mark: Mark<T[]>) => {
     return async (
-      d: T[],
+      d: T[] | undefined,
       key?: string | number,
       layerContext?: LayerContext
     ) => {
+      if (d === undefined) {
+        throw new Error("scatter operator requires data but received undefined.");
+      }
       // Group by the field
-      const groups = groupBy(d, field as ValueIteratee<T>);
+      const groups = groupBy(d, field as ValueIteratee<T>) as Record<
+        string,
+        T[]
+      >;
       if (options?.debug) console.log("scatter groups", groups);
       return Frame(
-        For(groups, async (items, groupKey) => {
+        For(groups, async (items: T[], groupKey) => {
           // Calculate average x and y values for this group
           const avgX = meanBy(items, options.x as string);
           const avgY = meanBy(items, options.y as string);
@@ -452,16 +468,22 @@ export function scatter<T>(
 export function group<T>(field: keyof T): Operator<T[], T[]> {
   return async (mark: Mark<T[]>) => {
     return async (
-      d: T[],
+      d: T[] | undefined,
       key?: string | number,
       layerContext?: LayerContext
     ) => {
+      if (d === undefined) {
+        throw new Error("group operator requires data but received undefined.");
+      }
       // Group by the field
-      const groups = groupBy(d, field as ValueIteratee<T>);
+      const groups = groupBy(d, field as ValueIteratee<T>) as Record<
+        string,
+        T[]
+      >;
 
       return Frame(
         {},
-        For(groups, (items, groupKey) => {
+        For(groups, (items: T[], groupKey) => {
           // Apply mark to each group
           const currentKey = key != undefined ? `${key}-${groupKey}` : groupKey;
           return mark(items, currentKey, layerContext) as any;
@@ -483,12 +505,16 @@ export function circle<T extends Record<string, any>>({
   stroke?: string;
   strokeWidth?: number;
   debug?: boolean;
-}): Mark<T> & { name(layerName: string): Mark<T> } {
-  const base: Mark<T> = async (
-    d: T,
+}): Mark<T[]> & { name(layerName: string): Mark<T[]> } {
+  const base: Mark<T[]> = async (
+    d: T[] | undefined,
     key?: string | number,
     _layerContext?: LayerContext
   ) => {
+    if (!d || d.length === 0) {
+      throw new Error("circle mark requires non-empty grouped data.");
+    }
+    const first = d[0];
     if (debug) console.log("circle", key, d);
     const node = Rect({
       w: typeof r === "number" ? r * 2 : inferSize(r, d),
@@ -496,7 +522,9 @@ export function circle<T extends Record<string, any>>({
       rx: typeof r === "number" ? r : 5,
       ry: typeof r === "number" ? r : 5,
       fill:
-        typeof fill === "string" && fill in d ? v(d[fill as keyof T]) : fill,
+        typeof fill === "string" && fill in first
+          ? v(first[fill as keyof T])
+          : fill,
       stroke,
       strokeWidth,
     }).name(key?.toString() ?? "");
@@ -520,10 +548,11 @@ export function line<T extends Record<string, any>>(options?: {
   interpolation?: "linear" | "bezier";
 }): Mark<Array<T & { __ref?: GoFishNode }>> {
   return async (
-    d: Array<T & { __ref?: GoFishNode }>,
+    d: Array<T & { __ref?: GoFishNode }> | undefined,
     key?: string | number,
     _layerContext?: LayerContext
   ) => {
+    if (!d) throw new Error("line mark requires data but received undefined.");
     // Use refs from enriched data (lazy resolution via __ref)
     const refs = d.map((item) => {
       if ("__ref" in item && item.__ref) {
@@ -556,10 +585,11 @@ export function area<T extends Record<string, any>>(options?: {
   interpolation?: "linear" | "bezier";
 }): Mark<Array<T & { __ref?: GoFishNode }>> {
   return async (
-    d: Array<T & { __ref?: GoFishNode }>,
+    d: Array<T & { __ref?: GoFishNode }> | undefined,
     key?: string | number,
     _layerContext?: LayerContext
   ) => {
+    if (!d) throw new Error("area mark requires data but received undefined.");
     // Use refs from enriched data (lazy resolution via __ref)
     const refs = d.map((item) => {
       if ("__ref" in item && item.__ref) {
@@ -606,7 +636,7 @@ export function scaffold<T extends Record<string, any>>({
   stroke?: string;
   strokeWidth?: number;
   debug?: boolean;
-} = {}): Mark<T | T[] | { item: T | T[]; key: number | string }> {
+} = {}): Mark<T[]> {
   // scaffold is essentially a transparent/zero-size rect
   return generatedRect({
     emX,

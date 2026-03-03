@@ -1,5 +1,5 @@
 import { sumBy } from "lodash";
-import { MaybeValue, value } from "./data";
+import { isValue, MaybeValue, value } from "./data";
 
 export type ChannelType = "size" | "color";
 
@@ -7,12 +7,19 @@ export type ChannelAnnotations<T> = {
   [K in keyof T]?: ChannelType;
 };
 
+export type AccessorFn<T extends Record<string, any>, V> = (d: T[]) => V;
+
+export type ResolvableProp<T extends Record<string, any>, V> =
+  | V
+  | (keyof T & string)
+  | AccessorFn<T, V | (keyof T & string)>;
+
 /**
  * Derive mark prop types from shape prop types + channel annotations.
  *
- * - "size" channels: mark accepts `number | keyof T` instead of `MaybeValue<number>`
- * - "color" channels: mark accepts `string | keyof T` instead of `MaybeValue<string>`
- * - unannotated props: passed through with the same type
+ * - "size" channels: mark accepts shape value, string field shorthand, or accessor fn
+ * - "color" channels: mark accepts shape value, string field shorthand, or accessor fn
+ * - unannotated props: passed through or accessor fn
  */
 export type DeriveMarkProps<
   ShapeProps,
@@ -21,11 +28,11 @@ export type DeriveMarkProps<
 > = {
   [K in keyof ShapeProps]: K extends keyof Channels
     ? Channels[K] extends "size"
-      ? number | (keyof T & string) | undefined
+      ? ResolvableProp<T, ShapeProps[K]>
       : Channels[K] extends "color"
-        ? string | (keyof T & string) | undefined
-        : ShapeProps[K]
-    : ShapeProps[K];
+        ? ResolvableProp<T, ShapeProps[K]>
+        : ShapeProps[K] | AccessorFn<T, ShapeProps[K]>
+    : ShapeProps[K] | AccessorFn<T, ShapeProps[K]>;
 } & { debug?: boolean };
 
 /**
@@ -34,9 +41,12 @@ export type DeriveMarkProps<
  * If accessor is a number, passes it through as a literal.
  */
 export const inferSize = <T>(
-  accessor: string | number | undefined,
+  accessor: string | number | MaybeValue<number> | undefined,
   d: T | T[],
 ): MaybeValue<number> | undefined => {
+  if (isValue(accessor as MaybeValue<number>)) {
+    return accessor as MaybeValue<number>;
+  }
   return typeof accessor === "number"
     ? accessor
     : accessor !== undefined
@@ -50,9 +60,10 @@ export const inferSize = <T>(
  * Otherwise passes through as a literal color string.
  */
 export const inferColor = <T extends Record<string, any>>(
-  accessor: string | undefined,
+  accessor: string | MaybeValue<string> | undefined,
   data: T[],
 ): MaybeValue<string> | undefined => {
+  if (isValue(accessor)) return accessor;
   if (accessor === undefined) return undefined;
   if (data.length > 0 && accessor in data[0]) {
     return value(data[0][accessor]);

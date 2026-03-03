@@ -168,7 +168,16 @@ const resolveRenderedDimensions = (
   return { width: 0, height: 0 };
 };
 
-export const Image = ({
+export type ImageProps = {
+  key?: string;
+  name?: string;
+  href: string;
+  filter?: string;
+  opacity?: number;
+  preserveAspectRatio?: string;
+} & FancyDims<number>;
+
+const ImageShape = ({
   key,
   name,
   href,
@@ -176,14 +185,7 @@ export const Image = ({
   opacity,
   preserveAspectRatio = "xMidYMid meet",
   ...fancyDims
-}: {
-  key?: string;
-  name?: string;
-  href: string;
-  filter?: string;
-  opacity?: number;
-  preserveAspectRatio?: string;
-} & FancyDims<number>) => {
+}: ImageProps) => {
   const dims = elaborateDims(fancyDims).map(inferEmbedded);
 
   return new GoFishNode(
@@ -336,4 +338,11 @@ export const Image = ({
   );
 };
 
-export const image = createMark(Image, {});
+export const image = createMark(ImageShape, {});
+
+/**
+ * @deprecated Use `image(opts)(undefined)` for low-level/no-data usage.
+ */
+export const Image = (opts: ImageProps): GoFishNode => {
+  return image(opts)(undefined) as GoFishNode;
+};

@@ -46,8 +46,20 @@ const computeIntrinsicSize = (
 
 const DEFAULT_RECT_SIZE = 16;
 
+export type RectProps = {
+  key?: string;
+  name?: string;
+  fill?: MaybeValue<string>;
+  stroke?: MaybeValue<string>;
+  strokeWidth?: number;
+  rx?: number;
+  ry?: number;
+  filter?: string;
+  label?: boolean;
+} & FancyDims<MaybeValue<number>>;
+
 /* TODO: what should default embedding behavior be when all values are aesthetic? */
-export const Rect = ({
+const RectShape = ({
     key,
     name,
     fill = color6[0],
@@ -58,17 +70,7 @@ export const Rect = ({
     filter,
     label,
     ...fancyDims
-  }: {
-    key?: string;
-    name?: string;
-    fill?: MaybeValue<string>;
-    stroke?: MaybeValue<string>;
-    strokeWidth?: number;
-    rx?: number;
-    ry?: number;
-    filter?: string;
-    label?: boolean;
-  } & FancyDims<MaybeValue<number>>) => {
+  }: RectProps) => {
     const dims = elaborateDims(fancyDims).map(inferEmbedded);
     return new GoFishNode(
       {
@@ -535,8 +537,15 @@ export const Rect = ({
     );
   };
 
-export const rect = createMark(Rect, {
+export const rect = createMark(RectShape, {
   w: "size",
   h: "size",
   fill: "color",
 });
+
+/**
+ * @deprecated Use `rect(opts)(undefined)` for low-level/no-data usage.
+ */
+export const Rect = (opts: RectProps): GoFishNode => {
+  return rect(opts)(undefined) as GoFishNode;
+};

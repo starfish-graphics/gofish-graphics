@@ -340,14 +340,20 @@ export type NameableMark<T> = Mark<T> & {
   name(layerName: string): Mark<T>;
 };
 
+const isAccessorFunction = <T extends Record<string, any>, V>(
+  value: V | ((d: T[]) => V)
+): value is (d: T[]) => V => {
+  return typeof value === "function";
+};
+
 /**
  * Creates a high-level mark function from a low-level shape function
  * and channel annotations.
  *
  * Channel annotations describe how each prop encodes data:
- * - "size": mark accepts `number | keyof T`, uses inferSize to convert
- * - "color": mark accepts `string | keyof T`, uses inferColor to convert
- * - unannotated props are passed through unchanged
+ * - "size": mark accepts literal, string field shorthand, or accessor function
+ * - "color": mark accepts literal, string field shorthand, or accessor function
+ * - unannotated props are passed through as-is (or resolved from accessor functions)
  *
  * The returned mark supports .name("layerName") so that when used in a chart,
  * each produced node is registered for select("layerName").
@@ -360,39 +366,39 @@ export function createMark<
   channels: C
 ): <T extends Record<string, any>>(
   opts: DeriveMarkProps<ShapeProps, C, T>
-) => NameableMark<T | T[] | { item: T | T[]; key: number | string }> {
+) => NameableMark<T[]> {
   return <T extends Record<string, any>>(
     markOpts: DeriveMarkProps<ShapeProps, C, T>
-  ): NameableMark<T | T[] | { item: T | T[]; key: number | string }> => {
-    const baseMark: Mark<
-      T | T[] | { item: T | T[]; key: number | string }
-    > = async (
-      input: T | T[] | { item: T | T[]; key: number | string },
-      keyParam?: string | number,
-      layerContext?: LayerContext
+  ): NameableMark<T[]> => {
+    const baseMark: Mark<T[]> = (
+      data: T[] | undefined,
+      key?: string | number
     ) => {
-      // Unwrap input: handles T, T[], or { item, key } patterns
-      let d: T | T[], key: number | string | undefined;
-      if (typeof input === "object" && input !== null && "item" in input) {
-        d = (input as { item: T | T[]; key: number | string }).item;
-        key = (input as { item: T | T[]; key: number | string }).key;
-      } else {
-        d = input as T | T[];
-        key = keyParam;
-      }
-
       if ((markOpts as any).debug) {
-        console.log("mark", key, d);
+        console.log("mark", key, data);
       }
-
-      const data = Array.isArray(d) ? d : [d];
 
       // Build shape props by encoding each channel
       const shapeProps: Record<string, any> = {};
       for (const propName of Object.keys(markOpts as any)) {
         if (propName === "debug") continue;
         const channelType = channels[propName as keyof C];
-        const markValue = (markOpts as any)[propName];
+        const unresolvedMarkValue = (markOpts as any)[propName];
+        const markValue = isAccessorFunction(unresolvedMarkValue)
+          ? (() => {
+              if (data === undefined) {
+                throw new Error(
+                  `Mark option "${propName}" requires data, but this mark was called without data.`
+                );
+              }
+              return unresolvedMarkValue(data);
+            })()
+          : unresolvedMarkValue;
+
+        if (data === undefined) {
+          shapeProps[propName] = markValue;
+          continue;
+        }
 
         if (channelType === "size") {
           shapeProps[propName] = inferSize(markValue, data);
@@ -405,19 +411,17 @@ export function createMark<
 
       const node = shapeFn(shapeProps as ShapeProps);
       node.name(key?.toString() ?? "");
-      (node as any).datum = d;
+      (node as any).datum = data;
       return node;
     };
 
-    const nameMethod = (
-      layerName: string
-    ): Mark<T | T[] | { item: T | T[]; key: number | string }> => {
+    const nameMethod = (layerName: string): Mark<T[]> => {
       return async (
-        input: T | T[] | { item: T | T[]; key: number | string },
+        data: T[] | undefined,
         keyParam?: string | number,
         layerContext?: LayerContext
       ) => {
-        const node = await baseMark(input, keyParam, layerContext);
+        const node = await baseMark(data, keyParam, layerContext);
         if (layerContext && layerName) {
           if (!layerContext[layerName]) {
             layerContext[layerName] = { data: [], nodes: [] };
@@ -434,8 +438,6 @@ export function createMark<
       configurable: true,
     });
 
-    return baseMark as NameableMark<
-      T | T[] | { item: T | T[]; key: number | string }
-    >;
+    return baseMark as NameableMark<T[]>;
   };
 }

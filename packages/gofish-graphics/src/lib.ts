@@ -30,6 +30,8 @@ export { For } from "./ast/iterators/for";
 export { groupBy, sumBy, orderBy, meanBy } from "lodash";
 
 // Shapes
+// Deprecated low-level aliases retained for compatibility:
+// prefer `rect(opts)(undefined)` / `image(opts)(undefined)` from chart marks.
 export { Rect } from "./ast/shapes/rect";
 export { ellipse as Ellipse } from "./ast/shapes/ellipse";
 export { Image } from "./ast/shapes/image";
