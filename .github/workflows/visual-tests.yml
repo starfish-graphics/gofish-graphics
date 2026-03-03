@@ -1,0 +1,67 @@
+name: Visual Tests
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'packages/gofish-graphics/**'
+      - 'packages/gofish-python/**'
+      - 'tests/**'
+      - '__snapshots__/**'
+
+  pull_request:
+    paths:
+      - 'packages/gofish-graphics/**'
+      - 'packages/gofish-python/**'
+      - 'tests/**'
+      - '__snapshots__/**'
+
+jobs:
+  visual-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Node dependencies
+        run: pnpm install
+
+      - name: Install Python dependencies
+        run: pip install -e packages/gofish-python
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run visual tests (JS only)
+        run: pnpm test:visual:js
+
+      - name: Upload diff report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-diff-report
+          path: tests/tmp/diff-report.html
+
+      - name: Check Python story sync
+        if: github.event_name == 'pull_request'
+        run: pnpm test:visual:check-sync
