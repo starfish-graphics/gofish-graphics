@@ -363,14 +363,11 @@ export function spread<T>(
       layerContext?: LayerContext
     ) => {
       // Group by the field if provided, otherwise iterate over raw data
-      const grouped =
-        field !== undefined && field !== null
-          ? Map.groupBy(d, (row) =>
-              typeof field === "string"
-                ? (row as any)[field]
-                : (row as any)[field as keyof T]
-            )
-          : d;
+      const grouped = field
+        ? typeof field === "string"
+          ? Map.groupBy(d, (row) => (row as any)[field])
+          : Map.groupBy(d, field as any)
+        : d;
 
       return Spread(
         {
