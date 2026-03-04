@@ -26,7 +26,7 @@ import {
   groupBy,
   For,
   ConnectX,
-  Ref,
+  ref,
   SpreadX,
   SpreadY,
 } from "../lib";
@@ -399,8 +399,8 @@ export const testSankeyIcicleAPIv2 = () =>
               opacity: 0.7,
             },
             [
-              Ref(`${cls}-${sex}-${survived}-src`),
-              Ref(`${cls}-${sex}-${survived}-tgt`),
+              ref(`${cls}-${sex}-${survived}-src`),
+              ref(`${cls}-${sex}-${survived}-tgt`),
             ]
           )
         ),

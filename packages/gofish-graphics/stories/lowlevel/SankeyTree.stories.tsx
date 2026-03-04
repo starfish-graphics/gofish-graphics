@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
 import { titanic } from "../../src/data/titanic";
-import { Frame, SpreadX, SpreadY, StackY, rect, For, ConnectX, Ref } from "../../src/lib";
+import { Frame, SpreadX, SpreadY, StackY, rect, For, ConnectX, ref } from "../../src/lib";
 import { color6, gray, neutral } from "../../src/color";
 import { groupBy } from "lodash";
 import _ from "lodash";
@@ -115,7 +115,7 @@ export const Default: StoryObj<Args> = {
             interpolation: "bezier",
             opacity: 0.7,
           },
-          [Ref(`${cls}-src`), Ref(`${cls}-tgt`)]
+          [ref(`${cls}-src`), ref(`${cls}-tgt`)]
         ),
         For(groupBy(items, "sex"), (sexItems, sex) => [
           ConnectX(
@@ -124,7 +124,7 @@ export const Default: StoryObj<Args> = {
               interpolation: "bezier",
               opacity: 0.7,
             },
-            [Ref(`${cls}-${sex}-src`), Ref(`${cls}-${sex}-tgt`)]
+            [ref(`${cls}-${sex}-src`), ref(`${cls}-${sex}-tgt`)]
           ),
           For(groupBy(sexItems, "survived"), (survivedItems, survived) =>
             ConnectX(
@@ -141,8 +141,8 @@ export const Default: StoryObj<Args> = {
                 opacity: 0.7,
               },
               [
-                Ref(`${cls}-${sex}-${survived}-src`),
-                Ref(`${cls}-${sex}-${survived}-tgt`),
+                ref(`${cls}-${sex}-${survived}-src`),
+                ref(`${cls}-${sex}-${survived}-tgt`),
               ]
             )
           ),

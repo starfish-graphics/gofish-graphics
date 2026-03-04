@@ -30,7 +30,7 @@ export { For } from "./ast/iterators/for";
 export { groupBy, sumBy, orderBy, meanBy } from "lodash";
 
 // Shapes
-export { ref as Ref } from "./ast/shapes/ref";
+export { ref } from "./ast/shapes/ref";
 
 // Graphical Operators
 export { stack as Stack } from "./ast/graphicalOperators/stack";

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
 import { caltrain, caltrainStopOrder } from "../../src/data/caltrain";
-import { Frame, SpreadY, For, rect, ellipse, ConnectY, Ref, v } from "../../src/lib";
+import { Frame, SpreadY, For, rect, ellipse, ConnectY, ref, v } from "../../src/lib";
 import { groupBy, orderBy } from "lodash";
 import _ from "lodash";
 
@@ -56,7 +56,7 @@ export const Default: StoryObj<Args> = {
       For(groupBy(caltrainProcessed, "Train"), (d) =>
         ConnectY(
           { strokeWidth: 1, mode: "center-to-center" },
-          For(d, (d) => Ref(`${d.Train}-${d.Station}-${d.Time}`))
+          For(d, (d) => ref(`${d.Train}-${d.Station}-${d.Time}`))
         )
       ),
     ]).render(container, {

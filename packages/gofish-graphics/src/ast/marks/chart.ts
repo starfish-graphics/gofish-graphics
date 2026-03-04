@@ -8,7 +8,7 @@ import {
   Position,
   meanBy,
   Connect,
-  Ref,
+  ref,
 } from "../../lib";
 import { GoFishNode } from "../_node";
 import { For } from "../iterators/for";
@@ -46,7 +46,7 @@ function nameableMark<T>(
         base(d, key, layerContext),
         layerContext
       );
-      // Set the node name for Ref() lookup in low-level context
+      // Set the node name for ref() lookup in low-level context
       node.name(layerName);
       if (layerContext && layerName) {
         if (!layerContext[layerName]) {
@@ -623,7 +623,7 @@ export function line<T extends Record<string, any>>(options?: {
     // Use refs from enriched data (lazy resolution via __ref)
     const refs = d.map((item) => {
       if ("__ref" in item && item.__ref) {
-        return Ref(item.__ref);
+        return ref(item.__ref);
       }
       throw new Error("line mark expected __ref on items");
     });
@@ -659,7 +659,7 @@ export function area<T extends Record<string, any>>(options?: {
     // Use refs from enriched data (lazy resolution via __ref)
     const refs = d.map((item) => {
       if ("__ref" in item && item.__ref) {
-        return Ref(item.__ref);
+        return ref(item.__ref);
       }
       throw new Error("area mark expected __ref on items");
     });

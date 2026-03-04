@@ -8,7 +8,7 @@ import {
   v,
   Frame,
   ConnectX,
-  Ref,
+  ref,
 } from "../lib";
 
 export const testRidgeline = () =>
@@ -35,7 +35,7 @@ export const testRidgeline = () =>
             // mixBlendMode: "normal",
             opacity: 0.7,
           },
-          For(items, (d) => Ref(`${d.c}-${d.x}`))
+          For(items, (d) => ref(`${d.c}-${d.x}`))
         ),
       ])
     )

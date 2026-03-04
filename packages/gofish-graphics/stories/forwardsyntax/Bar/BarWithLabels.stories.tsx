@@ -8,7 +8,7 @@ import {
   Layer,
   select,
   text,
-  Ref,
+  ref,
   Spread,
   sumBy,
 } from "../../../src/lib";
@@ -44,7 +44,7 @@ export const Default: StoryObj<Args> = {
           return Spread(
             { direction: "y", alignment: "middle", spacing: 10 },
             [
-              Ref(d[0] as any),
+              ref(d[0] as any),
               text({ text: String(sumBy(d, "count")) }),
             ]
           );

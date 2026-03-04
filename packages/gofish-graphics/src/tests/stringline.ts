@@ -7,7 +7,7 @@ import {
   Frame,
   groupBy,
   rect,
-  Ref,
+  ref,
   StackY,
   v,
 } from "../lib";
@@ -44,7 +44,7 @@ export const testStringLine = () =>
     For(groupBy(caltrainProcessed, "Train"), (d) =>
       ConnectY(
         { strokeWidth: 1, mode: "center-to-center" },
-        For(d, (d) => Ref(`${d.Train}-${d.Station}-${d.Time}`))
+        For(d, (d) => ref(`${d.Train}-${d.Station}-${d.Time}`))
       )
     ),
   ]);

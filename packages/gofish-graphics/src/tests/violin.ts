@@ -1,5 +1,5 @@
 import { penguins } from "../data/penguins";
-import { Frame, For, groupBy, SpreadX, v, SpreadY, ConnectY, Ref, StackY } from "../lib";
+import { Frame, For, groupBy, SpreadX, v, SpreadY, ConnectY, ref, StackY } from "../lib";
 import { rect } from "../ast/marks/chart";
 import _ from "lodash";
 import { density1d } from "fast-kde";
@@ -19,7 +19,7 @@ export const testViolinPlot = () => {
         ),
         ConnectY(
           { opacity: 1, mixBlendMode: "normal" },
-          For(density, (d) => Ref(`${species}-${d.x}`))
+          For(density, (d) => ref(`${species}-${d.x}`))
         ),
       ]);
     })

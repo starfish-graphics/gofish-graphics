@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
-import { For, Stack, Spread, ellipse, Layer, text, Ref, Arrow } from "../../src/lib";
+import { For, Stack, Spread, ellipse, Layer, text, ref, Arrow } from "../../src/lib";
 
 const meta: Meta = {
   title: "Bluefish/Planets",
@@ -68,7 +68,7 @@ export const PlanetsWithLabelAbove: StoryObj<Args> = {
         )
       ),
       Spread({ direction: "y", spacing: 60, alignment: "middle" }, [
-        Ref("Mercury"),
+        ref("Mercury"),
         text({ text: "Mercury" }),
       ]),
     ]).render(container, {
@@ -100,7 +100,7 @@ export const PlanetsWithLabelBelow: StoryObj<Args> = {
       ),
       Spread({ direction: "y", spacing: 60, alignment: "middle" }, [
         text({ text: "Mercury" }),
-        Ref("Mercury"),
+        ref("Mercury"),
       ]),
     ]).render(container, {
       w: args.w,
@@ -130,7 +130,7 @@ export const PlanetsWithLabelAboveNoSpacing: StoryObj<Args> = {
         )
       ),
       Spread({ direction: "y", spacing: 0, alignment: "middle" }, [
-        Ref("Mercury"),
+        ref("Mercury"),
         text({ text: "Mercury", debugBoundingBox: true }),
       ]),
     ]).render(container, {
@@ -162,7 +162,7 @@ export const PlanetsWithLabelBelowNoSpacing: StoryObj<Args> = {
       ),
       Spread({ direction: "y", spacing: 0, alignment: "middle" }, [
         text({ text: "Mercury", debugBoundingBox: true }),
-        Ref("Mercury"),
+        ref("Mercury"),
       ]),
     ]).render(container, {
       w: args.w,
@@ -193,9 +193,9 @@ export const PlanetsWithArrow: StoryObj<Args> = {
       ),
       Spread({ direction: "y", spacing: 60, alignment: "middle" }, [
         text({ text: "Mercury" }).name("label"),
-        Ref("Mercury"),
+        ref("Mercury"),
       ]),
-      Arrow({}, [Ref("label"), Ref("Mercury")]),
+      Arrow({}, [ref("label"), ref("Mercury")]),
     ]).render(container, {
       w: args.w,
       h: args.h,
