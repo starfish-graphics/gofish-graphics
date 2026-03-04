@@ -63,6 +63,7 @@ export {
   scatter,
   group,
   derive,
+  bin,
   rect,
   circle,
   select,
