@@ -240,6 +240,23 @@ export class ChartBuilder<TInput, TOutput = TInput> {
     );
   }
 
+  // facet is an alias for .flow(spread(...))
+  facet(
+    fieldOrOptions: Parameters<typeof spread>[0],
+    options?: Parameters<typeof spread>[1]
+  ): ChartBuilder<TInput, any> {
+    return this.flow(spread(fieldOrOptions as any, options));
+  }
+
+  // stack is an alias for .flow(stack(...))
+  // Note: 'stack' below refers to the module-level stack function, not this method
+  stack(
+    field: Parameters<typeof stack>[0],
+    options: Parameters<typeof stack>[1]
+  ): ChartBuilder<TInput, any> {
+    return this.flow(stack(field as any, options));
+  }
+
   // mark stores the mark and returns a new builder for chaining
   mark(mark: Mark<TOutput>): ChartBuilder<TInput, TOutput> {
     return new ChartBuilder(
