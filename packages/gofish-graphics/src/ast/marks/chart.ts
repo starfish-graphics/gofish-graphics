@@ -100,9 +100,11 @@ export class LayerSelector<T = any> {
       const datum: any = (node as any).datum;
 
       // Always convert datum to an array of node-attached objects for consistency.
-      const arr = Array.isArray(datum)
-        ? datum
-        : [{ ...(typeof datum === "object" && datum !== null ? datum : { item: datum }) }];
+      if (!Array.isArray(datum) && typeof datum !== "object") {
+        throw new Error("datum must be an array or object");
+      } 
+      const arr = Array.isArray(datum) ? datum : [datum];
+      
       return arr.map((item: any) => ({
         ...(item as object),
         __ref: node,
