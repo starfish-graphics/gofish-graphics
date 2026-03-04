@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
-import { For, Stack, Spread, Ellipse, Layer, Text, Ref, Arrow } from "../../src/lib";
+import { For, Stack, Spread, ellipse, Layer, text, ref, Arrow } from "../../src/lib";
 
 const meta: Meta = {
   title: "Bluefish/Planets",
@@ -32,7 +32,7 @@ export const PlanetsOnly: StoryObj<Args> = {
     Spread(
       { direction: "x", spacing: 50, alignment: "middle" },
       For(planets, (planet) =>
-        Ellipse({
+        ellipse({
           w: planet.radius * 2,
           h: planet.radius * 2,
           fill: planet.color,
@@ -58,7 +58,7 @@ export const PlanetsWithLabelAbove: StoryObj<Args> = {
       Spread(
         { direction: "x", spacing: 50, alignment: "middle" },
         For(planets, (planet) =>
-          Ellipse({
+          ellipse({
             w: planet.radius * 2,
             h: planet.radius * 2,
             fill: planet.color,
@@ -68,8 +68,8 @@ export const PlanetsWithLabelAbove: StoryObj<Args> = {
         )
       ),
       Spread({ direction: "y", spacing: 60, alignment: "middle" }, [
-        Ref("Mercury"),
-        Text({ text: "Mercury" }),
+        ref("Mercury"),
+        text({ text: "Mercury" }),
       ]),
     ]).render(container, {
       w: args.w,
@@ -89,18 +89,18 @@ export const PlanetsWithLabelBelow: StoryObj<Args> = {
       Spread(
         { direction: "x", spacing: 50, alignment: "middle" },
         For(planets, (planet) =>
-          Ellipse({
+          ellipse({
             w: planet.radius * 2,
             h: planet.radius * 2,
             fill: planet.color,
             stroke: "#333",
             strokeWidth: 3,
           }).name(planet.name)
-        ) 
+        )
       ),
       Spread({ direction: "y", spacing: 60, alignment: "middle" }, [
-        Text({ text: "Mercury" }),
-        Ref("Mercury"),
+        text({ text: "Mercury" }),
+        ref("Mercury"),
       ]),
     ]).render(container, {
       w: args.w,
@@ -120,7 +120,7 @@ export const PlanetsWithLabelAboveNoSpacing: StoryObj<Args> = {
       Spread(
         { direction: "x", spacing: 50, alignment: "middle" },
         For(planets, (planet) =>
-          Ellipse({
+          ellipse({
             w: planet.radius * 2,
             h: planet.radius * 2,
             fill: planet.color,
@@ -130,8 +130,8 @@ export const PlanetsWithLabelAboveNoSpacing: StoryObj<Args> = {
         )
       ),
       Spread({ direction: "y", spacing: 0, alignment: "middle" }, [
-        Ref("Mercury"),
-        Text({ text: "Mercury", debugBoundingBox: true }),
+        ref("Mercury"),
+        text({ text: "Mercury", debugBoundingBox: true }),
       ]),
     ]).render(container, {
       w: args.w,
@@ -151,7 +151,7 @@ export const PlanetsWithLabelBelowNoSpacing: StoryObj<Args> = {
       Spread(
         { direction: "x", spacing: 50, alignment: "middle" },
         For(planets, (planet) =>
-          Ellipse({
+          ellipse({
             w: planet.radius * 2,
             h: planet.radius * 2,
             fill: planet.color,
@@ -161,8 +161,8 @@ export const PlanetsWithLabelBelowNoSpacing: StoryObj<Args> = {
         )
       ),
       Spread({ direction: "y", spacing: 0, alignment: "middle" }, [
-        Text({ text: "Mercury", debugBoundingBox: true }),
-        Ref("Mercury"),
+        text({ text: "Mercury", debugBoundingBox: true }),
+        ref("Mercury"),
       ]),
     ]).render(container, {
       w: args.w,
@@ -182,7 +182,7 @@ export const PlanetsWithArrow: StoryObj<Args> = {
       Spread(
         { direction: "x", spacing: 50, alignment: "middle" },
         For(planets, (planet) =>
-          Ellipse({
+          ellipse({
             w: planet.radius * 2,
             h: planet.radius * 2,
             fill: planet.color,
@@ -192,10 +192,10 @@ export const PlanetsWithArrow: StoryObj<Args> = {
         )
       ),
       Spread({ direction: "y", spacing: 60, alignment: "middle" }, [
-        Text({ text: "Mercury" }).name("label"),
-        Ref("Mercury"),
+        text({ text: "Mercury" }).name("label"),
+        ref("Mercury"),
       ]),
-      Arrow({}, [Ref("label"), Ref("Mercury")]),
+      Arrow({}, [ref("label"), ref("Mercury")]),
     ]).render(container, {
       w: args.w,
       h: args.h,

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
 import { titanic } from "../../src/data/titanic";
-import { SpreadY, SpreadX, StackY, Rect, For, v } from "../../src/lib";
+import { SpreadY, SpreadX, StackY, rect, For, v } from "../../src/lib";
 import { color6, gray } from "../../src/color";
 import { groupBy } from "lodash";
 import _ from "lodash";
@@ -46,7 +46,7 @@ export const Default: StoryObj<Args> = {
                 sharedScale: true,
               },
               For(groupBy(sItems, "survived"), (items, survived) =>
-                Rect({
+                rect({
                   h: v(_(items).sumBy("count")),
                   fill: survived === "No" ? gray : classColor[cls],
                 })

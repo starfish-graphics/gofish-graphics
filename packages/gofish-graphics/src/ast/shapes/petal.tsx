@@ -31,9 +31,10 @@ import {
 import { aesthetic, continuous, Domain } from "../domain";
 import * as Monotonic from "../../util/monotonic";
 import { ORDINAL, POSITION, UNDEFINED } from "../underlyingSpace";
+import { createMark } from "../withGoFish";
 /* Implementation inspired by https://web.archive.org/web/20220808041640/http://bl.ocks.org/herrstucki/6199768 */
 /* TODO: what should default embedding behavior be when all values are aesthetic? */
-export const petal = ({
+export const Petal = ({
     name,
     fill = "black",
     stroke = fill,
@@ -318,3 +319,8 @@ export const petal = ({
       []
     );
   };
+
+export const petal = createMark(Petal, {
+  w: "size",
+  h: "size",
+});

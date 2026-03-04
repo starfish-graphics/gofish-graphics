@@ -8,7 +8,7 @@ import {
   Position,
   meanBy,
   Connect,
-  Ref,
+  ref,
 } from "../../lib";
 import { GoFishNode } from "../_node";
 import { For } from "../iterators/for";
@@ -46,6 +46,8 @@ function nameableMark<T>(
         base(d, key, layerContext),
         layerContext
       );
+      // Set the node name for ref() lookup in low-level context
+      node.name(layerName);
       if (layerContext && layerName) {
         if (!layerContext[layerName]) {
           layerContext[layerName] = { data: [], nodes: [] };
@@ -328,46 +330,81 @@ export function chart<T>(data: T, options?: ChartOptions): ChartBuilder<T, T> {
   return new ChartBuilder<T, T>(data, options, [], undefined, {});
 }
 
+type SpreadOptions<T> = {
+  dir: "x" | "y";
+  x?: number;
+  y?: number;
+  t?: number;
+  r?: number;
+  w?: number | keyof T;
+  h?: number | keyof T;
+  mode?: "edge" | "center";
+  spacing?: number;
+  sharedScale?: boolean;
+  alignment?: "start" | "middle" | "end" | "baseline";
+  reverse?: boolean;
+  debug?: boolean;
+  label?: boolean;
+};
+
+/** Mark combinator form: spread(opts, marks[]) → NameableMark */
 export function spread<T>(
-  fieldOrOptions:
-    | keyof T
-    | {
-        dir: "x" | "y";
-        x?: number;
-        y?: number;
-        t?: number;
-        r?: number;
-        w?: number | keyof T;
-        h?: number | keyof T;
-        mode?: "edge" | "center";
-        spacing?: number;
-        sharedScale?: boolean;
-        alignment?: "start" | "middle" | "end" | "baseline";
-        reverse?: boolean;
-        debug?: boolean;
-        label?: boolean;
-      },
-  options?: {
-    dir: "x" | "y";
-    x?: number;
-    y?: number;
-    t?: number;
-    r?: number;
-    w?: number | keyof T;
-    h?: number | keyof T;
-    mode?: "edge" | "center";
-    spacing?: number;
-    sharedScale?: boolean;
-    alignment?: "start" | "middle" | "end" | "baseline";
-    reverse?: boolean;
-    debug?: boolean;
-    label?: boolean;
+  options: SpreadOptions<T>,
+  marks: Mark<any>[]
+): Mark<T> & { name(layerName: string): Mark<T> };
+/** Operator form: spread(field, opts) → Operator */
+export function spread<T>(
+  field: keyof T,
+  options: SpreadOptions<T>
+): Operator<T[], T[]>;
+/** Operator form: spread(opts) → Operator */
+export function spread<T>(
+  options: SpreadOptions<T>
+): Operator<T[], T[]>;
+export function spread<T>(
+  fieldOrOptions: keyof T | SpreadOptions<T>,
+  optionsOrMarks?: SpreadOptions<T> | Mark<any>[]
+): Operator<T[], T[]> | (Mark<T> & { name(layerName: string): Mark<T> }) {
+  // Mark combinator form: spread(opts, marks[])
+  if (
+    typeof fieldOrOptions === "object" &&
+    Array.isArray(optionsOrMarks) &&
+    optionsOrMarks.length > 0 &&
+    typeof optionsOrMarks[0] === "function"
+  ) {
+    const opts = fieldOrOptions as SpreadOptions<T>;
+    const marks = optionsOrMarks as Mark<any>[];
+    const base: Mark<T> = async (
+      d: T,
+      key?: string | number,
+      layerContext?: LayerContext
+    ) => {
+      const resolvedChildren = await Promise.all(
+        marks.map((mark) =>
+          resolveMarkResult(mark(d, key, layerContext), layerContext)
+        )
+      );
+      return Spread(
+        {
+          direction: opts.dir === "x" ? 0 : 1,
+          spacing: opts.spacing ?? 0,
+          alignment: opts.alignment ?? "baseline",
+          sharedScale: opts.sharedScale,
+        },
+        resolvedChildren
+      );
+    };
+    return nameableMark(base);
   }
-): Operator<T[], T[]> {
-  // Determine if first argument is field or options
+
+  // Operator form
   const field: keyof T | undefined =
     typeof fieldOrOptions === "object" ? undefined : fieldOrOptions;
-  const opts = (typeof fieldOrOptions === "object" ? fieldOrOptions : options)!;
+  const opts = (
+    typeof fieldOrOptions === "object"
+      ? fieldOrOptions
+      : (optionsOrMarks as SpreadOptions<T>)
+  )!;
 
   const finalOptions = {
     ...opts,
@@ -421,6 +458,12 @@ export function spread<T>(
   };
 }
 
+/** Mark combinator form: stack(opts, marks[]) → NameableMark */
+export function stack<T>(
+  options: SpreadOptions<T>,
+  marks: Mark<any>[]
+): Mark<T> & { name(layerName: string): Mark<T> };
+/** Operator form: stack(field, opts) → Operator */
 export function stack<T>(
   field: keyof T,
   options: {
@@ -432,8 +475,38 @@ export function stack<T>(
     spacing?: number;
     alignment?: "start" | "middle" | "end" | "baseline";
   }
-): Operator<T[], T[]> {
-  return spread(field, { ...options, spacing: 0 });
+): Operator<T[], T[]>;
+export function stack<T>(
+  fieldOrOptions: keyof T | SpreadOptions<T>,
+  optionsOrMarks?:
+    | {
+        dir: "x" | "y";
+        x?: number;
+        y?: number;
+        w?: number | keyof T;
+        h?: number | keyof T;
+        spacing?: number;
+        alignment?: "start" | "middle" | "end" | "baseline";
+      }
+    | Mark<any>[]
+): Operator<T[], T[]> | (Mark<T> & { name(layerName: string): Mark<T> }) {
+  // Mark combinator form: stack(opts, marks[])
+  if (
+    typeof fieldOrOptions === "object" &&
+    Array.isArray(optionsOrMarks) &&
+    optionsOrMarks.length > 0 &&
+    typeof optionsOrMarks[0] === "function"
+  ) {
+    return spread(
+      { ...(fieldOrOptions as SpreadOptions<T>), spacing: 0 },
+      optionsOrMarks as Mark<any>[]
+    );
+  }
+  // Operator form
+  return spread(fieldOrOptions as keyof T, {
+    ...(optionsOrMarks as SpreadOptions<T>),
+    spacing: 0,
+  });
 }
 
 export function scatter<T>(
@@ -550,7 +623,7 @@ export function line<T extends Record<string, any>>(options?: {
     // Use refs from enriched data (lazy resolution via __ref)
     const refs = d.map((item) => {
       if ("__ref" in item && item.__ref) {
-        return Ref(item.__ref);
+        return ref(item.__ref);
       }
       throw new Error("line mark expected __ref on items");
     });
@@ -586,7 +659,7 @@ export function area<T extends Record<string, any>>(options?: {
     // Use refs from enriched data (lazy resolution via __ref)
     const refs = d.map((item) => {
       if ("__ref" in item && item.__ref) {
-        return Ref(item.__ref);
+        return ref(item.__ref);
       }
       throw new Error("area mark expected __ref on items");
     });

@@ -2,9 +2,8 @@ import _ from "lodash";
 import { gofish } from "../ast/gofish";
 import { value } from "../ast/data";
 import { stack } from "../ast/graphicalOperators/stack";
-import { rect } from "../ast/shapes/rect";
 import { color } from "../color";
-import { Rect, StackX, StackY, v } from "../lib";
+import { rect, StackX, StackY, v } from "../lib";
 
 const data = [
   { origin: "Europe", cylinders: "4", count: 66 },
@@ -32,7 +31,7 @@ export const testMosaic = () =>
           // sharedScale: true,
         },
         items.toReversed().map((d) =>
-          Rect({
+          rect({
             h: v(d.count / _(items).sumBy("count")),
             // h: v(d.count),
             fill: v(d.origin),
