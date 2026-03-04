@@ -29,13 +29,8 @@ export { For } from "./ast/iterators/for";
 // export { groupBy } from "./ast/iterators/groupBy";
 export { groupBy, sumBy, orderBy, meanBy } from "lodash";
 
-// Shapes (uppercase = shape constructors, lowercase = marks)
-export { Rect } from "./ast/shapes/rect";
-export { Ellipse } from "./ast/shapes/ellipse";
-export { Image } from "./ast/shapes/image";
-export { Petal } from "./ast/shapes/petal";
+// Shapes
 export { ref as Ref } from "./ast/shapes/ref";
-export { Text } from "./ast/shapes/text";
 
 // Graphical Operators
 export { stack as Stack } from "./ast/graphicalOperators/stack";
