@@ -76,26 +76,6 @@ export type LayerContext = {
   };
 };
 
-// Helper to propagate __ref from input data to derived outputs when possible.
-function attachRef<TIn, TOut>(input: TIn, output: TOut): TOut {
-  if (!output || typeof output !== "object") return output;
-
-  // If input is an array, use the first element as the ref source.
-  const source: any =
-    Array.isArray(input) && input.length > 0 ? input[0] : (input as any);
-
-  if (
-    source &&
-    typeof source === "object" &&
-    "__ref" in source &&
-    !(output as any).__ref
-  ) {
-    return { ...(output as any), __ref: (source as any).__ref } as TOut;
-  }
-
-  return output;
-}
-
 // LayerSelector is a lazy selector that defers layer lookup until actually needed
 export class LayerSelector<T = any> {
   constructor(public readonly layerName: string) {}
@@ -141,9 +121,7 @@ export function derive<T, U>(fn: (d: T) => U | Promise<U>): Operator<T, U> {
       key?: string | number,
       layerContext?: LayerContext
     ) => {
-      const raw = await fn(d);
-      const enriched = attachRef(d, raw);
-      return mark(enriched, key, layerContext);
+      return mark(await fn(d), key, layerContext);
     }) as Mark<T>;
   };
 }
@@ -386,7 +364,7 @@ export function spread<T>(
     ) => {
       // Group by the field if provided, otherwise iterate over raw data
       const grouped =
-        field != null
+        field !== undefined && field !== null
           ? Map.groupBy(d, (row) =>
               typeof field === "string"
                 ? (row as any)[field]

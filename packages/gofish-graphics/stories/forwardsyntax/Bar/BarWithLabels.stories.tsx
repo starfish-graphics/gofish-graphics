@@ -10,7 +10,6 @@ import {
   Text,
   Ref,
   Spread,
-  derive,
   sumBy,
 } from "../../../src/lib";
 import { group } from "../../../src/ast/marks/chart";
@@ -40,21 +39,16 @@ export const Default: StoryObj<Args> = {
         .flow(spread("lake", { dir: "x" }))
         .mark(rect({ h: "count" }).name("bars")),
       Chart(select("bars") as any)
-        .flow(
-          group("lake") as any,
-          derive((d: any[]) => ({
-            total: sumBy(d, "count"),
-          }))
-        )
-        .mark((d: any) => {
+        .flow(group("lake") as any)
+        .mark(((d: any[]) => {
           return Spread(
             { direction: "y", alignment: "middle", spacing: 10 },
             [
-              Ref(d as any),
-              Text({ text: d.total }),
+              Ref(d[0] as any),
+              Text({ text: String(sumBy(d, "count")) }),
             ]
           );
-        }) as any,
+        }) as any),
     ] as any).render(container, {
       w: args.w,
       h: args.h,
@@ -64,23 +58,3 @@ export const Default: StoryObj<Args> = {
     return container;
   },
 };
-
-
-// Layer([
-//   Chart(seafood)
-//     .flow(spread("lake", { dir: "x" }))
-//     .mark(rect({ h: "count" }).name("bars")), // 
-//   Chart(select("bars"))
-//     .flow(group("lake"), derive((d) => { total: sumBy(d, "count"), __ref: d[0].__ref }) ) // sumBy doesn't give the ref back this sums up the counts for each lake, ref
-//     // return (total: X, ref)
-//     .mark((d) => {
-//       return Spread({ direction: "y", alignment: "middle", spacing: 10 }, [
-//         Ref(d),
-//         Text({ text: d.total }),
-//       ]);
-//     }),
-// ]).render(container, {
-//   w: args.w,
-//   h: args.h,
-//   axes: true,
-// });
