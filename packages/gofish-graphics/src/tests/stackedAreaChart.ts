@@ -5,11 +5,9 @@ import { d as $d } from "../components/data"; */
 
 import { value } from "../ast/data";
 import { gofish } from "../ast/gofish";
-import { rect } from "../ast/shapes/rect";
 import { stack } from "../ast/graphicalOperators/stack";
 import { color, color6 } from "../color";
 import { layer } from "../ast/graphicalOperators/layer";
-import { ellipse } from "../ast/shapes/ellipse";
 import _ from "lodash";
 import { ref } from "../ast/shapes/ref";
 import { connectX } from "../ast/graphicalOperators/connectX";
@@ -17,7 +15,7 @@ import { streamgraphData, streamgraphColorPalette } from "../data/streamgraphDat
 import { stackX } from "../ast/graphicalOperators/stackX";
 import { stackY } from "../ast/graphicalOperators/stackY";
 import { frame } from "../ast/graphicalOperators/frame";
-import { ConnectX, Frame, groupBy, For, Rect, Ref, StackX, StackY, v } from "../lib";
+import { ConnectX, Frame, groupBy, For, rect, Ref, StackX, StackY, v } from "../lib";
 const data = streamgraphData;
 const colorPalette = streamgraphColorPalette;
 
@@ -64,7 +62,7 @@ export const testStackedAreaChartV2API = () =>
         StackY(
           { x: v(xCoord) },
           For(items, (d) =>
-            Rect({
+            rect({
               name: `${xCoord}-${d.c}`,
               h: v(d.y),
               w: 0,

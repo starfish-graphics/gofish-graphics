@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
 import { titanic } from "../../src/data/titanic";
-import { StackX, StackY, Rect } from "../../src/lib";
+import { StackX, StackY, rect } from "../../src/lib";
 import { color6, gray, neutral } from "../../src/color";
 import _ from "lodash";
 
@@ -33,7 +33,7 @@ export const Simplified: StoryObj<Args> = {
     const container = initializeContainer();
 
     StackX({ alignment: "middle" }, [
-      Rect({
+      rect({
         w: 40,
         h: _(titanic).sumBy("count") / 10,
         fill: neutral,
@@ -43,7 +43,7 @@ export const Simplified: StoryObj<Args> = {
         _(titanic)
           .groupBy("class")
           .map((items, cls) =>
-            Rect({
+            rect({
               w: 40,
               h: _(items).sumBy("count") / 10,
               fill: classColor[cls],
@@ -66,7 +66,7 @@ export const Default: StoryObj<Args> = {
     const container = initializeContainer();
 
     StackX({ alignment: "middle" }, [
-      Rect({
+      rect({
         w: 40,
         h: _(titanic).sumBy("count") / 10,
         fill: neutral,
@@ -82,14 +82,14 @@ export const Default: StoryObj<Args> = {
                 alignment: "start",
               },
               [
-                Rect({ w: 40, fill: classColor[cls] }),
+                rect({ w: 40, fill: classColor[cls] }),
                 StackY(
                   { dir: "ttb", alignment: "middle" },
                   _(items)
                     .groupBy("sex")
                     .map((items, sex) =>
                       StackX({ alignment: "middle" }, [
-                        Rect({
+                        rect({
                           w: 0,
                           h: _(items).sumBy("count") / 10,
                           fill: sex === "Female" ? color6[4] : color6[5],
@@ -103,7 +103,7 @@ export const Default: StoryObj<Args> = {
                           _(items)
                             .groupBy("survived")
                             .map((survivedItems, survived) => {
-                              return Rect({
+                              return rect({
                                 h: _(survivedItems).sumBy("count") / 10,
                                 fill:
                                   sex === "Female"

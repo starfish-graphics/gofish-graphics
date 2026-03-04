@@ -29,13 +29,13 @@ export { For } from "./ast/iterators/for";
 // export { groupBy } from "./ast/iterators/groupBy";
 export { groupBy, sumBy, orderBy, meanBy } from "lodash";
 
-// Shapes
+// Shapes (uppercase = shape constructors, lowercase = marks)
 export { Rect } from "./ast/shapes/rect";
-export { ellipse as Ellipse } from "./ast/shapes/ellipse";
+export { Ellipse } from "./ast/shapes/ellipse";
 export { Image } from "./ast/shapes/image";
-export { petal as Petal } from "./ast/shapes/petal";
+export { Petal } from "./ast/shapes/petal";
 export { ref as Ref } from "./ast/shapes/ref";
-export { text as Text } from "./ast/shapes/text";
+export { Text } from "./ast/shapes/text";
 
 // Graphical Operators
 export { stack as Stack } from "./ast/graphicalOperators/stack";
@@ -54,6 +54,12 @@ export { frame as Frame } from "./ast/graphicalOperators/frame";
 export { position as Position } from "./ast/graphicalOperators/position";
 export { arrow as Arrow } from "./ast/graphicalOperators/arrow";
 export { over as Over, inside as In, xor as Xor, out as Out, atop as Atop, mask as Mask } from "./ast/graphicalOperators/porterDuff";
+
+// Marks (lowercase, from createMark)
+export { ellipse } from "./ast/shapes/ellipse";
+export { petal } from "./ast/shapes/petal";
+export { text } from "./ast/shapes/text";
+export { image } from "./ast/shapes/image";
 
 /* Chart Syntax */
 export {

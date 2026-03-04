@@ -1,19 +1,19 @@
 import { mix } from "spectral.js";
 import { Chart } from "../ast/marks/chart";
 import { seafood } from "../data/catch";
-import { color6_old, For, groupBy, Rect, SpreadX, StackX, StackY, v } from "../lib";
+import { color6_old, For, groupBy, rect, SpreadX, StackX, StackY, v } from "../lib";
 import _ from "lodash";
 
 // export const testIcicleForwardChartAPI = () => {
 //   ForwardChart(titanic)
 //     .stackX({ spacing: 0, alignment: "middle"}, [
-//       Rect({ w: 40, h: _(titanic).sumBy("count") / 10, fill: "gray" }),
+//       rect({ w: 40, h: _(titanic).sumBy("count") / 10, fill: "gray" }),
 //       StackY("class", { spacing: 0, alignment: "middle"})
 //         .stackX()
 //     ])
 // }
 
-Rect({ h: 10, fill: "red" }).stackY("survived", {
+rect({ h: 10, fill: "red" }).stackY("survived", {
   w: 40,
   spacing: 0,
   alignment: "middle",
@@ -22,21 +22,21 @@ Rect({ h: 10, fill: "red" }).stackY("survived", {
 pipe(
   StackY("sex", { spacing: 0, alignment: "middle" }),
   StackX({ spacing: 0, alignment: "middle" }, [
-    Rect({
+    rect({
       w: 40,
       h: _(items).sumBy("count") / 10,
       fill: sex === "Female" ? color6_old[2] : color6_old[3],
     }),
     pipe(
       StackY("survived", { w: 40, spacing: 0, alignment: "middle" }),
-      Rect({ h: 10, fill: "red" })
+      rect({ h: 10, fill: "red" })
     ),
   ])
 );
 
 /* export const testIcicleAPIv2 = () =>
   StackX({ spacing: 0, alignment: "middle" }, [
-    Rect({
+    rect({
       w: 40,
       h: _(titanic).sumBy("count") / 10,
       fill: "gray",
@@ -45,12 +45,12 @@ pipe(
       { spacing: 0, alignment: "middle" },
       For(groupBy(titanic, "class"), (items, cls) =>
         StackX({ h: _(items).sumBy("count") / 10, spacing: 0, alignment: "start" }, [
-          Rect({ w: 40, fill: classColor[cls as keyof typeof classColor] }),
+          rect({ w: 40, fill: classColor[cls as keyof typeof classColor] }),
           StackY(
             { spacing: 0, alignment: "middle" },
             For(groupBy(items, "sex"), (items, sex) =>
               StackX({ spacing: 0, alignment: "middle" }, [
-                Rect({
+                rect({
                   w: 40,
                   h: _(items).sumBy("count") / 10,
                   fill: sex === "Female" ? color6_old[2] : color6_old[3],
@@ -62,7 +62,7 @@ pipe(
                     alignment: "middle",
                   },
                   For(groupBy(items, "survived"), (survivedItems, survived) => {
-                    return Rect({
+                    return rect({
                       // w: _(items).sumBy("count"),
                       // w: _(survivedItems).sumBy("count") / 10,
                       h: _(survivedItems).sumBy("count") / 10,
@@ -91,7 +91,7 @@ export const chartRectBF = () =>
   SpreadX(
     { spacing: 2, sharedScale: true },
     For(groupBy(seafood, "species"), (d) =>
-      Rect({ w: 32, h: v(_.sumBy(d, "count")), fill: v(d[0].species) })
+      rect({ w: 32, h: v(_.sumBy(d, "count")), fill: v(d[0].species) })
     )
   );
 

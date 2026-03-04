@@ -2,11 +2,11 @@ import _ from "lodash";
 import { caltrain, caltrainStopOrder } from "../data/caltrain";
 import {
   ConnectY,
-  Ellipse,
+  ellipse,
   For,
   Frame,
   groupBy,
-  Rect,
+  rect,
   Ref,
   StackY,
   v,
@@ -32,9 +32,9 @@ export const testStringLine = () =>
         ),
         (d, key) =>
           Frame({ key }, [
-            Rect({ w: 0, h: 0 }),
+            rect({ w: 0, h: 0 }),
             For(d, (d) =>
-              Ellipse({ x: d.Time / 3, w: 4, h: 4, fill: v(d.Direction) }).name(
+              ellipse({ x: d.Time / 3, w: 4, h: 4, fill: v(d.Direction) }).name(
                 `${d.Train}-${d.Station}-${d.Time}`
               )
             ),

@@ -4,7 +4,7 @@ import {
   For,
   groupBy,
   SpreadX,
-  Rect,
+  rect,
   v,
   Frame,
   ConnectX,
@@ -19,7 +19,7 @@ export const testRidgeline = () =>
         SpreadX(
           { spacing: 20 /* , sharedScale: true */ },
           For(items, (d) =>
-            Rect({
+            rect({
               // x: d.x * 20,
               // h: v(d.y),
               h: d.y,

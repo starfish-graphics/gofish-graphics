@@ -2,7 +2,6 @@ import _ from "lodash";
 import { gofish } from "../ast/gofish";
 import { value } from "../ast/data";
 import { spread } from "../ast/graphicalOperators/spread";
-import { rect } from "../ast/shapes/rect";
 import {
   black,
   color,
@@ -23,7 +22,7 @@ import {
   Frame,
   StackY,
   StackX,
-  Rect,
+  rect,
   groupBy,
   For,
   ConnectX,
@@ -290,7 +289,7 @@ export const testSankeyIcicleAPIv2 = () =>
       StackY(
         { alignment: "middle" },
         For(groupBy(titanic, "class"), (items, cls) =>
-          Rect({
+          rect({
             w: 40,
             h: _(items).sumBy("count") / 10,
             fill: "gray",
@@ -304,7 +303,7 @@ export const testSankeyIcicleAPIv2 = () =>
             StackY(
               { alignment: "middle" },
               For(groupBy(items, "sex"), (items, sex) =>
-                Rect({
+                rect({
                   w: 40,
                   h: _(items).sumBy("count") / 10,
                   fill: classColor[cls as keyof typeof classColor],
@@ -324,7 +323,7 @@ export const testSankeyIcicleAPIv2 = () =>
                       alignment: "middle",
                     },
                     For(groupBy(items, "survived"), (survivedItems, survived) =>
-                      Rect({
+                      rect({
                         name: `${cls}-${sex}-${survived}-src`,
                         w: 40,
                         h: _(survivedItems).sumBy("count") / 10,
@@ -341,7 +340,7 @@ export const testSankeyIcicleAPIv2 = () =>
                     For(
                       groupBy(items, "survived"),
                       (survivedItems, survived) => {
-                        return Rect({
+                        return rect({
                           name: `${cls}-${sex}-${survived}-tgt`,
                           // w: _(items).sumBy("count"),
                           // w: _(survivedItems).sumBy("count") / 10,

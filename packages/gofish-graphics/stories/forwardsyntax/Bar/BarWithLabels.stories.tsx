@@ -7,7 +7,7 @@ import {
   rect,
   Layer,
   select,
-  Text,
+  text,
   Ref,
   Spread,
   sumBy,
@@ -45,7 +45,7 @@ export const Default: StoryObj<Args> = {
             { direction: "y", alignment: "middle", spacing: 10 },
             [
               Ref(d[0] as any),
-              Text({ text: String(sumBy(d, "count")) }),
+              text({ text: String(sumBy(d, "count")) }),
             ]
           );
         }) as any),

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
 import { caltrain, caltrainStopOrder } from "../../src/data/caltrain";
-import { Frame, SpreadY, For, Rect, Ellipse, ConnectY, Ref, v } from "../../src/lib";
+import { Frame, SpreadY, For, rect, ellipse, ConnectY, Ref, v } from "../../src/lib";
 import { groupBy, orderBy } from "lodash";
 import _ from "lodash";
 
@@ -44,9 +44,9 @@ export const Default: StoryObj<Args> = {
           ),
           (d, key) =>
             Frame({ key }, [
-              Rect({ w: 0, h: 0 }),
+              rect({ w: 0, h: 0 }),
               For(d, (d) =>
-                Ellipse({ x: d.Time / 3, w: 4, h: 4, fill: v(d.Direction) }).name(
+                ellipse({ x: d.Time / 3, w: 4, h: 4, fill: v(d.Direction) }).name(
                   `${d.Train}-${d.Station}-${d.Time}`
                 )
               ),
