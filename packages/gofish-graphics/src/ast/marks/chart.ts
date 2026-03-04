@@ -94,16 +94,22 @@ export class LayerSelector<T = any> {
     // If keyContext is not available, fall back to stored nodes
     let resolvedNodes: GoFishNode[] = layer.nodes;
 
-    // Return node-attached data enriched with refs to nodes
-    const result = resolvedNodes.map((node: GoFishNode) => {
+    // Return node-attached data enriched with refs to nodes.
+    // Option 3: flatten arrays and duplicate __ref per underlying datum.
+    const result = resolvedNodes.flatMap((node: GoFishNode) => {
       const datum: any = (node as any).datum;
-      if (datum && typeof datum === "object") {
-        const datumHack = { ...datum[0], __ref: node };
-        return datumHack as T & { __ref: GoFishNode };
-      }
-      return { item: datum, __ref: node } as unknown as T & {
-        __ref: GoFishNode;
-      };
+
+      // Always convert datum to an array of node-attached objects for consistency.
+      if (!Array.isArray(datum) && typeof datum !== "object") {
+        throw new Error("datum must be an array or object");
+      } 
+      const arr = Array.isArray(datum) ? datum : [datum];
+      
+      return arr.map((item: any) => ({
+        ...(item as object),
+        __ref: node,
+      })) as Array<T & { __ref: GoFishNode }>;
+      
     });
     return result;
   }
@@ -379,7 +385,7 @@ export function spread<T>(
       const grouped = field
         ? typeof field === "string"
           ? Map.groupBy(d, (row) => (row as any)[field])
-          : Map.groupBy(d, field)
+          : Map.groupBy(d, field as any)
         : d;
 
       return Spread(
