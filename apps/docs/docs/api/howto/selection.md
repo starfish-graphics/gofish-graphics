@@ -37,8 +37,8 @@ gf.Layer([
     .flow(gf.group("lake"))
     .mark((d) =>
       gf.Spread({ direction: "y", alignment: "middle", spacing: 10 }, [
-        gf.Ref(d[0]),
-        gf.Text({ text: d[0].count }),
+        gf.ref(d[0]),
+        gf.text({ text: d[0].count }),
       ])
     ),
 ]).render(root, { w: 400, h: 250, axes: true });
@@ -46,7 +46,7 @@ gf.Layer([
 
 :::
 
-Here, `select("bars")` returns the bar nodes with their original data attached. The mark function receives each node and creates a vertical spread containing a reference to the bar (`Ref`) and a text label.
+Here, `select("bars")` returns the bar nodes with their original data attached. The mark function receives each node and creates a vertical spread containing a reference to the bar (`ref`) and a text label.
 
 ## Example: Connected scatterplot
 
@@ -104,7 +104,7 @@ This allows overlay marks to position themselves relative to the original marks 
 
 | Goal | Pattern |
 |------|---------|
-| Labels on bars | `rect().name("bars")` → `select("bars")` + `Text` |
+| Labels on bars | `rect().name("bars")` → `select("bars")` + `text` |
 | Line through points | `circle().name("points")` → `select("points")` + `line()` |
 | Area under line | `scaffold().name("points")` → `select("points")` + `area()` |
 | Annotations | Name any mark → select and add custom overlay |
