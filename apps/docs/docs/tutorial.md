@@ -10,12 +10,12 @@ To start, duplicate this tab to follow along in the live editor!
 
 <!-- ```ts index.ts
 // prettier-ignore
-import { StackX, StackY, ConnectX, Rect, Ref, For, v, color, Frame, polar, groupBy, sumBy, orderBy } from "gofish-graphics";
+import { StackX, StackY, ConnectX, rect, ref, For, v, color, Frame, polar, groupBy, sumBy, orderBy } from "gofish-graphics";
 import { seafood } from "./dataset";
 
 const root = document.getElementById("app");
 
-Rect({ x: 0, y: 0, w: 32, h: 300, fill: gf.color.green[5] }).render(root, {
+rect({ x: 0, y: 0, w: 32, h: 300, fill: gf.color.green[5] }).render(root, {
   w: 500,
   h: 300,
 });
@@ -361,7 +361,7 @@ not tied to an argument like `h`, we'll need to pass a `key` field to the object
 StackX(
   { spacing: 8, sharedScale: true },
   For(_.groupBy(seafood, "lake"), (lake, key) =>
-    Rect({ key, w: 32, h: v(_.sumBy(lake, "count")), fill: gf.color.green[5] })
+    rect({ key, w: 32, h: v(_.sumBy(lake, "count")), fill: gf.color.green[5] })
   )
 ).render(root, { w: 500, h: 300, axes: true });
 ```
@@ -370,7 +370,7 @@ StackX(
 
 Voila! Now we have a y-axis and labels for each of the bars.
 
-<!-- Notice also that we've added a `key` field to the `Rect`. This let's GoFish know the identity of -->
+<!-- Notice also that we've added a `key` field to `rect`. This let's GoFish know the identity of -->
 <!-- each -->
 
 ## Stacked Bar Chart
@@ -527,7 +527,7 @@ Frame([
       StackY(
         { key, spacing: 1 },
         For(_.orderBy(lake, "count", "desc"), (d) =>
-          Rect({ w: 16, h: v(d.count), fill: v(d.species) }).name(
+          rect({ w: 16, h: v(d.count), fill: v(d.species) }).name(
             `${d.lake}-${d.species}`
           )
         )
@@ -537,7 +537,7 @@ Frame([
   For(_.groupBy(seafood, "species"), (items) =>
     ConnectX(
       { opacity: 0.8 },
-      For(items, (d) => Ref(`${d.lake}-${d.species}`))
+      For(items, (d) => ref(`${d.lake}-${d.species}`))
     )
   ),
 ]).render(root, { w: 500, h: 300, axes: true });

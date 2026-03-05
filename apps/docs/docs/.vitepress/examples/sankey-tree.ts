@@ -13,7 +13,7 @@ gf.Frame([
     gf.StackY(
       { spacing: 0, alignment: "middle" },
       gf.For(_.groupBy(titanic, "class"), (items, cls) =>
-        gf.Rect({
+        gf.rect({
           w: 40,
           h: _(items).sumBy("count") / 10,
           fill: gf.neutral,
@@ -27,7 +27,7 @@ gf.Frame([
           gf.StackY(
             { spacing: 0, alignment: "middle" },
             gf.For(_.groupBy(items, "sex"), (items, sex) =>
-              gf.Rect({
+              gf.rect({
                 w: 40,
                 h: _(items).sumBy("count") / 10,
                 fill: classColor[cls],
@@ -48,7 +48,7 @@ gf.Frame([
                     alignment: "middle",
                   },
                   gf.For(_.groupBy(items, "survived"), (survivedItems, survived) =>
-                    gf.Rect({
+                    gf.rect({
                       w: 40,
                       h: _(survivedItems).sumBy("count") / 10,
                       fill: sex === "Female" ? gf.color6[4] : gf.color6[5],
@@ -62,7 +62,7 @@ gf.Frame([
                     alignment: "middle",
                   },
                   gf.For(_.groupBy(items, "survived"), (survivedItems, survived) => {
-                    return gf.Rect({
+                    return gf.rect({
                       h: _(survivedItems).sumBy("count") / 10,
                       fill:
                         sex === "Female"
@@ -89,7 +89,7 @@ gf.Frame([
         interpolation: "bezier",
         opacity: 0.7,
       },
-      [gf.Ref(`${cls}-src`), gf.Ref(`${cls}-tgt`)]
+      [gf.ref(`${cls}-src`), gf.ref(`${cls}-tgt`)]
     ),
     gf.For(_.groupBy(items, "sex"), (sexItems, sex) => [
       gf.ConnectX(
@@ -98,7 +98,7 @@ gf.Frame([
           interpolation: "bezier",
           opacity: 0.7,
         },
-        [gf.Ref(`${cls}-${sex}-src`), gf.Ref(`${cls}-${sex}-tgt`)]
+        [gf.ref(`${cls}-${sex}-src`), gf.ref(`${cls}-${sex}-tgt`)]
       ),
       gf.For(_.groupBy(sexItems, "survived"), (survivedItems, survived) =>
         gf.ConnectX(
@@ -115,8 +115,8 @@ gf.Frame([
             opacity: 0.7,
           },
           [
-            gf.Ref(`${cls}-${sex}-${survived}-src`),
-            gf.Ref(`${cls}-${sex}-${survived}-tgt`),
+            gf.ref(`${cls}-${sex}-${survived}-src`),
+            gf.ref(`${cls}-${sex}-${survived}-tgt`),
           ]
         )
       ),

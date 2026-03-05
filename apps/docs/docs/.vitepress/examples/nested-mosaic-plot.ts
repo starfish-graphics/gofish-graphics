@@ -19,7 +19,7 @@ gf.StackY(
             sharedScale: true,
           },
           gf.For(_.groupBy(sItems, "survived"), (items, survived) =>
-            gf.Rect({
+            gf.rect({
               h: gf.v(_(items).sumBy("count")),
               fill: survived === "No" ? gf.gray : classColor[cls],
             })

@@ -24,8 +24,8 @@ Here's a simple "badge" glyph with a rounded rectangle and a dot:
 
 ```js
 gf.Layer([
-  gf.Rect({ cx: 0, cy: 0, w: 50, h: 30, rx: 8, fill: "steelblue" }),
-  gf.Ellipse({ cx: -15, cy: 0, w: 10, h: 10, fill: "white" }),
+  gf.rect({ cx: 0, cy: 0, w: 50, h: 30, rx: 8, fill: "steelblue" }),
+  gf.ellipse({ cx: -15, cy: 0, w: 10, h: 10, fill: "white" }),
 ]).render(root, { w: 100, h: 100 });
 ```
 
@@ -40,8 +40,8 @@ Wrap your glyph in a function to make it reusable with different parameters:
 ```ts
 const Badge = ({ w = 50, h = 30, fill = "steelblue" }) =>
   Layer([
-    Rect({ cx: 0, cy: 0, w, h, rx: 8, fill }),
-    Ellipse({ cx: -w / 2 + 10, cy: 0, w: 10, h: 10, fill: "white" }),
+    rect({ cx: 0, cy: 0, w, h, rx: 8, fill }),
+    ellipse({ cx: -w / 2 + 10, cy: 0, w: 10, h: 10, fill: "white" }),
   ]);
 ```
 
@@ -52,8 +52,8 @@ Now you can create badges of different sizes and colors:
 ```js
 const Badge = ({ w = 50, h = 30, fill = "steelblue" }) =>
   gf.Layer([
-    gf.Rect({ cx: 0, cy: 0, w, h, rx: 8, fill }),
-    gf.Ellipse({ cx: -w / 2 + 10, cy: 0, w: 10, h: 10, fill: "white" }),
+    gf.rect({ cx: 0, cy: 0, w, h, rx: 8, fill }),
+    gf.ellipse({ cx: -w / 2 + 10, cy: 0, w: 10, h: 10, fill: "white" }),
   ]);
 
 gf.Spread({ direction: "x", spacing: 20 }, [
@@ -74,9 +74,9 @@ Pass a function to `.mark()` that returns your glyph. The function receives the 
 ```js
 const Pin = ({ fill = "tomato" }) =>
   gf.Layer([
-    gf.Ellipse({ cx: 0, cy: -8, w: 16, h: 16, fill }),
-    gf.Ellipse({ cx: 0, cy: -10, w: 6, h: 6, fill: "white" }),
-    gf.Rect({ cx: 0, cy: 0, w: 3, h: 10, fill }),
+    gf.ellipse({ cx: 0, cy: -8, w: 16, h: 16, fill }),
+    gf.ellipse({ cx: 0, cy: -10, w: 6, h: 6, fill: "white" }),
+    gf.rect({ cx: 0, cy: 0, w: 3, h: 10, fill }),
   ]);
 
 const locations = [
@@ -104,8 +104,8 @@ You can combine any shapes: rectangles, ellipses, text, and more. Here's a label
 ```js
 const DataPoint = ({ value, fill = "steelblue" }) =>
   gf.Spread({ direction: "y", spacing: 4, alignment: "middle" }, [
-    gf.Ellipse({ cx: 0, cy: 0, w: 12, h: 12, fill }),
-    gf.Text({ text: String(value), fontSize: 10 }),
+    gf.ellipse({ cx: 0, cy: 0, w: 12, h: 12, fill }),
+    gf.text({ text: String(value), fontSize: 10 }),
   ]);
 
 const points = [
