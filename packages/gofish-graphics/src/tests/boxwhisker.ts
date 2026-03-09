@@ -1,12 +1,11 @@
 import _ from "lodash";
 import {
   ConnectY,
-  Ellipse,
   For,
   Frame,
   groupBy,
-  Rect,
-  Ref,
+  rect,
+  ref,
   SpreadX,
   v,
 } from "../lib";
@@ -31,14 +30,14 @@ const boxAndWhisker = ({
   const minName = `min-${Math.random().toString(36).substring(2, 9)}`;
   const maxName = `max-${Math.random().toString(36).substring(2, 9)}`;
   return Frame({}, [
-    Rect({ w: 8, h: 1, y: v(min), fill: "gray" }).name(minName),
-    Rect({ w: 8, h: 1, y: v(max), fill: "gray" }).name(maxName),
+    rect({ w: 8, h: 1, y: v(min), fill: "gray" }).name(minName),
+    rect({ w: 8, h: 1, y: v(max), fill: "gray" }).name(maxName),
     ConnectY({ mode: "center-to-center", strokeWidth: 1 }, [
-      Ref(minName),
-      Ref(maxName),
+      ref(minName),
+      ref(maxName),
     ]),
-    Rect({ w: 8, y: v(q1), h: v(q3 - q1), fill }),
-    Rect({ w: 8, h: 1, y: v(median), fill: "white" }),
+    rect({ w: 8, y: v(q1), h: v(q3 - q1), fill }),
+    rect({ w: 8, h: 1, y: v(median), fill: "white" }),
   ]);
 };
 

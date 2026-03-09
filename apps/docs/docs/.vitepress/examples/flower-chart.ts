@@ -14,7 +14,7 @@ const scatterData = _(seafood)
 gf.Frame(
   gf.For(scatterData, (sample) =>
     gf.Frame({ x: sample.x, y: sample.y }, [
-      gf.Rect({
+      gf.rect({
         w: 2,
         h: 300 - sample.y,
         fill: gf.color.green[5],
@@ -32,7 +32,7 @@ gf.Frame(
               sharedScale: true,
             },
             gf.For(sample.collection, (d, i) =>
-              gf.Petal({
+              gf.petal({
                 w: gf.v(d.count),
                 fill: mix(gf.color6[i % 6], gf.white, 0.5),
               })

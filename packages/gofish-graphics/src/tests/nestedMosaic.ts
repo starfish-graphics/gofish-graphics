@@ -2,7 +2,7 @@ import _ from "lodash";
 import { gofish } from "../ast/gofish";
 import { value } from "../ast/data";
 import { stack } from "../ast/graphicalOperators/stack";
-import { Rect } from "../ast/shapes/rect";
+import { rect } from "../ast/shapes/rect";
 import {
   black,
   color,
@@ -67,7 +67,7 @@ export const testNestedMosaic = () =>
                   _(sItems)
                     .groupBy("survived")
                     .map((items, survived) =>
-                      Rect({
+                      rect({
                         h: value(_(items).sumBy("count"), "survived"),
                         // h: value(_(items).sumBy("count"), "count"),
                         // h: _(items).sumBy("count") / 10,

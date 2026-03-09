@@ -21,10 +21,29 @@
     "test:visual": "pnpm --filter @gofish/tests test",
     "test:visual:update": "pnpm --filter @gofish/tests update",
     "test:visual:js": "pnpm --filter @gofish/tests test:js",
-    "test:visual:check-sync": "pnpm --filter @gofish/tests check-sync"
+    "test:visual:check-sync": "pnpm --filter @gofish/tests check-sync",
+    "lint": "pnpm exec eslint .",
+    "lint:fix": "pnpm exec eslint . --fix",
+    "format": "pnpm exec prettier . --write",
+    "format:check": "pnpm exec prettier . --check",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}": [
+      "pnpm exec eslint --fix",
+      "pnpm exec prettier --write"
+    ],
+    "*.{json,yml,yaml,md,css,html,vue}": "pnpm exec prettier --write"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.3",
     "chromatic": "^13.3.5",
-    "prettier": "^3.6.2"
+    "eslint": "^9.39.3",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^16.5.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.3.2",
+    "prettier": "^3.6.2",
+    "typescript-eslint": "^8.56.1"
   }
 }

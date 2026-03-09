@@ -1,0 +1,11 @@
+**/.claude/**
+**/.pytest_cache/**
+**/node_modules/**
+**/dist/**
+**/.vitepress/dist/**
+**/.vitepress/cache/**
+**/storybook-static/**
+**/coverage/**
+packages/gofish-graphics/src/tests/**
+packages/gofish-graphics/stories/**
+pnpm-lock.yaml

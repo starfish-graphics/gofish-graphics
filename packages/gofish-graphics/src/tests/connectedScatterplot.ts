@@ -8,14 +8,13 @@ import { rect } from "../ast/shapes/rect";
 import { stack } from "../ast/graphicalOperators/stack";
 import { color, color6 } from "../color";
 import { layer } from "../ast/graphicalOperators/layer";
-import { ellipse } from "../ast/shapes/ellipse";
 import _ from "lodash";
 import { ref } from "../ast/shapes/ref";
 import { connect } from "../ast/graphicalOperators/connect";
 import { streamgraphColorPalette, streamgraphData } from "../data/streamgraphData";
 import { frame } from "../ast/graphicalOperators/frame";
 import { drivingShifts } from "../data/drivingShifts";
-import { ConnectX, Ellipse, For, Frame } from "../lib";
+import { ConnectX, ellipse, For, Frame } from "../lib";
 
 // const data = [
 //   { x: 0, y: 28, c: 0 },
@@ -47,7 +46,7 @@ const colorPalette = streamgraphColorPalette;
 export const testConnectedScatterplot = () =>
   Frame({}, [
     For(drivingShifts, (d) =>
-      Ellipse({
+      ellipse({
         x: value(d.miles),
         y: value(d.gas),
         w: 6,
@@ -67,7 +66,7 @@ export const testConnectedScatterplot = () =>
       For(drivingShifts, (d) => ref(`${d.year}`))
     ),
     For(drivingShifts, (d) =>
-      Ellipse({
+      ellipse({
         x: value(d.miles),
         y: value(d.gas),
         w: 6,
