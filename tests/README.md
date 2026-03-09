@@ -56,11 +56,11 @@ Both JS and Python DOM go through identical normalization (`scripts/normalize-do
 
 ## Commands
 
-| Command | Description |
-|---|---|
-| `pnpm test:visual:js` | Capture JS snapshots and compare against baselines |
-| `pnpm test:visual:update` | Capture and accept as new baselines |
-| `pnpm test:visual` | Full test: JS capture + Python capture + compare |
+| Command                       | Description                                                   |
+| ----------------------------- | ------------------------------------------------------------- |
+| `pnpm test:visual:js`         | Capture JS snapshots and compare against baselines            |
+| `pnpm test:visual:update`     | Capture and accept as new baselines                           |
+| `pnpm test:visual`            | Full test: JS capture + Python capture + compare              |
 | `pnpm test:visual:check-sync` | Check that changed JS stories have updated Python equivalents |
 
 ## Developer Workflows

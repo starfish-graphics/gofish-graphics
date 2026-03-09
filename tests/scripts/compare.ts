@@ -127,7 +127,9 @@ function main() {
   const parityFailures = jsOnly ? [] : checkParity();
 
   const rCount = regressions.filter((f) => f.kind === "regression").length;
-  const mCount = regressions.filter((f) => f.kind === "missing-baseline").length;
+  const mCount = regressions.filter(
+    (f) => f.kind === "missing-baseline"
+  ).length;
   const pCount = parityFailures.length;
 
   // Print summary
@@ -171,7 +173,7 @@ function main() {
   }
 
   console.log(
-    `\n${allFailures.length} failure(s). See tests/tmp/diff-report.html`,
+    `\n${allFailures.length} failure(s). See tests/tmp/diff-report.html`
   );
   process.exit(1);
 }

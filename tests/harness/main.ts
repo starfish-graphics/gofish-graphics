@@ -61,14 +61,18 @@ declare global {
 // Operator mapping (mirrors widget-src/index.ts but uses HTTP for derive)
 // ---------------------------------------------------------------------------
 
-function mapOperator(op: OperatorSpec, deriveServerUrl?: string): Operator<any, any> | null {
+function mapOperator(
+  op: OperatorSpec,
+  deriveServerUrl?: string
+): Operator<any, any> | null {
   const { type, ...opts } = op;
 
   switch (type) {
     case "derive": {
       const lambdaId = opts.lambdaId;
       if (!lambdaId) throw new Error("derive operator missing lambdaId");
-      if (!deriveServerUrl) throw new Error("derive operator requires deriveServerUrl");
+      if (!deriveServerUrl)
+        throw new Error("derive operator requires deriveServerUrl");
 
       return derive(async (d: any) => {
         const rows = Array.isArray(d) ? d : d == null ? [] : [d];
@@ -81,7 +85,9 @@ function mapOperator(op: OperatorSpec, deriveServerUrl?: string): Operator<any, 
         });
 
         if (!resp.ok) {
-          throw new Error(`Derive server error: ${resp.status} ${await resp.text()}`);
+          throw new Error(
+            `Derive server error: ${resp.status} ${await resp.text()}`
+          );
         }
 
         const result = await resp.json();
@@ -148,14 +154,21 @@ function renderChart(spec: HarnessSpec) {
     const node = builder.flow(...operators).mark(mark);
 
     const { w, h, axes, debug, ...restOpts } = spec.options || {};
-    node.render(container, { w: w ?? 400, h: h ?? 400, axes: axes ?? false, debug: debug ?? false, ...restOpts });
+    node.render(container, {
+      w: w ?? 400,
+      h: h ?? 400,
+      axes: axes ?? false,
+      debug: debug ?? false,
+      ...restOpts,
+    });
 
     // Allow a tick for SolidJS to flush renders
     requestAnimationFrame(() => {
       window.__GOFISH_RENDER_COMPLETE__ = true;
     });
   } catch (err) {
-    window.__GOFISH_RENDER_ERROR__ = err instanceof Error ? err.message : String(err);
+    window.__GOFISH_RENDER_ERROR__ =
+      err instanceof Error ? err.message : String(err);
     window.__GOFISH_RENDER_COMPLETE__ = true;
   }
 }

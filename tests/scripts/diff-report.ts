@@ -117,9 +117,7 @@ function collectDiffs(): DiffEntry[] {
         kind: "regression",
         beforeDom: baselineContent,
         afterDom: jsContent,
-        beforeScreenshot: readImageBase64(
-          join(BASELINE_SCREENSHOTS, pngFile),
-        ),
+        beforeScreenshot: readImageBase64(join(BASELINE_SCREENSHOTS, pngFile)),
         afterScreenshot: readImageBase64(join(JS_DIR, pngFile)),
       });
     }
@@ -182,8 +180,10 @@ function generateReport(diffs: DiffEntry[]): string {
         ? `<img src="data:image/png;base64,${d.afterScreenshot}" style="max-width: 100%;" />`
         : `<div style="color: #999; padding: 40px;">No screenshot</div>`;
 
-      const beforeLabel = d.kind === "parity" ? "JS (expected)" : "Before (baseline)";
-      const afterLabel = d.kind === "parity" ? "Python (actual)" : "After (current)";
+      const beforeLabel =
+        d.kind === "parity" ? "JS (expected)" : "Before (baseline)";
+      const afterLabel =
+        d.kind === "parity" ? "Python (actual)" : "After (current)";
 
       return `
     <div style="border: 1px solid #ddd; margin: 16px 0; border-radius: 6px; overflow: hidden;">

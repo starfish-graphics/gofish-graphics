@@ -21,7 +21,8 @@ export function stripWrapper(html: string): string {
   let s = html.trim();
 
   // Strip <div style="margin: 20px;"> wrapper (Storybook only)
-  const marginWrap = /^<div\s+style="margin:\s*20px;?">\s*([\s\S]*?)\s*<\/div>$/i;
+  const marginWrap =
+    /^<div\s+style="margin:\s*20px;?">\s*([\s\S]*?)\s*<\/div>$/i;
   const m = s.match(marginWrap);
   if (m) {
     s = m[1].trim();
@@ -70,16 +71,12 @@ function roundNum(numStr: string, decimals: number): string {
 
 /** Round numbers inside an SVG `d` attribute (path data). */
 function roundPathData(d: string, decimals: number): string {
-  return d.replace(/-?\d+\.?\d*(?:e[+-]?\d+)?/gi, (m) =>
-    roundNum(m, decimals),
-  );
+  return d.replace(/-?\d+\.?\d*(?:e[+-]?\d+)?/gi, (m) => roundNum(m, decimals));
 }
 
 /** Round numbers in a `transform` attribute. */
 function roundTransform(t: string, decimals: number): string {
-  return t.replace(/-?\d+\.?\d*(?:e[+-]?\d+)?/gi, (m) =>
-    roundNum(m, decimals),
-  );
+  return t.replace(/-?\d+\.?\d*(?:e[+-]?\d+)?/gi, (m) => roundNum(m, decimals));
 }
 
 /** Round numbers in a `viewBox` attribute. */
@@ -117,12 +114,12 @@ export function roundFloats(html: string, decimals = 4): string {
         const rounded = value.replace(
           /:\s*(-?\d+\.?\d*(?:e[+-]?\d+)?)(px|em|rem|%|)/gi,
           (_m: string, num: string, unit: string) =>
-            `: ${roundNum(num, decimals)}${unit}`,
+            `: ${roundNum(num, decimals)}${unit}`
         );
         return `${space}${attr}="${rounded}"`;
       }
       return `${space}${attr}="${value}"`;
-    },
+    }
   );
 }
 
@@ -189,22 +186,27 @@ export function normalizeIds(html: string): string {
  */
 export function sortAttributes(html: string): string {
   // Match opening tags: <tagname attr1="v1" attr2="v2" ...>
-  return html.replace(/<(\w[\w-]*)((?:\s+[\w:.-]+="[^"]*")*)\s*(\/?)>/g, (_m, tag, attrs, selfClose) => {
-    if (!attrs || !attrs.trim()) {
-      return selfClose ? `<${tag} />` : `<${tag}>`;
+  return html.replace(
+    /<(\w[\w-]*)((?:\s+[\w:.-]+="[^"]*")*)\s*(\/?)>/g,
+    (_m, tag, attrs, selfClose) => {
+      if (!attrs || !attrs.trim()) {
+        return selfClose ? `<${tag} />` : `<${tag}>`;
+      }
+      // Parse attributes
+      const attrList: [string, string][] = [];
+      const attrRegex = /([\w:.-]+)="([^"]*)"/g;
+      let am: RegExpExecArray | null;
+      while ((am = attrRegex.exec(attrs)) !== null) {
+        attrList.push([am[1], am[2]]);
+      }
+      // Sort alphabetically by attribute name
+      attrList.sort((a, b) => a[0].localeCompare(b[0]));
+      const sortedAttrs = attrList.map(([k, v]) => `${k}="${v}"`).join(" ");
+      return selfClose
+        ? `<${tag} ${sortedAttrs} />`
+        : `<${tag} ${sortedAttrs}>`;
     }
-    // Parse attributes
-    const attrList: [string, string][] = [];
-    const attrRegex = /([\w:.-]+)="([^"]*)"/g;
-    let am: RegExpExecArray | null;
-    while ((am = attrRegex.exec(attrs)) !== null) {
-      attrList.push([am[1], am[2]]);
-    }
-    // Sort alphabetically by attribute name
-    attrList.sort((a, b) => a[0].localeCompare(b[0]));
-    const sortedAttrs = attrList.map(([k, v]) => `${k}="${v}"`).join(" ");
-    return selfClose ? `<${tag} ${sortedAttrs} />` : `<${tag} ${sortedAttrs}>`;
-  });
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -221,7 +223,10 @@ export function normalizeWhitespace(html: string): string {
   // Also break after text nodes
   s = s.replace(/>([^<]+)</g, ">$1\n<");
 
-  const lines = s.split("\n").map((l) => l.trim()).filter(Boolean);
+  const lines = s
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
 
   const result: string[] = [];
   let depth = 0;
@@ -261,7 +266,7 @@ export interface NormalizeOptions {
  */
 export function normalizeDom(
   html: string,
-  options: NormalizeOptions = {},
+  options: NormalizeOptions = {}
 ): string {
   const { decimals = 4 } = options;
 

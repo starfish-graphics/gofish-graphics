@@ -63,7 +63,7 @@ function main() {
   }
 
   console.log(
-    `Updated ${domCount} DOM baseline(s) and ${screenshotCount} screenshot(s).`,
+    `Updated ${domCount} DOM baseline(s) and ${screenshotCount} screenshot(s).`
   );
 }
 

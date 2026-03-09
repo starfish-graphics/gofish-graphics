@@ -11,7 +11,10 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "gofish-graphics": resolve(__dirname, "../../packages/gofish-graphics/src/lib.ts"),
+      "gofish-graphics": resolve(
+        __dirname,
+        "../../packages/gofish-graphics/src/lib.ts"
+      ),
     },
   },
 });

@@ -50,7 +50,10 @@ function discoverPythonStories(): PythonStory[] {
     if (!existsSync(dir)) return;
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
       if (entry.isDirectory() && !entry.name.startsWith("__")) {
-        scan(join(dir, entry.name), prefix ? `${prefix}/${entry.name}` : entry.name);
+        scan(
+          join(dir, entry.name),
+          prefix ? `${prefix}/${entry.name}` : entry.name
+        );
       } else if (entry.name.startsWith("test_") && entry.name.endsWith(".py")) {
         const filePath = join(dir, entry.name);
         const content = readFileSync(filePath, "utf-8");
@@ -65,9 +68,7 @@ function discoverPythonStories(): PythonStory[] {
             .replace(/^test_/, "")
             .replace(/\.py$/, "")
             .replace(/_/g, "-");
-          const storyName = funcName
-            .replace(/^story_/, "")
-            .replace(/_/g, "-");
+          const storyName = funcName.replace(/^story_/, "").replace(/_/g, "-");
           const outPath = prefix
             ? `${prefix}/${baseName}--${storyName}`
             : `${baseName}--${storyName}`;
@@ -96,7 +97,9 @@ function discoverPythonStories(): PythonStory[] {
 // Extract IR from Python story (by calling Python)
 // ---------------------------------------------------------------------------
 
-function extractIR(story: PythonStory): { spec: any; data: any; options: any; deriveIds: string[] } | null {
+function extractIR(
+  story: PythonStory
+): { spec: any; data: any; options: any; deriveIds: string[] } | null {
   const script = `
 import sys, json
 sys.path.insert(0, "${TESTS_DIR}")
@@ -147,7 +150,9 @@ print(json.dumps(output))
     });
     return JSON.parse(result.trim());
   } catch (err) {
-    console.error(`  Failed to extract IR: ${err instanceof Error ? err.message : err}`);
+    console.error(
+      `  Failed to extract IR: ${err instanceof Error ? err.message : err}`
+    );
     return null;
   }
 }
@@ -160,7 +165,7 @@ function startDeriveServer(): ChildProcess {
   const proc = spawn(
     "python3",
     [join(TESTS_DIR, "scripts/derive-server.py"), String(DERIVE_SERVER_PORT)],
-    { cwd: ROOT, stdio: ["ignore", "pipe", "pipe"] },
+    { cwd: ROOT, stdio: ["ignore", "pipe", "pipe"] }
   );
 
   proc.stdout?.on("data", (d) => {
@@ -184,7 +189,9 @@ async function waitForServer(url: string, timeoutMs = 10_000) {
     }
     await new Promise((r) => setTimeout(r, 200));
   }
-  throw new Error(`Server at ${url} did not become ready within ${timeoutMs}ms`);
+  throw new Error(
+    `Server at ${url} did not become ready within ${timeoutMs}ms`
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -236,12 +243,18 @@ print("OK")
 function startHarnessServer(): ChildProcess {
   const proc = spawn(
     "npx",
-    ["vite", "--config", join(HARNESS_DIR, "vite.config.ts"), "--port", String(HARNESS_PORT)],
+    [
+      "vite",
+      "--config",
+      join(HARNESS_DIR, "vite.config.ts"),
+      "--port",
+      String(HARNESS_PORT),
+    ],
     {
       cwd: HARNESS_DIR,
       stdio: ["ignore", "pipe", "pipe"],
       env: { ...process.env, NODE_ENV: "development" },
-    },
+    }
   );
 
   proc.stdout?.on("data", (d) => {
@@ -262,7 +275,7 @@ async function captureStory(
   page: Page,
   harnessUrl: string,
   story: PythonStory,
-  ir: any,
+  ir: any
 ): Promise<{ dom: string; screenshot: Buffer }> {
   await page.goto(harnessUrl, { waitUntil: "networkidle" });
 
@@ -356,7 +369,9 @@ async function main() {
     let failed = 0;
 
     for (const story of stories) {
-      process.stdout.write(`  ${story.module}::${story.function} → ${story.path} ... `);
+      process.stdout.write(
+        `  ${story.module}::${story.function} → ${story.path} ... `
+      );
 
       // Register derives for this story with the derive server
       if (story.file) {
@@ -375,7 +390,7 @@ async function main() {
           page,
           `http://localhost:${HARNESS_PORT}`,
           story,
-          ir,
+          ir
         );
         const normalized = normalizeDom(dom);
 
