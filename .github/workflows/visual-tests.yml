@@ -79,10 +79,9 @@ jobs:
         if: failure()
         id: deploy-review
         run: |
-          output=$(npx wrangler@latest pages deploy tests/tmp/review-site \
+          output=$(npx wrangler@latest --cwd tests/tmp/review-site pages deploy . \
             --project-name=gofish-visual-review \
             --branch="${{ github.head_ref || github.ref_name }}" \
-            --functions-dir=tests/tmp/review-site/functions \
             --commit-dirty=true 2>&1) || { echo "$output"; exit 1; }
           echo "$output"
           url=$(echo "$output" | grep -oE 'https://[a-zA-Z0-9._-]+\.pages\.dev[a-zA-Z0-9._/-]*' | tail -1)
