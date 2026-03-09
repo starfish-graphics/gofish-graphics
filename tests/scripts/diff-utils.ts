@@ -11,7 +11,7 @@ import {
   cpSync,
 } from "fs";
 import { join, dirname } from "path";
-import { diffLines } from "diff";
+import { diffLines, diffChars } from "diff";
 
 export const ROOT = join(import.meta.dirname, "../..");
 export const BASELINE_DOM = join(ROOT, "__snapshots__/dom");
@@ -165,40 +165,111 @@ export function escapeHtml(s: string): string {
     .replace(/"/g, "&quot;");
 }
 
-/** Returns an HTML snippet with colored line diff (green/red/gray). */
+/** Returns an HTML snippet with colored line diff and intra-line char highlighting. */
 export function formatDomDiff(before: string, after: string): string {
   const changes = diffLines(before, after);
-  let lineNum = 1;
-  const rows: string[] = [];
 
+  // Flatten to a list of tagged lines so we can pair removed+added
+  interface TaggedLine {
+    text: string;
+    type: "added" | "removed" | "context";
+  }
+  const lines: TaggedLine[] = [];
   for (const change of changes) {
-    const lines = change.value.split("\n");
-    // diffLines includes a trailing empty string after the last newline
-    if (lines[lines.length - 1] === "") lines.pop();
-
-    const bg = change.added
-      ? "#d4edda"
+    const parts = change.value.split("\n");
+    if (parts[parts.length - 1] === "") parts.pop();
+    const type = change.added
+      ? "added"
       : change.removed
-        ? "#f8d7da"
-        : "#f8f8f8";
-    const fg = change.added ? "#155724" : change.removed ? "#721c24" : "#666";
-    const prefix = change.added ? "+" : change.removed ? "-" : " ";
+        ? "removed"
+        : "context";
+    for (const text of parts) lines.push({ text, type });
+  }
 
-    for (const line of lines) {
-      const lineNumStr = change.removed ? "" : String(lineNum);
-      if (!change.removed) lineNum++;
+  const rows: string[] = [];
+  let lineNum = 1;
+  let i = 0;
+
+  while (i < lines.length) {
+    const line = lines[i];
+
+    if (
+      line.type === "removed" &&
+      i + 1 < lines.length &&
+      lines[i + 1].type === "added"
+    ) {
+      // Paired change: show intra-line char diff
+      const next = lines[i + 1];
+      const charChanges = diffChars(line.text, next.text);
+
+      const removedHtml = charChanges
+        .filter((c) => !c.added)
+        .map((c) =>
+          c.removed
+            ? `<mark style="background:#f5a0aa;border-radius:2px;">${escapeHtml(c.value)}</mark>`
+            : escapeHtml(c.value)
+        )
+        .join("");
+
+      const addedHtml = charChanges
+        .filter((c) => !c.removed)
+        .map((c) =>
+          c.added
+            ? `<mark style="background:#6ed98a;border-radius:2px;">${escapeHtml(c.value)}</mark>`
+            : escapeHtml(c.value)
+        )
+        .join("");
+
       rows.push(
-        `<tr style="background:${bg};">` +
-          `<td style="color:#999;text-align:right;padding:0 8px;user-select:none;min-width:40px;font-size:11px;">${escapeHtml(lineNumStr)}</td>` +
-          `<td style="color:${fg};padding:0 4px;user-select:none;">${prefix}</td>` +
-          `<td style="color:${fg};white-space:pre;padding:0 8px;">${escapeHtml(line)}</td>` +
+        `<tr style="background:#f8d7da;">` +
+          `<td style="color:#999;text-align:right;padding:0 8px;user-select:none;min-width:40px;font-size:11px;vertical-align:top;"></td>` +
+          `<td style="color:#721c24;padding:0 6px;user-select:none;vertical-align:top;">−</td>` +
+          `<td style="color:#721c24;white-space:pre-wrap;word-break:break-all;padding:0 8px;">${removedHtml}</td>` +
           `</tr>`
       );
+      rows.push(
+        `<tr style="background:#d4edda;">` +
+          `<td style="color:#999;text-align:right;padding:0 8px;user-select:none;min-width:40px;font-size:11px;vertical-align:top;">${lineNum}</td>` +
+          `<td style="color:#155724;padding:0 6px;user-select:none;vertical-align:top;">+</td>` +
+          `<td style="color:#155724;white-space:pre-wrap;word-break:break-all;padding:0 8px;">${addedHtml}</td>` +
+          `</tr>`
+      );
+      lineNum++;
+      i += 2;
+    } else if (line.type === "removed") {
+      rows.push(
+        `<tr style="background:#f8d7da;">` +
+          `<td style="color:#999;text-align:right;padding:0 8px;user-select:none;min-width:40px;font-size:11px;vertical-align:top;"></td>` +
+          `<td style="color:#721c24;padding:0 6px;user-select:none;vertical-align:top;">−</td>` +
+          `<td style="color:#721c24;white-space:pre-wrap;word-break:break-all;padding:0 8px;">${escapeHtml(line.text)}</td>` +
+          `</tr>`
+      );
+      i++;
+    } else if (line.type === "added") {
+      rows.push(
+        `<tr style="background:#d4edda;">` +
+          `<td style="color:#999;text-align:right;padding:0 8px;user-select:none;min-width:40px;font-size:11px;vertical-align:top;">${lineNum}</td>` +
+          `<td style="color:#155724;padding:0 6px;user-select:none;vertical-align:top;">+</td>` +
+          `<td style="color:#155724;white-space:pre-wrap;word-break:break-all;padding:0 8px;">${escapeHtml(line.text)}</td>` +
+          `</tr>`
+      );
+      lineNum++;
+      i++;
+    } else {
+      rows.push(
+        `<tr style="background:#f8f8f8;">` +
+          `<td style="color:#999;text-align:right;padding:0 8px;user-select:none;min-width:40px;font-size:11px;vertical-align:top;">${lineNum}</td>` +
+          `<td style="color:#ccc;padding:0 6px;user-select:none;vertical-align:top;"> </td>` +
+          `<td style="color:#555;white-space:pre-wrap;word-break:break-all;padding:0 8px;">${escapeHtml(line.text)}</td>` +
+          `</tr>`
+      );
+      lineNum++;
+      i++;
     }
   }
 
   return (
-    `<table style="border-collapse:collapse;width:100%;font-family:monospace;font-size:12px;line-height:1.4;">` +
+    `<table style="border-collapse:collapse;width:100%;font-family:monospace;font-size:12px;line-height:1.6;">` +
     rows.join("") +
     `</table>`
   );

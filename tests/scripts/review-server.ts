@@ -292,6 +292,7 @@ function serveApp(res: ServerResponse): void {
     <span id="main-kind-badge"></span>
     <div id="view-toggle">
       <button class="view-btn active" data-view="strobe">Strobe</button>
+      <button class="view-btn" data-view="side">Side by Side</button>
       <button class="view-btn" data-view="pixel">Pixel Diff</button>
     </div>
   </div>
@@ -310,6 +311,25 @@ function serveApp(res: ServerResponse): void {
           <img id="img-before" style="position:absolute;top:0;left:0;max-width:100%;display:block;" />
         </div>
         <div id="strobe-label" style="background:#222;">After</div>
+      </div>
+    </div>
+
+    <!-- Side by side view -->
+    <div id="side-view" style="display:none;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
+          <h4 style="font-size:12px;color:#666;margin:0 0 6px;">Before (baseline)</h4>
+          <div style="background:#fff;border:1px solid #e0e0e0;border-radius:6px;padding:12px;min-height:80px;display:flex;align-items:flex-start;justify-content:center;">
+            <img id="sbs-before" style="max-width:100%;display:block;" />
+            <div id="sbs-no-before" style="color:#aaa;font-size:13px;padding:32px;display:none;">No baseline</div>
+          </div>
+        </div>
+        <div>
+          <h4 style="font-size:12px;color:#666;margin:0 0 6px;">After (current)</h4>
+          <div style="background:#fff;border:1px solid #e0e0e0;border-radius:6px;padding:12px;min-height:80px;display:flex;align-items:flex-start;justify-content:center;">
+            <img id="sbs-after" style="max-width:100%;display:block;" />
+          </div>
+        </div>
       </div>
     </div>
 
@@ -477,17 +497,40 @@ function serveApp(res: ServerResponse): void {
 
   function renderCurrentView(entry) {
     const strobeView = document.getElementById('strobe-view');
+    const sideView = document.getElementById('side-view');
     const pixelView = document.getElementById('pixel-diff-view');
+
+    strobeView.style.display = 'none';
+    sideView.style.display = 'none';
+    pixelView.style.display = 'none';
+    stopStrobe();
 
     if (currentView === 'strobe') {
       strobeView.style.display = 'block';
-      pixelView.style.display = 'none';
       renderStrobe(entry);
+    } else if (currentView === 'side') {
+      sideView.style.display = 'block';
+      renderSideBySide(entry);
     } else {
-      strobeView.style.display = 'none';
       pixelView.style.display = 'block';
-      stopStrobe();
       renderPixelDiff(entry);
+    }
+  }
+
+  function renderSideBySide(entry) {
+    const sbsBefore = document.getElementById('sbs-before');
+    const sbsAfter = document.getElementById('sbs-after');
+    const noBefore = document.getElementById('sbs-no-before');
+
+    sbsAfter.src = '/api/screenshot/after/' + encodeURIComponent(entry.path);
+    if (entry.kind !== 'new') {
+      sbsBefore.src = '/api/screenshot/before/' + encodeURIComponent(entry.path);
+      sbsBefore.style.display = 'block';
+      noBefore.style.display = 'none';
+    } else {
+      sbsBefore.src = '';
+      sbsBefore.style.display = 'none';
+      noBefore.style.display = 'block';
     }
   }
 
