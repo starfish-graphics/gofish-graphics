@@ -82,7 +82,7 @@ jobs:
           output=$(npx wrangler@latest pages deploy tests/tmp/review-site \
             --project-name=gofish-visual-review \
             --branch="${{ github.head_ref || github.ref_name }}" \
-            --commit-dirty=true 2>&1)
+            --commit-dirty=true 2>&1) || { echo "$output"; exit 1; }
           echo "$output"
           url=$(echo "$output" | grep -oE 'https://[a-zA-Z0-9._-]+\.pages\.dev[a-zA-Z0-9._/-]*' | tail -1)
           echo "deployment-url=$url" >> "$GITHUB_OUTPUT"
