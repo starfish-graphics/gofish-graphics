@@ -256,6 +256,9 @@ const html = `<!DOCTYPE html>
     .accept-all-btn { padding: 8px 24px; border-radius: 6px; border: 1px solid #888; background: transparent; color: #555; font-size: 14px; font-weight: 600; cursor: pointer; margin-left: auto; }
     .accept-all-btn:hover:not(:disabled) { background: #f0f0f0; }
     .accept-all-btn:disabled { opacity: 0.5; cursor: default; }
+    .commit-btn { padding: 8px 24px; border-radius: 6px; border: none; background: #2980b9; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; }
+    .commit-btn:hover:not(:disabled) { background: #2471a3; }
+    .commit-btn:disabled { opacity: 0.5; cursor: default; }
     #action-status { font-size: 13px; color: #666; }
     #action-status.error { color: #e74c3c; }
 
@@ -363,6 +366,7 @@ const html = `<!DOCTYPE html>
     <button class="reject-btn" id="btn-reject">✗ Reject</button>
     <span id="action-status"></span>
     <button class="accept-all-btn" id="btn-accept-all">Accept All Pending</button>
+    <button class="commit-btn" id="btn-commit" disabled>⬆ Commit Accepted</button>
   </div>
 </div>
 
@@ -374,6 +378,7 @@ const html = `<!DOCTYPE html>
   let filter = 'all';
   let strobeInterval = null;
   let strobePhase = 'after';
+  let hasUncommittedAccepts = false;
 
   const domDiffCache = {};
 
@@ -603,34 +608,25 @@ const html = `<!DOCTYPE html>
   function setAcceptBusy(busy) {
     document.getElementById('btn-accept').disabled = busy;
     document.getElementById('btn-accept-all').disabled = busy;
+    document.getElementById('btn-commit').disabled = busy || !hasUncommittedAccepts;
     if (busy) {
       document.getElementById('action-status').innerHTML = '<span class="spinner"></span>Committing...';
     }
   }
 
-  async function acceptCurrent() {
+  function updateCommitBtn() {
+    document.getElementById('btn-commit').disabled = !hasUncommittedAccepts;
+  }
+
+  function acceptCurrent() {
     if (!currentPath) return;
     const entry = allDiffs.find(d => d.path === currentPath);
     if (!entry || entry.status === 'accepted') return;
-
-    setAcceptBusy(true);
-    try {
-      const res = await fetch('/api/accept/' + currentPath, { method: 'POST' });
-      const data = await res.json();
-      if (res.status === 401) {
-        setActionStatus('Token expired — GITHUB_TOKEN is invalid or revoked.', true);
-      } else if (!res.ok || !data.ok) {
-        setActionStatus('Error: ' + (data.error || 'Unknown error'), true);
-      } else {
-        entry.status = 'accepted';
-        setActionStatus('Committed: ' + (data.commitSha || '').slice(0, 8));
-        renderSidebar();
-      }
-    } catch (e) {
-      setActionStatus('Network error: ' + String(e), true);
-    } finally {
-      setAcceptBusy(false);
-    }
+    entry.status = 'accepted';
+    hasUncommittedAccepts = true;
+    setActionStatus('Accepted (local only)');
+    renderSidebar();
+    updateCommitBtn();
   }
 
   function rejectCurrent() {
@@ -643,26 +639,39 @@ const html = `<!DOCTYPE html>
     }
   }
 
-  async function acceptAll() {
+  function acceptAll() {
     const pending = allDiffs.filter(d => d.status === 'pending');
     if (pending.length === 0) return;
+    for (const d of pending) d.status = 'accepted';
+    hasUncommittedAccepts = true;
+    setActionStatus('Accepted ' + pending.length + ' diff(s) locally');
+    renderSidebar();
+    updateCommitBtn();
+  }
+
+  async function commitAccepted() {
+    const acceptedPaths = allDiffs.filter(d => d.status === 'accepted').map(d => d.path);
+    if (acceptedPaths.length === 0) return;
 
     setAcceptBusy(true);
     try {
-      const res = await fetch('/api/accept-all', { method: 'POST' });
+      const res = await fetch('/api/commit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paths: acceptedPaths }),
+      });
       const data = await res.json();
       if (res.status === 401) {
         setActionStatus('Token expired — GITHUB_TOKEN is invalid or revoked.', true);
-      } else if (!res.ok && !data.ok) {
+      } else if (!res.ok || !data.ok) {
         setActionStatus('Error: ' + (data.error || 'Unknown error'), true);
       } else {
-        for (const d of allDiffs) {
-          if (d.status === 'pending') d.status = 'accepted';
-        }
-        const msg = 'Committed ' + data.accepted + ' diff(s)' +
+        hasUncommittedAccepts = false;
+        const msg = 'Committed ' + data.accepted + ' diff(s): ' + (data.commitSha || '').slice(0, 8) +
           (data.errors && data.errors.length ? ' (' + data.errors.length + ' errors)' : '');
         setActionStatus(msg, data.errors && data.errors.length > 0);
         renderSidebar();
+        updateCommitBtn();
       }
     } catch (e) {
       setActionStatus('Network error: ' + String(e), true);
@@ -696,6 +705,7 @@ const html = `<!DOCTYPE html>
   document.getElementById('btn-accept').addEventListener('click', acceptCurrent);
   document.getElementById('btn-reject').addEventListener('click', rejectCurrent);
   document.getElementById('btn-accept-all').addEventListener('click', acceptAll);
+  document.getElementById('btn-commit').addEventListener('click', commitAccepted);
 
   // DOM diff toggle
   document.getElementById('dom-diff-toggle').addEventListener('click', () => {

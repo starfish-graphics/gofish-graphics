@@ -1,10 +1,13 @@
 /**
- * Cloudflare Pages Function: accept a single visual diff story.
+ * Cloudflare Pages Function: batch-commit accepted visual diff stories.
  *
- * Route: POST /api/accept/*
+ * Route: POST /api/commit
  *
- * Reads after-files from the same origin, then commits them to the
- * PR branch via the GitHub API. GITHUB_TOKEN is a Cloudflare Pages secret.
+ * Request body: { paths: string[] }
+ *
+ * For each path, fetches after-files from the same origin, then creates a
+ * single commit with all accepted stories via the GitHub API.
+ * GITHUB_TOKEN is a Cloudflare Pages secret.
  */
 
 interface Env {
@@ -29,13 +32,12 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
 async function createBlob(
   apiBase: string,
   headers: Record<string, string>,
-  content: string,
-  encoding: "base64" | "utf-8" = "base64"
+  content: string
 ): Promise<string> {
   const res = await fetch(`${apiBase}/git/blobs`, {
     method: "POST",
     headers,
-    body: JSON.stringify({ content, encoding }),
+    body: JSON.stringify({ content, encoding: "base64" }),
   });
   if (!res.ok) {
     const text = await res.text();
@@ -46,7 +48,7 @@ async function createBlob(
 }
 
 export const onRequestPost: PagesFunction<Env> = async (ctx) => {
-  const { params, env, request } = ctx;
+  const { env, request } = ctx;
 
   const token = env.GITHUB_TOKEN;
   if (!token) {
@@ -56,37 +58,39 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
     );
   }
 
-  // Reconstruct story path from catch-all params
-  const pathParts = Array.isArray(params.path) ? params.path : [params.path];
-  const storyPath = pathParts.join("/");
-  const pngPath = storyPath.replace(/\.html$/, ".png");
+  let paths: string[];
+  try {
+    const body = (await request.json()) as { paths?: unknown };
+    if (!Array.isArray(body.paths) || body.paths.length === 0) {
+      return new Response(
+        JSON.stringify({
+          error: "Request body must include non-empty paths array",
+        }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+    paths = body.paths as string[];
+  } catch {
+    return new Response(JSON.stringify({ error: "Invalid JSON body" }), {
+      status: 400,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
 
   const origin = new URL(request.url).origin;
 
   // Load repo metadata
   const metaRes = await fetch(`${origin}/data/meta.json`);
   if (!metaRes.ok) {
-    return new Response(JSON.stringify({ error: "meta.json not found" }), {
+    return new Response(JSON.stringify({ error: "Failed to load meta.json" }), {
       status: 500,
       headers: { "Content-Type": "application/json" },
     });
   }
+
   const meta = (await metaRes.json()) as Meta;
   const [owner, repo] = meta.repo.split("/");
   const branch = meta.branch;
-
-  // Fetch after-files
-  const [domRes, screenshotRes] = await Promise.all([
-    fetch(`${origin}/_after-files/dom/${storyPath}`),
-    fetch(`${origin}/_after-files/screenshots/${pngPath}`),
-  ]);
-
-  if (!domRes.ok) {
-    return new Response(
-      JSON.stringify({ error: `After DOM file not found: ${storyPath}` }),
-      { status: 404, headers: { "Content-Type": "application/json" } }
-    );
-  }
 
   const githubHeaders = {
     Authorization: `token ${token}`,
@@ -96,20 +100,67 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
   };
   const apiBase = `https://api.github.com/repos/${owner}/${repo}`;
 
-  // Create blobs
-  const domBuf = await domRes.arrayBuffer();
-  const domBase64 = arrayBufferToBase64(domBuf);
-  const domBlobSha = await createBlob(apiBase, githubHeaders, domBase64);
+  // Fetch all after-files and create blobs
+  const treeItems: Array<{
+    path: string;
+    mode: string;
+    type: string;
+    sha: string;
+  }> = [];
+  const errors: string[] = [];
+  let accepted = 0;
 
-  let screenshotBlobSha: string | null = null;
-  if (screenshotRes.ok) {
-    const screenshotBuf = await screenshotRes.arrayBuffer();
-    const screenshotBase64 = arrayBufferToBase64(screenshotBuf);
-    screenshotBlobSha = await createBlob(
-      apiBase,
-      githubHeaders,
-      screenshotBase64
-    );
+  for (const storyPath of paths) {
+    const pngPath = storyPath.replace(/\.html$/, ".png");
+
+    try {
+      const [domRes, screenshotRes] = await Promise.all([
+        fetch(`${origin}/_after-files/dom/${storyPath}`),
+        fetch(`${origin}/_after-files/screenshots/${pngPath}`),
+      ]);
+
+      if (!domRes.ok) {
+        errors.push(`${storyPath}: after DOM file not found`);
+        continue;
+      }
+
+      const domBuf = await domRes.arrayBuffer();
+      const domBase64 = arrayBufferToBase64(domBuf);
+      const domBlobSha = await createBlob(apiBase, githubHeaders, domBase64);
+
+      treeItems.push({
+        path: `__snapshots__/dom/${storyPath}`,
+        mode: "100644",
+        type: "blob",
+        sha: domBlobSha,
+      });
+
+      if (screenshotRes.ok) {
+        const screenshotBuf = await screenshotRes.arrayBuffer();
+        const screenshotBase64 = arrayBufferToBase64(screenshotBuf);
+        const screenshotBlobSha = await createBlob(
+          apiBase,
+          githubHeaders,
+          screenshotBase64
+        );
+        treeItems.push({
+          path: `__snapshots__/screenshots/${pngPath}`,
+          mode: "100644",
+          type: "blob",
+          sha: screenshotBlobSha,
+        });
+      }
+
+      accepted++;
+    } catch (e) {
+      errors.push(`${storyPath}: ${String(e)}`);
+    }
+  }
+
+  if (treeItems.length === 0) {
+    return new Response(JSON.stringify({ ok: false, accepted: 0, errors }), {
+      headers: { "Content-Type": "application/json" },
+    });
   }
 
   // Get current HEAD SHA
@@ -129,37 +180,14 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
   const ref = (await refRes.json()) as { object: { sha: string } };
   const headSha = ref.object.sha;
 
-  // Get base tree SHA from HEAD commit
+  // Get base tree SHA
   const commitRes = await fetch(`${apiBase}/git/commits/${headSha}`, {
     headers: githubHeaders,
   });
   const commit = (await commitRes.json()) as { tree: { sha: string } };
   const treeSha = commit.tree.sha;
 
-  // Build tree items
-  const treeItems: Array<{
-    path: string;
-    mode: string;
-    type: string;
-    sha: string;
-  }> = [
-    {
-      path: `__snapshots__/dom/${storyPath}`,
-      mode: "100644",
-      type: "blob",
-      sha: domBlobSha,
-    },
-  ];
-  if (screenshotBlobSha) {
-    treeItems.push({
-      path: `__snapshots__/screenshots/${pngPath}`,
-      mode: "100644",
-      type: "blob",
-      sha: screenshotBlobSha,
-    });
-  }
-
-  // Create tree
+  // Create tree with all changes
   const newTreeRes = await fetch(`${apiBase}/git/trees`, {
     method: "POST",
     headers: githubHeaders,
@@ -167,12 +195,12 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
   });
   const newTree = (await newTreeRes.json()) as { sha: string };
 
-  // Create commit
+  // Create single commit
   const newCommitRes = await fetch(`${apiBase}/git/commits`, {
     method: "POST",
     headers: githubHeaders,
     body: JSON.stringify({
-      message: `Accept visual diff: ${storyPath}`,
+      message: `Accept ${accepted} visual diff(s)`,
       tree: newTree.sha,
       parents: [headSha],
     }),
@@ -193,7 +221,13 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
     );
   }
 
-  return new Response(JSON.stringify({ ok: true, commitSha: newCommit.sha }), {
-    headers: { "Content-Type": "application/json" },
-  });
+  return new Response(
+    JSON.stringify({
+      ok: errors.length === 0,
+      accepted,
+      errors,
+      commitSha: newCommit.sha,
+    }),
+    { headers: { "Content-Type": "application/json" } }
+  );
 };
