@@ -33,14 +33,12 @@ const VITE_PORT = 3001;
 /** Convert a story title + name into a file-system path for snapshots. */
 function storyToPath(title: string, name: string): string {
   // "Forward Syntax V3/Bar/Basic" + "Default" → "forward-syntax/bar/basic--default"
-  const segments = title
-    .split("/")
-    .map((s) =>
-      s
-        .replace(/([a-z])([A-Z])/g, "$1-$2")
-        .replace(/\s+/g, "-")
-        .toLowerCase(),
-    );
+  const segments = title.split("/").map((s) =>
+    s
+      .replace(/([a-z])([A-Z])/g, "$1-$2")
+      .replace(/\s+/g, "-")
+      .toLowerCase()
+  );
 
   const storyName = name
     .replace(/([a-z])([A-Z])/g, "$1-$2")
@@ -57,12 +55,18 @@ function storyToPath(title: string, name: string): string {
 function startViteServer(): ChildProcess {
   const proc = spawn(
     "npx",
-    ["vite", "--config", join(HARNESS_DIR, "vite.config.ts"), "--port", String(VITE_PORT)],
+    [
+      "vite",
+      "--config",
+      join(HARNESS_DIR, "vite.config.ts"),
+      "--port",
+      String(VITE_PORT),
+    ],
     {
       cwd: HARNESS_DIR,
       stdio: ["ignore", "pipe", "pipe"],
       env: { ...process.env, NODE_ENV: "development" },
-    },
+    }
   );
 
   return proc;
@@ -93,17 +97,12 @@ async function main() {
   console.log("Starting Vite dev server...");
   const viteProc = startViteServer();
 
-  // Log Vite output for debugging
-  let viteReady = false;
+  // Log Vite output — always show errors, show all output in DEBUG mode
   viteProc.stdout?.on("data", (d) => {
-    const s = d.toString();
-    if (s.includes("Local:") || s.includes("ready in")) {
-      viteReady = true;
-    }
-    if (process.env.DEBUG) process.stdout.write(s);
+    if (process.env.DEBUG) process.stdout.write(d.toString());
   });
   viteProc.stderr?.on("data", (d) => {
-    if (process.env.DEBUG) process.stderr.write(d.toString());
+    process.stderr.write(d.toString());
   });
 
   let browser: Browser | undefined;
@@ -125,14 +124,31 @@ async function main() {
     });
     const page = await context.newPage();
 
+    // Surface browser console errors immediately
+    page.on("console", (msg) => {
+      if (msg.type() === "error") console.error(`[browser] ${msg.text()}`);
+      else if (process.env.DEBUG)
+        console.log(`[browser:${msg.type()}] ${msg.text()}`);
+    });
+    page.on("pageerror", (err) =>
+      console.error(`[browser pageerror] ${err.message}`)
+    );
+
     await page.goto(`http://localhost:${VITE_PORT}/stories-runner.html`, {
-      waitUntil: "networkidle",
+      waitUntil: "domcontentloaded",
     });
 
-    // Wait for the runner to be ready
-    await page.waitForFunction(() => (window as any).__STORIES_RUNNER_READY__ === true, {
-      timeout: 30_000,
-    });
+    // Wait for the runner to be ready (or to report an error)
+    await page.waitForFunction(
+      () => (window as any).__STORIES_RUNNER_READY__ === true,
+      { timeout: 30_000 }
+    );
+
+    const runnerError = await page.evaluate(
+      () => (window as any).__STORIES_RUNNER_ERROR__
+    );
+    if (runnerError)
+      throw new Error(`Stories runner failed to initialize: ${runnerError}`);
 
     // 3. Get the story list
     const stories = await page.evaluate(() => window.__listStories__());
@@ -162,9 +178,12 @@ async function main() {
         }
 
         // Wait for render to settle
-        await page.waitForFunction(() => window.__STORY_RENDER_DONE__ === true, {
-          timeout: 15_000,
-        });
+        await page.waitForFunction(
+          () => window.__STORY_RENDER_DONE__ === true,
+          {
+            timeout: 15_000,
+          }
+        );
 
         // Extract DOM from #stories-root
         const rawDom = await page.evaluate(() => {
@@ -202,7 +221,9 @@ async function main() {
       }
     }
 
-    console.log(`\nDone: ${captured} captured, ${failed} failed, ${skipped} skipped`);
+    console.log(
+      `\nDone: ${captured} captured, ${failed} failed, ${skipped} skipped`
+    );
 
     await context.close();
   } finally {

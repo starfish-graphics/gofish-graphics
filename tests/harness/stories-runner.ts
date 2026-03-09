@@ -7,7 +7,7 @@
 // Import all story modules eagerly so they're available synchronously after page load
 const storyModules = import.meta.glob(
   "../../packages/gofish-graphics/stories/**/*.stories.tsx",
-  { eager: true },
+  { eager: true }
 ) as Record<string, any>;
 
 interface StoryInfo {
@@ -31,7 +31,9 @@ function buildStoryList(): StoryInfo[] {
       if (exportName === "default") continue;
       if (typeof (story as any)?.render !== "function") continue;
 
-      const id = `${meta.title}--${exportName}`.toLowerCase().replace(/[\s/]+/g, "-");
+      const id = `${meta.title}--${exportName}`
+        .toLowerCase()
+        .replace(/[\s/]+/g, "-");
 
       stories.push({
         id,
@@ -58,6 +60,8 @@ declare global {
     __renderStory__: (id: string) => Promise<boolean>;
     __STORY_RENDER_DONE__: boolean;
     __STORY_RENDER_ERROR__: string | null;
+    __STORIES_RUNNER_READY__: boolean;
+    __STORIES_RUNNER_ERROR__: string | null;
   }
 }
 
@@ -118,6 +122,15 @@ window.__renderStory__ = async (id: string): Promise<boolean> => {
 
 window.__STORY_RENDER_DONE__ = false;
 window.__STORY_RENDER_ERROR__ = null;
+window.__STORIES_RUNNER_READY__ = false;
+window.__STORIES_RUNNER_ERROR__ = null;
 
-// Signal that the runner is ready
-(window as any).__STORIES_RUNNER_READY__ = true;
+// Signal that the runner is ready (or failed)
+try {
+  // Touch allStories to force evaluation now (catches module-load errors)
+  void allStories.length;
+  window.__STORIES_RUNNER_READY__ = true;
+} catch (err: any) {
+  window.__STORIES_RUNNER_ERROR__ = err?.message ?? String(err);
+  window.__STORIES_RUNNER_READY__ = true; // unblock Playwright so it can read the error
+}
