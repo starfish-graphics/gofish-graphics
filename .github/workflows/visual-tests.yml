@@ -5,17 +5,17 @@ on:
     branches:
       - main
     paths:
-      - 'packages/gofish-graphics/**'
-      - 'packages/gofish-python/**'
-      - 'tests/**'
-      - '__snapshots__/**'
+      - "packages/gofish-graphics/**"
+      - "packages/gofish-python/**"
+      - "tests/**"
+      - "__snapshots__/**"
 
   pull_request:
     paths:
-      - 'packages/gofish-graphics/**'
-      - 'packages/gofish-python/**'
-      - 'tests/**'
-      - '__snapshots__/**'
+      - "packages/gofish-graphics/**"
+      - "packages/gofish-python/**"
+      - "tests/**"
+      - "__snapshots__/**"
 
 jobs:
   visual-test:
@@ -48,6 +48,9 @@ jobs:
 
       - name: Install Python dependencies
         run: pip install -e packages/gofish-python
+
+      - name: Build gofish-graphics
+        run: pnpm --filter gofish-graphics build
 
       - name: Install Playwright browsers
         run: pnpm --filter @gofish/tests exec playwright install --with-deps chromium
