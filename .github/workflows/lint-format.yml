@@ -51,6 +51,8 @@ jobs:
           PRETTIER_FILES="$(
             printf '%s\n' "$CHANGED" \
               | grep -E '\.(js|mjs|cjs|ts|mts|cts|tsx|json|ya?ml|md|css|html|vue)$' \
+              | grep -v '^__snapshots__/' \
+              | grep -v '^tests/tmp/' \
               | tr '\n' ' ' \
               | sed 's/[[:space:]]*$//' || true
           )"
