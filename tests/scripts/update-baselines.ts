@@ -4,20 +4,9 @@
  * Copies tmp/js/ → __snapshots__/dom/ and __snapshots__/screenshots/.
  */
 
-import {
-  readFileSync,
-  writeFileSync,
-  readdirSync,
-  mkdirSync,
-  existsSync,
-  cpSync,
-} from "fs";
-import { join, dirname } from "path";
-
-const ROOT = join(import.meta.dirname, "../..");
-const JS_DIR = join(import.meta.dirname, "../tmp/js");
-const BASELINE_DOM = join(ROOT, "__snapshots__/dom");
-const BASELINE_SCREENSHOTS = join(ROOT, "__snapshots__/screenshots");
+import { readdirSync, existsSync } from "fs";
+import { join } from "path";
+import { acceptStory, JS_DIR } from "./diff-utils.js";
 
 /** Recursively list files under a directory. */
 function listFiles(dir: string, prefix = ""): string[] {
@@ -43,28 +32,16 @@ function main() {
   }
 
   const files = listFiles(JS_DIR);
-  let domCount = 0;
-  let screenshotCount = 0;
+  let count = 0;
 
   for (const file of files) {
-    const src = join(JS_DIR, file);
-
     if (file.endsWith(".html")) {
-      const dest = join(BASELINE_DOM, file);
-      mkdirSync(dirname(dest), { recursive: true });
-      writeFileSync(dest, readFileSync(src));
-      domCount++;
-    } else if (file.endsWith(".png")) {
-      const dest = join(BASELINE_SCREENSHOTS, file);
-      mkdirSync(dirname(dest), { recursive: true });
-      cpSync(src, dest);
-      screenshotCount++;
+      acceptStory(file);
+      count++;
     }
   }
 
-  console.log(
-    `Updated ${domCount} DOM baseline(s) and ${screenshotCount} screenshot(s).`
-  );
+  console.log(`Updated ${count} story baseline(s).`);
 }
 
 main();

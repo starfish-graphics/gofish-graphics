@@ -175,6 +175,7 @@ function main() {
   console.log(
     `\n${allFailures.length} failure(s). See tests/tmp/diff-report.html`
   );
+  console.log(`Run "pnpm test:visual:review" to interactively review changes.`);
   process.exit(1);
 }
 
