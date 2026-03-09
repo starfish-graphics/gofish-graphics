@@ -20,6 +20,8 @@ on:
 jobs:
   visual-test:
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
 
     steps:
       - name: Checkout code
@@ -76,11 +78,17 @@ jobs:
       - name: Deploy review site to Cloudflare Pages
         if: failure()
         id: deploy-review
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy tests/tmp/review-site --project-name=gofish-visual-review --branch=${{ github.head_ref || github.ref_name }} --functions-dir=tests/tmp/review-site/functions
+        run: |
+          output=$(npx wrangler@latest pages deploy tests/tmp/review-site \
+            --project-name=gofish-visual-review \
+            --branch="${{ github.head_ref || github.ref_name }}" \
+            --commit-dirty=true 2>&1)
+          echo "$output"
+          url=$(echo "$output" | grep -oE 'https://[a-zA-Z0-9._-]+\.pages\.dev[a-zA-Z0-9._/-]*' | tail -1)
+          echo "deployment-url=$url" >> "$GITHUB_OUTPUT"
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
       - name: Comment PR with review URL
         if: failure() && github.event_name == 'pull_request'
