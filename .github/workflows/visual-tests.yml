@@ -65,6 +65,36 @@ jobs:
           name: visual-diff-report
           path: tests/tmp/diff-report.html
 
+      - name: Build review site
+        if: failure()
+        run: pnpm --filter @gofish/tests build:review-site
+        env:
+          REVIEW_REPO: ${{ github.repository }}
+          REVIEW_BRANCH: ${{ github.head_ref || github.ref_name }}
+          REVIEW_SHA: ${{ github.sha }}
+
+      - name: Deploy review site to Cloudflare Pages
+        if: failure()
+        id: deploy-review
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy tests/tmp/review-site --project-name=gofish-visual-review --branch=${{ github.head_ref || github.ref_name }} --functions-dir=tests/tmp/review-site/functions
+
+      - name: Comment PR with review URL
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const url = '${{ steps.deploy-review.outputs.deployment-url }}';
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `## Visual Diff Review\n\nVisual tests failed. [**Open Review App**](${url})\n\nAccept or reject changes from the web — accepted diffs commit directly to this branch.`
+            });
+
       - name: Check Python story sync
         if: github.event_name == 'pull_request'
         run: pnpm test:visual:check-sync

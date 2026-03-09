@@ -8,7 +8,8 @@
     "test:js": "tsx scripts/capture-js-dom.ts && tsx scripts/compare.ts --js-only",
     "update": "tsx scripts/capture-js-dom.ts && tsx scripts/update-baselines.ts",
     "check-sync": "bash scripts/check-python-sync.sh",
-    "review": "tsx scripts/review-server.ts"
+    "review": "tsx scripts/review-server.ts",
+    "build:review-site": "tsx scripts/build-review-site.ts"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",
