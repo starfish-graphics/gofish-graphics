@@ -20,6 +20,13 @@ interface Meta {
   sha: string;
 }
 
+function json(body: unknown, status = 200): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
   const bytes = new Uint8Array(buffer);
   let binary = "";
@@ -47,47 +54,52 @@ async function createBlob(
   return data.sha;
 }
 
+async function githubJson<T>(res: Response, label: string): Promise<T> {
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`GitHub ${label} failed (${res.status}): ${text}`);
+  }
+  return res.json() as Promise<T>;
+}
+
 export const onRequestPost: PagesFunction<Env> = async (ctx) => {
+  try {
+    return await handleCommit(ctx);
+  } catch (e) {
+    return json({ ok: false, error: `Unexpected error: ${String(e)}` }, 500);
+  }
+};
+
+async function handleCommit(
+  ctx: EventContext<Env, string, unknown>
+): Promise<Response> {
   const { env, request } = ctx;
 
   const token = env.GITHUB_TOKEN;
   if (!token) {
-    return new Response(
-      JSON.stringify({ error: "GITHUB_TOKEN not configured" }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
+    return json({ error: "GITHUB_TOKEN not configured" }, 500);
   }
 
   let paths: string[];
   try {
     const body = (await request.json()) as { paths?: unknown };
     if (!Array.isArray(body.paths) || body.paths.length === 0) {
-      return new Response(
-        JSON.stringify({
-          error: "Request body must include non-empty paths array",
-        }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
+      return json(
+        { error: "Request body must include non-empty paths array" },
+        400
       );
     }
     paths = body.paths as string[];
   } catch {
-    return new Response(JSON.stringify({ error: "Invalid JSON body" }), {
-      status: 400,
-      headers: { "Content-Type": "application/json" },
-    });
+    return json({ error: "Invalid JSON body" }, 400);
   }
 
   const origin = new URL(request.url).origin;
 
-  // Load repo metadata
   const metaRes = await fetch(`${origin}/data/meta.json`);
   if (!metaRes.ok) {
-    return new Response(JSON.stringify({ error: "Failed to load meta.json" }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    return json({ error: "Failed to load meta.json" }, 500);
   }
-
   const meta = (await metaRes.json()) as Meta;
   const [owner, repo] = meta.repo.split("/");
   const branch = meta.branch;
@@ -112,7 +124,6 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
 
   for (const storyPath of paths) {
     const pngPath = storyPath.replace(/\.html$/, ".png");
-
     try {
       const [domRes, screenshotRes] = await Promise.all([
         fetch(`${origin}/_after-files/dom/${storyPath}`),
@@ -124,10 +135,11 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
         continue;
       }
 
-      const domBuf = await domRes.arrayBuffer();
-      const domBase64 = arrayBufferToBase64(domBuf);
-      const domBlobSha = await createBlob(apiBase, githubHeaders, domBase64);
-
+      const domBlobSha = await createBlob(
+        apiBase,
+        githubHeaders,
+        arrayBufferToBase64(await domRes.arrayBuffer())
+      );
       treeItems.push({
         path: `__snapshots__/dom/${storyPath}`,
         mode: "100644",
@@ -136,12 +148,10 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
       });
 
       if (screenshotRes.ok) {
-        const screenshotBuf = await screenshotRes.arrayBuffer();
-        const screenshotBase64 = arrayBufferToBase64(screenshotBuf);
         const screenshotBlobSha = await createBlob(
           apiBase,
           githubHeaders,
-          screenshotBase64
+          arrayBufferToBase64(await screenshotRes.arrayBuffer())
         );
         treeItems.push({
           path: `__snapshots__/screenshots/${pngPath}`,
@@ -158,54 +168,52 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
   }
 
   if (treeItems.length === 0) {
-    return new Response(JSON.stringify({ ok: false, accepted: 0, errors }), {
-      headers: { "Content-Type": "application/json" },
-    });
+    return json({ ok: false, accepted: 0, errors });
   }
 
   // Get current HEAD SHA
-  const refRes = await fetch(`${apiBase}/git/ref/heads/${branch}`, {
-    headers: githubHeaders,
-  });
-  if (!refRes.ok) {
-    const text = await refRes.text();
-    return new Response(
-      JSON.stringify({ error: `Failed to get branch ref: ${text}` }),
-      {
-        status: refRes.status === 401 ? 401 : 500,
-        headers: { "Content-Type": "application/json" },
-      }
-    );
-  }
-  const ref = (await refRes.json()) as { object: { sha: string } };
-  const headSha = ref.object.sha;
+  const refData = await githubJson<{ object: { sha: string } }>(
+    await fetch(`${apiBase}/git/ref/heads/${branch}`, {
+      headers: githubHeaders,
+    }),
+    `get ref heads/${branch}`
+  );
+  const headSha = refData.object.sha;
 
   // Get base tree SHA
-  const commitRes = await fetch(`${apiBase}/git/commits/${headSha}`, {
-    headers: githubHeaders,
-  });
-  const commit = (await commitRes.json()) as { tree: { sha: string } };
-  const treeSha = commit.tree.sha;
+  const commitData = await githubJson<{ tree: { sha: string } }>(
+    await fetch(`${apiBase}/git/commits/${headSha}`, {
+      headers: githubHeaders,
+    }),
+    `get commit ${headSha}`
+  );
 
   // Create tree with all changes
-  const newTreeRes = await fetch(`${apiBase}/git/trees`, {
-    method: "POST",
-    headers: githubHeaders,
-    body: JSON.stringify({ base_tree: treeSha, tree: treeItems }),
-  });
-  const newTree = (await newTreeRes.json()) as { sha: string };
+  const newTree = await githubJson<{ sha: string }>(
+    await fetch(`${apiBase}/git/trees`, {
+      method: "POST",
+      headers: githubHeaders,
+      body: JSON.stringify({
+        base_tree: commitData.tree.sha,
+        tree: treeItems,
+      }),
+    }),
+    "create tree"
+  );
 
   // Create single commit
-  const newCommitRes = await fetch(`${apiBase}/git/commits`, {
-    method: "POST",
-    headers: githubHeaders,
-    body: JSON.stringify({
-      message: `Accept ${accepted} visual diff(s)`,
-      tree: newTree.sha,
-      parents: [headSha],
+  const newCommit = await githubJson<{ sha: string }>(
+    await fetch(`${apiBase}/git/commits`, {
+      method: "POST",
+      headers: githubHeaders,
+      body: JSON.stringify({
+        message: `Accept ${accepted} visual diff(s)`,
+        tree: newTree.sha,
+        parents: [headSha],
+      }),
     }),
-  });
-  const newCommit = (await newCommitRes.json()) as { sha: string };
+    "create commit"
+  );
 
   // Update branch ref
   const updateRes = await fetch(`${apiBase}/git/refs/heads/${branch}`, {
@@ -215,19 +223,13 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
   });
   if (!updateRes.ok) {
     const text = await updateRes.text();
-    return new Response(
-      JSON.stringify({ error: `Failed to update branch ref: ${text}` }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
+    throw new Error(`Failed to update branch ref: ${text}`);
   }
 
-  return new Response(
-    JSON.stringify({
-      ok: errors.length === 0,
-      accepted,
-      errors,
-      commitSha: newCommit.sha,
-    }),
-    { headers: { "Content-Type": "application/json" } }
-  );
-};
+  return json({
+    ok: errors.length === 0,
+    accepted,
+    errors,
+    commitSha: newCommit.sha,
+  });
+}
