@@ -19,9 +19,9 @@ gf.Frame({}, [
         gf.Frame({ key }, [
           gf.rect({ w: 0, h: 0 }),
           gf.For(d, (d) =>
-            gf.ellipse({ x: d.Time / 3, w: 4, h: 4, fill: gf.v(d.Direction) }).name(
-              `${d.Train}-${d.Station}-${d.Time}`
-            )
+            gf
+              .ellipse({ x: d.Time / 3, w: 4, h: 4, fill: gf.v(d.Direction) })
+              .name(`${d.Train}-${d.Station}-${d.Time}`)
           ),
         ])
     )

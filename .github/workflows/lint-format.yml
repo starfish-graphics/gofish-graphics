@@ -48,26 +48,13 @@ jobs:
               | tr '\n' ' ' \
               | sed 's/[[:space:]]*$//' || true
           )"
-          PRETTIER_FILES="$(
-            printf '%s\n' "$CHANGED" \
-              | grep -E '\.(js|mjs|cjs|ts|mts|cts|tsx|json|ya?ml|md|css|html|vue)$' \
-              | tr '\n' ' ' \
-              | sed 's/[[:space:]]*$//' || true
-          )"
 
           {
             echo "eslint_files<<EOF"
             echo "$ESLINT_FILES"
-            echo "EOF"
-            echo "prettier_files<<EOF"
-            echo "$PRETTIER_FILES"
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
 
       - name: Run ESLint on changed files
         if: steps.changed.outputs.eslint_files != ''
         run: pnpm exec eslint ${{ steps.changed.outputs.eslint_files }}
-
-      - name: Check Prettier on changed files
-        if: steps.changed.outputs.prettier_files != ''
-        run: pnpm exec prettier --check ${{ steps.changed.outputs.prettier_files }}

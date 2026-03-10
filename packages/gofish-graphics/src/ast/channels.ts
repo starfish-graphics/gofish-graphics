@@ -35,7 +35,7 @@ export type DeriveMarkProps<
  */
 export const inferSize = <T>(
   accessor: string | number | undefined,
-  d: T | T[],
+  d: T | T[]
 ): MaybeValue<number> | undefined => {
   return typeof accessor === "number"
     ? accessor
@@ -51,7 +51,7 @@ export const inferSize = <T>(
  */
 export const inferColor = <T extends Record<string, any>>(
   accessor: string | undefined,
-  data: T[],
+  data: T[]
 ): MaybeValue<string> | undefined => {
   if (accessor === undefined) return undefined;
   if (data.length > 0 && data[0] != null && accessor in data[0]) {

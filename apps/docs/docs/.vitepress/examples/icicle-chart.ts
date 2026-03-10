@@ -53,8 +53,8 @@ gf.StackX({ spacing: 0, alignment: "middle" }, [
                                   ? gf.gray
                                   : gf.color6[4]
                                 : survived === "No"
-                                ? gf.gray
-                                : gf.color6[5],
+                                  ? gf.gray
+                                  : gf.color6[5],
                           });
                         })
                         .value()

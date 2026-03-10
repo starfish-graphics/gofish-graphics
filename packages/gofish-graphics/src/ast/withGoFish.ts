@@ -340,8 +340,10 @@ export function createOperatorSequential<T extends Record<string, any>, R>(
       >(children);
       const layerContext: LayerContext = {};
       // Second phase: process thunks and ChartBuilder instances sequentially
-      const resolvedChildren =
-        await reifyChildrenSequentially(flattenedWithThunks, layerContext);
+      const resolvedChildren = await reifyChildrenSequentially(
+        flattenedWithThunks,
+        layerContext
+      );
       return func(opts, resolvedChildren);
     })();
     return addRenderMethod(promise);
