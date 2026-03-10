@@ -101,7 +101,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
-              body: `## Visual Diff Review\n\nVisual tests failed. [**Open Review App**](${url})\n\nAccept or reject changes from the web — accepted diffs commit directly to this branch.`
+              body: `## Visual Diff Review\n\nVisual tests failed. [**Open Review App**](${url})\n\nReview each diff, mark stories as accepted or rejected, then click **Commit Accepted** to push all accepted changes in a single commit.`
             });
 
       - name: Check Python story sync

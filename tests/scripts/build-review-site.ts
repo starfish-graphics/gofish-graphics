@@ -660,6 +660,13 @@ const html = `<!DOCTYPE html>
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ paths: acceptedPaths }),
       });
+      const ct = res.headers.get('content-type') || '';
+      if (!ct.includes('application/json')) {
+        const text = await res.text();
+        setActionStatus('Server error (' + res.status + '): expected JSON but got ' + ct.split(';')[0].trim() + '. Check that the review site was built and deployed with the latest functions.', true);
+        console.error('/api/commit non-JSON response:', text.slice(0, 500));
+        return;
+      }
       const data = await res.json();
       if (res.status === 401) {
         setActionStatus('Token expired — GITHUB_TOKEN is invalid or revoked.', true);
