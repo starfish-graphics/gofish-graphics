@@ -3,10 +3,17 @@
  *
  * Route: POST /api/commit
  *
- * Request body: { paths: string[] }
+ * The client fetches file contents in the browser (no subrequest limit) and
+ * sends them in the request body. The Worker only makes GitHub API calls:
+ * - 1 blob creation per screenshot (binary, needs blob API)
+ * - DOM files use tree `content` field directly (no blob API needed)
+ * - 5 fixed GitHub calls (get ref, get commit, create tree, create commit, update ref)
  *
- * For each path, fetches after-files from the same origin, then creates a
- * single commit with all accepted stories via the GitHub API.
+ * Total subrequests: N (screenshots) + 5 — well within Cloudflare's 50 limit.
+ *
+ * Request body:
+ *   { paths, domContents, screenshotContents, repo, branch }
+ *
  * GITHUB_TOKEN is a Cloudflare Pages secret.
  */
 
@@ -14,26 +21,27 @@ interface Env {
   GITHUB_TOKEN: string;
 }
 
-interface Meta {
+interface CommitBody {
+  paths: string[];
+  domContents: Record<string, string>; // storyPath → HTML text
+  screenshotContents: Record<string, string>; // pngPath → base64
   repo: string;
   branch: string;
-  sha: string;
 }
+
+type TreeItem = {
+  path: string;
+  mode: string;
+  type: string;
+  sha?: string;
+  content?: string;
+};
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
     headers: { "Content-Type": "application/json" },
   });
-}
-
-function arrayBufferToBase64(buffer: ArrayBuffer): string {
-  const bytes = new Uint8Array(buffer);
-  let binary = "";
-  for (let i = 0; i < bytes.length; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary);
 }
 
 async function createBlob(
@@ -80,29 +88,30 @@ async function handleCommit(
     return json({ error: "GITHUB_TOKEN not configured" }, 500);
   }
 
-  let paths: string[];
+  let body: CommitBody;
   try {
-    const body = (await request.json()) as { paths?: unknown };
-    if (!Array.isArray(body.paths) || body.paths.length === 0) {
-      return json(
-        { error: "Request body must include non-empty paths array" },
-        400
-      );
+    const raw = (await request.json()) as Partial<CommitBody>;
+    if (
+      !Array.isArray(raw.paths) ||
+      raw.paths.length === 0 ||
+      !raw.repo ||
+      !raw.branch
+    ) {
+      return json({ error: "Invalid request body" }, 400);
     }
-    paths = body.paths as string[];
+    body = raw as CommitBody;
   } catch {
     return json({ error: "Invalid JSON body" }, 400);
   }
 
-  const origin = new URL(request.url).origin;
-
-  const metaRes = await fetch(`${origin}/data/meta.json`);
-  if (!metaRes.ok) {
-    return json({ error: "Failed to load meta.json" }, 500);
-  }
-  const meta = (await metaRes.json()) as Meta;
-  const [owner, repo] = meta.repo.split("/");
-  const branch = meta.branch;
+  const {
+    paths,
+    domContents = {},
+    screenshotContents = {},
+    repo,
+    branch,
+  } = body;
+  const [owner, repoName] = repo.split("/");
 
   const githubHeaders = {
     Authorization: `token ${token}`,
@@ -110,48 +119,37 @@ async function handleCommit(
     "Content-Type": "application/json",
     "User-Agent": "gofish-visual-review/1.0",
   };
-  const apiBase = `https://api.github.com/repos/${owner}/${repo}`;
+  const apiBase = `https://api.github.com/repos/${owner}/${repoName}`;
 
-  // Fetch all after-files and create blobs
-  const treeItems: Array<{
-    path: string;
-    mode: string;
-    type: string;
-    sha: string;
-  }> = [];
+  const treeItems: TreeItem[] = [];
   const errors: string[] = [];
   let accepted = 0;
 
   for (const storyPath of paths) {
     const pngPath = storyPath.replace(/\.html$/, ".png");
     try {
-      const [domRes, screenshotRes] = await Promise.all([
-        fetch(`${origin}/_after-files/dom/${storyPath}`),
-        fetch(`${origin}/_after-files/screenshots/${pngPath}`),
-      ]);
-
-      if (!domRes.ok) {
-        errors.push(`${storyPath}: after DOM file not found`);
+      const domContent = domContents[storyPath];
+      if (domContent == null) {
+        errors.push(`${storyPath}: DOM content not provided`);
         continue;
       }
 
-      const domBlobSha = await createBlob(
-        apiBase,
-        githubHeaders,
-        arrayBufferToBase64(await domRes.arrayBuffer())
-      );
+      // Use tree `content` for DOM files — GitHub creates the blob internally,
+      // saving a subrequest compared to creating the blob explicitly.
       treeItems.push({
         path: `__snapshots__/dom/${storyPath}`,
         mode: "100644",
         type: "blob",
-        sha: domBlobSha,
+        content: domContent,
       });
 
-      if (screenshotRes.ok) {
+      // Screenshots are binary, so they still need the blob API.
+      const screenshotBase64 = screenshotContents[pngPath];
+      if (screenshotBase64) {
         const screenshotBlobSha = await createBlob(
           apiBase,
           githubHeaders,
-          arrayBufferToBase64(await screenshotRes.arrayBuffer())
+          screenshotBase64
         );
         treeItems.push({
           path: `__snapshots__/screenshots/${pngPath}`,

@@ -442,6 +442,13 @@ const html = `<!DOCTYPE html>
     return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
 
+  function arrayBufferToBase64(buf) {
+    const bytes = new Uint8Array(buf);
+    let binary = '';
+    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+    return btoa(binary);
+  }
+
   function stopStrobe() {
     if (strobeInterval) { clearInterval(strobeInterval); strobeInterval = null; }
   }
@@ -650,15 +657,38 @@ const html = `<!DOCTYPE html>
   }
 
   async function commitAccepted() {
-    const acceptedPaths = allDiffs.filter(d => d.status === 'accepted').map(d => d.path);
-    if (acceptedPaths.length === 0) return;
+    const acceptedEntries = allDiffs.filter(d => d.status === 'accepted');
+    if (acceptedEntries.length === 0) return;
 
     setAcceptBusy(true);
     try {
+      // Phase 1: fetch file contents in the browser (avoids Worker subrequest limit)
+      document.getElementById('action-status').innerHTML =
+        '<span class="spinner"></span>Fetching ' + acceptedEntries.length + ' file(s)...';
+      const domContents = {};
+      const screenshotContents = {};
+      await Promise.all(acceptedEntries.map(async (entry) => {
+        const pngPath = entry.path.replace(/\\.html$/, '.png');
+        const [domRes, screenshotRes] = await Promise.all([
+          fetch('/_after-files/dom/' + entry.path),
+          fetch('/_after-files/screenshots/' + pngPath),
+        ]);
+        if (domRes.ok) domContents[entry.path] = await domRes.text();
+        if (screenshotRes.ok) screenshotContents[pngPath] = arrayBufferToBase64(await screenshotRes.arrayBuffer());
+      }));
+
+      // Phase 2: send to Worker for committing
+      document.getElementById('action-status').innerHTML = '<span class="spinner"></span>Committing...';
       const res = await fetch('/api/commit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ paths: acceptedPaths }),
+        body: JSON.stringify({
+          paths: acceptedEntries.map(e => e.path),
+          domContents,
+          screenshotContents,
+          repo: meta.repo,
+          branch: meta.branch,
+        }),
       });
       const ct = res.headers.get('content-type') || '';
       if (!ct.includes('application/json')) {
@@ -681,7 +711,7 @@ const html = `<!DOCTYPE html>
         updateCommitBtn();
       }
     } catch (e) {
-      setActionStatus('Network error: ' + String(e), true);
+      setActionStatus('Error: ' + String(e), true);
     } finally {
       setAcceptBusy(false);
     }
