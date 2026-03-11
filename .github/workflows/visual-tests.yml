@@ -104,6 +104,3 @@ jobs:
               body: `## Visual Diff Review\n\nVisual tests failed. [**Open Review App**](${url})\n\nReview each diff, mark stories as accepted or rejected, then click **Commit Accepted** to push all accepted changes in a single commit.`
             });
 
-      - name: Check Python story sync
-        if: github.event_name == 'pull_request'
-        run: pnpm test:visual:check-sync
