@@ -33,17 +33,16 @@ export type AxesOptions = boolean | { x: boolean; y: boolean };
 function resolveAxesVisibility(axes: AxesOptions | undefined): {
   x: boolean;
   y: boolean;
-  any: boolean;
 } {
   if (axes === true) {
-    return { x: true, y: true, any: true };
+    return { x: true, y: true };
   }
   if (axes && typeof axes === "object") {
     const x = axes.x === true;
     const y = axes.y === true;
-    return { x, y, any: x || y };
+    return { x, y };
   }
-  return { x: false, y: false, any: false };
+  return { x: false, y: false };
 }
 
 type OrdinalScale = (key: string) => number | undefined;
@@ -460,11 +459,14 @@ export const render = (
   const scaleContext = scaleContextParam;
   const keyContext = keyContextParam;
   const axisVisibility = resolveAxesVisibility(axes);
+  const hasAnyVisibleAxis = axisVisibility.x || axisVisibility.y;
+  const axisPaddingX = axisVisibility.y ? 100 : 0;
+  const axisPaddingY = axisVisibility.x ? 100 : 0;
 
   let yTicks: number[] = [];
   let xTicks: number[] = [];
   if (
-    axisVisibility.any &&
+    hasAnyVisibleAxis &&
     scaleContext?.x &&
     scaleContext?.y &&
     "domain" in scaleContext.x &&
@@ -489,8 +491,8 @@ export const render = (
 
   const result = (
     <svg
-      width={width + PADDING * 6 + (axisVisibility.any ? 100 : 0)}
-      height={height + PADDING * 6 + (axisVisibility.any ? 100 : 0)}
+      width={width + PADDING * 6 + axisPaddingX}
+      height={height + PADDING * 6 + axisPaddingY}
       xmlns="http://www.w3.org/2000/svg"
     >
       <Show when={defs}>
@@ -502,7 +504,7 @@ export const render = (
         <Show when={transform} keyed fallback={child.INTERNAL_render()}>
           <g transform={transform ?? ""}>{child.INTERNAL_render()}</g>
         </Show>
-        <Show when={axisVisibility.any}>
+        <Show when={hasAnyVisibleAxis}>
           {(() => {
             // Check if we have a coordinate transform (polar/clock coordinates)
             const hasCoordTransform =
