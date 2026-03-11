@@ -35,6 +35,7 @@ import {
 import { toJSON } from "../util/interval";
 import type { KeyContext, ScaleContext } from "./gofish";
 import type { ScopeContext } from "./scopeContext";
+import { assignDiscreteColor, assignContinuousColor, type ColorConfig } from "./colorSchemes";
 
 export type RenderSession = {
   scopeContext: ScopeContext;
@@ -179,23 +180,59 @@ export class GoFishNode {
     this.color = color;
   }
 
+  private collectColorValues(out: any[]): void {
+    if (this.color !== undefined && isValue(this.color)) {
+      const val = getValue(this.color);
+      if (!out.includes(val)) out.push(val);
+    }
+    this.children.forEach((child) => {
+      if (child instanceof GoFishNode) child.collectColorValues(out);
+    });
+  }
+
   public resolveColorScale(): void {
     const scaleContext = this.getRenderSession().scaleContext;
-    if (this.color !== undefined && isValue(this.color)) {
-      const color = getValue(this.color);
-      if (!scaleContext.unit.color.has(color)) {
-        scaleContext.unit.color.set(
-          color,
-          color6[scaleContext.unit.color.size % 6]
-        );
-      }
-    }
+    const unit = scaleContext.unit as { color: Map<any, string>; colorConfig?: ColorConfig };
 
-    this.children.forEach((child) => {
-      if (child instanceof GoFishNode) {
-        child.resolveColorScale();
+    if (unit.colorConfig) {
+      // Two-pass: collect all unique values from subtree, then assign colors
+      const orderedKeys: any[] = [];
+      this.collectColorValues(orderedKeys);
+
+      const allNumeric = orderedKeys.length > 0 && orderedKeys.every((k) => typeof k === "number");
+
+      if (allNumeric) {
+        const min = Math.min(...orderedKeys);
+        const max = Math.max(...orderedKeys);
+        orderedKeys.forEach((key) => {
+          if (!unit.color.has(key)) {
+            const t = max === min ? 0 : (key - min) / (max - min);
+            unit.color.set(key, assignContinuousColor(unit.colorConfig!, t));
+          }
+        });
+      } else {
+        orderedKeys.forEach((key, i) => {
+          if (!unit.color.has(key)) {
+            unit.color.set(key, assignDiscreteColor(unit.colorConfig!, String(key), i));
+          }
+        });
       }
-    });
+    } else {
+      // Original single-pass: assign colors as encountered, cycle color6
+      // Skip values that are already literal CSS colors — they pass through at render time
+      if (this.color !== undefined && isValue(this.color)) {
+        const color = getValue(this.color);
+        const isLiteralColor =
+          typeof color === "string" &&
+          (color.startsWith("#") || color.startsWith("rgb") || color.startsWith("hsl"));
+        if (!isLiteralColor && !scaleContext.unit.color.has(color)) {
+          scaleContext.unit.color.set(color, color6[scaleContext.unit.color.size % 6]);
+        }
+      }
+      this.children.forEach((child) => {
+        if (child instanceof GoFishNode) child.resolveColorScale();
+      });
+    }
   }
 
   public resolveNames(): void {
@@ -377,6 +414,7 @@ export class GoFishNode {
       debug = false,
       defs,
       axes = false,
+      colorConfig,
     }: {
       w: number;
       h: number;
@@ -386,11 +424,12 @@ export class GoFishNode {
       debug?: boolean;
       defs?: JSX.Element[];
       axes?: boolean;
+      colorConfig?: ColorConfig;
     }
   ) {
     return gofish(
       container,
-      { w, h, x, y, transform, debug, defs, axes },
+      { w, h, x, y, transform, debug, defs, axes, colorConfig },
       this
     );
   }

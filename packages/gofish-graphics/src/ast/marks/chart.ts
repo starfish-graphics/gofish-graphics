@@ -13,6 +13,9 @@ import {
 import { GoFishNode } from "../_node";
 import { For } from "../iterators/for";
 import { CoordinateTransform } from "../coordinateTransforms/coord";
+import { type ColorConfig } from "../colorSchemes";
+
+export type { ColorConfig };
 import { inferSize } from "../channels";
 import { Rect } from "../shapes/rect";
 import { rect as generatedRect } from "../shapes/rect";
@@ -173,6 +176,7 @@ export type ChartOptions = {
   w?: number;
   h?: number;
   coord?: CoordinateTransform;
+  color?: ColorConfig;
 };
 
 export class ChartBuilder<TInput, TOutput = TInput> {
@@ -318,10 +322,11 @@ export class ChartBuilder<TInput, TOutput = TInput> {
 
   // render calls resolve and then renders
   async render(
-    ...args: Parameters<GoFishNode["render"]>
+    container: Parameters<GoFishNode["render"]>[0],
+    options: Parameters<GoFishNode["render"]>[1]
   ): Promise<ReturnType<GoFishNode["render"]>> {
     const node = await this.resolve();
-    return node.render(...args);
+    return node.render(container, { ...options, colorConfig: this.options?.color });
   }
 }
 
@@ -330,7 +335,7 @@ export function chart<T>(data: T, options?: ChartOptions): ChartBuilder<T, T> {
 }
 
 type SpreadOptions<T> = {
-  dir: "x" | "y";
+  dir: "x" | "y" | "x, color" | "y, color";
   x?: number;
   y?: number;
   t?: number;
@@ -383,7 +388,7 @@ export function spread<T>(
       );
       return Spread(
         {
-          direction: opts.dir === "x" ? 0 : 1,
+          direction: opts.dir.startsWith("x") ? 0 : 1,
           spacing: opts.spacing ?? 0,
           alignment: opts.alignment ?? "baseline",
           sharedScale: opts.sharedScale,
@@ -422,9 +427,11 @@ export function spread<T>(
           : Map.groupBy(d, field as any)
         : d;
 
+      const spatialDir = (finalOptions.dir ?? "x").startsWith("x") ? "x" : "y";
+
       return Spread(
         {
-          direction: finalOptions.dir === "x" ? 0 : 1,
+          direction: spatialDir === "x" ? 0 : 1,
           x: finalOptions?.x ?? finalOptions?.t,
           y: finalOptions?.y ?? finalOptions?.r,
           mode: finalOptions?.mode
@@ -477,7 +484,7 @@ export function stack<T>(
   fieldOrOptions: keyof T | SpreadOptions<T>,
   optionsOrMarks?:
     | {
-        dir: "x" | "y";
+        dir: "x" | "y" | "x, color" | "y, color";
         x?: number;
         y?: number;
         w?: number | keyof T;
