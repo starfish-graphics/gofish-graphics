@@ -21,6 +21,7 @@ import {
   writeFileSync,
   mkdirSync,
   existsSync,
+  readdirSync,
 } from "fs";
 import { join, dirname } from "path";
 import {
@@ -59,6 +60,97 @@ function readOptional(p: string): string | null {
   }
 }
 
+/**
+ * Builds a map from Storybook story ID → relative JS file path.
+ * Story ID is the title converted to kebab-case, e.g.
+ *   "Forward Syntax V3/Bar/Basic" → "forward-syntax-v3/bar/basic"
+ */
+function buildStoryIndex(): Map<string, string> {
+  const index = new Map<string, string>();
+  function scan(dir: string): void {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const full = join(dir, entry.name);
+      if (entry.isDirectory()) {
+        scan(full);
+      } else if (entry.name.endsWith(".stories.tsx")) {
+        const source = readOptional(full);
+        if (!source) continue;
+        const m = source.match(/title:\s*["']([^"']+)["']/);
+        if (!m) continue;
+        const storyId = m[1]
+          .split("/")
+          .map((s) =>
+            s.trim().toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")
+          )
+          .join("/");
+        index.set(
+          storyId,
+          "packages/gofish-graphics/stories/" + full.slice(STORIES_DIR.length + 1)
+        );
+      }
+    }
+  }
+  scan(STORIES_DIR);
+  return index;
+}
+
+/** Strips imports, type declarations, and Storybook meta boilerplate from a JS story. */
+function extractJsCode(source: string): string {
+  return source
+    .split("\n")
+    .filter((line) => {
+      const t = line.trim();
+      return (
+        !t.startsWith("import ") &&
+        !t.startsWith("const meta") &&
+        t !== "export default meta;" &&
+        !t.startsWith("type ") &&
+        !t.startsWith("interface ") &&
+        !t.includes("initializeContainer()") &&
+        t !== "return container;"
+      );
+    })
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+/** Strips imports and module-level docstrings from a Python story. */
+function extractPythonCode(source: string): string {
+  const lines = source.split("\n");
+  const result: string[] = [];
+  let inDocstring = false;
+  for (const line of lines) {
+    const t = line.trim();
+    if (t.startsWith("from ") || t.startsWith("import ")) continue;
+    if (t.startsWith('"""') || t.startsWith("'''")) {
+      const delim = t.startsWith('"""') ? '"""' : "'''";
+      const rest = t.slice(3);
+      if (rest.includes(delim)) {
+        // Single-line docstring — skip
+        continue;
+      }
+      inDocstring = !inDocstring;
+      continue;
+    }
+    if (inDocstring) continue;
+    result.push(line);
+  }
+  return result.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+}
+
+/**
+ * Derives the Python story file path from a DOM snapshot id.
+ * e.g. "forward-syntax-v3/bar/basic--default" → "tests/python-stories/forward-syntax-v3/bar/test_basic.py"
+ */
+function domIdToPythonFile(id: string): string {
+  const storyId = id.replace(/--[^/]*$/, "");
+  const lastSlash = storyId.lastIndexOf("/");
+  const dir = lastSlash >= 0 ? storyId.slice(0, lastSlash) : "";
+  const base = (lastSlash >= 0 ? storyId.slice(lastSlash + 1) : storyId).replace(/-/g, "_");
+  return `tests/python-stories/${dir}/test_${base}.py`;
+}
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -89,6 +181,10 @@ interface StoryPair {
 // ---------------------------------------------------------------------------
 
 console.log("Building parity review site...");
+
+// Build story index: storyId → relative JS file path
+const storyIndex = buildStoryIndex();
+console.log(`  ${storyIndex.size} JS story file(s) indexed`);
 
 // Load sync results (may not exist if sync check was skipped)
 let syncResults: SyncResult[] = [];
@@ -157,10 +253,10 @@ for (const diff of parityDiffs) {
   }
   seenIds.add(id);
 
-  // Try to infer JS/Python file from DOM path
-  // DOM path uses kebab-case; we do a best-effort mapping
-  const jsFile = `packages/gofish-graphics/stories/${id}.stories.tsx`;
-  const pythonFile = mapJsToPython(jsFile);
+  // Look up JS file via story index (DOM id = storyId + "--" + variant)
+  const storyId = id.replace(/--[^/]*$/, "");
+  const jsFile = storyIndex.get(storyId) ?? `packages/gofish-graphics/stories/${id}.stories.tsx`;
+  const pythonFile = domIdToPythonFile(id);
 
   const hasDomDiff = diff.beforeDom !== null;
   pairs.push({
@@ -185,21 +281,21 @@ console.log(`  ${pairs.length} story pair(s) total`);
 for (const pair of pairs) {
   // JS source
   const jsAbsPath = join(ROOT_DIR, pair.jsFile);
-  const jsSource = readOptional(jsAbsPath);
-  if (jsSource !== null) {
+  const jsRaw = readOptional(jsAbsPath);
+  if (jsRaw !== null) {
     write(
       join(OUT_DIR, "data/sources/js", `${pair.id}.tsx`),
-      jsSource
+      extractJsCode(jsRaw)
     );
   }
 
   // Python source
   const pyAbsPath = join(ROOT_DIR, pair.pythonFile);
-  const pySource = readOptional(pyAbsPath);
-  if (pySource !== null) {
+  const pyRaw = readOptional(pyAbsPath);
+  if (pyRaw !== null) {
     write(
       join(OUT_DIR, "data/sources/python", `${pair.id}.py`),
-      pySource
+      extractPythonCode(pyRaw)
     );
   }
 }
@@ -482,7 +578,9 @@ const html = `<!DOCTYPE html>
     if (sourceCache[jsKey] === undefined) {
       try {
         const res = await fetch('/data/sources/js/' + pair.id + '.tsx');
-        sourceCache[jsKey] = res.ok ? escHtml(await res.text()) : null;
+        const ct = res.headers.get('content-type') || '';
+        const text = res.ok && !ct.includes('text/html') ? await res.text() : null;
+        sourceCache[jsKey] = text !== null ? escHtml(text) : null;
       } catch { sourceCache[jsKey] = null; }
     }
     jsEl.innerHTML = sourceCache[jsKey] !== null
@@ -494,7 +592,9 @@ const html = `<!DOCTYPE html>
     if (sourceCache[pyKey] === undefined) {
       try {
         const res = await fetch('/data/sources/python/' + pair.id + '.py');
-        sourceCache[pyKey] = res.ok ? escHtml(await res.text()) : null;
+        const ct = res.headers.get('content-type') || '';
+        const text = res.ok && !ct.includes('text/html') ? await res.text() : null;
+        sourceCache[pyKey] = text !== null ? escHtml(text) : null;
       } catch { sourceCache[pyKey] = null; }
     }
     pyEl.innerHTML = sourceCache[pyKey] !== null
