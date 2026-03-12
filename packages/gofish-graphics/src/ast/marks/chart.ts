@@ -1,5 +1,4 @@
 import { groupBy, ValueIteratee } from "lodash";
-import { bin as d3bin } from "d3-array";
 import {
   Frame,
   Spread,
@@ -166,29 +165,6 @@ export function log<T>(label?: string): Operator<T, T> {
       return mark(d, key, layerContext);
     }) as Mark<T>;
   };
-}
-
-export function bin<T extends Record<string, any>>(
-  field: keyof T & string,
-  options?: { thresholds?: number | number[] }
-): Operator<
-  T[],
-  { start: number; end: number; size: number; count: number }[]
-> {
-  return derive((data: T[]) => {
-    const binner = d3bin<T, number>()
-      .value((d) => d[field] as number)
-      .thresholds(options?.thresholds ?? 10);
-    const bins = binner(data.filter((d) => d[field] != null));
-    return bins
-      .filter((b) => b.x0 !== undefined && b.x1 !== undefined)
-      .map((b) => ({
-        start: b.x0!,
-        end: b.x1!,
-        size: b.x1! - b.x0!,
-        count: b.length,
-      }));
-  });
 }
 
 /* END Data Transformation Operators */

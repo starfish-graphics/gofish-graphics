@@ -28,6 +28,7 @@ export { GoFishSolid } from "./ast/GoFishSolid";
 export { For } from "./ast/iterators/for";
 // export { groupBy } from "./ast/iterators/groupBy";
 export { groupBy, sumBy, orderBy, meanBy } from "lodash";
+export { bin } from "./ast/transforms";
 
 // Shapes
 export { ref } from "./ast/shapes/ref";
@@ -71,7 +72,6 @@ export {
   scatter,
   group,
   derive,
-  bin,
   rect,
   circle,
   select,
