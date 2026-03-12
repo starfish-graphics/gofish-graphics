@@ -143,9 +143,10 @@ print(json.dumps(output))
 `;
 
   try {
-    const result = execSync(`python3 -c ${JSON.stringify(script)}`, {
+    const result = execSync(`python3 -`, {
       cwd: ROOT,
       encoding: "utf-8",
+      input: script,
       timeout: 30_000,
     });
     return JSON.parse(result.trim());
@@ -226,9 +227,10 @@ print("OK")
 `;
 
   try {
-    execSync(`python3 -c ${JSON.stringify(script)}`, {
+    execSync(`python3 -`, {
       cwd: ROOT,
       encoding: "utf-8",
+      input: script,
       timeout: 10_000,
     });
   } catch {
