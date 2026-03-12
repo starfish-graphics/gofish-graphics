@@ -30,7 +30,7 @@ import {
   formatDomDiff,
   type DiffEntry,
 } from "./diff-utils.js";
-import { mapJsToPython } from "./check-python-sync.js";
+import { mapJsToPython } from "./path-mapping.js";
 
 // ---------------------------------------------------------------------------
 // Paths
