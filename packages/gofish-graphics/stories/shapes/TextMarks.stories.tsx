@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
-import { coord, Ellipse, For, polar, Stack, Spread, Text } from "../../src/lib";
+import { coord, ellipse, For, polar, Stack, Spread, text } from "../../src/lib";
 
 const meta: Meta = {
   title: "Shapes/Text Marks",
@@ -35,7 +35,7 @@ export const TextStack: StoryObj<Args> = {
     Spread(
       { direction: "y", spacing: 18, alignment: "start" },
       For(labels, (label) =>
-        Text({
+        text({
           text: label.text,
           fill: label.color,
           fontSize: 28,
@@ -62,7 +62,7 @@ export const TextStackMiddleAlignment: StoryObj<Args> = {
     Spread(
       { direction: "y", spacing: 18, alignment: "middle" },
       For(labels, (label) =>
-        Text({
+        text({
           text: label.text,
           fill: label.color,
           fontSize: 28,
@@ -89,7 +89,7 @@ export const TextStackHorizontal: StoryObj<Args> = {
     Spread(
       { direction: "x", spacing: 18, alignment: "start" },
       For(labels, (label) =>
-        Text({
+        text({
           text: label.text,
           fill: label.color,
           fontSize: 28,
@@ -114,14 +114,12 @@ export const TextStackWithEllipse: StoryObj<Args> = {
 
     container.innerHTML = "";
     Spread({ direction: "y", spacing: 60, alignment: "middle" }, [
-      // Text({ text: "Mercury" }),
-      Ellipse({
+      ellipse({
         w: 10,
         h: 10,
         fill: "red",
       }),
-      Text({ text: "Mercury" }),
-      // Ref("Mercury"),
+      text({ text: "Mercury" }),
     ]).render(container, {
       w: args.w,
       h: args.h,
@@ -147,7 +145,7 @@ export const PolarText: StoryObj<Args> = {
       ],
     };
     coord({ transform: radialPolar }, [
-      Text({
+      text({
         text: "Polar Text",
         x: 80,
         y: Math.PI / 4,

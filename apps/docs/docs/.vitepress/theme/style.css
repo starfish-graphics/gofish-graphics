@@ -43,7 +43,7 @@
  *   in custom container, badges, etc.
  * -------------------------------------------------------------------------- */
 
- :root {
+:root {
   --vp-c-default-1: var(--vp-c-gray-1);
   --vp-c-default-2: var(--vp-c-gray-2);
   --vp-c-default-3: var(--vp-c-gray-3);
@@ -148,7 +148,7 @@
   width: 300px;
   height: 300px;
   margin-bottom: 12px;
-  background-image: url('/gofish-logo.png');
+  background-image: url("/gofish-logo.png");
   background-repeat: no-repeat;
   background-position: center;
   background-size: contain;
@@ -257,10 +257,17 @@ a.starfish-codepen:hover {
   }
 }
 
+/* Remove green code styling on API reference page */
+.api-page {
+  --vp-code-color: var(--vp-c-text-2);
+  --vp-code-bg: var(--vp-c-default-soft);
+  --vp-code-block-bg: var(--vp-c-bg-alt);
+}
+
 /* Wider doc container ONLY on cheatsheet pages */
 .cheatsheet-page .VPDoc .container,
 .cheatsheet-page .VPDoc .container > .content {
-  max-width: 1200px !important;    /* or none for full-width */
+  max-width: 1200px !important; /* or none for full-width */
   width: 100% !important;
 }
 

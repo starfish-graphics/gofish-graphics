@@ -3,7 +3,7 @@ import { initializeContainer } from "../helper";
 import { seafood } from "../../src/data/catch";
 import { streamgraphData } from "../../src/data/streamgraphData";
 import { Chart, spread, scaffold, stack, Layer, select } from "../../src/lib";
-import { area, group } from "../../src/ast/marks/chart";
+import { area, group, log } from "../../src/ast/marks/chart";
 
 const meta: Meta = {
   title: "Forward Syntax V3/Area",
@@ -29,7 +29,8 @@ export const Basic: StoryObj<Args> = {
       Chart(seafood)
         .flow(spread("lake", { dir: "x", spacing: 64 }))
         .mark(scaffold({ h: "count" }).name("points")),
-      Chart(select("points")).mark(area({ opacity: 0.8 })),
+      Chart(select("points")).flow(log("points")).mark(area({ opacity: 0.8 })
+    ),
     ]).render(container, {
       w: args.w,
       h: args.h,
@@ -71,7 +72,7 @@ export const Layered: StoryObj<Args> = {
     const container = initializeContainer();
     Layer([
       Chart(streamgraphData)
-        .flow(spread("x", { dir: "x", spacing: 50 }))
+        .flow(group("c"), spread("x", { dir: "x", spacing: 50 }))
         .mark(scaffold({ h: "y", fill: "c" }).name("points")),
       Chart(select("points"))
         .flow(group("c"))

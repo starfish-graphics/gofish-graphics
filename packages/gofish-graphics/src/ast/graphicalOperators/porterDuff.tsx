@@ -12,7 +12,9 @@ type CompositeOperator = "over" | "in" | "xor" | "out" | "atop";
 
 const requireTwoChildren = <T,>(children: T[]) => {
   if (children.length !== 2) {
-    throw new Error("Porter-Duff relation operators currently expect exactly two children");
+    throw new Error(
+      "Porter-Duff relation operators currently expect exactly two children"
+    );
   }
 };
 
@@ -42,25 +44,23 @@ const renderComposite = (
   const height = intrinsicDims?.[1]?.size ?? 0;
 
   const tail =
-    operator === "in"
-      ? (
-        <>
-          <feBlend
-            in="compositeResult"
-            in2="graySource"
-            mode={blendMode}
-            result="blendedIntersect"
-          />
-          <feComposite
-            in="blendedIntersect"
-            in2="compositeResult"
-            operator="in"
-          />
-        </>
-      )
-      : operator === "over" || operator === "atop"
-        ? <feBlend in="compositeResult" in2="graySource" mode={blendMode} />
-        : null;
+    operator === "in" ? (
+      <>
+        <feBlend
+          in="compositeResult"
+          in2="graySource"
+          mode={blendMode}
+          result="blendedIntersect"
+        />
+        <feComposite
+          in="blendedIntersect"
+          in2="compositeResult"
+          operator="in"
+        />
+      </>
+    ) : operator === "over" || operator === "atop" ? (
+      <feBlend in="compositeResult" in2="graySource" mode={blendMode} />
+    ) : null;
 
   return (
     <>
@@ -105,10 +105,7 @@ const renderComposite = (
   );
 };
 
-const createCompositeRelation = (
-  type: string,
-  operator: CompositeOperator
-) =>
+const createCompositeRelation = (type: string, operator: CompositeOperator) =>
   createOperator(
     (
       {
@@ -138,19 +135,39 @@ const createCompositeRelation = (
               h: Monotonic.max(...childMeasures.map((measure) => measure[1])),
             };
           },
-          layout: (_shared, size, scaleFactors, layoutChildren, _measurement, posScales) => {
+          layout: (
+            _shared,
+            size,
+            scaleFactors,
+            layoutChildren,
+            _measurement,
+            posScales
+          ) => {
             requireTwoChildren(layoutChildren);
 
             const childPlaceables = layoutChildren.map((child) =>
               child.layout(size, scaleFactors, posScales)
             );
-            childPlaceables.forEach((child) => child.place({ x: 0, y: 0 }));
+            childPlaceables.forEach((child) => {
+              child.place("x", 0, "baseline");
+              child.place("y", 0, "baseline");
+            });
 
             const { minX, maxX, minY, maxY } = maxChildBounds(childPlaceables);
             return {
               intrinsicDims: [
-                { min: minX, size: maxX - minX, center: minX + (maxX - minX) / 2, max: maxX },
-                { min: minY, size: maxY - minY, center: minY + (maxY - minY) / 2, max: maxY },
+                {
+                  min: minX,
+                  size: maxX - minX,
+                  center: minX + (maxX - minX) / 2,
+                  max: maxX,
+                },
+                {
+                  min: minY,
+                  size: maxY - minY,
+                  center: minY + (maxY - minY) / 2,
+                  max: maxY,
+                },
               ],
               transform: { translate: [undefined, undefined] },
             };
@@ -159,10 +176,17 @@ const createCompositeRelation = (
             requireTwoChildren(renderedChildren);
             return (
               <g
-                transform={`translate(${transform?.translate?.[0] ?? 0}, ${transform?.translate?.[1] ?? 0
-                  })`}
+                transform={`translate(${transform?.translate?.[0] ?? 0}, ${
+                  transform?.translate?.[1] ?? 0
+                })`}
               >
-                {renderComposite(node, renderedChildren, intrinsicDims, operator, blendMode)}
+                {renderComposite(
+                  node,
+                  renderedChildren,
+                  intrinsicDims,
+                  operator,
+                  blendMode
+                )}
               </g>
             );
           },
@@ -178,71 +202,96 @@ export const xor = createCompositeRelation("xor", "xor");
 export const out = createCompositeRelation("out", "out");
 export const atop = createCompositeRelation("atop", "atop");
 
-export const mask = createOperator((_: Record<string, never>, children: GoFishAST[]) => {
-  requireTwoChildren(children);
+export const mask = createOperator(
+  (_: Record<string, never>, children: GoFishAST[]) => {
+    requireTwoChildren(children);
 
-  return new GoFishNode(
-    {
-      type: "mask",
-      shared: [false, false],
-      resolveUnderlyingSpace: (
-        _children: Size<UnderlyingSpace>[],
-        _childNodes: GoFishAST[]
-      ) => [UNDEFINED, UNDEFINED],
-      inferSizeDomains: (_shared, layoutChildren) => {
-        requireTwoChildren(layoutChildren);
-        const childMeasures = layoutChildren.map((child) => child.inferSizeDomains());
-        return {
-          w: Monotonic.max(...childMeasures.map((measure) => measure[0])),
-          h: Monotonic.max(...childMeasures.map((measure) => measure[1])),
-        };
-      },
-      layout: (_shared, size, scaleFactors, layoutChildren, _measurement, posScales) => {
-        requireTwoChildren(layoutChildren);
+    return new GoFishNode(
+      {
+        type: "mask",
+        shared: [false, false],
+        resolveUnderlyingSpace: (
+          _children: Size<UnderlyingSpace>[],
+          _childNodes: GoFishAST[]
+        ) => [UNDEFINED, UNDEFINED],
+        inferSizeDomains: (_shared, layoutChildren) => {
+          requireTwoChildren(layoutChildren);
+          const childMeasures = layoutChildren.map((child) =>
+            child.inferSizeDomains()
+          );
+          return {
+            w: Monotonic.max(...childMeasures.map((measure) => measure[0])),
+            h: Monotonic.max(...childMeasures.map((measure) => measure[1])),
+          };
+        },
+        layout: (
+          _shared,
+          size,
+          scaleFactors,
+          layoutChildren,
+          _measurement,
+          posScales
+        ) => {
+          requireTwoChildren(layoutChildren);
 
-        const childPlaceables = layoutChildren.map((child) =>
-          child.layout(size, scaleFactors, posScales)
-        );
-        childPlaceables.forEach((child) => child.place({ x: 0, y: 0 }));
+          const childPlaceables = layoutChildren.map((child) =>
+            child.layout(size, scaleFactors, posScales)
+          );
+          childPlaceables.forEach((child) => {
+            child.place("x", 0, "baseline");
+            child.place("y", 0, "baseline");
+          });
 
-        const { minX, maxX, minY, maxY } = maxChildBounds(childPlaceables);
-        return {
-          intrinsicDims: [
-            { min: minX, size: maxX - minX, center: minX + (maxX - minX) / 2, max: maxX },
-            { min: minY, size: maxY - minY, center: minY + (maxY - minY) / 2, max: maxY },
-          ],
-          transform: { translate: [undefined, undefined] },
-        };
-      },
-      render: ({ transform }, renderedChildren, node) => {
-        requireTwoChildren(renderedChildren);
+          const { minX, maxX, minY, maxY } = maxChildBounds(childPlaceables);
+          return {
+            intrinsicDims: [
+              {
+                min: minX,
+                size: maxX - minX,
+                center: minX + (maxX - minX) / 2,
+                max: maxX,
+              },
+              {
+                min: minY,
+                size: maxY - minY,
+                center: minY + (maxY - minY) / 2,
+                max: maxY,
+              },
+            ],
+            transform: { translate: [undefined, undefined] },
+          };
+        },
+        render: ({ transform }, renderedChildren, node) => {
+          requireTwoChildren(renderedChildren);
 
-        const uid = `pd-mask-${node.uid}`;
-        const sourceId = `${uid}-source`;
-        const destinationId = `${uid}-destination`;
-        const maskId = `${uid}-mask`;
+          const uid = `pd-mask-${node.uid}`;
+          const sourceId = `${uid}-source`;
+          const destinationId = `${uid}-destination`;
+          const maskId = `${uid}-mask`;
 
-        return (
-          <g
-            transform={`translate(${transform?.translate?.[0] ?? 0}, ${transform?.translate?.[1] ?? 0
+          return (
+            <g
+              transform={`translate(${transform?.translate?.[0] ?? 0}, ${
+                transform?.translate?.[1] ?? 0
               })`}
-          >
-            <defs>
-              <g id={sourceId}>{renderedChildren[0]}</g>
-              <g id={destinationId}>{renderedChildren[1]}</g>
-              <mask
-                id={maskId}
-                maskUnits="userSpaceOnUse"
-                maskContentUnits="userSpaceOnUse"
-              >
-                <use href={`#${sourceId}`} />
-              </mask>
-            </defs>
-            <use href={`#${destinationId}`} mask={`url(#${maskId})`} />
-          </g>
-        );
+            >
+              <defs>
+                <g id={sourceId}>{renderedChildren[0]}</g>
+                <g id={destinationId}>{renderedChildren[1]}</g>
+                <mask
+                  id={maskId}
+                  maskUnits="userSpaceOnUse"
+                  maskContentUnits="userSpaceOnUse"
+                >
+                  <use href={`#${sourceId}`} />
+                </mask>
+              </defs>
+              <use href={`#${destinationId}`} mask={`url(#${maskId})`} />
+            </g>
+          );
+        },
       },
-    },
-    children
-  );
-});
+      children
+    );
+  }
+);

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
 import { titanic } from "../../src/data/titanic";
-import { SpreadY, SpreadX, Enclose, Ellipse } from "../../src/lib";
+import { SpreadY, SpreadX, Enclose, ellipse } from "../../src/lib";
 import { color6, gray } from "../../src/color";
 import _ from "lodash";
 
@@ -57,7 +57,7 @@ export const Default: StoryObj<Args> = {
                         SpreadX(
                           { spacing: 0.5, alignment: "end" },
                           d.map((d) =>
-                            Ellipse({
+                            ellipse({
                               w: 4,
                               h: 4,
                               fill:

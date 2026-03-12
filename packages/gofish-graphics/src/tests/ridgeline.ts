@@ -4,11 +4,11 @@ import {
   For,
   groupBy,
   SpreadX,
-  Rect,
+  rect,
   v,
   Frame,
   ConnectX,
-  Ref,
+  ref,
 } from "../lib";
 
 export const testRidgeline = () =>
@@ -19,7 +19,7 @@ export const testRidgeline = () =>
         SpreadX(
           { spacing: 20 /* , sharedScale: true */ },
           For(items, (d) =>
-            Rect({
+            rect({
               // x: d.x * 20,
               // h: v(d.y),
               h: d.y,
@@ -35,7 +35,7 @@ export const testRidgeline = () =>
             // mixBlendMode: "normal",
             opacity: 0.7,
           },
-          For(items, (d) => Ref(`${d.c}-${d.x}`))
+          For(items, (d) => ref(`${d.c}-${d.x}`))
         ),
       ])
     )

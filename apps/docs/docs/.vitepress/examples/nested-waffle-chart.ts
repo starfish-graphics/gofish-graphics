@@ -31,7 +31,7 @@ gf.StackY(
                     gf.StackX(
                       { spacing: 0.5, alignment: "end" },
                       d.map((d) =>
-                        gf.Ellipse({
+                        gf.ellipse({
                           w: 4,
                           h: 4,
                           fill:

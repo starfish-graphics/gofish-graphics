@@ -1,5 +1,6 @@
 import type { JSX } from "solid-js";
 import {
+  Anchor,
   Dimensions,
   elaborateDims,
   elaborateDirection,
@@ -16,9 +17,7 @@ import {
   Transform,
 } from "./dims";
 import { ContinuousDomain } from "./domain";
-import {
-  gofish,
-} from "./gofish";
+import { gofish } from "./gofish";
 import { GoFishRef } from "./_ref";
 import { GoFishAST } from "./_ast";
 import { CoordinateTransform } from "./coordinateTransforms/coord";
@@ -60,7 +59,7 @@ export const findScaleFactor = (
 
 export type Placeable = {
   dims: Dimensions;
-  place: (pos: FancyPosition) => void;
+  place: (axis: FancyDirection, value: number, anchor?: Anchor) => void;
 };
 
 export type InferSizeDomains = (
@@ -288,31 +287,37 @@ export class GoFishNode {
     return [dim(0), dim(1)];
   }
 
-  public place(pos: FancyPosition): void {
-    const elabPos = elaboratePosition(pos);
-    /* For each dimension, if intrinsic dim is not defined, assign pos to that.
-     * Otherwise, compute translation to position the implicit anchor point.
-     *
-     * The anchor point is always the local origin (0). Shapes set up their
-     * intrinsic dimensions so that one edge is at 0:
-     * - For positive sizes: min = 0 (anchor at bottom)
-     * - For negative sizes: max = 0 (anchor at top)
-     */
-    for (let i = 0; i < elabPos.length; i++) {
-      if (elabPos[i] === undefined) continue;
-      if (this.intrinsicDims?.[i]?.min === undefined) {
-        this.intrinsicDims![i].min = elabPos[i]!;
-      } else if (this.transform?.translate?.[i] === undefined) {
-        this.transform!.translate![i] = elabPos[i]!;
-      } else {
-        // console.warn(
-        //   "placing node with both intrinsic and transform defined:",
-        //   this.type,
-        //   this.transform!.translate![i]
-        // );
-        // this.transform!.translate![i] = elabPos[i]! - (this.intrinsicDims![i].min ?? 0);
-      }
+  public place(
+    axis: FancyDirection,
+    value: number,
+    anchor: Anchor = "min"
+  ): void {
+    const dir = elaborateDirection(axis);
+    const intrinsic = this.intrinsicDims?.[dir];
+
+    const anchorToDim = {
+      min: intrinsic?.min,
+      max: intrinsic?.max,
+      center: intrinsic?.center,
+      // TODO: revisit baseline case
+      baseline: intrinsic?.min,
+    };
+
+    if (anchorToDim[anchor] === undefined) {
+      this.intrinsicDims![dir][anchor] = value;
+      return;
     }
+
+    if (this.transform?.translate?.[dir] !== undefined) return;
+
+    const anchorToPoint = {
+      min: intrinsic!.min ?? 0,
+      max: intrinsic!.max ?? 0,
+      center: intrinsic!.center ?? 0,
+      baseline: 0,
+    };
+
+    this.transform!.translate![dir] = value - anchorToPoint[anchor];
   }
 
   public embed(direction: FancyDirection): void {
@@ -342,7 +347,10 @@ export class GoFishNode {
   public setRenderSession(session: RenderSession): void {
     this.renderSession = session;
     this.children.forEach((child) => {
-      if ("setRenderSession" in child && typeof child.setRenderSession === "function") {
+      if (
+        "setRenderSession" in child &&
+        typeof child.setRenderSession === "function"
+      ) {
         child.setRenderSession(session);
       }
     });
