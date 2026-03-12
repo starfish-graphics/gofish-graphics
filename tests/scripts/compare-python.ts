@@ -41,8 +41,8 @@ for (const file of pyFiles) {
   const pythonPath = join(PYTHON_DIR, file);
 
   if (!existsSync(baselinePath)) {
-    console.warn(`  WARN: No JS baseline for ${file} (not yet accepted)`);
-    warnings++;
+    console.error(`  FAIL: No JS baseline for ${file} (not yet accepted)`);
+    failures++;
     continue;
   }
 
