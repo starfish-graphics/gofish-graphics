@@ -23,19 +23,8 @@ export const Default: StoryObj<Args> = {
   render: (args: Args, context: any) => {
     const container = initializeContainer();
 
-    // TODO: scatter needs to have the alignment behavior when one of its dimensions is not
-    // specified. this will also affect underlying space resolution
-    // NOTE: I was tempted to use stack for this but that doesn't make it easy to set the correct
-    // starting position! (It will always start at 0.) Scatter is luckily more general for when
-    // histograms aren't consisting of contiguous bins. On the other hand, it maybe suggests a 1D
-    // binning operator that behaves slightly different from stacking in terms of that
-    // functionality.
     Chart(context.loaded.movies as any[])
-      .flow(
-        derive(bin("IMDB Rating")),
-        log("binned data"),
-        scatter({ x: "start", y: 0 })
-      )
+      .flow(derive(bin("IMDB Rating")), log("binned data"), scatter({ x: "start" }))
       .mark(rect({ w: "size", h: "count" }))
       .render(container, { w: args.w, h: args.h, axes: true });
 

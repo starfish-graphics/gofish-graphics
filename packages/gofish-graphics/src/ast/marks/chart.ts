@@ -3,9 +3,9 @@ import {
   Frame,
   Spread,
   Stack,
+  Scatter,
   sumBy,
   v,
-  Position,
   meanBy,
   Connect,
   ref,
@@ -495,19 +495,24 @@ export function scatter<T>(
   fieldOrOptions:
     | keyof T
     | {
-        x: number | (keyof T & string);
-        y: number | (keyof T & string);
+        x?: number | (keyof T & string);
+        y?: number | (keyof T & string);
+        alignment?: "start" | "middle" | "end" | "baseline";
         debug?: boolean;
       },
   options?: {
-    x: number | (keyof T & string);
-    y: number | (keyof T & string);
+    x?: number | (keyof T & string);
+    y?: number | (keyof T & string);
+    alignment?: "start" | "middle" | "end" | "baseline";
     debug?: boolean;
   }
 ): Operator<T[], T[]> {
   const field: keyof T | undefined =
     typeof fieldOrOptions === "object" ? undefined : fieldOrOptions;
   const opts = (typeof fieldOrOptions === "object" ? fieldOrOptions : options)!;
+  if (opts.x === undefined && opts.y === undefined) {
+    throw new Error("scatter() requires at least one of x or y");
+  }
 
   return async (mark: Mark<T[]>) => {
     return async (
@@ -519,31 +524,74 @@ export function scatter<T>(
         // Group by field, position each group at its mean x/y
         const groups = groupBy(d, field as ValueIteratee<T>);
         if (opts?.debug) console.log("scatter groups", groups);
-        return Frame(
-          For(groups, async (items, groupKey) => {
-            const x = inferPos(opts.x, items);
-            const y = inferPos(opts.y, items);
+        const entries = Object.entries(groups);
+        const resolved = await Promise.all(
+          entries.map(async ([groupKey, items]) => {
+            const x =
+              opts.x === undefined ? undefined : inferPos(opts.x, items);
+            const y =
+              opts.y === undefined ? undefined : inferPos(opts.y, items);
             if (opts?.debug) console.log(`Group ${groupKey}: x=${x}, y=${y}`);
             const currentKey =
               key != undefined ? `${key}-${groupKey}` : groupKey;
-            return Position({ x: x!, y: y! }, [
-              mark(items, currentKey, layerContext) as any,
-            ]);
+            return {
+              x,
+              y,
+              child: (await resolveMarkResult(
+                mark(items, currentKey, layerContext),
+                layerContext
+              )) as any,
+            };
           })
+        );
+        return Scatter(
+          {
+            x:
+              opts.x === undefined
+                ? undefined
+                : resolved.map((entry) => entry.x!),
+            y:
+              opts.y === undefined
+                ? undefined
+                : resolved.map((entry) => entry.y!),
+            alignment: opts.alignment,
+          },
+          resolved.map((entry) => entry.child)
         );
       } else {
         // No grouping — position each item at its own x/y
         if (opts?.debug) console.log("scatter items", d);
-        return Frame(
-          d.map((item, i) => {
-            const x = inferPos(opts.x, [item]);
-            const y = inferPos(opts.y, [item]);
+        const resolved = await Promise.all(
+          d.map(async (item, i) => {
+            const x =
+              opts.x === undefined ? undefined : inferPos(opts.x, [item]);
+            const y =
+              opts.y === undefined ? undefined : inferPos(opts.y, [item]);
             if (opts?.debug) console.log(`Item ${i}: x=${x}, y=${y}`);
             const currentKey = key != undefined ? `${key}-${i}` : i;
-            return Position({ x: x!, y: y! }, [
-              mark([item], currentKey as any, layerContext) as any,
-            ]);
+            return {
+              x,
+              y,
+              child: (await resolveMarkResult(
+                mark([item], currentKey as any, layerContext),
+                layerContext
+              )) as any,
+            };
           })
+        );
+        return Scatter(
+          {
+            x:
+              opts.x === undefined
+                ? undefined
+                : resolved.map((entry) => entry.x!),
+            y:
+              opts.y === undefined
+                ? undefined
+                : resolved.map((entry) => entry.y!),
+            alignment: opts.alignment,
+          },
+          resolved.map((entry) => entry.child)
         );
       }
     };
