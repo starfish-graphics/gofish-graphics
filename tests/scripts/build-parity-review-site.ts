@@ -306,28 +306,16 @@ for (const pair of pairs) {
   }
 }
 
-// DOM diffs + screenshots
+// DOM diffs
 for (const diff of parityDiffs) {
   if (diff.beforeDom !== null && diff.afterDom !== null) {
     const html = formatDomDiff(diff.beforeDom, diff.afterDom);
     write(join(OUT_DIR, "data/dom-diffs", diff.path), html);
   }
-
-  const pngPath = diff.path.replace(/\.html$/, ".png");
-  if (diff.beforeScreenshotPath && existsSync(diff.beforeScreenshotPath)) {
-    const dest = join(OUT_DIR, "data/screenshots/js", pngPath);
-    mkdirSync(dirname(dest), { recursive: true });
-    cpSync(diff.beforeScreenshotPath, dest);
-  }
-  if (diff.afterScreenshotPath && existsSync(diff.afterScreenshotPath)) {
-    const dest = join(OUT_DIR, "data/screenshots/python", pngPath);
-    mkdirSync(dirname(dest), { recursive: true });
-    cpSync(diff.afterScreenshotPath, dest);
-  }
 }
 
 // ---------------------------------------------------------------------------
-// data/results.json
+// data/results.json  (written before screenshots so crashes there don't lose data)
 // ---------------------------------------------------------------------------
 
 write(
@@ -346,6 +334,25 @@ const meta = {
 };
 
 write(join(OUT_DIR, "data/meta.json"), JSON.stringify(meta, null, 2));
+
+// Screenshots (non-fatal — copied after results.json is safely written)
+for (const diff of parityDiffs) {
+  const pngPath = diff.path.replace(/\.html$/, ".png");
+  try {
+    if (diff.beforeScreenshotPath && existsSync(diff.beforeScreenshotPath)) {
+      const dest = join(OUT_DIR, "data/screenshots/js", pngPath);
+      mkdirSync(dirname(dest), { recursive: true });
+      cpSync(diff.beforeScreenshotPath, dest);
+    }
+    if (diff.afterScreenshotPath && existsSync(diff.afterScreenshotPath)) {
+      const dest = join(OUT_DIR, "data/screenshots/python", pngPath);
+      mkdirSync(dirname(dest), { recursive: true });
+      cpSync(diff.afterScreenshotPath, dest);
+    }
+  } catch (err) {
+    console.warn(`  Warning: failed to copy screenshots for ${pngPath}:`, err);
+  }
+}
 
 console.log(
   `  Repo: ${meta.repo}, branch: ${meta.branch}, sha: ${meta.sha.slice(0, 8)}`
@@ -560,8 +567,12 @@ const html = `<!DOCTYPE html>
       fetch('/data/results.json'),
       fetch('/data/meta.json'),
     ]);
+    if (!resultsRes.ok) {
+      document.getElementById('sidebar-stats').textContent = 'Error: could not load results.json';
+      return;
+    }
     allPairs = await resultsRes.json();
-    meta = await metaRes.json();
+    meta = metaRes.ok ? await metaRes.json() : meta;
 
     const metaEl = document.getElementById('sidebar-meta');
     const shortSha = meta.sha.slice(0, 8);
