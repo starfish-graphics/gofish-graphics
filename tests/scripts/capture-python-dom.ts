@@ -106,6 +106,17 @@ import sys, json, importlib.util
 sys.path.insert(0, "${join(ROOT, "packages/gofish-python")}")
 sys.path.insert(0, "${TESTS_DIR}")
 
+# Register "python_stories" as a package so story imports (e.g. from python_stories.data) work
+_pkg_dir = "${PYTHON_STORIES_DIR}"
+_pkg_init = "${PYTHON_STORIES_DIR}/__init__.py"
+_pkg_spec = importlib.util.spec_from_file_location(
+    "python_stories", _pkg_init,
+    submodule_search_locations=[_pkg_dir]
+)
+_pkg_mod = importlib.util.module_from_spec(_pkg_spec)
+sys.modules["python_stories"] = _pkg_mod
+_pkg_spec.loader.exec_module(_pkg_mod)
+
 spec = importlib.util.spec_from_file_location("story_module", "${storyAbsPath}")
 mod = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(mod)
@@ -209,6 +220,17 @@ function registerDerives(story: PythonStory): void {
 import sys, importlib.util
 sys.path.insert(0, "${join(ROOT, "packages/gofish-python")}")
 sys.path.insert(0, "${TESTS_DIR}")
+
+# Register "python_stories" as a package so story imports (e.g. from python_stories.data) work
+_pkg_dir = "${PYTHON_STORIES_DIR}"
+_pkg_init = "${PYTHON_STORIES_DIR}/__init__.py"
+_pkg_spec = importlib.util.spec_from_file_location(
+    "python_stories", _pkg_init,
+    submodule_search_locations=[_pkg_dir]
+)
+_pkg_mod = importlib.util.module_from_spec(_pkg_spec)
+sys.modules["python_stories"] = _pkg_mod
+_pkg_spec.loader.exec_module(_pkg_mod)
 
 from gofish.ast import DeriveOperator
 
