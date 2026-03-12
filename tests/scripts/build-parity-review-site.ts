@@ -162,14 +162,17 @@ for (const diff of parityDiffs) {
   const jsFile = `packages/gofish-graphics/stories/${id}.stories.tsx`;
   const pythonFile = mapJsToPython(jsFile);
 
+  const hasDomDiff = diff.beforeDom !== null;
   pairs.push({
     id,
     jsFile,
     pythonFile,
     checkType: "dom",
     status: "fail",
-    message: "DOM output does not match JS baseline",
-    hasDomDiff: true,
+    message: hasDomDiff
+      ? "DOM output does not match JS baseline"
+      : "No JS baseline exists yet",
+    hasDomDiff,
   });
 }
 
