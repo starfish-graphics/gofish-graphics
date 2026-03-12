@@ -8,6 +8,7 @@
 import type { JSX } from "solid-js";
 import { GoFishAST } from "./_ast";
 import { GoFishNode } from "./_node";
+import type { AxesOptions } from "./gofish";
 import _, { ListOfRecursiveArraysOrValues } from "lodash";
 import { ChartBuilder } from "./marks/chart";
 import type { LayerContext } from "./marks/chart";
@@ -31,7 +32,7 @@ export interface RenderOptions {
   transform?: { x?: number; y?: number };
   debug?: boolean;
   defs?: JSX.Element[];
-  axes?: boolean;
+  axes?: AxesOptions;
 }
 
 /**

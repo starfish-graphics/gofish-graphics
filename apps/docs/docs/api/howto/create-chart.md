@@ -85,7 +85,7 @@ Options:
 
 - `w` — width in pixels
 - `h` — height in pixels
-- `axes` — whether to show axes (boolean)
+- `axes` — `boolean | { x: boolean; y: boolean }` (use object form to toggle x/y axes individually)
 
 ## Composing operators
 

@@ -18,6 +18,7 @@ import {
 } from "./dims";
 import { ContinuousDomain } from "./domain";
 import { gofish } from "./gofish";
+import type { AxesOptions } from "./gofish";
 import { GoFishRef } from "./_ref";
 import { GoFishAST } from "./_ast";
 import { CoordinateTransform } from "./coordinateTransforms/coord";
@@ -385,7 +386,7 @@ export class GoFishNode {
       transform?: { x?: number; y?: number };
       debug?: boolean;
       defs?: JSX.Element[];
-      axes?: boolean;
+      axes?: AxesOptions;
     }
   ) {
     return gofish(
