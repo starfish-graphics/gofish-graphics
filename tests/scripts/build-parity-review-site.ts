@@ -22,6 +22,7 @@ import {
   mkdirSync,
   existsSync,
   readdirSync,
+  cpSync,
 } from "fs";
 import { join, dirname } from "path";
 import {
@@ -174,6 +175,7 @@ interface StoryPair {
   status: string;
   message: string;
   hasDomDiff: boolean;
+  hasScreenshots: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -233,6 +235,7 @@ for (const r of syncResults) {
     status,
     message: r.message,
     hasDomDiff: false,
+    hasScreenshots: false,
   });
 }
 
@@ -243,10 +246,11 @@ for (const diff of parityDiffs) {
   const id = diff.path.replace(/\.html$/, "");
 
   if (seenIds.has(id)) {
-    // Update existing pair to mark DOM failure
+    // Update existing pair to mark DOM failure + screenshots
     const pair = pairs.find((p) => p.id === id);
     if (pair) {
       pair.hasDomDiff = true;
+      if (diff.afterScreenshotPath) pair.hasScreenshots = true;
       if (pair.status !== "fail") pair.status = "fail";
     }
     continue;
@@ -259,6 +263,7 @@ for (const diff of parityDiffs) {
   const pythonFile = domIdToPythonFile(id);
 
   const hasDomDiff = diff.beforeDom !== null;
+  const hasScreenshots = diff.afterScreenshotPath !== null;
   pairs.push({
     id,
     jsFile,
@@ -269,6 +274,7 @@ for (const diff of parityDiffs) {
       ? "DOM output does not match JS baseline"
       : "No JS baseline exists yet",
     hasDomDiff,
+    hasScreenshots,
   });
 }
 
@@ -300,11 +306,23 @@ for (const pair of pairs) {
   }
 }
 
-// DOM diffs
+// DOM diffs + screenshots
 for (const diff of parityDiffs) {
   if (diff.beforeDom !== null && diff.afterDom !== null) {
     const html = formatDomDiff(diff.beforeDom, diff.afterDom);
     write(join(OUT_DIR, "data/dom-diffs", diff.path), html);
+  }
+
+  const pngPath = diff.path.replace(/\.html$/, ".png");
+  if (diff.beforeScreenshotPath && existsSync(diff.beforeScreenshotPath)) {
+    const dest = join(OUT_DIR, "data/screenshots/js", pngPath);
+    mkdirSync(dirname(dest), { recursive: true });
+    cpSync(diff.beforeScreenshotPath, dest);
+  }
+  if (diff.afterScreenshotPath && existsSync(diff.afterScreenshotPath)) {
+    const dest = join(OUT_DIR, "data/screenshots/python", pngPath);
+    mkdirSync(dirname(dest), { recursive: true });
+    cpSync(diff.afterScreenshotPath, dest);
   }
 }
 
@@ -388,6 +406,26 @@ const html = `<!DOCTYPE html>
     .source-panel-content { padding: 12px; overflow-x: auto; font-family: monospace; font-size: 12px; line-height: 1.6; white-space: pre; color: #333; max-height: 500px; overflow-y: auto; }
     .source-missing { color: #aaa; font-style: italic; padding: 32px; text-align: center; }
 
+    /* Screenshot comparison */
+    #screenshot-section { margin-bottom: 16px; background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; }
+    #screenshot-header { padding: 10px 16px; font-size: 13px; font-weight: 600; border-bottom: 1px solid #e0e0e0; display: flex; align-items: center; gap: 12px; }
+    #screenshot-tabs { display: flex; gap: 4px; }
+    .sshot-tab { padding: 3px 12px; border-radius: 10px; border: 1px solid #ddd; background: transparent; font-size: 11px; cursor: pointer; color: #666; }
+    .sshot-tab.active { background: #3498db; color: #fff; border-color: #3498db; font-weight: 600; }
+    #screenshot-body { padding: 12px; }
+    #sbs-view, #strobe-view { display: none; }
+    #sbs-view.active, #strobe-view.active { display: block; }
+    #sbs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .sshot-panel { border: 1px solid #e0e0e0; border-radius: 6px; overflow: hidden; }
+    .sshot-panel-header { padding: 6px 12px; background: #f8f8f8; border-bottom: 1px solid #e0e0e0; font-size: 12px; font-weight: 600; color: #555; }
+    .sshot-panel-body { padding: 12px; min-height: 80px; display: flex; align-items: flex-start; justify-content: center; background: #fff; }
+    .sshot-panel-body img { max-width: 100%; display: block; }
+    .sshot-missing { color: #aaa; font-size: 13px; font-style: italic; padding: 24px; }
+    #strobe-container { position: relative; display: inline-block; }
+    #strobe-container img { max-width: 100%; display: block; }
+    #strobe-js { position: absolute; top: 0; left: 0; }
+    #strobe-label { margin-top: 6px; font-size: 12px; font-weight: 600; color: #fff; background: #333; display: inline-block; padding: 2px 10px; border-radius: 4px; }
+
     /* DOM diff */
     #dom-diff-section { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; }
     #dom-diff-toggle { padding: 10px 16px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; user-select: none; border-bottom: 1px solid transparent; }
@@ -453,6 +491,42 @@ const html = `<!DOCTYPE html>
             <div class="source-panel-content" id="py-source">
               <div class="source-missing">Loading...</div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Screenshot comparison -->
+      <div id="screenshot-section" style="display:none;">
+        <div id="screenshot-header">
+          <span>Screenshots</span>
+          <div id="screenshot-tabs">
+            <button class="sshot-tab active" data-view="sbs">Side by side</button>
+            <button class="sshot-tab" data-view="strobe">Strobe</button>
+          </div>
+        </div>
+        <div id="screenshot-body">
+          <div id="sbs-view" class="active">
+            <div id="sbs-grid">
+              <div class="sshot-panel">
+                <div class="sshot-panel-header">JS (baseline)</div>
+                <div class="sshot-panel-body" id="sbs-js-body">
+                  <div class="sshot-missing">No JS screenshot</div>
+                </div>
+              </div>
+              <div class="sshot-panel">
+                <div class="sshot-panel-header">Python</div>
+                <div class="sshot-panel-body" id="sbs-py-body">
+                  <div class="sshot-missing">No Python screenshot</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div id="strobe-view">
+            <div id="strobe-container">
+              <img id="strobe-py" />
+              <img id="strobe-js" />
+            </div>
+            <div id="strobe-label">Python</div>
           </div>
         </div>
       </div>
@@ -559,6 +633,16 @@ const html = `<!DOCTYPE html>
     // Load sources
     await loadSources(pair);
 
+    // Screenshots
+    const ssSec = document.getElementById('screenshot-section');
+    if (pair.hasScreenshots) {
+      ssSec.style.display = 'block';
+      renderScreenshots(pair.id);
+    } else {
+      ssSec.style.display = 'none';
+      stopStrobe();
+    }
+
     // DOM diff section
     const domSection = document.getElementById('dom-diff-section');
     if (pair.hasDomDiff) {
@@ -618,6 +702,70 @@ const html = `<!DOCTYPE html>
       content.innerHTML = '<em style="color:#aaa;">Failed to load DOM diff.</em>';
     }
   }
+
+  // ---------------------------------------------------------------------------
+  // Screenshots
+  // ---------------------------------------------------------------------------
+
+  let strobeInterval = null;
+  let strobePhase = 'python';
+  let ssView = 'sbs';
+
+  function stopStrobe() {
+    if (strobeInterval) { clearInterval(strobeInterval); strobeInterval = null; }
+  }
+
+  function renderScreenshots(id) {
+    stopStrobe();
+    const pngPath = id + '.png';
+    const jsUrl = '/data/screenshots/js/' + pngPath;
+    const pyUrl = '/data/screenshots/python/' + pngPath;
+
+    // Side-by-side
+    const jsBody = document.getElementById('sbs-js-body');
+    const pyBody = document.getElementById('sbs-py-body');
+    jsBody.innerHTML = '<img src="' + jsUrl + '" onerror="this.parentNode.innerHTML=\'<div class=sshot-missing>No JS screenshot</div>\'" />';
+    pyBody.innerHTML = '<img src="' + pyUrl + '" onerror="this.parentNode.innerHTML=\'<div class=sshot-missing>No Python screenshot</div>\'" />';
+
+    // Strobe
+    const strobeJs = document.getElementById('strobe-js');
+    const strobePy = document.getElementById('strobe-py');
+    strobeJs.src = jsUrl;
+    strobePy.src = pyUrl;
+    strobeJs.style.opacity = '0';
+    document.getElementById('strobe-label').textContent = 'Python';
+
+    if (ssView === 'strobe') startStrobe();
+  }
+
+  function startStrobe() {
+    stopStrobe();
+    strobePhase = 'python';
+    const jsImg = document.getElementById('strobe-js');
+    const label = document.getElementById('strobe-label');
+    strobeInterval = setInterval(() => {
+      strobePhase = strobePhase === 'python' ? 'js' : 'python';
+      jsImg.style.opacity = strobePhase === 'js' ? '1' : '0';
+      label.textContent = strobePhase === 'js' ? 'JS' : 'Python';
+    }, 500);
+  }
+
+  // Screenshot tab switching
+  document.querySelectorAll('.sshot-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      ssView = btn.dataset.view;
+      document.querySelectorAll('.sshot-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('sbs-view').classList.toggle('active', ssView === 'sbs');
+      document.getElementById('strobe-view').classList.toggle('active', ssView === 'strobe');
+      if (ssView === 'strobe' && currentId) {
+        const pair = allPairs.find(p => p.id === currentId);
+        if (pair && pair.hasScreenshots) startStrobe();
+      } else {
+        stopStrobe();
+      }
+    });
+  });
 
   // Filter buttons
   document.querySelectorAll('.filter-btn').forEach(btn => {
