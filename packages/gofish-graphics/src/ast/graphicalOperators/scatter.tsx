@@ -3,7 +3,7 @@ import { getValue, isValue, MaybeValue } from "../data";
 import { elaborateDims, FancyDims, Size } from "../dims";
 import { createOperator } from "../withGoFish";
 import { GoFishAST } from "../_ast";
-import _, { Collection } from "lodash";
+import { Collection } from "lodash";
 import * as Monotonic from "../../util/monotonic";
 import {
   DIFFERENCE,
@@ -32,6 +32,48 @@ type ScatterProps = {
   y?: MaybeValue<number>[];
   alignment?: Alignment;
 } & FancyDims<MaybeValue<number>>;
+
+const alignmentToAnchor = {
+  start: "min",
+  middle: "center",
+  end: "max",
+  baseline: "baseline",
+} as const;
+
+function getCurrentAnchor(
+  child: Placeable,
+  axis: 0 | 1,
+  anchor: "min" | "center" | "max" | "baseline"
+) {
+  const dims = child.dims[axis];
+  const min = dims.min ?? 0;
+  const size = dims.size ?? 0;
+  const max = dims.max ?? min + size;
+  const center = dims.center ?? min + size / 2;
+
+  switch (anchor) {
+    case "min":
+      return min;
+    case "center":
+      return center;
+    case "max":
+      return max;
+    case "baseline":
+      return 0;
+  }
+}
+
+function setAxisTranslation(
+  child: Placeable,
+  axis: 0 | 1,
+  target: number,
+  anchor: "min" | "center" | "max" | "baseline"
+) {
+  const node = child as GoFishNode;
+  const delta = target - getCurrentAnchor(child, axis, anchor);
+  node.transform!.translate![axis] =
+    (node.transform!.translate![axis] ?? 0) + delta;
+}
 
 function resolveAlignSpace(
   spaces: UnderlyingSpace[],
@@ -144,13 +186,6 @@ export const scatter = createOperator(
           const childPlaceables = childNodes.map((child) =>
             child.layout(size, scaleFactors, posScales)
           );
-
-          const alignmentToAnchor = {
-            start: "min",
-            middle: "center",
-            end: "max",
-            baseline: "baseline",
-          } as const;
           const anchorKey = {
             start: "min",
             middle: "center",
@@ -162,23 +197,26 @@ export const scatter = createOperator(
           const getBaseline = (axis: 0 | 1, child: Placeable) =>
             child.dims[axis][anchorKey[alignment]]!;
 
+          childPlaceables.forEach((child) => {
+            child.place("x", 0);
+            child.place("y", 0);
+          });
+
           childPlaceables.forEach((child, index) => {
             const xPos = x?.[index];
             const yPos = y?.[index];
 
             if (xPos !== undefined) {
-              child.place(
-                "x",
-                isValue(xPos) ? posScales[0]!(getValue(xPos)!) : xPos,
-                "center"
-              );
+              const resolvedX = isValue(xPos)
+                ? posScales[0]!(getValue(xPos)!)
+                : xPos;
+              setAxisTranslation(child, 0, resolvedX, "center");
             }
             if (yPos !== undefined) {
-              child.place(
-                "y",
-                isValue(yPos) ? posScales[1]!(getValue(yPos)!) : yPos,
-                "center"
-              );
+              const resolvedY = isValue(yPos)
+                ? posScales[1]!(getValue(yPos)!)
+                : yPos;
+              setAxisTranslation(child, 1, resolvedY, "center");
             }
           });
 
@@ -200,7 +238,12 @@ export const scatter = createOperator(
 
             childPlaceables.forEach((child) => {
               if (isFixed(axis, child)) return;
-              child.place(axis, baseline, alignmentToAnchor[alignment]);
+              setAxisTranslation(
+                child,
+                axis,
+                baseline,
+                alignmentToAnchor[alignment]
+              );
             });
           });
 
