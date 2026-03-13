@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "jsx": "preserve",
+    "jsxImportSource": "solid-js",
+    "skipLibCheck": true,
+    "paths": {
+      "gofish-graphics": ["../../packages/gofish-graphics/src/lib.ts"]
+    }
+  },
+  "include": ["*.ts", "*.tsx"]
+}
