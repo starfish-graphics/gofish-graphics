@@ -1,0 +1,315 @@
+/* ─── Slide theme overrides ─────────────────────────────────────────── */
+.reveal {
+  font-family: "Source Sans 3", "Helvetica Neue", sans-serif;
+  font-size: 28px;
+}
+
+.reveal h1 {
+  font-size: 2.2em;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin-bottom: 0.15em;
+}
+
+.reveal h2 {
+  font-size: 1.4em;
+  font-weight: 600;
+  color: #16213e;
+}
+
+.reveal h3 {
+  font-size: 1.15em;
+  font-weight: 600;
+  color: #0f3460;
+  text-transform: none;
+  margin-bottom: 0.4em;
+}
+
+.reveal p {
+  margin: 0.4em 0;
+  line-height: 1.5;
+}
+
+.reveal ul {
+  list-style: none;
+  padding: 0;
+}
+
+.reveal ul li {
+  margin: 0.3em 0;
+  padding-left: 1.4em;
+  position: relative;
+}
+
+.reveal ul li::before {
+  content: "→";
+  position: absolute;
+  left: 0;
+  color: #e94560;
+}
+
+/* ─── Two-column layout ─────────────────────────────────────────────── */
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  align-items: start;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.two-col .col-code {
+  text-align: left;
+}
+
+.two-col .col-chart {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 320px;
+}
+
+/* ─── Code blocks ───────────────────────────────────────────────────── */
+.reveal pre {
+  font-size: 0.58em;
+  border-radius: 6px;
+  box-shadow: none;
+  border: 1px solid #ddd;
+  margin: 0;
+  width: 100%;
+}
+
+.reveal pre code {
+  padding: 0.8em 1em;
+  font-family: "Fira Code", "Consolas", monospace;
+  line-height: 1.6;
+  max-height: 380px;
+  overflow: auto;
+}
+
+/* ─── Chart containers ──────────────────────────────────────────────── */
+.chart-container {
+  width: 100%;
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fafafa;
+  border-radius: 6px;
+  border: 1px solid #eee;
+  overflow: hidden;
+}
+
+.chart-container svg {
+  display: block;
+}
+
+/* ─── Title slide ───────────────────────────────────────────────────── */
+.title-slide {
+  text-align: center;
+  padding: 2rem;
+}
+
+.title-slide .subtitle {
+  font-size: 1.1em;
+  color: #555;
+  margin-top: 0.5em;
+}
+
+.title-slide .conference {
+  font-size: 0.85em;
+  color: #999;
+  margin-top: 2em;
+}
+
+/* ─── Tag / badge ───────────────────────────────────────────────────── */
+.tag {
+  display: inline-block;
+  background: #e94560;
+  color: white;
+  padding: 0.15em 0.6em;
+  border-radius: 4px;
+  font-size: 0.7em;
+  font-weight: 600;
+  vertical-align: middle;
+  margin-left: 0.4em;
+}
+
+/* ─── Ladder / step boxes ───────────────────────────────────────────── */
+.ladder {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.ladder-step {
+  background: #f0f4ff;
+  border-left: 4px solid #e94560;
+  padding: 0.5em 1em;
+  border-radius: 0 4px 4px 0;
+  text-align: left;
+  font-size: 0.82em;
+}
+
+.ladder-step code {
+  font-family: "Fira Code", monospace;
+  font-size: 0.9em;
+  color: #333;
+}
+
+.ladder-step .step-num {
+  font-weight: 700;
+  color: #e94560;
+  margin-right: 0.5em;
+}
+
+/* ─── Grammar definitions ───────────────────────────────────────────── */
+.grammar-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem 2rem;
+  margin-top: 0.8rem;
+  text-align: left;
+}
+
+.grammar-term {
+  font-weight: 700;
+  color: #e94560;
+}
+
+.grammar-def {
+  color: #333;
+  font-size: 0.88em;
+}
+
+/* ─── AST diagram ───────────────────────────────────────────────────── */
+.ast-box {
+  display: inline-block;
+  border: 2px solid #0f3460;
+  border-radius: 6px;
+  padding: 0.3em 0.8em;
+  margin: 0.2em;
+  font-size: 0.75em;
+  background: #f0f4ff;
+}
+
+.ast-tree {
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.ast-tree .level {
+  margin: 0.4em 0;
+}
+
+.ast-connector {
+  color: #aaa;
+  font-size: 1.2em;
+}
+
+/* ─── Highlight ─────────────────────────────────────────────────────── */
+.highlight {
+  color: #e94560;
+  font-weight: 600;
+}
+
+/* ─── Callout box ───────────────────────────────────────────────────── */
+.callout {
+  background: #fff8e1;
+  border-left: 4px solid #f9a825;
+  padding: 0.6em 1em;
+  border-radius: 0 4px 4px 0;
+  font-size: 0.88em;
+  margin-top: 0.8em;
+  text-align: left;
+}
+
+/* ─── Slide subtitle ────────────────────────────────────────────────── */
+.slide-subtitle {
+  font-size: 0.7em;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.3em;
+}
+
+/* ─── Footer / timing ───────────────────────────────────────────────── */
+.timing-note {
+  position: absolute;
+  bottom: 0.4em;
+  right: 1em;
+  font-size: 0.45em;
+  color: #ccc;
+}
+
+/* ─── Data table ────────────────────────────────────────────────────── */
+.data-table {
+  font-size: 0.72em;
+  border-collapse: collapse;
+  margin: 0.5em auto;
+  min-width: 60%;
+}
+
+.data-table th {
+  background: #0f3460;
+  color: white;
+  padding: 0.4em 1em;
+  font-weight: 600;
+}
+
+.data-table td {
+  border: 1px solid #ddd;
+  padding: 0.3em 1em;
+  text-align: center;
+}
+
+.data-table tr:nth-child(even) {
+  background: #f5f5f5;
+}
+
+/* ─── Arch diagram boxes ────────────────────────────────────────────── */
+.arch-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 0.3rem 0;
+  font-size: 0.8em;
+}
+
+.arch-box {
+  background: #0f3460;
+  color: white;
+  padding: 0.4em 0.9em;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.arch-box.accent {
+  background: #e94560;
+}
+
+.arch-arrow {
+  color: #aaa;
+  font-size: 1.3em;
+}
+
+/* ─── Install slide ─────────────────────────────────────────────────── */
+.install-block {
+  background: #1a1a2e;
+  color: #e0e0e0;
+  border-radius: 6px;
+  padding: 0.7em 1.2em;
+  font-family: "Fira Code", monospace;
+  font-size: 0.8em;
+  text-align: left;
+  margin: 0.5em 0;
+  display: inline-block;
+  min-width: 60%;
+}
+
+.install-block .prompt {
+  color: #e94560;
+  margin-right: 0.5em;
+}

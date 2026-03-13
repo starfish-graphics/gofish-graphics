@@ -7,6 +7,8 @@
   "license": "MIT",
   "scripts": {
     "dev": "pnpm --filter gofish-graphics dev",
+    "presentation:dev": "pnpm --filter pydata-2026 dev",
+    "presentation:build": "pnpm --filter pydata-2026 build",
     "build": "pnpm --filter gofish-graphics build",
     "build:widget": "pnpm --filter gofish-python build:widget",
     "docs:dev": "pnpm --filter docs docs:dev",

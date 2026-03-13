@@ -183,6 +183,34 @@ importers:
         specifier: ^0.24.0
         version: 0.24.0
 
+  presentations/pydata-2026:
+    dependencies:
+      gofish-graphics:
+        specifier: workspace:*
+        version: link:../../packages/gofish-graphics
+      reveal.js:
+        specifier: ^5.1.0
+        version: 5.2.1
+      solid-js:
+        specifier: ^1.9.5
+        version: 1.9.11
+    devDependencies:
+      '@types/lodash':
+        specifier: ^4.17.16
+        version: 4.17.20
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+      vite:
+        specifier: ^6.0.0
+        version: 6.4.1(@types/node@24.10.1)(tsx@4.21.0)(yaml@2.8.2)
+      vite-plugin-solid:
+        specifier: ^2.11.6
+        version: 2.11.10(@testing-library/jest-dom@6.8.0)(solid-js@1.9.11)(vite@6.4.1(@types/node@24.10.1)(tsx@4.21.0)(yaml@2.8.2))
+
   tests:
     devDependencies:
       '@playwright/test':
@@ -2892,6 +2920,10 @@ packages:
   restore-cursor@5.1.0:
     resolution: {integrity: sha512-oMA2dcrw6u0YfxJQXm342bFKX/E4sG9rbTzO9ptUcR/e8A33cHuvStiYOwH7fszkZlZ1z/ta9AAoPk2F4qIOHA==}
     engines: {node: '>=18'}
+
+  reveal.js@5.2.1:
+    resolution: {integrity: sha512-r7//6mIM5p34hFiDMvYfXgyjXqGRta+/psd9YtytsgRlrpRzFv4RbH76TXd2qD+7ZPZEbpBDhdRhJaFgfQ7zNQ==}
+    engines: {node: '>=18.0.0'}
 
   rfdc@1.4.1:
     resolution: {integrity: sha512-q1b3N5QkRUWUl7iyylaaj3kOpIT0N2i9MqIEQXP73GVsN9cw3fdx8X63cEmWhJGi2PPCF23Ijp7ktmd39rawIA==}
@@ -6040,6 +6072,8 @@ snapshots:
     dependencies:
       onetime: 7.0.0
       signal-exit: 4.1.0
+
+  reveal.js@5.2.1: {}
 
   rfdc@1.4.1: {}
 

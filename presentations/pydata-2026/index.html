@@ -1,0 +1,776 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GoFish: Composable Visualization from Python — PyData 2026</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..700;1,300..700&family=Fira+Code:wght@300..500&display=swap"
+    />
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <!-- ══════════════════════════════════════════════════════
+             1. TITLE
+             ══════════════════════════════════════════════════════ -->
+        <section>
+          <div class="title-slide">
+            <h1>GoFish 🐟</h1>
+            <p class="subtitle">Composable Visualization from Python</p>
+            <div style="margin-top: 3rem; font-size: 0.8em; color: #555">
+              <p>PyData 2026</p>
+            </div>
+          </div>
+          <aside class="notes">
+            Welcome! 30 min talk + 15 min Q&A. We'll go from "why another viz
+            library" to live composable charts, ending with scatter plots where
+            every point is a pie chart. Let's start with a problem.
+          </aside>
+        </section>
+
+        <!-- ══════════════════════════════════════════════════════
+             2. THE VISUALIZATION CEILING
+             ══════════════════════════════════════════════════════ -->
+        <section>
+          <div class="slide-subtitle">0:00 — The Problem</div>
+          <h2>The Visualization Ceiling</h2>
+          <div class="ladder" style="margin-top: 1.2rem">
+            <div class="ladder-step fragment">
+              <span class="step-num">①</span>
+              Bar chart — <em>easy everywhere</em>
+              <code style="float: right; color: #aaa">plt.bar(...)</code>
+            </div>
+            <div class="ladder-step fragment">
+              <span class="step-num">②</span>
+              Stacked bar — <em>still fine</em>
+              <code style="float: right; color: #aaa"
+                >df.plot.bar(stacked=True)</code
+              >
+            </div>
+            <div class="ladder-step fragment">
+              <span class="step-num">③</span>
+              Stacked bar + line overlay — <em>getting awkward</em>
+              <code style="float: right; color: #aaa">ax.twinx()...</code>
+            </div>
+            <div
+              class="ladder-step fragment"
+              style="background: #fff0f0; border-color: #e94560"
+            >
+              <span class="step-num">④</span>
+              Scatter where each point is a pie —
+              <span class="highlight">now what?</span>
+            </div>
+          </div>
+          <aside class="notes">
+            Every library has a ceiling. The first three are fine in
+            matplotlib/seaborn/plotly. But once you need real composition —
+            overlays, glyphs, nested charts — you're rewriting everything. 4 min
+            mark.
+          </aside>
+        </section>
+
+        <!-- ══════════════════════════════════════════════════════
+             3. THESIS
+             ══════════════════════════════════════════════════════ -->
+        <section>
+          <div class="slide-subtitle">The Idea</div>
+          <h2>Charts as Composable Data Structures</h2>
+          <p style="margin-top: 1.5rem; font-size: 1.05em; line-height: 1.8">
+            Most libraries treat charts as
+            <span class="highlight">drawing commands</span>.<br />
+            GoFish treats them as
+            <span class="highlight">data transformations</span>.
+          </p>
+          <div class="callout" style="margin-top: 2rem">
+            <strong>Consequence:</strong> charts compose the same way functions
+            compose — stack one inside another, swap coordinates, reference
+            layers by name.
+          </div>
+          <aside class="notes">
+            This is the one-sentence pitch. Once you accept it, everything else
+            follows — nesting, coordinate transforms, layer references all fall
+            out naturally.
+          </aside>
+        </section>
+
+        <!-- ══════════════════════════════════════════════════════
+             4. THE DATASET
+             ══════════════════════════════════════════════════════ -->
+        <section>
+          <div class="slide-subtitle">4:00 — First Chart</div>
+          <h2>Our Dataset</h2>
+          <p style="font-size: 0.85em; color: #666">
+            Fish catch counts by lake and species
+          </p>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>lake</th>
+                <th>species</th>
+                <th>count</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Lake A</td>
+                <td>Bass</td>
+                <td>23</td>
+              </tr>
+              <tr>
+                <td>Lake A</td>
+                <td>Trout</td>
+                <td>31</td>
+              </tr>
+              <tr>
+                <td>Lake A</td>
+                <td>Catfish</td>
+                <td>29</td>
+              </tr>
+              <tr>
+                <td>Lake B</td>
+                <td>Bass</td>
+                <td>25</td>
+              </tr>
+              <tr>
+                <td>Lake B</td>
+                <td>Trout</td>
+                <td>34</td>
+              </tr>
+              <tr>
+                <td>…</td>
+                <td>…</td>
+                <td>…</td>
+              </tr>
+            </tbody>
+          </table>
+          <p style="font-size: 0.7em; color: #999; margin-top: 0.8em">
+            6 lakes × 5 species = 30 rows. We'll use this dataset throughout.
+          </p>
+          <aside class="notes">
+            Simple, concrete data. Lake + species + count. We'll build every
+            chart in this talk from these 30 rows.
+          </aside>
+        </section>
+
+        <!-- ══════════════════════════════════════════════════════
+             5. FIRST CHART — BASIC BAR
+             ══════════════════════════════════════════════════════ -->
+        <section>
+          <div class="slide-subtitle">4:30 — The Flow API</div>
+          <h2>Basic Bar Chart</h2>
+          <div class="two-col">
+            <div class="col-code">
+              <pre><code class="language-python">from gofish import chart, spread, rect
+
+chart(data).flow(
+    spread("lake", dir="x")
+).mark(
+    rect(h="count")
+).render(w=500, h=350)</code></pre>
+              <div style="margin-top: 1rem; font-size: 0.7em; line-height: 1.8">
+                <p><code>chart(data)</code> — attach data to a builder</p>
+                <p><code>.flow()</code> — pipe through layout operators</p>
+                <p>
+                  <code>spread("lake", dir="x")</code> — one column per lake
+                </p>
+                <p>
+                  <code>.mark(rect(h="count"))</code> — height encodes count
+                </p>
+              </div>
+            </div>
+            <div class="col-chart">
+              <div id="chart-bar" class="chart-container"></div>
+            </div>
+          </div>
+          <aside class="notes">
+            The three-part structure: chart → flow → mark. This is the whole API
+            in miniature. Notice there are no x/y coordinates — GoFish infers
+            them from the operator.
+          </aside>
+        </section>
+
+        <!-- ══════════════════════════════════════════════════════
+             6. STACKED BAR
+             ══════════════════════════════════════════════════════ -->
+        <section>
+          <div class="slide-subtitle">6:30 — Composition = Adding Lines</div>
+          <h2>Add Stacking</h2>
+          <div class="two-col">
+            <div class="col-code">
+              <pre><code class="language-python">chart(data).flow(
+    spread("lake", dir="x"),
+    stack("species", dir="y"),  # ← new
+).mark(
+    rect(h="count", fill="species")
+).render(w=500, h=350)</code></pre>
+              <div class="callout" style="margin-top: 1rem">
+                One new line → stacked chart.<br />
+                No rewriting. No coordinate math.
+              </div>
+            </div>
+            <div class="col-chart">
+              <div id="chart-stacked" class="chart-container"></div>
+            </div>
+          </div>
+          <aside class="notes">
+            Key message: composition = adding lines, not rewriting. The spread
+            and stack operators are independent — they each do one thing and
+            compose cleanly. 8 min mark.
+          </aside>
+        </section>
+
+        <!-- ══════════════════════════════════════════════════════
+             7. GRAMMAR OF GRAPHICS IN 60 SECONDS
+             ══════════════════════════════════════════════════════ -->
+        <section>
+          <div class="slide-subtitle">9:00 — Grammar of Graphics</div>
+          <h2>The Pattern Has a Name</h2>
+          <div class="grammar-grid" style="margin-top: 1.2rem">
+            <div class="grammar-term">Data</div>
+            <div class="grammar-def">Your DataFrame — the source of truth</div>
+
+            <div class="grammar-term">Operators</div>
+            <div class="grammar-def">
+              How to arrange: <code>spread</code>, <code>stack</code>,
+              <code>scatter</code>, <code>group</code>
+            </div>
+
+            <div class="grammar-term">Marks</div>
+            <div class="grammar-def">
+              What to draw: <code>rect</code>, <code>circle</code>,
+              <code>line</code>, <code>area</code>
+            </div>
+
+            <div class="grammar-term">Channels</div>
+            <div class="grammar-def">
+              Data → visual: <code>h="count"</code>, <code>fill="species"</code>
+            </div>
+
+            <div class="grammar-term">Coordinates</div>
+            <div class="grammar-def">
+              What geometry: <code>linear</code> (default), <code>clock()</code>
+            </div>
+          </div>
+          <div class="callout" style="margin-top: 1.2rem">
+            <strong>Why this matters:</strong> the abstraction, not the library,
+            explains what's possible. The ceiling moves when the algebra is
+            right.
+          </div>
+          <aside class="notes">
+            Don't lecture. Name the pattern they already saw. The point is: once
+            you have these five things, coordinate transforms fall out
+            naturally. 10 min mark.
+          </aside>
+        </section>
+
+        <!-- ══════════════════════════════════════════════════════
+             8. COORDINATE TRANSFORM — PIE
+             ══════════════════════════════════════════════════════ -->
+        <section>
+          <div class="slide-subtitle">11:00 — One-Line Coordinate Swap</div>
+          <h2>Bar → Pie in One Line</h2>
+          <div class="two-col">
+            <div class="col-code">
+              <pre><code class="language-python">from gofish import clock
+
+chart(data, options={"coord": clock()}).flow(
+    stack("species", dir="x")
+).mark(
+    rect(w="count", fill="species")
+).render(w=400, h=400)</code></pre>
+              <div
+                style="margin-top: 1rem; font-size: 0.72em; line-height: 1.8"
+              >
+                <p>Same operators, same marks.</p>
+                <p>Only <code>coord=clock()</code> changed.</p>
+                <p>
+                  The geometry wraps <em>x</em> into angle, <em>y</em> into
+                  radius.
+                </p>
+              </div>
+            </div>
+            <div class="col-chart">
+              <div id="chart-pie" class="chart-container"></div>
+            </div>
+          </div>
+          <aside class="notes">
+            This is where the abstraction pays off. Bar chart and pie chart are
+            the same thing in different coordinate systems. 13 min mark.
+          </aside>
+        </section>
+
+        <!-- ══════════════════════════════════════════════════════
+             9. LAYER SELECTION — THE PROBLEM
+             ══════════════════════════════════════════════════════ -->
+        <section>
+          <div class="slide-subtitle">13:00 — Layer Selection</div>
+          <h2>The Overlay Problem</h2>
+          <p style="margin-top: 1rem; font-size: 0.9em">
+            In matplotlib, drawing a line through scatter points means manually
+            aligning coordinates:
+          </p>
+          <pre
+            style="margin-top: 0.8rem"
+          ><code class="language-python">fig, ax = plt.subplots()
+ax.scatter(df["miles"], df["gas"], c=df["year"])
+# Now sort and connect — by hand
+sorted_df = df.sort_values("year")
+ax.plot(sorted_df["miles"], sorted_df["gas"], "k-", lw=0.8)</code></pre>
+          <div class="callout" style="margin-top: 1.2rem">
+            GoFish alternative: <strong>name a layer, then select it.</strong
+            ><br />
+            The second chart inherits all layout decisions from the first.
+          </div>
+          <aside class="notes">
+            The problem: once you have two separate chart objects, nothing links
+            their coordinate spaces. GoFish solves this with named layers and
+            select(). 14 min mark.
+          </aside>
+        </section>
+
+        <!-- ══════════════════════════════════════════════════════
+             10. CONNECTED SCATTER
+             ══════════════════════════════════════════════════════ -->
+        <section>
+          <div class="slide-subtitle">14:30 — select()</div>
+          <h2>Connected Scatter via <code>select()</code></h2>
+          <div class="two-col">
+            <div class="col-code">
+              <pre><code class="language-python">from gofish import Layer, select, circle, line
+
+Layer([
+    chart(data)
+        .flow(scatter("year", x="miles", y="gas"))
+        .mark(circle(r=4).name("points")),
+
+    chart(select("points"))
+        .mark(line(stroke="black")),
+])</code></pre>
+              <div
+                style="margin-top: 0.8rem; font-size: 0.72em; line-height: 1.8"
+              >
+                <p>
+                  <code>.name("points")</code> — registers each node by name
+                </p>
+                <p>
+                  <code>select("points")</code> — retrieves them in a new chart
+                </p>
+                <p>
+                  The line inherits the scatter's x/y positions — no coordinate
+                  math.
+                </p>
+              </div>
+            </div>
+            <div class="col-chart">
+              <div id="chart-scatter" class="chart-container"></div>
+            </div>
+          </div>
+          <aside class="notes">
+            Name a layer, reference it. The second chart knows nothing about
+            miles or gas — it just connects the already-placed nodes. 16 min
+            mark.
+          </aside>
+        </section>
+
+        <!-- ══════════════════════════════════════════════════════
+             11. STACKED AREA
+             ══════════════════════════════════════════════════════ -->
+        <section>
+          <div class="slide-subtitle">16:30 — scaffold + select</div>
+          <h2>Stacked Area Chart</h2>
+          <div class="two-col">
+            <div class="col-code">
+              <pre><code class="language-python">from gofish import scaffold, area, group
+
+Layer([
+    chart(data).flow(
+        spread("lake", dir="x", spacing=64),
+        stack("species", dir="y"),
+    ).mark(
+        scaffold(h="count", fill="species").name("bars")
+    ),
+
+    chart(select("bars"))
+        .flow(group("species"))
+        .mark(area(opacity=0.8)),
+])</code></pre>
+              <div
+                style="margin-top: 0.8rem; font-size: 0.72em; line-height: 1.8"
+              >
+                <p>
+                  <code>scaffold</code> — positions without drawing (invisible)
+                </p>
+                <p>
+                  <code>select("bars")</code> + <code>group("species")</code> —
+                  one area per species
+                </p>
+              </div>
+            </div>
+            <div class="col-chart">
+              <div id="chart-area" class="chart-container"></div>
+            </div>
+          </div>
+          <aside class="notes">
+            scaffold is a "ghost mark" — it lays out positions but draws
+            nothing. The area mark then connects those positions. 18 min mark.
+          </aside>
+        </section>
+
+        <!-- ══════════════════════════════════════════════════════
+             12. GLYPHS — THE BIG IDEA
+             ══════════════════════════════════════════════════════ -->
+        <section>
+          <div class="slide-subtitle">18:00 — Glyphs</div>
+          <h2>Charts Within Charts</h2>
+          <p style="margin-top: 1.2rem; font-size: 1em">
+            A mark function can return an <strong>entire chart</strong>.
+          </p>
+          <div style="margin-top: 1.5rem; font-size: 0.85em; line-height: 2">
+            <p class="fragment">
+              Normally: <code>.mark(rect(...))</code> — mark returns a
+              <em>shape</em>
+            </p>
+            <p class="fragment">
+              Glyph:
+              <code>.mark(lambda data: chart(data[0]["collection"])...)</code> —
+              mark returns a <em>chart</em>
+            </p>
+            <p class="fragment">
+              GoFish renders the inner chart into the bounding box allocated for
+              each outer data point.
+            </p>
+          </div>
+          <div class="callout fragment" style="margin-top: 1rem">
+            This works because GoFish builds an AST — a tree of nodes.<br />
+            Nesting = child nodes. Same as HTML elements.
+          </div>
+          <aside class="notes">
+            This is the moment of revelation. The mark API doesn't distinguish
+            between a shape and a chart — both return a node tree. 20 min mark.
+          </aside>
+        </section>
+
+        <!-- ══════════════════════════════════════════════════════
+             13. SCATTER WITH PIE GLYPHS
+             ══════════════════════════════════════════════════════ -->
+        <section>
+          <div class="slide-subtitle">20:30 — The Showstopper</div>
+          <h2>Scatter Where Each Point Is a Pie</h2>
+          <div class="two-col">
+            <div class="col-code">
+              <pre><code class="language-python">chart(scatter_data).flow(
+    scatter("lake", x="x", y="y")
+).mark(
+    lambda data:
+        chart(
+            data[0]["collection"],
+            options={"coord": clock()}
+        )
+        .flow(stack("species", dir="x", h=20))
+        .mark(rect(w="count", fill="species"))
+)</code></pre>
+              <div
+                style="margin-top: 0.8rem; font-size: 0.72em; line-height: 1.8"
+              >
+                <p>Outer chart: positions lakes in space</p>
+                <p>Inner chart: renders a pie for each lake</p>
+                <p>
+                  <code>data[0]["collection"]</code> — per-lake species data
+                </p>
+              </div>
+            </div>
+            <div class="col-chart">
+              <div id="chart-glyphs" class="chart-container"></div>
+            </div>
+          </div>
+          <aside class="notes">
+            Walk through slowly. Outer scatter places the pies. Inner chart
+            renders each pie independently. The coordinate transform runs
+            per-glyph. Pause after showing the output — let it land. 23 min
+            mark.
+          </aside>
+        </section>
+
+        <!-- ══════════════════════════════════════════════════════
+             14. THE NESTING LADDER
+             ══════════════════════════════════════════════════════ -->
+        <section>
+          <div class="slide-subtitle">23:30 — Why It Works</div>
+          <h2>The Nesting Ladder</h2>
+          <div class="ladder" style="margin-top: 1.2rem">
+            <div class="ladder-step">
+              <span class="step-num">①</span> Bar:
+              <code>spread + rect</code>
+            </div>
+            <div class="ladder-step">
+              <span class="step-num">②</span> Stacked bar:
+              <code>spread + stack + rect</code>
+            </div>
+            <div class="ladder-step">
+              <span class="step-num">③</span> Pie:
+              <code>stack + rect + clock()</code>
+            </div>
+            <div
+              class="ladder-step"
+              style="background: #fff0f0; border-color: #e94560"
+            >
+              <span class="step-num">④</span> Scatter-pie:
+              <code>scatter + nested(stack + rect + clock())</code>
+            </div>
+          </div>
+          <div class="callout" style="margin-top: 1rem; font-size: 0.82em">
+            Each step adds one operator or one level of nesting.<br />
+            The complexity scales with your intent, not with the library.
+          </div>
+          <aside class="notes">
+            The progression from bar to scatter-pie is 4 small steps. That's
+            what composition buys you. 24 min mark.
+          </aside>
+        </section>
+
+        <!-- ══════════════════════════════════════════════════════
+             15. AST — WHY THIS WORKS
+             ══════════════════════════════════════════════════════ -->
+        <section>
+          <div class="slide-subtitle">24:30 — Architecture</div>
+          <h2>Why Composition Works: The AST</h2>
+          <div class="ast-tree" style="margin-top: 1.5rem">
+            <div class="level">
+              <span
+                class="ast-box"
+                style="background: #e8f0fe; border-color: #1a73e8"
+                >Frame (root)</span
+              >
+            </div>
+            <div class="ast-connector">│</div>
+            <div class="level">
+              <span class="ast-box">Spread</span>
+              <span style="color: #aaa; margin: 0 0.5em">×6 lakes</span>
+            </div>
+            <div class="ast-connector">│</div>
+            <div class="level">
+              <span class="ast-box">Stack</span>
+              <span style="color: #aaa; margin: 0 0.5em">×5 species</span>
+            </div>
+            <div class="ast-connector">│</div>
+            <div class="level">
+              <span
+                class="ast-box"
+                style="background: #fce8e6; border-color: #e94560"
+                >Rect (leaf)</span
+              >
+            </div>
+          </div>
+          <div
+            style="
+              margin-top: 1.5rem;
+              font-size: 0.8em;
+              line-height: 1.8;
+              text-align: left;
+              max-width: 70%;
+              margin-left: auto;
+              margin-right: auto;
+            "
+          >
+            <p>Three render passes over the tree:</p>
+            <p>① <strong>Domain inference</strong> — what data ranges exist?</p>
+            <p>② <strong>Layout calculation</strong> — how do elements fit?</p>
+            <p>③ <strong>Placement</strong> — final positions → SVG</p>
+          </div>
+          <aside class="notes">
+            GoFish doesn't draw anything imperatively. It builds a tree, then
+            does three passes over it. Nesting is just adding a child node — the
+            passes handle the rest. 25 min mark.
+          </aside>
+        </section>
+
+        <!-- ══════════════════════════════════════════════════════
+             16. PYTHON INTEGRATION
+             ══════════════════════════════════════════════════════ -->
+        <section>
+          <div class="slide-subtitle">24:00 — Python API</div>
+          <h2>Python Integration</h2>
+          <pre><code class="language-python">from gofish import chart, spread, rect, derive
+import numpy as np
+import pandas as pd
+
+data = pd.DataFrame({
+    "lake": ["Lake A"] * 5 + ["Lake B"] * 5,
+    "species": ["Bass","Trout","Catfish","Perch","Salmon"] * 2,
+    "count": [23, 31, 29, 12, 8, 25, 34, 41, 21, 16],
+})
+
+chart(data).flow(
+    derive(lambda df: df.assign(log_count=np.log(df["count"]))),
+    spread("lake", dir="x"),
+).mark(
+    rect(h="log_count", fill="species")
+).render(w=600, h=400)</code></pre>
+          <div style="font-size: 0.72em; color: #555; margin-top: 0.8rem">
+            <code>derive()</code> round-trips data back to Python — full
+            pandas/numpy available.
+          </div>
+          <aside class="notes">
+            The Python bindings let you use the full PyData ecosystem inside
+            derive(). The chart spec is JSON, data is sent as Arrow. 26 min
+            mark.
+          </aside>
+        </section>
+
+        <!-- ══════════════════════════════════════════════════════
+             17. ARCHITECTURE
+             ══════════════════════════════════════════════════════ -->
+        <section>
+          <div class="slide-subtitle">26:30 — How It Works</div>
+          <h2>Architecture in 30 Seconds</h2>
+          <div style="margin-top: 2rem">
+            <div class="arch-row">
+              <div class="arch-box accent">Python API</div>
+              <div class="arch-arrow">→</div>
+              <div class="arch-box">JSON spec</div>
+              <div class="arch-arrow">→</div>
+              <div class="arch-box">Arrow data</div>
+            </div>
+            <div class="arch-row">
+              <div
+                class="arch-arrow"
+                style="font-size: 1.6em; transform: rotate(90deg)"
+              >
+                →
+              </div>
+            </div>
+            <div class="arch-row">
+              <div class="arch-box accent">GoFish JS/TS</div>
+              <div class="arch-arrow">→</div>
+              <div class="arch-box">AST build</div>
+              <div class="arch-arrow">→</div>
+              <div class="arch-box">3-pass render</div>
+              <div class="arch-arrow">→</div>
+              <div class="arch-box">SVG</div>
+            </div>
+          </div>
+          <div
+            style="
+              margin-top: 1.5rem;
+              font-size: 0.8em;
+              color: #555;
+              line-height: 1.8;
+            "
+          >
+            <p>
+              Rendering runs in the browser via SolidJS — crisp SVG at any
+              resolution.
+            </p>
+            <p>
+              <code>derive()</code> operations round-trip to Python for
+              pandas/numpy access.
+            </p>
+          </div>
+          <aside class="notes">
+            Python is a thin layer over the JS engine. The rendering is entirely
+            in the browser — no server-side image generation. 27 min mark.
+          </aside>
+        </section>
+
+        <!-- ══════════════════════════════════════════════════════
+             18. RECAP
+             ══════════════════════════════════════════════════════ -->
+        <section>
+          <div class="slide-subtitle">27:00 — Recap</div>
+          <h2>What You Saw</h2>
+          <div style="margin-top: 1.5rem">
+            <ul style="line-height: 2.2; font-size: 0.9em">
+              <li class="fragment">
+                <strong>Flow API</strong> —
+                <code>chart → flow(operators) → mark</code>
+              </li>
+              <li class="fragment">
+                <strong>Operator composition</strong> — add lines, don't rewrite
+              </li>
+              <li class="fragment">
+                <strong>Coordinate transforms</strong> — same chart, different
+                geometry
+              </li>
+              <li class="fragment">
+                <strong>Layer selection</strong> — <code>.name()</code> +
+                <code>select()</code> for overlays
+              </li>
+              <li class="fragment">
+                <strong>Glyphs</strong> — marks that return charts (nesting)
+              </li>
+            </ul>
+          </div>
+          <aside class="notes">
+            Quick summary before the install slide. 28 min mark.
+          </aside>
+        </section>
+
+        <!-- ══════════════════════════════════════════════════════
+             19. TRY IT
+             ══════════════════════════════════════════════════════ -->
+        <section>
+          <div class="slide-subtitle">28:30 — Try It</div>
+          <h2>Get Started</h2>
+          <div style="margin-top: 1.5rem; text-align: center">
+            <div class="install-block">
+              <span class="prompt">$</span>pip install gofish-graphics
+            </div>
+          </div>
+          <div
+            style="
+              margin-top: 1.5rem;
+              font-size: 0.85em;
+              line-height: 2.2;
+              text-align: left;
+              max-width: 70%;
+              margin: 1.5rem auto 0;
+            "
+          >
+            <p>📦 <strong>PyPI:</strong> <code>gofish-graphics</code></p>
+            <p>
+              🐙 <strong>GitHub:</strong>
+              <code>starfish-graphics/gofish-graphics</code>
+            </p>
+            <p>📖 <strong>Docs:</strong> live chart examples, API reference</p>
+            <p>💬 <strong>Storybook:</strong> interactive playground</p>
+          </div>
+          <aside class="notes">
+            Point people to the GitHub repo. The docs site has a live editor. 29
+            min mark.
+          </aside>
+        </section>
+
+        <!-- ══════════════════════════════════════════════════════
+             20. QUESTIONS
+             ══════════════════════════════════════════════════════ -->
+        <section>
+          <div class="title-slide" style="padding-top: 3rem">
+            <h2>Questions?</h2>
+            <p class="subtitle" style="margin-top: 1rem">
+              GoFish: Composable Visualization from Python
+            </p>
+            <div
+              style="
+                margin-top: 3rem;
+                font-size: 0.75em;
+                color: #999;
+                line-height: 2;
+              "
+            >
+              <p>github.com/starfish-graphics/gofish-graphics</p>
+            </div>
+          </div>
+          <aside class="notes">
+            15 min Q&A. Anticipated questions: performance at scale, Altair/Vega
+            comparison, how derive() works, TypeScript vs Python API surface.
+          </aside>
+        </section>
+      </div>
+    </div>
+
+    <script type="module" src="/main.ts"></script>
+  </body>
+</html>
