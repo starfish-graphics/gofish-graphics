@@ -713,8 +713,8 @@ const html = `<!DOCTYPE html>
     // Side-by-side
     const jsBody = document.getElementById('sbs-js-body');
     const pyBody = document.getElementById('sbs-py-body');
-    jsBody.innerHTML = '<img src="' + jsUrl + '" onerror="this.parentNode.innerHTML=\'<div class=sshot-missing>No JS screenshot</div>\'" />';
-    pyBody.innerHTML = '<img src="' + pyUrl + '" onerror="this.parentNode.innerHTML=\'<div class=sshot-missing>No Python screenshot</div>\'" />';
+    jsBody.innerHTML = '<img src="' + jsUrl + '" onerror="this.parentNode.innerHTML=\\'<div class=sshot-missing>No JS screenshot</div>\\'" />';
+    pyBody.innerHTML = '<img src="' + pyUrl + '" onerror="this.parentNode.innerHTML=\\'<div class=sshot-missing>No Python screenshot</div>\\'" />';
 
     // Strobe
     const strobeJs = document.getElementById('strobe-js');
