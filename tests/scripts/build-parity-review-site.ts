@@ -40,9 +40,7 @@ const SCRIPTS_DIR = import.meta.dirname;
 const TESTS_DIR = dirname(SCRIPTS_DIR);
 const ROOT_DIR = dirname(TESTS_DIR);
 const OUT_DIR = join(TESTS_DIR, "tmp/parity-review-site");
-const SYNC_RESULTS_FILE = join(TESTS_DIR, "tmp/sync-results.json");
 const STORIES_DIR = join(ROOT_DIR, "packages/gofish-graphics/stories");
-const PYTHON_STORIES_DIR = join(ROOT_DIR, "tests/python-stories");
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -156,14 +154,6 @@ function domIdToPythonFile(id: string): string {
 // Types
 // ---------------------------------------------------------------------------
 
-interface SyncResult {
-  jsFile: string;
-  pythonFile: string;
-  changeType: "added" | "deleted" | "modified";
-  status: "ok" | "error" | "warning" | "exempt";
-  message: string;
-}
-
 interface StoryPair {
   /** Slug used as key, e.g. "forwardsyntax/bar--basic" */
   id: string;
@@ -188,21 +178,12 @@ console.log("Building parity review site...");
 const storyIndex = buildStoryIndex();
 console.log(`  ${storyIndex.size} JS story file(s) indexed`);
 
-// Load sync results (may not exist if sync check was skipped)
-let syncResults: SyncResult[] = [];
-if (existsSync(SYNC_RESULTS_FILE)) {
-  syncResults = JSON.parse(readFileSync(SYNC_RESULTS_FILE, "utf-8"));
-  console.log(`  ${syncResults.length} sync result(s) from check-python-sync`);
-} else {
-  console.log("  No sync-results.json found, skipping coverage/sync data");
-}
-
 // Collect parity diffs
 const parityDiffs: DiffEntry[] = collectParityDiffs();
 console.log(`  ${parityDiffs.length} DOM parity diff(s) found`);
 
 // ---------------------------------------------------------------------------
-// Assemble story pairs
+// Assemble story pairs — all stories, not just PR-changed ones
 // ---------------------------------------------------------------------------
 
 const pairs: StoryPair[] = [];
@@ -217,64 +198,61 @@ function jsFileToId(jsFile: string): string {
     .replace(/([a-z])([A-Z])/g, "$1-$2");
 }
 
-// From sync results
-for (const r of syncResults) {
-  const id = jsFileToId(r.jsFile);
+// From all indexed JS stories
+for (const [, jsFile] of storyIndex) {
+  const id = jsFileToId(jsFile);
   if (seenIds.has(id)) continue;
   seenIds.add(id);
 
-  const checkType = r.changeType === "modified" ? "sync" : "coverage";
-  const status =
-    r.status === "error" ? "fail" : r.status === "warning" ? "warning" : "pass";
+  const pythonFile = mapJsToPython(jsFile);
+  const pythonExists = existsSync(join(ROOT_DIR, pythonFile));
 
   pairs.push({
     id,
-    jsFile: r.jsFile,
-    pythonFile: r.pythonFile,
-    checkType,
-    status,
-    message: r.message,
+    jsFile,
+    pythonFile,
+    checkType: "coverage",
+    status: pythonExists ? "pass" : "warning",
+    message: pythonExists ? "Python counterpart present" : "No Python counterpart found",
     hasDomDiff: false,
     hasScreenshots: false,
   });
 }
 
-// From DOM parity diffs
+// Overlay DOM parity diffs
 for (const diff of parityDiffs) {
-  // Convert DOM path back to JS story path for display
-  // DOM path: "forwardsyntax/bar--basic.html"
   const id = diff.path.replace(/\.html$/, "");
 
   if (seenIds.has(id)) {
-    // Update existing pair to mark DOM failure + screenshots
     const pair = pairs.find((p) => p.id === id);
     if (pair) {
       pair.hasDomDiff = true;
       if (diff.afterScreenshotPath) pair.hasScreenshots = true;
       if (pair.status !== "fail") pair.status = "fail";
+      pair.checkType = "dom";
+      pair.message = diff.beforeDom !== null
+        ? "DOM output does not match JS baseline"
+        : "No JS baseline exists yet";
     }
     continue;
   }
   seenIds.add(id);
 
-  // Look up JS file via story index (DOM id = storyId + "--" + variant)
   const storyId = id.replace(/--[^/]*$/, "");
   const jsFile = storyIndex.get(storyId) ?? `packages/gofish-graphics/stories/${id}.stories.tsx`;
   const pythonFile = domIdToPythonFile(id);
 
-  const hasDomDiff = diff.beforeDom !== null;
-  const hasScreenshots = diff.afterScreenshotPath !== null;
   pairs.push({
     id,
     jsFile,
     pythonFile,
     checkType: "dom",
     status: "fail",
-    message: hasDomDiff
+    message: diff.beforeDom !== null
       ? "DOM output does not match JS baseline"
       : "No JS baseline exists yet",
-    hasDomDiff,
-    hasScreenshots,
+    hasDomDiff: diff.beforeDom !== null,
+    hasScreenshots: diff.afterScreenshotPath !== null,
   });
 }
 
