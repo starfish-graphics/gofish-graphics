@@ -21,11 +21,11 @@ chart(data, options?)
 
 ## Parameters
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `data` | `T` | The dataset to visualize |
-| `options.w` | `number` | Width hint for the chart frame |
-| `options.h` | `number` | Height hint for the chart frame |
+| Parameter       | Type                  | Description                           |
+| --------------- | --------------------- | ------------------------------------- |
+| `data`          | `T`                   | The dataset to visualize              |
+| `options.w`     | `number`              | Width hint for the chart frame        |
+| `options.h`     | `number`              | Height hint for the chart frame       |
 | `options.coord` | `CoordinateTransform` | Coordinate transform (e.g. `polar()`) |
 
 Returns a `ChartBuilder<T>` with [`.flow()`](/api/core/flow), [`.mark()`](/api/core/mark), and [`.render()`](/api/core/render) methods.

@@ -20,7 +20,7 @@ gf.Chart(seafood, { coord: gf.clock() })
 ## Signature
 
 ```ts
-clock()
+clock();
 ```
 
 ## Parameters
@@ -40,10 +40,10 @@ chart(data, { coord: clock() })
 
 ## Coordinate Mapping
 
-| Cartesian | Clock |
-|-----------|-------|
-| x | angle (theta), 0° at top, clockwise |
-| y | radius from center |
+| Cartesian | Clock                               |
+| --------- | ----------------------------------- |
+| x         | angle (theta), 0° at top, clockwise |
+| y         | radius from center                  |
 
 ## Examples
 
@@ -51,17 +51,17 @@ chart(data, { coord: clock() })
 // Pie chart
 chart(data, { coord: clock() })
   .flow(stack("category", { dir: "x" }))
-  .mark(rect({ w: "value", fill: "category" }))
+  .mark(rect({ w: "value", fill: "category" }));
 
 // Donut chart (with inner radius)
 chart(data, { coord: clock() })
   .flow(stack("category", { dir: "x", y: 50, h: 50 }))
-  .mark(rect({ w: "value", fill: "category" }))
+  .mark(rect({ w: "value", fill: "category" }));
 
 // Rose chart (radial bar chart)
 chart(data, { coord: clock() })
   .flow(stack("month", { dir: "x" }))
-  .mark(rect({ w: Math.PI * 2 / 12, emX: true, h: "value" }))
+  .mark(rect({ w: (Math.PI * 2) / 12, emX: true, h: "value" }));
 ```
 
 ## See Also

@@ -1,13 +1,13 @@
 import type { Meta, StoryObj } from "@storybook/html";
-import { initializeContainer } from "../helper";
-import { Chart, spread, rect, derive, log } from "../../src/lib";
+import { initializeContainer } from "../../helper";
+import { Chart, spread, rect, derive, log } from "../../../src/lib";
 import { groupBy, sumBy, orderBy } from "lodash";
 import data from "vega-datasets";
 
 // Mirrors: https://vega.github.io/vega-lite/examples/bar_aggregate_sort_by_encoding.html
 
 const meta: Meta = {
-  title: "Vega-Lite/Aggregate Bar Chart (Sorted)",
+  title: "Vega-Lite/Bar/Aggregate Bar Chart (Sorted)",
   argTypes: {
     w: { control: { type: "number", min: 100, max: 1000, step: 10 } },
     h: { control: { type: "number", min: 100, max: 1000, step: 10 } },

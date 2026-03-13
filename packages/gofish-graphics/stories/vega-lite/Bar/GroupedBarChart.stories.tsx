@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/html";
-import { initializeContainer } from "../helper";
-import { Chart, spread, stack, rect } from "../../src/lib";
+import { initializeContainer } from "../../helper";
+import { Chart, spread, stack, rect } from "../../../src/lib";
 
 // Mirrors: https://vega.github.io/vega-lite/examples/bar_grouped.html
 
@@ -17,7 +17,7 @@ const values = [
 ];
 
 const meta: Meta = {
-  title: "Vega-Lite/Grouped Bar Chart",
+  title: "Vega-Lite/Bar/Grouped Bar Chart",
   argTypes: {
     w: { control: { type: "number", min: 100, max: 1000, step: 10 } },
     h: { control: { type: "number", min: 100, max: 1000, step: 10 } },

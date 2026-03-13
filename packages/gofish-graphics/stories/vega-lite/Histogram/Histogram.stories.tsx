@@ -1,13 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/html";
-import { initializeContainer } from "../helper";
-import { Chart, spread, stack, rect, derive } from "../../src/lib";
-import { groupBy, sumBy } from "lodash";
+import { initializeContainer } from "../../helper";
+import { Chart, bin, derive, rect, log, scatter } from "../../../src/lib";
 import data from "vega-datasets";
 
-// Mirrors: https://vega.github.io/vega-lite/examples/stacked_bar_h.html
+// Mirrors: https://vega.github.io/vega-lite/examples/histogram.html
 
 const meta: Meta = {
-  title: "Vega-Lite/Horizontal Stacked Bar Chart",
+  title: "Vega-Lite/Histogram/Histogram",
   argTypes: {
     w: { control: { type: "number", min: 100, max: 1000, step: 10 } },
     h: { control: { type: "number", min: 100, max: 1000, step: 10 } },
@@ -19,14 +18,14 @@ export default meta;
 type Args = { w: number; h: number };
 
 export const Default: StoryObj<Args> = {
-  args: { w: 500, h: 400 },
-  loaders: [async () => ({ barley: await data["barley.json"]() })],
+  args: { w: 500, h: 300 },
+  loaders: [async () => ({ movies: await data["movies.json"]() })],
   render: (args: Args, context: any) => {
     const container = initializeContainer();
 
-    Chart(context.loaded.barley as any[])
-      .flow(spread("variety", { dir: "y" }), stack("site", { dir: "x" }))
-      .mark(rect({ w: "yield", fill: "site" }))
+    Chart(context.loaded.movies as any[])
+      .flow(derive(bin("IMDB Rating")), log("binned data"), scatter({ x: "start" }))
+      .mark(rect({ w: "size", h: "count" }))
       .render(container, { w: args.w, h: args.h, axes: true });
 
     return container;
