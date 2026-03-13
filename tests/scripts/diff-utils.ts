@@ -135,6 +135,63 @@ export function collectDiffs(): DiffEntry[] {
 }
 
 // ---------------------------------------------------------------------------
+// Collect parity diffs: Python output vs JS baselines
+// ---------------------------------------------------------------------------
+
+/**
+ * Compares Python DOM output (`PYTHON_DIR`) against JS baselines (`BASELINE_DOM`).
+ * Used by the parity review site — does NOT re-capture JS.
+ */
+export function collectParityDiffs(): DiffEntry[] {
+  const entries: DiffEntry[] = [];
+  if (!existsSync(PYTHON_DIR)) return entries;
+
+  const pyFiles = listHtmlFiles(PYTHON_DIR);
+  for (const file of pyFiles) {
+    const baselinePath = join(BASELINE_DOM, file);
+    const pythonPath = join(PYTHON_DIR, file);
+
+    const baselineContent = readOptional(baselinePath);
+    const pythonContent = readFileSync(pythonPath, "utf-8");
+
+    if (baselineContent === null) {
+      // No JS baseline yet — treat as a parity failure (same as compare-python.ts)
+      const pngFile = file.replace(/\.html$/, ".png");
+      const afterPng = join(PYTHON_DIR, pngFile);
+      entries.push({
+        path: file,
+        kind: "parity",
+        status: "pending",
+        beforeDom: null,
+        afterDom: pythonContent,
+        beforeScreenshotPath: null,
+        afterScreenshotPath: existsSync(afterPng) ? afterPng : null,
+        diffPercent: null,
+      });
+      continue;
+    }
+
+    if (pythonContent !== baselineContent) {
+      const pngFile = file.replace(/\.html$/, ".png");
+      const beforePng = join(BASELINE_SCREENSHOTS, pngFile);
+      const afterPng = join(PYTHON_DIR, pngFile);
+      entries.push({
+        path: file,
+        kind: "parity",
+        status: "pending",
+        beforeDom: baselineContent,
+        afterDom: pythonContent,
+        beforeScreenshotPath: existsSync(beforePng) ? beforePng : null,
+        afterScreenshotPath: existsSync(afterPng) ? afterPng : null,
+        diffPercent: null,
+      });
+    }
+  }
+
+  return entries;
+}
+
+// ---------------------------------------------------------------------------
 // Accept a story (copy tmp → baselines)
 // ---------------------------------------------------------------------------
 

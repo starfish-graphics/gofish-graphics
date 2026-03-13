@@ -104,6 +104,112 @@ jobs:
               body: `## Visual Diff Review\n\nVisual tests failed. [**Open Review App**](${url})\n\nReview each diff, mark stories as accepted or rejected, then click **Commit Accepted** to push all accepted changes in a single commit.`
             });
 
-      - name: Check Python story sync
-        if: github.event_name == 'pull_request'
-        run: pnpm test:visual:check-sync
+  python-parity:
+    runs-on: ubuntu-latest
+    needs: visual-test
+    permissions:
+      pull-requests: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Node dependencies
+        run: pnpm install
+
+      - name: Install Python dependencies
+        run: pip install -e packages/gofish-python
+
+      - name: Build gofish-graphics
+        run: pnpm --filter gofish-graphics build
+
+      - name: Install Playwright browsers
+        run: pnpm --filter @gofish/tests exec playwright install --with-deps chromium
+
+      - name: Check Python story sync (coverage + spec sync)
+        id: sync-check
+        if: always()
+        run: pnpm test:visual:check-python-sync
+        env:
+          BASE_REF: origin/main
+
+      - name: Capture Python DOM snapshots
+        id: capture-python
+        if: always()
+        run: pnpm test:visual:capture-python
+
+      - name: Compare Python DOM against JS baselines
+        id: compare-python
+        if: always()
+        run: pnpm test:visual:compare-python
+
+      - name: Build parity review site
+        if: failure()
+        run: pnpm --filter @gofish/tests build:parity-review-site
+        env:
+          REVIEW_REPO: ${{ github.repository }}
+          REVIEW_BRANCH: ${{ github.head_ref || github.ref_name }}
+          REVIEW_SHA: ${{ github.sha }}
+
+      - name: Upload parity report artifact
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: parity-review-site
+          path: tests/tmp/parity-review-site/
+
+      - name: Deploy parity review site to Cloudflare Pages
+        if: failure()
+        id: deploy-parity
+        run: |
+          output=$(npx wrangler@latest --cwd tests/tmp/parity-review-site pages deploy . \
+            --project-name=gofish-parity-review \
+            --branch="${{ github.head_ref || github.ref_name }}" \
+            --commit-dirty=true 2>&1) || { echo "$output"; exit 1; }
+          echo "$output"
+          url=$(echo "$output" | grep -oE 'https://[a-zA-Z0-9._-]+\.pages\.dev[a-zA-Z0-9._/-]*' | tail -1)
+          echo "deployment-url=$url" >> "$GITHUB_OUTPUT"
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          NO_COLOR: "1"
+
+      - name: Comment PR with parity review link
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const url = '${{ steps.deploy-parity.outputs.deployment-url }}';
+            const urlLine = url
+              ? '[**Open Parity Review**](' + url + ')'
+              : '_Cloudflare deploy failed — download the `parity-review-site` artifact instead._';
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: [
+                '## Python Parity Review',
+                '',
+                'One or more Python parity checks failed. ' + urlLine,
+                '',
+                'This read-only site shows JS and Python source code side-by-side for each story pair, plus DOM diffs for parity failures.',
+              ].join('\n'),
+            });
