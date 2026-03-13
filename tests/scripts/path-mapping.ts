@@ -28,11 +28,16 @@ export function mapJsToPython(jsFile: string): string {
     const content = readFileSync(absPath, "utf-8");
     const m = content.match(/title:\s*["'](.+?)["']/);
     if (m) title = m[1];
-  } catch {}
+  } catch {
+    /* file unreadable — fall through to path-based fallback */
+  }
 
   if (title) {
     const toKebab = (s: string) =>
-      s.replace(/([a-z])([A-Z])/g, "$1-$2").replace(/\s+/g, "-").toLowerCase();
+      s
+        .replace(/([a-z])([A-Z])/g, "$1-$2")
+        .replace(/\s+/g, "-")
+        .toLowerCase();
     const segments = title.split("/").map(toKebab);
     const dirPath = segments.slice(0, -1).join("/");
     const basePart = segments[segments.length - 1].replace(/-/g, "_");
