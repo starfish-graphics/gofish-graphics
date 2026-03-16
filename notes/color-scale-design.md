@@ -9,9 +9,9 @@ All encoding channels (x, y, color) share the same structure, consistent with Ve
 Color scale is defined at the `Chart()` level, not on `Layer()`. Since layers compose Charts, each Chart can have its own independent color scale. `Layer()` doesn't need to know about color scales.
 
 ```ts
-Chart(seafood, { color: { range: ["blue", "red"] } })
-  .flow(spread("lake", { dir: "x" }), spread("species", { dir: "color" }))
-  .mark(rect({ h: "count" }))
+Chart(seafood, { color: discrete("tableau10") })
+  .flow(spread("lake", { dir: "x" }), spread("species", { dir: "x" }))
+  .mark(rect({ h: "count", fill: "species" }))
 ```
 
 ### 3. `spread` extended with `dir: "color"`
@@ -34,9 +34,11 @@ Discrete vs continuous behavior is inferred from the data type of the field bein
 Both are valid ways to define the color space. `scheme` is a named preset; `range` is an explicit array. They are two ways to define the same thing, not additive.
 
 ```ts
-color: { scheme: "viridis" }
-color: { range: ["#f7fbff", "#08306b"] }
-color: { scheme: "viridis", range: ["blue", "white", "red"] } // range overrides
+continuous("viridis")
+continuous(["#f7fbff", "#08306b"])
+discrete("tableau10")
+discrete(["#e41a1c", "#377eb8", "#4daf4a"])
+discrete({ Salmon: "#e15759" })  // unmapped values → "#ccc"
 ```
 
 ### 6. `range` array interpretation
@@ -47,7 +49,7 @@ color: { scheme: "viridis", range: ["blue", "white", "red"] } // range overrides
 Defined by a 3-color range with an optional `mid` domain value that pins the middle color:
 
 ```ts
-color: { range: ["blue", "white", "red"], mid: 0 }
+continuous(["blue", "white", "red"])  // mid-point pinning via `mid` option deferred
 ```
 
 ### 8. `group` forces discrete behavior

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
 import { seafood } from "../../src/data/catch";
-import { Chart, spread, stack, rect, derive } from "../../src/lib";
+import { Chart, spread, stack, rect, derive, discrete, continuous } from "../../src/lib";
 
 const meta: Meta = {
   title: "Forward Syntax V3/Color Scales",
@@ -34,7 +34,7 @@ export const DiscreteNamedScheme: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    Chart(seafood, { color: "tableau10" })
+    Chart(seafood, { color: discrete("tableau10") })
       .flow(spread("species", { dir: "x" }))
       .mark(rect({ h: "count", fill: "species" }))
       .render(container, { w: args.w, h: args.h, axes: true });
@@ -50,7 +50,7 @@ export const DiscreteStringArray: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    Chart(seafood, { color: ["#e41a1c", "#377eb8", "#4daf4a", "#984ea3", "#ff7f00"] })
+    Chart(seafood, { color: discrete(["#e41a1c", "#377eb8", "#4daf4a", "#984ea3", "#ff7f00"]) })
       .flow(spread("species", { dir: "x" }))
       .mark(rect({ h: "count", fill: "species" }))
       .render(container, { w: args.w, h: args.h, axes: true });
@@ -66,7 +66,7 @@ export const ContinuousNamedScheme: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    Chart(scores, { color: "blues" })
+    Chart(scores, { color: continuous("blues") })
       .flow(spread("label", { dir: "x" }))
       .mark(rect({ h: "value", fill: "value" }))
       .render(container, { w: args.w, h: args.h, axes: true });
@@ -115,10 +115,10 @@ export const NestedDerive: StoryObj<Args> = {
     const lakeOrder = ["Lake A", "Lake B", "Lake C", "Lake D", "Lake E", "Lake F"];
 
     Chart(seafood, {
-      color: {
+      color: discrete({
         "salmon-highlight": "#e15759",
-        "first-half": "#4e79a7"      
-      },
+        "first-half": "#4e79a7",
+      }),
     })
       .flow(
         derive((d) =>
@@ -153,7 +153,7 @@ export const SelectiveDerive: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    Chart(seafood, { color: { highlighted: "#e15759" } })
+    Chart(seafood, { color: discrete({ highlighted: "#e15759" }) })
       .flow(
         derive((d) =>
           d.map((item) => ({
@@ -178,7 +178,7 @@ export const SelectiveGroup: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    Chart(seafood, { color: { Salmon: "#e15759" } })
+    Chart(seafood, { color: discrete({ Salmon: "#e15759" }) })
       .flow(
         spread("lake", { dir: "x" }),
         stack("species", { dir: "x" })
@@ -197,7 +197,7 @@ export const ContinuousStringArray: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    Chart(scores, { color: ["#f7fbff", "#42c663", "#6b0808"] })
+    Chart(scores, { color: continuous(["#f7fbff", "#42c663", "#6b0808"]) })
       .flow(spread("label", { dir: "x" }))
       .mark(rect({ h: "value", fill: "value" }))
       .render(container, { w: args.w, h: args.h, axes: true });

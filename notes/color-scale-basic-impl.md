@@ -3,126 +3,92 @@
 ## API Shape
 
 ```ts
-// Named scheme (string)
-Chart(seafood, { color: "tableau10" })
+// Discrete — named scheme, colors cycle
+Chart(seafood, { color: discrete("tableau10") })
 
-// Array — behavior inferred from field type
-Chart(seafood, { color: ["red", "blue", "green"] })
+// Discrete — explicit palette array, colors cycle
+Chart(seafood, { color: discrete(["#e41a1c", "#377eb8", "#4daf4a"]) })
 
-// Explicit keyed map (discrete only)
-Chart(seafood, { color: { salmon: "#e41a1c", trout: "#377eb8" } })
-```
+// Discrete — explicit key→color map, unmapped values fall back to "#ccc"
+Chart(seafood, { color: discrete({ Salmon: "#e15759" }) })
 
-Combined with spread:
-```ts
-// Discrete — ordinal field, colors cycle
-Chart(seafood, { color: "tableau10" })
-  .flow(
-    spread("lake", { along: "x" }),
-    spread("species", { along: "color" })
-  )
-  .mark(rect({ h: "count" }))
+// Continuous — named scheme, interpolates
+Chart(scores, { color: continuous("blues") })
 
-// Continuous — numeric field, colors interpolate
-Chart(seafood, { color: ["blue", "white", "red"] })
-  .flow(
-    spread("lake", { along: "x" }),
-    spread("temperature", { along: "color" })
-  )
-  .mark(rect({ h: "count" }))
+// Continuous — explicit color stops, interpolates
+Chart(scores, { color: continuous(["#f7fbff", "#42c663", "#6b0808"]) })
 ```
 
 ---
 
 ## How It Works
 
-### 1. Extend `along` to accept `"color"`
-`along: "x" | "y" | "color"` — no other changes to spread's interface.
+### 1. `ColorConfig` type
 
-### 2. Color config on Chart options
-Add `color` as an optional field on the Chart options object:
 ```ts
-type ColorConfig = string | string[] | Record<string, string>
+type DiscreteScale  = { _tag: "discrete";  values: string | string[] | Record<string, string> }
+type ContinuousScale = { _tag: "continuous"; stops:  string | string[] }
+type ColorConfig = DiscreteScale | ContinuousScale
+
+const discrete   = (values: string | string[] | Record<string, string>): DiscreteScale
+const continuous = (stops:  string | string[]): ContinuousScale
 ```
 
-### 3. Resolving the scale at render time
-When a `spread` with `along: "color"` is evaluated, it:
-1. Reads the field's inferred data type from the existing type system
-2. Reads the `color` config from the Chart options
-3. Picks a scale strategy based on field type:
+The `_tag` is the explicit user intent. Scale behavior is determined solely by `_tag` — no data-type inference.
 
-| Field type | Color config | Behavior |
-|---|---|---|
-| Ordinal/categorical | `string` (named) | Look up named discrete palette, cycle |
-| Ordinal/categorical | `string[]` | Use array as palette, cycle |
-| Ordinal/categorical | `Record<string, string>` | Direct value → color lookup |
-| Continuous/numeric | `string` (named) | Look up named continuous scheme, interpolate |
-| Continuous/numeric | `string[]` | Use array as interpolation stops |
+### 2. Discrete: cycling / lookup
+- `string` → look up named scheme, cycle by index
+- `string[]` → cycle by index
+- `Record<string, string>` → direct key lookup; unmapped values fall back to `"#ccc"` automatically
 
-### 4. Discrete: cycling
-Given a palette array and a set of domain values, assign colors by index modulo palette length — same as D3 ordinal. If an explicit keyed map is provided, look up directly, with a fallback color for unmapped values (e.g. `"#ccc"`).
+### 3. Continuous: interpolation
+- `string` → look up named scheme stops, interpolate via chroma-js in lab space
+- `string[]` → use as stops, interpolate via chroma-js in lab space
+- Position `t` computed as `(value - min) / (max - min)` across the subtree domain
 
-### 5. Continuous: interpolation
-Given an array of color stops, interpolate in RGB or HSL space. 2 stops → linear interpolation. 3+ stops → piecewise linear, stops evenly distributed across the domain unless `mid` is specified (deferred for now).
-
-### 6. Named scheme registry
-A simple lookup table mapping scheme names to their color arrays and type tag:
+### 4. Named scheme registry (`colorSchemes.ts`)
 ```ts
 const schemes = {
-  tableau10: { type: "discrete", colors: ["#4e79a7", "#f28e2b", ...] },
+  tableau10: { type: "discrete",   colors: ["#4e79a7", "#f28e2b", ...] },
   viridis:   { type: "continuous", colors: ["#440154", "#31688e", "#35b779", "#fde725"] },
-  blues:     { type: "continuous", colors: ["#f7fbff", "#08306b"] },
+  blues:     { type: "continuous", colors: ["#f7fbff", "#deebf7", "#9ecae1", "#3182bd", "#08306b"] },
+  reds:      { type: "continuous", colors: ["#fff5f0", "#fc9272", "#de2d26", "#67000d"] },
 }
 ```
-Type tag is used as a sanity check against the inferred field type. Mismatch can warn but shouldn't hard error for now.
+
+### 5. Two-pass color resolution (`_node.ts` `resolveColorScale()`)
+1. `collectColorValues()` walks the subtree collecting unique fill values in encounter order
+2. Dispatch on `colorConfig._tag`:
+   - `"continuous"` → compute min/max, assign each value `assignContinuousColor(config, t)`
+   - `"discrete"` → assign each value `assignDiscreteColor(config, key, index)`
+3. Falls back to `color6` cycling when no `colorConfig` is set
+
+---
+
+## Files Changed
+
+**`src/ast/colorSchemes.ts`**
+- `DiscreteScale`, `ContinuousScale`, `ColorConfig` types
+- `discrete()`, `continuous()` constructors
+- `assignDiscreteColor(config: DiscreteScale, key, index)`
+- `assignContinuousColor(config: ContinuousScale, t)`
+
+**`src/ast/_node.ts`**
+- `resolveColorScale()`: dispatches on `_tag` instead of inferring from data type
+
+**`src/ast/marks/chart.ts`**
+- `ChartOptions.color?: ColorConfig`
+- `SpreadOptions.dir`: `"x" | "y"` (combined `"x, color"` form was removed — redundant)
+- `ChartBuilder.render()`: passes `colorConfig` through to node render
+
+**`src/lib.ts`**
+- Exports `discrete`, `continuous`, `ColorConfig`, `DiscreteScale`, `ContinuousScale`
 
 ---
 
 ## What's Not Included Yet
 - Diverging scales with `mid` domain pinning
-- Redundant encoding (`along: ["x", "color"]`)
+- `schemeColors(name: string): string[]` — expose raw colors from a named scheme so users can subset or extend palettes (e.g. `discrete(schemeColors("tableau10").slice(0, 5))`)
+- Redundant encoding (`dir: ["x", "color"]`)
 - Nested/hierarchical schemes
 - Multiple color scales per layered chart
-
----
-
-## Implementation
-
-### Files changed
-
-**`src/ast/colorSchemes.ts`** (new)
-- `ColorConfig` type: `string | string[] | Record<string, string>`
-- Named scheme registry (`tableau10`, `viridis`, `blues`, `reds`) with `type: "discrete" | "continuous"` tags
-- `assignDiscreteColor(config, key, index)` — cycles through palette by index
-- `assignContinuousColor(config, t)` — interpolates via chroma-js at position `t` in [0, 1]
-
-**`src/ast/gofish.tsx`**
-- `ScaleContext` unit type extended: `{ color: Map<any, string>; colorConfig?: ColorConfig }`
-- `gofish()` options: added `colorConfig?: ColorConfig`
-- `scaleContext` init: passes `colorConfig` into `unit` so all nodes in the tree can read it
-
-**`src/ast/_node.ts`**
-- `render()` options: added `colorConfig?: ColorConfig`, passed through to `gofish()`
-- Added `collectColorValues(out)` — walks the subtree collecting unique color values in encounter order
-- `resolveColorScale()` is now two-pass when `colorConfig` is set:
-  1. `collectColorValues()` gathers all unique values from the entire subtree
-  2. If all values are numbers → compute min/max, interpolate each at `t = (v - min) / (max - min)`
-  3. If values are strings → cycle by index
-  - Falls back to original `color6` single-pass when no `colorConfig`
-
-**`src/ast/marks/chart.ts`**
-- `ChartOptions`: added `color?: ColorConfig`
-- `SpreadOptions`: `dir` is `"x" | "y"`; spatial direction parsed as `dir.startsWith("x") ? "x" : "y"`
-- `ChartBuilder.render()`: injects `colorConfig: this.options?.color` into the node render call
-
-### Color assignment rules
-| Data type | Behavior |
-|---|---|
-| String / ordinal | Discrete: cycle through palette by insertion order |
-| Number / continuous | Continuous: interpolate across palette by value position in domain |
-| `Record<string, string>` config | Direct key → color lookup, `"#ccc"` fallback |
-
-### What didn't change
-- `dir: "x"` / `dir: "y"` unchanged
-- Fill must still be declared on the mark (`fill: "species"`)
-- Color encoding is handled purely by `resolveColorScale()`, not by `spread`

@@ -199,22 +199,21 @@ export class GoFishNode {
       // Two-pass: collect all unique values from subtree, then assign colors
       const orderedKeys: any[] = [];
       this.collectColorValues(orderedKeys);
+      const colorConfig = unit.colorConfig;
 
-      const allNumeric = orderedKeys.length > 0 && orderedKeys.every((k) => typeof k === "number");
-
-      if (allNumeric) {
+      if (colorConfig._tag === "continuous") {
         const min = Math.min(...orderedKeys);
         const max = Math.max(...orderedKeys);
         orderedKeys.forEach((key) => {
           if (!unit.color.has(key)) {
             const t = max === min ? 0 : (key - min) / (max - min);
-            unit.color.set(key, assignContinuousColor(unit.colorConfig!, t));
+            unit.color.set(key, assignContinuousColor(colorConfig, t));
           }
         });
       } else {
         orderedKeys.forEach((key, i) => {
           if (!unit.color.has(key)) {
-            unit.color.set(key, assignDiscreteColor(unit.colorConfig!, String(key), i));
+            unit.color.set(key, assignDiscreteColor(colorConfig, String(key), i));
           }
         });
       }

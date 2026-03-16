@@ -87,4 +87,6 @@ export type {
   ChartOptions,
   ChartBuilder,
 } from "./ast/marks/chart";
+export { discrete, continuous } from "./ast/colorSchemes";
+export type { ColorConfig, DiscreteScale, ContinuousScale } from "./ast/colorSchemes";
 export type { NameableMark } from "./ast/withGoFish";

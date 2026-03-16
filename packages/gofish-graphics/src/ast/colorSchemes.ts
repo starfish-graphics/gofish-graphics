@@ -1,6 +1,14 @@
 import chroma from "chroma-js";
 
-export type ColorConfig = string | string[] | Record<string, string>;
+export type DiscreteScale = { _tag: "discrete"; values: string | string[] | Record<string, string> };
+export type ContinuousScale = { _tag: "continuous"; stops: string | string[] };
+export type ColorConfig = DiscreteScale | ContinuousScale;
+
+export const discrete = (values: string | string[] | Record<string, string>): DiscreteScale =>
+  ({ _tag: "discrete", values });
+
+export const continuous = (stops: string | string[]): ContinuousScale =>
+  ({ _tag: "continuous", stops });
 
 type Scheme = { type: "discrete" | "continuous"; colors: string[] };
 
@@ -28,30 +36,29 @@ const schemes: Record<string, Scheme> = {
 
 /** Assign a discrete color by cycling through the palette by index. */
 export function assignDiscreteColor(
-  config: ColorConfig,
+  config: DiscreteScale,
   key: string,
   index: number,
 ): string {
-  if (typeof config === "string") {
-    const scheme = schemes[config];
+  const values = config.values;
+  if (typeof values === "string") {
+    const scheme = schemes[values];
     if (scheme) return scheme.colors[index % scheme.colors.length];
-    return config;
+    return values;
   }
-  if (Array.isArray(config)) {
-    return config[index % config.length];
+  if (Array.isArray(values)) {
+    return values[index % values.length];
   }
-  return (config as Record<string, string>)[key] ?? "#ccc";
+  return (values as Record<string, string>)[key] ?? "#ccc";
 }
 
 /** Assign a continuous color by interpolating at position t in [0, 1]. */
-export function assignContinuousColor(config: ColorConfig, t: number): string {
-  if (typeof config === "string") {
-    const scheme = schemes[config];
+export function assignContinuousColor(config: ContinuousScale, t: number): string {
+  const stops = config.stops;
+  if (typeof stops === "string") {
+    const scheme = schemes[stops];
     if (scheme) return chroma.scale(scheme.colors).mode("lab")(t).hex();
-    return config;
+    return stops;
   }
-  if (Array.isArray(config)) {
-    return chroma.scale(config).mode("lab")(t).hex();
-  }
-  return "#ccc";
+  return chroma.scale(stops).mode("lab")(t).hex();
 }
