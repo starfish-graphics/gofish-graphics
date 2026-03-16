@@ -335,7 +335,7 @@ export function chart<T>(data: T, options?: ChartOptions): ChartBuilder<T, T> {
 }
 
 type SpreadOptions<T> = {
-  dir: "x" | "y" | "x, color" | "y, color";
+  dir: "x" | "y";
   x?: number;
   y?: number;
   t?: number;
@@ -484,7 +484,7 @@ export function stack<T>(
   fieldOrOptions: keyof T | SpreadOptions<T>,
   optionsOrMarks?:
     | {
-        dir: "x" | "y" | "x, color" | "y, color";
+        dir: "x" | "y";
         x?: number;
         y?: number;
         w?: number | keyof T;

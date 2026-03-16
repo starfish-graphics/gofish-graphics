@@ -112,7 +112,7 @@ Type tag is used as a sanity check against the inferred field type. Mismatch can
 
 **`src/ast/marks/chart.ts`**
 - `ChartOptions`: added `color?: ColorConfig`
-- `SpreadOptions`: `dir` type extended to `"x" | "y" | "x, color" | "y, color"`; spatial direction parsed as `dir.startsWith("x") ? "x" : "y"`
+- `SpreadOptions`: `dir` is `"x" | "y"`; spatial direction parsed as `dir.startsWith("x") ? "x" : "y"`
 - `ChartBuilder.render()`: injects `colorConfig: this.options?.color` into the node render call
 
 ### Color assignment rules
@@ -123,6 +123,6 @@ Type tag is used as a sanity check against the inferred field type. Mismatch can
 | `Record<string, string>` config | Direct key → color lookup, `"#ccc"` fallback |
 
 ### What didn't change
-- `dir: "x"` / `dir: "y"` still work (backwards compatible)
+- `dir: "x"` / `dir: "y"` unchanged
 - Fill must still be declared on the mark (`fill: "species"`)
-- `"x, color"` vs `"x"` has no spatial difference — color encoding is handled purely by `resolveColorScale()`
+- Color encoding is handled purely by `resolveColorScale()`, not by `spread`

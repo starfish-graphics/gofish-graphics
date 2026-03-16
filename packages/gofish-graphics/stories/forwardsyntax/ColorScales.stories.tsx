@@ -35,7 +35,7 @@ export const DiscreteNamedScheme: StoryObj<Args> = {
     const container = initializeContainer();
 
     Chart(seafood, { color: "tableau10" })
-      .flow(spread("species", { dir: "x, color" }))
+      .flow(spread("species", { dir: "x" }))
       .mark(rect({ h: "count", fill: "species" }))
       .render(container, { w: args.w, h: args.h, axes: true });
 
@@ -51,7 +51,7 @@ export const DiscreteStringArray: StoryObj<Args> = {
     const container = initializeContainer();
 
     Chart(seafood, { color: ["#e41a1c", "#377eb8", "#4daf4a", "#984ea3", "#ff7f00"] })
-      .flow(spread("species", { dir: "x, color" }))
+      .flow(spread("species", { dir: "x" }))
       .mark(rect({ h: "count", fill: "species" }))
       .render(container, { w: args.w, h: args.h, axes: true });
 
@@ -67,7 +67,7 @@ export const ContinuousNamedScheme: StoryObj<Args> = {
     const container = initializeContainer();
 
     Chart(scores, { color: "blues" })
-      .flow(spread("label", { dir: "x, color" }))
+      .flow(spread("label", { dir: "x" }))
       .mark(rect({ h: "value", fill: "value" }))
       .render(container, { w: args.w, h: args.h, axes: true });
 
@@ -117,8 +117,7 @@ export const NestedDerive: StoryObj<Args> = {
     Chart(seafood, {
       color: {
         "salmon-highlight": "#e15759",
-        "first-half": "#4e79a7",
-        other: "#ccc",
+        "first-half": "#4e79a7"      
       },
     })
       .flow(
@@ -133,7 +132,7 @@ export const NestedDerive: StoryObj<Args> = {
                   ? "salmon-highlight"
                   : isFirstHalf
                     ? "first-half"
-                    : "other",
+                    : "",
             };
           })
         ),
@@ -154,12 +153,12 @@ export const SelectiveDerive: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    Chart(seafood, { color: { highlighted: "#e15759", other: "#ccc" } })
+    Chart(seafood, { color: { highlighted: "#e15759" } })
       .flow(
         derive((d) =>
           d.map((item) => ({
             ...item,
-            highlight: item.species === "Salmon" ? "highlighted" : "other",
+            highlight: item.species === "Salmon" ? "highlighted" : ""
           }))
         ),
         spread("lake", { dir: "x" }),
@@ -199,7 +198,7 @@ export const ContinuousStringArray: StoryObj<Args> = {
     const container = initializeContainer();
 
     Chart(scores, { color: ["#f7fbff", "#42c663", "#6b0808"] })
-      .flow(spread("label", { dir: "x, color" }))
+      .flow(spread("label", { dir: "x" }))
       .mark(rect({ h: "value", fill: "value" }))
       .render(container, { w: args.w, h: args.h, axes: true });
 
