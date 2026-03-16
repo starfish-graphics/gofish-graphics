@@ -48,7 +48,14 @@ export { enclose as Enclose } from "./ast/graphicalOperators/enclose";
 export { frame as Frame } from "./ast/graphicalOperators/frame";
 export { position as Position } from "./ast/graphicalOperators/position";
 export { arrow as Arrow } from "./ast/graphicalOperators/arrow";
-export { over as Over, inside as In, xor as Xor, out as Out, atop as Atop, mask as Mask } from "./ast/graphicalOperators/porterDuff";
+export {
+  over as Over,
+  inside as In,
+  xor as Xor,
+  out as Out,
+  atop as Atop,
+  mask as Mask,
+} from "./ast/graphicalOperators/porterDuff";
 
 // Marks (lowercase, from createMark)
 export { ellipse } from "./ast/shapes/ellipse";

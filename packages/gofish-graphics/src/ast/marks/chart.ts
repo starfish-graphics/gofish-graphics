@@ -107,14 +107,13 @@ export class LayerSelector<T = any> {
       // Always convert datum to an array of node-attached objects for consistency.
       if (!Array.isArray(datum) && typeof datum !== "object") {
         throw new Error("datum must be an array or object");
-      } 
+      }
       const arr = Array.isArray(datum) ? datum : [datum];
-      
+
       return arr.map((item: any) => ({
         ...(item as object),
         __ref: node,
       })) as Array<T & { __ref: GoFishNode }>;
-      
     });
     return result;
   }
@@ -363,9 +362,7 @@ export function spread<T>(
   options: SpreadOptions<T>
 ): Operator<T[], T[]>;
 /** Operator form: spread(opts) → Operator */
-export function spread<T>(
-  options: SpreadOptions<T>
-): Operator<T[], T[]>;
+export function spread<T>(options: SpreadOptions<T>): Operator<T[], T[]>;
 export function spread<T>(
   fieldOrOptions: keyof T | SpreadOptions<T>,
   optionsOrMarks?: SpreadOptions<T> | Mark<any>[]

@@ -8,6 +8,7 @@ import {
 import { render as solidRender } from "solid-js/web";
 import { gofish } from "./gofish";
 import { type GoFishNode } from "./_node";
+import type { AxesOptions } from "./gofish";
 
 interface GoFishComponentProps {
   w: number;
@@ -18,7 +19,7 @@ interface GoFishComponentProps {
   debug?: boolean;
   defs?: JSX.Element[];
   children: GoFishNode;
-  axes?: boolean;
+  axes?: AxesOptions;
 }
 
 export const GoFishSolid: Component<GoFishComponentProps> = (props) => {

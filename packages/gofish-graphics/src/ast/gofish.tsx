@@ -29,6 +29,22 @@ export type ScaleContext = {
 };
 
 export type KeyContext = { [key: string]: GoFishNode };
+export type AxesOptions = boolean | { x: boolean; y: boolean };
+
+function resolveAxesVisibility(axes: AxesOptions | undefined): {
+  x: boolean;
+  y: boolean;
+} {
+  if (axes === true) {
+    return { x: true, y: true };
+  }
+  if (axes && typeof axes === "object") {
+    const x = axes.x === true;
+    const y = axes.y === true;
+    return { x, y };
+  }
+  return { x: false, y: false };
+}
 
 type OrdinalScale = (key: string) => number | undefined;
 
@@ -106,7 +122,7 @@ export async function layout(
     transform?: { x?: number; y?: number };
     debug?: boolean;
     defs?: JSX.Element[];
-    axes?: boolean;
+    axes?: AxesOptions;
   },
   child: GoFishNode | Promise<GoFishNode>,
   contexts?: {
@@ -359,10 +375,7 @@ const PADDING = 10;
 function findCoordTranslation(node: GoFishNode): [number, number] | null {
   // Check if the node itself is a coord node
   if (node.type === "coord" && node.transform?.translate) {
-    return [
-      node.transform.translate[0] ?? 0,
-      node.transform.translate[1] ?? 0,
-    ];
+    return [node.transform.translate[0] ?? 0, node.transform.translate[1] ?? 0];
   }
 
   // Check immediate children for a coord node
@@ -432,7 +445,7 @@ export const render = (
     height: number;
     transform?: string;
     defs?: JSX.Element[];
-    axes?: boolean;
+    axes?: AxesOptions;
     scaleContext: ScaleContext | null;
     keyContext: KeyContext | null;
     sizeDomains?: [any, any];
@@ -448,11 +461,15 @@ export const render = (
 ): JSX.Element => {
   const scaleContext = scaleContextParam;
   const keyContext = keyContextParam;
+  const axisVisibility = resolveAxesVisibility(axes);
+  const hasAnyVisibleAxis = axisVisibility.x || axisVisibility.y;
+  const axisPaddingX = axisVisibility.y ? 100 : 0;
+  const axisPaddingY = axisVisibility.x ? 100 : 0;
 
   let yTicks: number[] = [];
   let xTicks: number[] = [];
   if (
-    axes &&
+    hasAnyVisibleAxis &&
     scaleContext?.x &&
     scaleContext?.y &&
     "domain" in scaleContext.x &&
@@ -477,8 +494,8 @@ export const render = (
 
   const result = (
     <svg
-      width={width + PADDING * 6 + (axes ? 100 : 0)}
-      height={height + PADDING * 6 + (axes ? 100 : 0)}
+      width={width + PADDING * 6 + axisPaddingX}
+      height={height + PADDING * 6 + axisPaddingY}
       xmlns="http://www.w3.org/2000/svg"
     >
       <Show when={defs}>
@@ -490,7 +507,7 @@ export const render = (
         <Show when={transform} keyed fallback={child.INTERNAL_render()}>
           <g transform={transform ?? ""}>{child.INTERNAL_render()}</g>
         </Show>
-        <Show when={axes}>
+        <Show when={hasAnyVisibleAxis}>
           {(() => {
             // Check if we have a coordinate transform (polar/clock coordinates)
             const hasCoordTransform =
@@ -498,22 +515,22 @@ export const render = (
                 underlyingSpaceX.coordinateTransform) ||
               (isPOSITION(underlyingSpaceY) &&
                 underlyingSpaceY.coordinateTransform);
-            
+
             // Find the coord node's translation if we have a coordinate transform
             const coordTranslation = hasCoordTransform
               ? findCoordTranslation(child)
               : null;
-            
+
             // Apply translation if found
             const axesTransform = coordTranslation
               ? `translate(${coordTranslation[0]}, ${coordTranslation[1]})`
               : undefined;
-            
+
             return (
               <>
-              <g transform={axesTransform}>
-                {/* x axis */}
-            {/* <line
+                <g transform={axesTransform}>
+                  {/* x axis */}
+                  {/* <line
               x1={0}
               y1={height + PADDING}
               x2={width + PADDING}
@@ -521,588 +538,611 @@ export const render = (
               stroke="gray"
               stroke-width="1px"
             /> */}
-            {/* y axis (continuous) */}
-            <Show when={isPOSITION(underlyingSpaceY)}>
-              {(() => {
-                if (!isPOSITION(underlyingSpaceY)) return null;
-                const spaceY = underlyingSpaceY; // Type narrowed to POSITION_TYPE
-                const xPosScale = posScales[0];
-                const yPosScale = posScales[1];
-                const [yMin, yMax] = nice(
-                  spaceY.domain.min,
-                  spaceY.domain.max,
-                  10
-                );
-                const yTicks = ticks(yMin, yMax, 10);
-                const coordTransform = spaceY.coordinateTransform;
+                  {/* y axis (continuous) */}
+                  <Show when={axisVisibility.y && isPOSITION(underlyingSpaceY)}>
+                    {(() => {
+                      if (!isPOSITION(underlyingSpaceY)) return null;
+                      const spaceY = underlyingSpaceY; // Type narrowed to POSITION_TYPE
+                      const xPosScale = posScales[0];
+                      const yPosScale = posScales[1];
+                      const [yMin, yMax] = nice(
+                        spaceY.domain.min,
+                        spaceY.domain.max,
+                        10
+                      );
+                      const yTicks = ticks(yMin, yMax, 10);
+                      const coordTransform = spaceY.coordinateTransform;
 
-                if (coordTransform && xPosScale && yPosScale) {
-                  // Map using posScales before applying coordinate transform
-                  const xDomainMin = coordTransform.domain[0].min!;
-                  const screenYMin = yPosScale(yMin);
-                  const screenYMax = yPosScale(yMax);
-                  const screenX = xPosScale(xDomainMin);
+                      if (coordTransform && xPosScale && yPosScale) {
+                        // Map using posScales before applying coordinate transform
+                        const xDomainMin = coordTransform.domain[0].min!;
+                        const screenYMin = yPosScale(yMin);
+                        const screenYMax = yPosScale(yMax);
+                        const screenX = xPosScale(xDomainMin);
 
-                  // Create path in screen space, then transform
-                  const screenPath = path(
-                    [
-                      [screenX, screenYMin],
-                      [screenX, screenYMax],
-                    ],
-                    { subdivision: 100 }
-                  );
-                  const axisLinePath = transformPath(
-                    screenPath,
-                    coordTransform
-                  );
-
-                  return (
-                    <g>
-                      <path
-                        d={pathToSVGPath(axisLinePath)}
-                        stroke="gray"
-                        stroke-width="1px"
-                        fill="none"
-                      />
-                      <For each={yTicks}>
-                        {(tick) => {
-                          const screenTickY = yPosScale(tick);
-                          const [transformedX, transformedY] =
-                            coordTransform.transform([screenX, screenTickY]);
-                          return (
-                            <>
-                              <text
-                                transform="scale(1, -1)"
-                                x={transformedX - PADDING * 0.25}
-                                y={-transformedY}
-                                text-anchor="end"
-                                dominant-baseline="middle"
-                                font-size="10px"
-                                fill="gray"
-                              >
-                                {tick}
-                              </text>
-                              {/* Tick mark - create a small line from the axis */}
-                              <line
-                                x1={transformedX}
-                                y1={transformedY}
-                                x2={transformedX - PADDING * 0.5}
-                                y2={transformedY}
-                                stroke="gray"
-                              />
-                            </>
-                          );
-                        }}
-                      </For>
-                    </g>
-                  );
-                } else {
-                  // Standard cartesian y-axis
-                  if (!yPosScale) return null;
-                  return (
-                    <g>
-                      <line
-                        x1={-PADDING}
-                        y1={yPosScale(yTicks[0]) - 0.5}
-                        x2={-PADDING}
-                        y2={yPosScale(yTicks[yTicks.length - 1]) + 0.5}
-                        stroke="gray"
-                        stroke-width="1px"
-                      />
-                      <For each={yTicks}>
-                        {(tick) => (
-                          <>
-                            <text
-                              transform="scale(1, -1)"
-                              x={-PADDING * 1.75}
-                              y={-yPosScale(tick)}
-                              text-anchor="end"
-                              dominant-baseline="middle"
-                              font-size="10px"
-                              fill="gray"
-                            >
-                              {tick}
-                            </text>
-                            <line
-                              x1={-PADDING * 1.5}
-                              y1={yPosScale(tick)}
-                              x2={-PADDING}
-                              y2={yPosScale(tick)}
-                              stroke="gray"
-                            />
-                          </>
-                        )}
-                      </For>
-                    </g>
-                  );
-                }
-              })()}
-            </Show>
-            <Show
-              when={
-                isDIFFERENCE(underlyingSpaceY) &&
-                scaleContext?.y &&
-                "scaleFactor" in scaleContext.y
-              }
-            >
-              {(() => {
-                const yScale = scaleContext!.y as {
-                  domain: [number, number];
-                  scaleFactor: number;
-                };
-                if (!isDIFFERENCE(underlyingSpaceY)) return null;
-                const [yMin, yMax] = nice(0, underlyingSpaceY.width, 10);
-                const yTicks = ticks(yMin, yMax, 10);
-                return (
-                  <g>
-                    <line
-                      x1={-PADDING}
-                      y1={(yTicks[0] - yTicks[0]) * yScale.scaleFactor - 0.5}
-                      x2={-PADDING}
-                      y2={
-                        (yTicks[yTicks.length - 1] - yTicks[0]) *
-                          yScale.scaleFactor +
-                        0.5
-                      }
-                      stroke="gray"
-                      stroke-width="1px"
-                    />
-                    <For each={yTicks}>
-                      {(tick) => (
-                        <>
-                          <line
-                            x1={-PADDING * 1.5}
-                            y1={(tick - yTicks[0]) * yScale.scaleFactor}
-                            x2={-PADDING}
-                            y2={(tick - yTicks[0]) * yScale.scaleFactor}
-                            stroke="gray"
-                          />
-                        </>
-                      )}
-                    </For>
-
-                    {/* For each pair of yTicks, put text in between showing the difference */}
-                    <For
-                      each={Array.from(
-                        { length: yTicks.length - 1 },
-                        (_, i) => i
-                      )}
-                    >
-                      {(i) => {
-                        const tick1 = yTicks[i];
-                        const tick2 = yTicks[i + 1];
-                        const diff = tick2 - tick1;
-                        // Position text halfway between the two ticks
-                        const y1 = (tick1 - yTicks[0]) * yScale.scaleFactor;
-                        const y2 = (tick2 - yTicks[0]) * yScale.scaleFactor;
-                        const yMid = (y1 + y2) / 2;
-                        return (
-                          <text
-                            transform="scale(1, -1)"
-                            x={-PADDING * 1.5}
-                            y={-yMid}
-                            text-anchor="end"
-                            dominant-baseline="middle"
-                            font-size="10px"
-                            fill="gray"
-                          >
-                            {diff}
-                          </text>
+                        // Create path in screen space, then transform
+                        const screenPath = path(
+                          [
+                            [screenX, screenYMin],
+                            [screenX, screenYMax],
+                          ],
+                          { subdivision: 100 }
                         );
-                      }}
-                    </For>
-                  </g>
-                );
-              })()}
-            </Show>
+                        const axisLinePath = transformPath(
+                          screenPath,
+                          coordTransform
+                        );
 
-            {/* x axis (position) */}
-            <Show when={isPOSITION(underlyingSpaceX)}>
-              {(() => {
-                if (!isPOSITION(underlyingSpaceX)) return null;
-                const spaceX = underlyingSpaceX; // Type narrowed to POSITION_TYPE
-                const xPosScale = posScales[0];
-                const [xMin, xMax] = nice(
-                  spaceX.domain.min,
-                  spaceX.domain.max,
-                  10
-                );
-                const xTicks = ticks(xMin, xMax, 10);
-                const coordTransform = spaceX.coordinateTransform;
-
-                if (coordTransform && xPosScale) {
-                  // Map the chart's data domain into the coordinate-space theta range.
-                  // For clock/polar, the coord transform expects theta in [0, 2π] (or whatever its domain says),
-                  // not raw data-domain values.
-                  const thetaSize =
-                    coordTransform.domain[0].size ??
-                    (coordTransform.domain[0].max! - coordTransform.domain[0].min!);
-                  const thetaScale = computePosScale(
-                    continuous({
-                      value: [xMin, xMax],
-                      measure: "unit",
-                    }),
-                    thetaSize
-                  );
-
-                  const thetaMin = thetaScale(xMin);
-                  const thetaMax = thetaScale(xMax);
-                  
-                  // Get the maximum radius from the coordinate-space bounding box
-                  // and add padding to position axis outside chart bounds
-                  const coordBbox = findCoordBoundingBox(child);
-                  const rMax = coordBbox
-                    ? coordBbox.rMax + PADDING * 2
-                    : coordTransform.domain[1].max ??
-                      coordTransform.domain[1].size ??
-                      100;
-
-                  const rAxis = rMax;
-                  const tickLen = PADDING * 0.5;
-                  const labelPad = PADDING * 1.25;
-
-                  const axisDomainPath = path(
-                    [
-                      [thetaMin, rMax],
-                      [thetaMax, rMax],
-                    ],
-                    { subdivision: 200 }
-                  );
-
-                  const axisLinePath = transformPath(
-                    axisDomainPath,
-                    coordTransform
-                  );
-
-                  return (
-                    <g>
-                      <path
-                        d={pathToSVGPath(axisLinePath)}
-                        stroke="gray"
-                        stroke-width="1px"
-                        fill="none"
-                      />
-                      <For each={xTicks}>
-                        {(tick) => {
-                          const thetaTick = thetaScale(tick);
-                          // Ticks/labels should point outward (increasing r), regardless of how the
-                          // coordinate transform distorts the space. Compute direction in screen space
-                          // by sampling at r and r+Δr.
-                          const [tickAxisX, tickAxisY] = coordTransform.transform([
-                            thetaTick,
-                            rAxis,
-                          ]);
-                          const [tickOutX, tickOutY] = coordTransform.transform([
-                            thetaTick,
-                            rAxis + tickLen,
-                          ]);
-
-                          const dx = tickOutX - tickAxisX;
-                          const dy = tickOutY - tickAxisY;
-                          const dLen = Math.hypot(dx, dy);
-                          const dirX = dLen > 1e-6 ? dx / dLen : 0;
-                          const dirY = dLen > 1e-6 ? dy / dLen : 1;
-
-                          const labelX = tickOutX + dirX * labelPad;
-                          const labelY = tickOutY + dirY * labelPad;
-                          return (
-                            <>
-                              <text
-                                transform="scale(1, -1)"
-                                x={labelX}
-                                y={-labelY}
-                                text-anchor="middle"
-                                dominant-baseline="hanging"
-                                font-size="10px"
-                                fill="gray"
-                              >
-                                {tick}
-                              </text>
-                              {/* Tick mark - create a small line from the axis */}
-                              <line
-                                x1={tickAxisX}
-                                y1={tickAxisY}
-                                x2={tickOutX}
-                                y2={tickOutY}
-                                stroke="gray"
-                              />
-                            </>
-                          );
-                        }}
-                      </For>
-                    </g>
-                  );
-                } else {
-                  // Standard cartesian x-axis
-                  if (!xPosScale) return null;
-                  return (
-                    <g>
-                      <line
-                        x1={xPosScale(xTicks[0]) - 0.5}
-                        y1={-PADDING}
-                        x2={xPosScale(xTicks[xTicks.length - 1]) + 0.5}
-                        y2={-PADDING}
-                        stroke="gray"
-                        stroke-width="1px"
-                      />
-                      <For each={xTicks}>
-                        {(tick) => (
-                          <>
-                            <text
-                              transform="scale(1, -1)"
-                              x={xPosScale(tick)}
-                              y={PADDING * 1.75}
-                              text-anchor="middle"
-                              dominant-baseline="hanging"
-                              font-size="10px"
-                              fill="gray"
-                            >
-                              {tick}
-                            </text>
-                            <line
-                              x1={xPosScale(tick)}
-                              y1={-PADDING}
-                              x2={xPosScale(tick)}
-                              y2={-PADDING * 1.5}
+                        return (
+                          <g>
+                            <path
+                              d={pathToSVGPath(axisLinePath)}
                               stroke="gray"
+                              stroke-width="1px"
+                              fill="none"
                             />
-                          </>
-                        )}
-                      </For>
-                    </g>
-                  );
-                }
-              })()}
-            </Show>
-
-            {/* x axis (difference) */}
-            <Show
-              when={
-                isDIFFERENCE(underlyingSpaceX) &&
-                scaleContext?.x &&
-                "scaleFactor" in scaleContext.x
-              }
-            >
-              {(() => {
-                const xScale = scaleContext!.x as {
-                  domain: [number, number];
-                  scaleFactor: number;
-                };
-                if (!isDIFFERENCE(underlyingSpaceX)) return null;
-                const [xMin, xMax] = nice(0, underlyingSpaceX.width, 10);
-                const xTicks = ticks(xMin, xMax, 10);
-                return (
-                  <g>
-                    <line
-                      x1={(xTicks[0] - xTicks[0]) * xScale.scaleFactor - 0.5}
-                      y1={-PADDING}
-                      x2={
-                        (xTicks[xTicks.length - 1] - xTicks[0]) *
-                          xScale.scaleFactor +
-                        0.5
+                            <For each={yTicks}>
+                              {(tick) => {
+                                const screenTickY = yPosScale(tick);
+                                const [transformedX, transformedY] =
+                                  coordTransform.transform([
+                                    screenX,
+                                    screenTickY,
+                                  ]);
+                                return (
+                                  <>
+                                    <text
+                                      transform="scale(1, -1)"
+                                      x={transformedX - PADDING * 0.25}
+                                      y={-transformedY}
+                                      text-anchor="end"
+                                      dominant-baseline="middle"
+                                      font-size="10px"
+                                      fill="gray"
+                                    >
+                                      {tick}
+                                    </text>
+                                    {/* Tick mark - create a small line from the axis */}
+                                    <line
+                                      x1={transformedX}
+                                      y1={transformedY}
+                                      x2={transformedX - PADDING * 0.5}
+                                      y2={transformedY}
+                                      stroke="gray"
+                                    />
+                                  </>
+                                );
+                              }}
+                            </For>
+                          </g>
+                        );
+                      } else {
+                        // Standard cartesian y-axis
+                        if (!yPosScale) return null;
+                        return (
+                          <g>
+                            <line
+                              x1={-PADDING}
+                              y1={yPosScale(yTicks[0]) - 0.5}
+                              x2={-PADDING}
+                              y2={yPosScale(yTicks[yTicks.length - 1]) + 0.5}
+                              stroke="gray"
+                              stroke-width="1px"
+                            />
+                            <For each={yTicks}>
+                              {(tick) => (
+                                <>
+                                  <text
+                                    transform="scale(1, -1)"
+                                    x={-PADDING * 1.75}
+                                    y={-yPosScale(tick)}
+                                    text-anchor="end"
+                                    dominant-baseline="middle"
+                                    font-size="10px"
+                                    fill="gray"
+                                  >
+                                    {tick}
+                                  </text>
+                                  <line
+                                    x1={-PADDING * 1.5}
+                                    y1={yPosScale(tick)}
+                                    x2={-PADDING}
+                                    y2={yPosScale(tick)}
+                                    stroke="gray"
+                                  />
+                                </>
+                              )}
+                            </For>
+                          </g>
+                        );
                       }
-                      y2={-PADDING}
-                      stroke="gray"
-                      stroke-width="1px"
-                    />
-                    <For each={xTicks}>
-                      {(tick) => (
-                        <>
+                    })()}
+                  </Show>
+                  <Show
+                    when={
+                      axisVisibility.y &&
+                      isDIFFERENCE(underlyingSpaceY) &&
+                      scaleContext?.y &&
+                      "scaleFactor" in scaleContext.y
+                    }
+                  >
+                    {(() => {
+                      const yScale = scaleContext!.y as {
+                        domain: [number, number];
+                        scaleFactor: number;
+                      };
+                      if (!isDIFFERENCE(underlyingSpaceY)) return null;
+                      const [yMin, yMax] = nice(0, underlyingSpaceY.width, 10);
+                      const yTicks = ticks(yMin, yMax, 10);
+                      return (
+                        <g>
                           <line
-                            x1={(tick - xTicks[0]) * xScale.scaleFactor}
-                            y1={-PADDING * 1.5}
-                            x2={(tick - xTicks[0]) * xScale.scaleFactor}
+                            x1={-PADDING}
+                            y1={
+                              (yTicks[0] - yTicks[0]) * yScale.scaleFactor - 0.5
+                            }
+                            x2={-PADDING}
+                            y2={
+                              (yTicks[yTicks.length - 1] - yTicks[0]) *
+                                yScale.scaleFactor +
+                              0.5
+                            }
+                            stroke="gray"
+                            stroke-width="1px"
+                          />
+                          <For each={yTicks}>
+                            {(tick) => (
+                              <>
+                                <line
+                                  x1={-PADDING * 1.5}
+                                  y1={(tick - yTicks[0]) * yScale.scaleFactor}
+                                  x2={-PADDING}
+                                  y2={(tick - yTicks[0]) * yScale.scaleFactor}
+                                  stroke="gray"
+                                />
+                              </>
+                            )}
+                          </For>
+
+                          {/* For each pair of yTicks, put text in between showing the difference */}
+                          <For
+                            each={Array.from(
+                              { length: yTicks.length - 1 },
+                              (_, i) => i
+                            )}
+                          >
+                            {(i) => {
+                              const tick1 = yTicks[i];
+                              const tick2 = yTicks[i + 1];
+                              const diff = tick2 - tick1;
+                              // Position text halfway between the two ticks
+                              const y1 =
+                                (tick1 - yTicks[0]) * yScale.scaleFactor;
+                              const y2 =
+                                (tick2 - yTicks[0]) * yScale.scaleFactor;
+                              const yMid = (y1 + y2) / 2;
+                              return (
+                                <text
+                                  transform="scale(1, -1)"
+                                  x={-PADDING * 1.5}
+                                  y={-yMid}
+                                  text-anchor="end"
+                                  dominant-baseline="middle"
+                                  font-size="10px"
+                                  fill="gray"
+                                >
+                                  {diff}
+                                </text>
+                              );
+                            }}
+                          </For>
+                        </g>
+                      );
+                    })()}
+                  </Show>
+
+                  {/* x axis (position) */}
+                  <Show when={axisVisibility.x && isPOSITION(underlyingSpaceX)}>
+                    {(() => {
+                      if (!isPOSITION(underlyingSpaceX)) return null;
+                      const spaceX = underlyingSpaceX; // Type narrowed to POSITION_TYPE
+                      const xPosScale = posScales[0];
+                      const [xMin, xMax] = nice(
+                        spaceX.domain.min,
+                        spaceX.domain.max,
+                        10
+                      );
+                      const xTicks = ticks(xMin, xMax, 10);
+                      const coordTransform = spaceX.coordinateTransform;
+
+                      if (coordTransform && xPosScale) {
+                        // Map the chart's data domain into the coordinate-space theta range.
+                        // For clock/polar, the coord transform expects theta in [0, 2π] (or whatever its domain says),
+                        // not raw data-domain values.
+                        const thetaSize =
+                          coordTransform.domain[0].size ??
+                          coordTransform.domain[0].max! -
+                            coordTransform.domain[0].min!;
+                        const thetaScale = computePosScale(
+                          continuous({
+                            value: [xMin, xMax],
+                            measure: "unit",
+                          }),
+                          thetaSize
+                        );
+
+                        const thetaMin = thetaScale(xMin);
+                        const thetaMax = thetaScale(xMax);
+
+                        // Get the maximum radius from the coordinate-space bounding box
+                        // and add padding to position axis outside chart bounds
+                        const coordBbox = findCoordBoundingBox(child);
+                        const rMax = coordBbox
+                          ? coordBbox.rMax + PADDING * 2
+                          : (coordTransform.domain[1].max ??
+                            coordTransform.domain[1].size ??
+                            100);
+
+                        const rAxis = rMax;
+                        const tickLen = PADDING * 0.5;
+                        const labelPad = PADDING * 1.25;
+
+                        const axisDomainPath = path(
+                          [
+                            [thetaMin, rMax],
+                            [thetaMax, rMax],
+                          ],
+                          { subdivision: 200 }
+                        );
+
+                        const axisLinePath = transformPath(
+                          axisDomainPath,
+                          coordTransform
+                        );
+
+                        return (
+                          <g>
+                            <path
+                              d={pathToSVGPath(axisLinePath)}
+                              stroke="gray"
+                              stroke-width="1px"
+                              fill="none"
+                            />
+                            <For each={xTicks}>
+                              {(tick) => {
+                                const thetaTick = thetaScale(tick);
+                                // Ticks/labels should point outward (increasing r), regardless of how the
+                                // coordinate transform distorts the space. Compute direction in screen space
+                                // by sampling at r and r+Δr.
+                                const [tickAxisX, tickAxisY] =
+                                  coordTransform.transform([thetaTick, rAxis]);
+                                const [tickOutX, tickOutY] =
+                                  coordTransform.transform([
+                                    thetaTick,
+                                    rAxis + tickLen,
+                                  ]);
+
+                                const dx = tickOutX - tickAxisX;
+                                const dy = tickOutY - tickAxisY;
+                                const dLen = Math.hypot(dx, dy);
+                                const dirX = dLen > 1e-6 ? dx / dLen : 0;
+                                const dirY = dLen > 1e-6 ? dy / dLen : 1;
+
+                                const labelX = tickOutX + dirX * labelPad;
+                                const labelY = tickOutY + dirY * labelPad;
+                                return (
+                                  <>
+                                    <text
+                                      transform="scale(1, -1)"
+                                      x={labelX}
+                                      y={-labelY}
+                                      text-anchor="middle"
+                                      dominant-baseline="hanging"
+                                      font-size="10px"
+                                      fill="gray"
+                                    >
+                                      {tick}
+                                    </text>
+                                    {/* Tick mark - create a small line from the axis */}
+                                    <line
+                                      x1={tickAxisX}
+                                      y1={tickAxisY}
+                                      x2={tickOutX}
+                                      y2={tickOutY}
+                                      stroke="gray"
+                                    />
+                                  </>
+                                );
+                              }}
+                            </For>
+                          </g>
+                        );
+                      } else {
+                        // Standard cartesian x-axis
+                        if (!xPosScale) return null;
+                        return (
+                          <g>
+                            <line
+                              x1={xPosScale(xTicks[0]) - 0.5}
+                              y1={-PADDING}
+                              x2={xPosScale(xTicks[xTicks.length - 1]) + 0.5}
+                              y2={-PADDING}
+                              stroke="gray"
+                              stroke-width="1px"
+                            />
+                            <For each={xTicks}>
+                              {(tick) => (
+                                <>
+                                  <text
+                                    transform="scale(1, -1)"
+                                    x={xPosScale(tick)}
+                                    y={PADDING * 1.75}
+                                    text-anchor="middle"
+                                    dominant-baseline="hanging"
+                                    font-size="10px"
+                                    fill="gray"
+                                  >
+                                    {tick}
+                                  </text>
+                                  <line
+                                    x1={xPosScale(tick)}
+                                    y1={-PADDING}
+                                    x2={xPosScale(tick)}
+                                    y2={-PADDING * 1.5}
+                                    stroke="gray"
+                                  />
+                                </>
+                              )}
+                            </For>
+                          </g>
+                        );
+                      }
+                    })()}
+                  </Show>
+
+                  {/* x axis (difference) */}
+                  <Show
+                    when={
+                      axisVisibility.x &&
+                      isDIFFERENCE(underlyingSpaceX) &&
+                      scaleContext?.x &&
+                      "scaleFactor" in scaleContext.x
+                    }
+                  >
+                    {(() => {
+                      const xScale = scaleContext!.x as {
+                        domain: [number, number];
+                        scaleFactor: number;
+                      };
+                      if (!isDIFFERENCE(underlyingSpaceX)) return null;
+                      const [xMin, xMax] = nice(0, underlyingSpaceX.width, 10);
+                      const xTicks = ticks(xMin, xMax, 10);
+                      return (
+                        <g>
+                          <line
+                            x1={
+                              (xTicks[0] - xTicks[0]) * xScale.scaleFactor - 0.5
+                            }
+                            y1={-PADDING}
+                            x2={
+                              (xTicks[xTicks.length - 1] - xTicks[0]) *
+                                xScale.scaleFactor +
+                              0.5
+                            }
                             y2={-PADDING}
                             stroke="gray"
+                            stroke-width="1px"
                           />
-                        </>
-                      )}
-                    </For>
+                          <For each={xTicks}>
+                            {(tick) => (
+                              <>
+                                <line
+                                  x1={(tick - xTicks[0]) * xScale.scaleFactor}
+                                  y1={-PADDING * 1.5}
+                                  x2={(tick - xTicks[0]) * xScale.scaleFactor}
+                                  y2={-PADDING}
+                                  stroke="gray"
+                                />
+                              </>
+                            )}
+                          </For>
 
-                    {/* For each pair of xTicks, put text in between showing the difference */}
-                    <For
-                      each={Array.from(
-                        { length: xTicks.length - 1 },
-                        (_, i) => i
-                      )}
-                    >
-                      {(i) => {
-                        const tick1 = xTicks[i];
-                        const tick2 = xTicks[i + 1];
-                        const diff = tick2 - tick1;
-                        // Position text halfway between the two ticks
-                        const x1 = (tick1 - xTicks[0]) * xScale.scaleFactor;
-                        const x2 = (tick2 - xTicks[0]) * xScale.scaleFactor;
-                        const xMid = (x1 + x2) / 2;
-                        return (
-                          <text
-                            transform="scale(1, -1)"
-                            x={xMid}
-                            y={PADDING * 1.75}
-                            text-anchor="middle"
-                            dominant-baseline="hanging"
-                            font-size="10px"
-                            fill="gray"
+                          {/* For each pair of xTicks, put text in between showing the difference */}
+                          <For
+                            each={Array.from(
+                              { length: xTicks.length - 1 },
+                              (_, i) => i
+                            )}
                           >
-                            {diff}
-                          </text>
-                        );
-                      }}
-                    </For>
-                  </g>
-                );
-              })()}
-            </Show>
-            {/* x axis (discrete) */}
-            <Show
-              when={
-                axes &&
-                isORDINAL(underlyingSpaceX) &&
-                ordinalScales[0] &&
-                keyContext
-              }
-            >
-              {(() => {
-                const scale = ordinalScales[0]!;
-                // Use domain from ORDINAL space for top-level keys
-                const domain = isORDINAL(underlyingSpaceX)
-                  ? underlyingSpaceX.domain
-                  : undefined;
-                const labelKeys = domain && domain.length > 0 ? domain : [];
-                // Get the minimum Y position for label placement
-                const entries = Object.entries(keyContext ?? {});
-                const minY = entries.reduce((min, [, node]) => {
-                  if (!("intrinsicDims" in node) || !node.intrinsicDims)
-                    return min;
-                  const pathToRoot = findPathToRoot(node);
-                  const accumulatedTransform = pathToRoot.reduce(
-                    (acc, n) => {
-                      return {
-                        x: acc.x + (n.transform?.translate?.[0] ?? 0),
-                        y: acc.y + (n.transform?.translate?.[1] ?? 0),
-                      };
-                    },
-                    { x: 0, y: 0 }
-                  );
-                  const yPos =
-                    accumulatedTransform.y + (node.intrinsicDims[1]?.min ?? 0);
-                  return Math.min(min, yPos);
-                }, Infinity);
-                return (
-                  <g>
-                    <For each={labelKeys}>
-                      {(key) => {
-                        const xPos = scale(key);
-                        if (xPos === undefined) return null;
-                        return (
-                          <text
-                            transform="scale(1, -1)"
-                            x={xPos}
-                            y={-minY + 5}
-                            text-anchor="middle"
-                            dominant-baseline="hanging"
-                            font-size="10px"
-                            fill="gray"
-                          >
-                            {key}
-                          </text>
-                        );
-                      }}
-                    </For>
-                  </g>
-                );
-              })()}
-            </Show>
-            <Show
-              when={
-                axes &&
-                isORDINAL(underlyingSpaceY) &&
-                ordinalScales[1] &&
-                keyContext
-              }
-            >
-              {(() => {
-                const scale = ordinalScales[1]!;
-                // Use domain from ORDINAL space for top-level keys
-                const domain = isORDINAL(underlyingSpaceY)
-                  ? underlyingSpaceY.domain
-                  : undefined;
-                const labelKeys = domain && domain.length > 0 ? domain : [];
-                // Get the minimum X position for label placement
-                const entries = Object.entries(keyContext ?? {});
-                const minX = entries.reduce((min, [, node]) => {
-                  if (!("intrinsicDims" in node) || !node.intrinsicDims)
-                    return min;
-                  const pathToRoot = findPathToRoot(node);
-                  const accumulatedTransform = pathToRoot.reduce(
-                    (acc, n) => {
-                      return {
-                        x: acc.x + (n.transform?.translate?.[0] ?? 0),
-                        y: acc.y + (n.transform?.translate?.[1] ?? 0),
-                      };
-                    },
-                    { x: 0, y: 0 }
-                  );
-                  const xPos =
-                    accumulatedTransform.x + (node.intrinsicDims[0]?.min ?? 0);
-                  return Math.min(min, xPos);
-                }, Infinity);
-                return (
-                  <g>
-                    <For each={labelKeys}>
-                      {(key) => {
-                        const yPos = scale(key);
-                        if (yPos === undefined) return null;
-                        return (
-                          <text
-                            transform="scale(1, -1)"
-                            x={minX - 5}
-                            y={-yPos}
-                            text-anchor="end"
-                            dominant-baseline="middle"
-                            font-size="10px"
-                            fill="gray"
-                          >
-                            {key}
-                          </text>
-                        );
-                      }}
-                    </For>
-                  </g>
-                );
-              })()}
-            </Show>
-              </g>
-            {/* legend (discrete color for now) */}
-            <g>
-              <For
-                each={Array.from(
-                  (scaleContext?.unit && "color" in scaleContext.unit
-                    ? scaleContext.unit.color
-                    : new Map()
-                  ).entries()
-                )}
-              >
-                {([key, value], i) => (
-                  <g
-                    transform={`translate(${width + PADDING * 3}, ${height - i() * 20})`}
+                            {(i) => {
+                              const tick1 = xTicks[i];
+                              const tick2 = xTicks[i + 1];
+                              const diff = tick2 - tick1;
+                              // Position text halfway between the two ticks
+                              const x1 =
+                                (tick1 - xTicks[0]) * xScale.scaleFactor;
+                              const x2 =
+                                (tick2 - xTicks[0]) * xScale.scaleFactor;
+                              const xMid = (x1 + x2) / 2;
+                              return (
+                                <text
+                                  transform="scale(1, -1)"
+                                  x={xMid}
+                                  y={PADDING * 1.75}
+                                  text-anchor="middle"
+                                  dominant-baseline="hanging"
+                                  font-size="10px"
+                                  fill="gray"
+                                >
+                                  {diff}
+                                </text>
+                              );
+                            }}
+                          </For>
+                        </g>
+                      );
+                    })()}
+                  </Show>
+                  {/* x axis (discrete) */}
+                  <Show
+                    when={
+                      axisVisibility.x &&
+                      isORDINAL(underlyingSpaceX) &&
+                      ordinalScales[0] &&
+                      keyContext
+                    }
                   >
-                    <rect x={-20} y={-5} width={10} height={10} fill={value} />
-                    <text
-                      transform="scale(1, -1)"
-                      x={-5}
-                      y={0}
-                      text-anchor="start"
-                      dominant-baseline="middle"
-                      font-size="10px"
-                      fill="gray"
-                    >
-                      {key}
-                    </text>
-                  </g>
-                )}
-              </For>
-            </g>
+                    {(() => {
+                      const scale = ordinalScales[0]!;
+                      // Use domain from ORDINAL space for top-level keys
+                      const domain = isORDINAL(underlyingSpaceX)
+                        ? underlyingSpaceX.domain
+                        : undefined;
+                      const labelKeys =
+                        domain && domain.length > 0 ? domain : [];
+                      // Get the minimum Y position for label placement
+                      const entries = Object.entries(keyContext ?? {});
+                      const minY = entries.reduce((min, [, node]) => {
+                        if (!("intrinsicDims" in node) || !node.intrinsicDims)
+                          return min;
+                        const pathToRoot = findPathToRoot(node);
+                        const accumulatedTransform = pathToRoot.reduce(
+                          (acc, n) => {
+                            return {
+                              x: acc.x + (n.transform?.translate?.[0] ?? 0),
+                              y: acc.y + (n.transform?.translate?.[1] ?? 0),
+                            };
+                          },
+                          { x: 0, y: 0 }
+                        );
+                        const yPos =
+                          accumulatedTransform.y +
+                          (node.intrinsicDims[1]?.min ?? 0);
+                        return Math.min(min, yPos);
+                      }, Infinity);
+                      return (
+                        <g>
+                          <For each={labelKeys}>
+                            {(key) => {
+                              const xPos = scale(key);
+                              if (xPos === undefined) return null;
+                              return (
+                                <text
+                                  transform="scale(1, -1)"
+                                  x={xPos}
+                                  y={-minY + 5}
+                                  text-anchor="middle"
+                                  dominant-baseline="hanging"
+                                  font-size="10px"
+                                  fill="gray"
+                                >
+                                  {key}
+                                </text>
+                              );
+                            }}
+                          </For>
+                        </g>
+                      );
+                    })()}
+                  </Show>
+                  <Show
+                    when={
+                      axisVisibility.y &&
+                      isORDINAL(underlyingSpaceY) &&
+                      ordinalScales[1] &&
+                      keyContext
+                    }
+                  >
+                    {(() => {
+                      const scale = ordinalScales[1]!;
+                      // Use domain from ORDINAL space for top-level keys
+                      const domain = isORDINAL(underlyingSpaceY)
+                        ? underlyingSpaceY.domain
+                        : undefined;
+                      const labelKeys =
+                        domain && domain.length > 0 ? domain : [];
+                      // Get the minimum X position for label placement
+                      const entries = Object.entries(keyContext ?? {});
+                      const minX = entries.reduce((min, [, node]) => {
+                        if (!("intrinsicDims" in node) || !node.intrinsicDims)
+                          return min;
+                        const pathToRoot = findPathToRoot(node);
+                        const accumulatedTransform = pathToRoot.reduce(
+                          (acc, n) => {
+                            return {
+                              x: acc.x + (n.transform?.translate?.[0] ?? 0),
+                              y: acc.y + (n.transform?.translate?.[1] ?? 0),
+                            };
+                          },
+                          { x: 0, y: 0 }
+                        );
+                        const xPos =
+                          accumulatedTransform.x +
+                          (node.intrinsicDims[0]?.min ?? 0);
+                        return Math.min(min, xPos);
+                      }, Infinity);
+                      return (
+                        <g>
+                          <For each={labelKeys}>
+                            {(key) => {
+                              const yPos = scale(key);
+                              if (yPos === undefined) return null;
+                              return (
+                                <text
+                                  transform="scale(1, -1)"
+                                  x={minX - 5}
+                                  y={-yPos}
+                                  text-anchor="end"
+                                  dominant-baseline="middle"
+                                  font-size="10px"
+                                  fill="gray"
+                                >
+                                  {key}
+                                </text>
+                              );
+                            }}
+                          </For>
+                        </g>
+                      );
+                    })()}
+                  </Show>
+                </g>
+                {/* legend (discrete color for now) */}
+                <g>
+                  <For
+                    each={Array.from(
+                      (scaleContext?.unit && "color" in scaleContext.unit
+                        ? scaleContext.unit.color
+                        : new Map()
+                      ).entries()
+                    )}
+                  >
+                    {([key, value], i) => (
+                      <g
+                        transform={`translate(${width + PADDING * 3}, ${height - i() * 20})`}
+                      >
+                        <rect
+                          x={-20}
+                          y={-5}
+                          width={10}
+                          height={10}
+                          fill={value}
+                        />
+                        <text
+                          transform="scale(1, -1)"
+                          x={-5}
+                          y={0}
+                          text-anchor="start"
+                          dominant-baseline="middle"
+                          font-size="10px"
+                          fill="gray"
+                        >
+                          {key}
+                        </text>
+                      </g>
+                    )}
+                  </For>
+                </g>
               </>
             );
           })()}

@@ -10,9 +10,9 @@ gf.StackX(
       gf.StackY(
         { spacing: 0, alignment: "middle" },
         gf.For(density, (d) =>
-          gf.rect({ y: d.x / 40, w: d.y * 100000, h: 0, fill: gf.v(species) }).name(
-            `${species}-${d.x}`
-          )
+          gf
+            .rect({ y: d.x / 40, w: d.y * 100000, h: 0, fill: gf.v(species) })
+            .name(`${species}-${d.x}`)
         )
       ),
       gf.ConnectY(

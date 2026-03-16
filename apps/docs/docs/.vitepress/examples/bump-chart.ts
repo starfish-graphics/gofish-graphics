@@ -8,7 +8,9 @@ gf.Frame({}, [
         alignment: "start",
       },
       gf.For(_.sortBy(d, "Rank"), (d) =>
-        gf.ellipse({ w: 8, h: 8, fill: gf.v(d.Color) }).name(`${d.Color}-${d.Year}`)
+        gf
+          .ellipse({ w: 8, h: 8, fill: gf.v(d.Color) })
+          .name(`${d.Color}-${d.Year}`)
       )
     )
   ),

@@ -9,3 +9,5 @@
 packages/gofish-graphics/src/tests/**
 packages/gofish-graphics/stories/**
 pnpm-lock.yaml
+__snapshots__/
+tests/tmp/

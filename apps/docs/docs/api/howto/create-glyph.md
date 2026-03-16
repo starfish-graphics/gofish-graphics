@@ -7,11 +7,7 @@ A **glyph** is a composite visual element built from multiple shapes. Instead of
 Use `Layer()` to compose multiple shapes at the same position:
 
 ```ts
-Layer([
-  shape1,
-  shape2,
-  shape3,
-])
+Layer([shape1, shape2, shape3]);
 ```
 
 All children are placed at position `(0, 0)` relative to the layer. The layer's size is computed as the union of all children's bounding boxes.
@@ -124,9 +120,9 @@ gf.Chart(points)
 
 ## Summary
 
-| Task | Approach |
-|------|----------|
-| Compose shapes | `Layer([shape1, shape2, ...])` |
-| Make reusable | Wrap in a function with parameters |
-| Use in chart | Pass glyph function to `.mark()` |
-| Position elements | Use `Spread` within the glyph |
+| Task              | Approach                           |
+| ----------------- | ---------------------------------- |
+| Compose shapes    | `Layer([shape1, shape2, ...])`     |
+| Make reusable     | Wrap in a function with parameters |
+| Use in chart      | Pass glyph function to `.mark()`   |
+| Position elements | Use `Spread` within the glyph      |
