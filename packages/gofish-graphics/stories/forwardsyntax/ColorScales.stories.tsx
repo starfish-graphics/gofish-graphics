@@ -1,7 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
 import { seafood } from "../../src/data/catch";
-import { Chart, spread, stack, rect, derive, palette, gradient, assignGradientColor } from "../../src/lib";
+import { Chart, spread, stack, rect, derive, palette, gradient, assignGradientColor, Layer, select } from "../../src/lib";
+import { area, group } from "../../src/ast/marks/chart";
+import { orderBy } from "lodash";
+import { clock } from "../../src/ast/coordinateTransforms/clock";
 
 const meta: Meta = {
   title: "Forward Syntax V3/Color Scales",
@@ -213,6 +216,61 @@ export const SelectiveGroup: StoryObj<Args> = {
         stack("species", { dir: "x" })
       )
       .mark(rect({ h: "count", fill: "species" }))
+      .render(container, { w: args.w, h: args.h, axes: true });
+
+    return container;
+  },
+};
+
+// Ribbon — two highlighted species ribbons, others gray
+export const RibbonHighlight: StoryObj<Args> = {
+  name: "Ribbon / Two Highlighted",
+  args: defaultArgs,
+  render: (args: Args) => {
+    const container = initializeContainer();
+
+    Layer([
+      Chart(seafood, { color: palette({ Salmon: "#e15759", Trout: "#4e79a7" }) })
+        .flow(
+          spread("lake", { dir: "x", spacing: 64 }),
+          derive((d) => orderBy(d, "count", "asc")),
+          stack("species", { dir: "y" })
+        )
+        .mark(rect({ h: "count", fill: "species" }).name("bars")),
+      Chart(select("bars"))
+        .flow(group("species"))
+        .mark(area({ opacity: 0.6 })),
+    ]).render(container, { w: args.w, h: args.h, axes: true });
+
+    return container;
+  },
+};
+
+// Rose — concentric rings, each lighter than the last via blues gradient
+const NUM_RINGS = 6;
+const NUM_SECTORS = 12;
+const roseData = Array.from({ length: NUM_RINGS * NUM_SECTORS }, (_, i) => {
+  const sector = i % NUM_SECTORS;
+  const ring = Math.floor(i / NUM_SECTORS);
+  return {
+    sector: `S${sector + 1}`,
+    ring,
+    value: 2 + 25 * Math.abs(Math.sin(sector * 1.3) * Math.cos(ring * 0.9 + 1)),
+  };
+});
+
+export const RoseGradient: StoryObj<Args> = {
+  name: "Rose / Concentric Gradient",
+  args: defaultArgs,
+  render: (args: Args) => {
+    const container = initializeContainer();
+
+    Chart(roseData, { color: gradient("blues"), coord: clock() })
+      .flow(
+        stack("sector", { dir: "x" }),
+        stack("ring", { dir: "y" }),
+      )
+      .mark(rect({ w: (Math.PI * 2) / NUM_SECTORS, emX: true, h: "value", fill: "ring" }))
       .render(container, { w: args.w, h: args.h, axes: true });
 
     return container;
