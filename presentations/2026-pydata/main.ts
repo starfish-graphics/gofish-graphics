@@ -1,5 +1,6 @@
 import Reveal from "reveal.js";
 import RevealHighlight from "reveal.js/plugin/highlight/highlight";
+import RevealNotes from "reveal.js/plugin/notes/notes";
 import "reveal.js/dist/reveal.css";
 import "reveal.js/dist/theme/white.css";
 import "reveal.js/plugin/highlight/monokai.css";
@@ -9,10 +10,11 @@ import { renderCharts, chartRenderers } from "./charts";
 const deck = new Reveal({
   hash: true,
   transition: "none",
+  navigationMode: "linear",
   width: 1280,
   height: 720,
   margin: 0.06,
-  plugins: [RevealHighlight],
+  plugins: [RevealHighlight, RevealNotes],
   highlight: {
     highlightOnLoad: true,
   },
