@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
 import { seafood } from "../../src/data/catch";
-import { Chart, spread, stack, rect, derive, discrete, continuous } from "../../src/lib";
+import { Chart, spread, stack, rect, derive, palette, gradient, assignGradientColor } from "../../src/lib";
 
 const meta: Meta = {
   title: "Forward Syntax V3/Color Scales",
@@ -15,7 +15,7 @@ export default meta;
 type Args = { w: number; h: number };
 const defaultArgs = { w: 400, h: 400 };
 
-// Numeric dataset: one value per item, suitable for continuous color demos
+// Numeric dataset: one value per item, suitable for gradient color demos
 const scores = [
   { label: "A", value: 4 },
   { label: "B", value: 12 },
@@ -27,14 +27,14 @@ const scores = [
   { label: "H", value: 100 }
 ];
 
-// Discrete — named scheme (tableau10), colors cycle by species
-export const DiscreteNamedScheme: StoryObj<Args> = {
-  name: "Discrete / Named Scheme",
+// Palette — named scheme (tableau10), colors cycle by species
+export const PaletteNamedScheme: StoryObj<Args> = {
+  name: "Palette / Named Scheme",
   args: defaultArgs,
   render: (args: Args) => {
     const container = initializeContainer();
 
-    Chart(seafood, { color: discrete("tableau10") })
+    Chart(seafood, { color: palette("tableau10") })
       .flow(spread("species", { dir: "x" }))
       .mark(rect({ h: "count", fill: "species" }))
       .render(container, { w: args.w, h: args.h, axes: true });
@@ -43,14 +43,14 @@ export const DiscreteNamedScheme: StoryObj<Args> = {
   },
 };
 
-// Discrete — explicit string[] palette, colors cycle by species
-export const DiscreteStringArray: StoryObj<Args> = {
-  name: "Discrete / String Array",
+// Palette — explicit string[] colors cycle by species
+export const PaletteStringArray: StoryObj<Args> = {
+  name: "Palette / String Array",
   args: defaultArgs,
   render: (args: Args) => {
     const container = initializeContainer();
 
-    Chart(seafood, { color: discrete(["#e41a1c", "#377eb8", "#4daf4a", "#984ea3", "#ff7f00"]) })
+    Chart(seafood, { color: palette(["#e41a1c", "#377eb8", "#4daf4a", "#984ea3", "#ff7f00"]) })
       .flow(spread("species", { dir: "x" }))
       .mark(rect({ h: "count", fill: "species" }))
       .render(container, { w: args.w, h: args.h, axes: true });
@@ -59,14 +59,14 @@ export const DiscreteStringArray: StoryObj<Args> = {
   },
 };
 
-// Continuous — named scheme (blues), interpolates by numeric value
-export const ContinuousNamedScheme: StoryObj<Args> = {
-  name: "Continuous / Named Scheme",
+// Gradient — named scheme (blues), interpolates by numeric value
+export const GradientNamedScheme: StoryObj<Args> = {
+  name: "Gradient / Named Scheme",
   args: defaultArgs,
   render: (args: Args) => {
     const container = initializeContainer();
 
-    Chart(scores, { color: continuous("blues") })
+    Chart(scores, { color: gradient("blues") })
       .flow(spread("label", { dir: "x" }))
       .mark(rect({ h: "value", fill: "value" }))
       .render(container, { w: args.w, h: args.h, axes: true });
@@ -75,30 +75,59 @@ export const ContinuousNamedScheme: StoryObj<Args> = {
   },
 };
 
-// Paired bars — warm continuous palette for bar 1, cold for bar 2 within each pair
+// Gradient — explicit string[] color stops, interpolates by numeric value
+export const GradientStringArray: StoryObj<Args> = {
+  name: "Gradient / String Array",
+  args: defaultArgs,
+  render: (args: Args) => {
+    const container = initializeContainer();
+
+    Chart(scores, { color: gradient(["#f7fbff", "#42c663", "#6b0808"]) })
+      .flow(spread("label", { dir: "x" }))
+      .mark(rect({ h: "value", fill: "value" }))
+      .render(container, { w: args.w, h: args.h, axes: true });
+
+    return container;
+  },
+};
+
+// Paired bars — warm gradient for first of each pair, cold gradient for second
 const pairedBars = [
-  { pair: "P1", type: "warm", value: 20, barColor: "#ffe8cc" },
-  { pair: "P1", type: "cold", value: 20, barColor: "#cce5ff" },
-  { pair: "P2", type: "warm", value: 45, barColor: "#ffb347" },
-  { pair: "P2", type: "cold", value: 45, barColor: "#6baed6" },
-  { pair: "P3", type: "warm", value: 70, barColor: "#ff6f00" },
-  { pair: "P3", type: "cold", value: 70, barColor: "#2171b5" },
-  { pair: "P4", type: "warm", value: 90, barColor: "#d32f2f" },
-  { pair: "P4", type: "cold", value: 90, barColor: "#08306b" },
+  { pair: "P1", type: "warm", value: 20 },
+  { pair: "P1", type: "cold", value: 20 },
+  { pair: "P2", type: "warm", value: 45 },
+  { pair: "P2", type: "cold", value: 45 },
+  { pair: "P3", type: "warm", value: 70 },
+  { pair: "P3", type: "cold", value: 70 },
+  { pair: "P4", type: "warm", value: 90 },
+  { pair: "P4", type: "cold", value: 90 },
 ];
 
+const warmGradient = gradient(["#ffe0b2", "#e65100"]);
+const coldGradient = gradient(["#bbdefb", "#0d47a1"]);
+
 export const PairedPalettes: StoryObj<Args> = {
-  name: "Paired / Warm + Cold Palettes",
+  name: "Paired / Warm + Cold Gradients",
   args: defaultArgs,
   render: (args: Args) => {
     const container = initializeContainer();
 
     Chart(pairedBars)
       .flow(
+        derive((d) => {
+          const values = d.map((item) => item.value);
+          const min = Math.min(...values);
+          const max = Math.max(...values);
+          return d.map((item) => {
+            const t = max === min ? 0 : (item.value - min) / (max - min);
+            const scale = item.type === "warm" ? warmGradient : coldGradient;
+            return { ...item, color: assignGradientColor(scale, t) };
+          });
+        }),
         spread("pair", { dir: "x" }),
         stack("type", { dir: "x" })
       )
-      .mark(rect({ h: "value", fill: "barColor" }))
+      .mark(rect({ h: "value", fill: "color" }))
       .render(container, { w: args.w, h: args.h, axes: true });
 
     return container;
@@ -115,7 +144,7 @@ export const NestedDerive: StoryObj<Args> = {
     const lakeOrder = ["Lake A", "Lake B", "Lake C", "Lake D", "Lake E", "Lake F"];
 
     Chart(seafood, {
-      color: discrete({
+      color: palette({
         "salmon-highlight": "#e15759",
         "first-half": "#4e79a7",
       }),
@@ -153,7 +182,7 @@ export const SelectiveDerive: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    Chart(seafood, { color: discrete({ highlighted: "#e15759" }) })
+    Chart(seafood, { color: palette({ highlighted: "#e15759" }) })
       .flow(
         derive((d) =>
           d.map((item) => ({
@@ -178,28 +207,12 @@ export const SelectiveGroup: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    Chart(seafood, { color: discrete({ Salmon: "#e15759" }) })
+    Chart(seafood, { color: palette({ Salmon: "#e15759" }) })
       .flow(
         spread("lake", { dir: "x" }),
         stack("species", { dir: "x" })
       )
       .mark(rect({ h: "count", fill: "species" }))
-      .render(container, { w: args.w, h: args.h, axes: true });
-
-    return container;
-  },
-};
-
-// Continuous — explicit string[] color stops, interpolates by numeric value
-export const ContinuousStringArray: StoryObj<Args> = {
-  name: "Continuous / String Array",
-  args: defaultArgs,
-  render: (args: Args) => {
-    const container = initializeContainer();
-
-    Chart(scores, { color: continuous(["#f7fbff", "#42c663", "#6b0808"]) })
-      .flow(spread("label", { dir: "x" }))
-      .mark(rect({ h: "value", fill: "value" }))
       .render(container, { w: args.w, h: args.h, axes: true });
 
     return container;

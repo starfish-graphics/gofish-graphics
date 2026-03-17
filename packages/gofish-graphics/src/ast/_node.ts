@@ -36,7 +36,11 @@ import {
 import { toJSON } from "../util/interval";
 import type { KeyContext, ScaleContext } from "./gofish";
 import type { ScopeContext } from "./scopeContext";
-import { assignDiscreteColor, assignContinuousColor, type ColorConfig } from "./colorSchemes";
+import {
+  assignPaletteColor,
+  assignGradientColor,
+  type ColorConfig,
+} from "./colorSchemes";
 
 export type RenderSession = {
   scopeContext: ScopeContext;
@@ -193,7 +197,10 @@ export class GoFishNode {
 
   public resolveColorScale(): void {
     const scaleContext = this.getRenderSession().scaleContext;
-    const unit = scaleContext.unit as { color: Map<any, string>; colorConfig?: ColorConfig };
+    const unit = scaleContext.unit as {
+      color: Map<any, string>;
+      colorConfig?: ColorConfig;
+    };
 
     if (unit.colorConfig) {
       // Two-pass: collect all unique values from subtree, then assign colors
@@ -201,19 +208,22 @@ export class GoFishNode {
       this.collectColorValues(orderedKeys);
       const colorConfig = unit.colorConfig;
 
-      if (colorConfig._tag === "continuous") {
+      if (colorConfig._tag === "gradient") {
         const min = Math.min(...orderedKeys);
         const max = Math.max(...orderedKeys);
         orderedKeys.forEach((key) => {
           if (!unit.color.has(key)) {
             const t = max === min ? 0 : (key - min) / (max - min);
-            unit.color.set(key, assignContinuousColor(colorConfig, t));
+            unit.color.set(key, assignGradientColor(colorConfig, t));
           }
         });
       } else {
         orderedKeys.forEach((key, i) => {
           if (!unit.color.has(key)) {
-            unit.color.set(key, assignDiscreteColor(colorConfig, String(key), i));
+            unit.color.set(
+              key,
+              assignPaletteColor(colorConfig, String(key), i)
+            );
           }
         });
       }
@@ -224,9 +234,14 @@ export class GoFishNode {
         const color = getValue(this.color);
         const isLiteralColor =
           typeof color === "string" &&
-          (color.startsWith("#") || color.startsWith("rgb") || color.startsWith("hsl"));
+          (color.startsWith("#") ||
+            color.startsWith("rgb") ||
+            color.startsWith("hsl"));
         if (!isLiteralColor && !scaleContext.unit.color.has(color)) {
-          scaleContext.unit.color.set(color, color6[scaleContext.unit.color.size % 6]);
+          scaleContext.unit.color.set(
+            color,
+            color6[scaleContext.unit.color.size % 6]
+          );
         }
       }
       this.children.forEach((child) => {

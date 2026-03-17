@@ -303,7 +303,7 @@ export const Rect = ({
         const originalFill = fill;
         fill = isValue(fill)
           ? scaleContext?.unit?.color
-            ? scaleContext.unit.color.get(getValue(fill))
+            ? (scaleContext.unit.color.get(getValue(fill)) ?? getValue(fill))
             : getValue(fill)
           : fill;
 
