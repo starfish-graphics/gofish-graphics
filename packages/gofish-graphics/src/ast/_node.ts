@@ -136,6 +136,7 @@ export class GoFishNode {
   public renderData?: any;
   public coordinateTransform?: CoordinateTransform;
   public color?: MaybeValue<string>;
+  public colorConfig?: ColorConfig;
   private renderSession?: RenderSession;
   constructor(
     {
@@ -202,34 +203,24 @@ export class GoFishNode {
       colorConfig?: ColorConfig;
     };
 
-    if (unit.colorConfig) {
-      // Two-pass: collect all unique values from subtree, then assign colors
-      const orderedKeys: any[] = [];
-      this.collectColorValues(orderedKeys);
-      const colorConfig = unit.colorConfig;
+    // If this node carries its own colorConfig (set by ChartBuilder.resolve()),
+    // temporarily apply it for this subtree, then restore for siblings.
+    if (this.colorConfig) {
+      const saved = unit.colorConfig;
+      unit.colorConfig = this.colorConfig;
+      this._applyColorConfig(unit);
+      unit.colorConfig = saved;
+      // Recurse so children can override with their own configs
+      this.children.forEach((child) => {
+        if (child instanceof GoFishNode) child.resolveColorScale();
+      });
+      return;
+    }
 
-      if (colorConfig._tag === "gradient") {
-        const min = Math.min(...orderedKeys);
-        const max = Math.max(...orderedKeys);
-        orderedKeys.forEach((key) => {
-          if (!unit.color.has(key)) {
-            const t = max === min ? 0 : (key - min) / (max - min);
-            unit.color.set(key, assignGradientColor(colorConfig, t));
-          }
-        });
-      } else {
-        orderedKeys.forEach((key, i) => {
-          if (!unit.color.has(key)) {
-            unit.color.set(
-              key,
-              assignPaletteColor(colorConfig, String(key), i)
-            );
-          }
-        });
-      }
+    if (unit.colorConfig) {
+      this._applyColorConfig(unit);
     } else {
-      // Original single-pass: assign colors as encountered, cycle color6
-      // Skip values that are already literal CSS colors — they pass through at render time
+      // No colorConfig — single-pass: cycle color6, skip literal CSS colors
       if (this.color !== undefined && isValue(this.color)) {
         const color = getValue(this.color);
         const isLiteralColor =
@@ -246,6 +237,32 @@ export class GoFishNode {
       }
       this.children.forEach((child) => {
         if (child instanceof GoFishNode) child.resolveColorScale();
+      });
+    }
+  }
+
+  private _applyColorConfig(unit: {
+    color: Map<any, string>;
+    colorConfig?: ColorConfig;
+  }): void {
+    const orderedKeys: any[] = [];
+    this.collectColorValues(orderedKeys);
+    const colorConfig = unit.colorConfig!;
+
+    if (colorConfig._tag === "gradient") {
+      const min = Math.min(...orderedKeys);
+      const max = Math.max(...orderedKeys);
+      orderedKeys.forEach((key) => {
+        if (!unit.color.has(key)) {
+          const t = max === min ? 0 : (key - min) / (max - min);
+          unit.color.set(key, assignGradientColor(colorConfig, t));
+        }
+      });
+    } else {
+      orderedKeys.forEach((key, i) => {
+        if (!unit.color.has(key)) {
+          unit.color.set(key, assignPaletteColor(colorConfig, String(key), i));
+        }
       });
     }
   }

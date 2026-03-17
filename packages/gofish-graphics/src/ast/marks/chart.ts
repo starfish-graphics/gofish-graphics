@@ -307,6 +307,11 @@ export class ChartBuilder<TInput, TOutput = TInput> {
       ).setShared([true, true]),
     ]);
 
+    // Embed colorConfig on the node so it survives .resolve() inside Layer
+    if (this.options?.color) {
+      node.colorConfig = this.options.color;
+    }
+
     return node;
   }
 
@@ -326,7 +331,10 @@ export class ChartBuilder<TInput, TOutput = TInput> {
     options: Parameters<GoFishNode["render"]>[1]
   ): Promise<ReturnType<GoFishNode["render"]>> {
     const node = await this.resolve();
-    return node.render(container, { ...options, colorConfig: this.options?.color });
+    return node.render(container, {
+      ...options,
+      colorConfig: this.options?.color,
+    });
   }
 }
 
