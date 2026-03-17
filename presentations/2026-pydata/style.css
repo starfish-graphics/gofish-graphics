@@ -12,9 +12,11 @@
 }
 
 .reveal h2 {
+  font-family: "Shantell Sans", "Source Sans 3", "Helvetica Neue", sans-serif;
   font-size: 1.4em;
   font-weight: 600;
   color: #16213e;
+  text-transform: lowercase;
 }
 
 .reveal h3 {

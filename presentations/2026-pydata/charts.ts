@@ -47,25 +47,72 @@ function getContainer(id: string): HTMLElement | null {
 }
 
 // ── Opening: Franconeri — same data, two groupings ────────────────────────
+type HeightSample = {
+  age: string;
+  person: "Charlie" | "River";
+  height: number;
+};
+
+const franconeriHeights: HeightSample[] = [
+  { age: "8", person: "Charlie", height: 50 },
+  { age: "8", person: "River", height: 48 },
+  { age: "10", person: "Charlie", height: 54 },
+  { age: "10", person: "River", height: 53 },
+  { age: "12", person: "Charlie", height: 58 },
+  { age: "12", person: "River", height: 51 }, // slight but real decrease
+];
+
+const FRANCONERI_BAR_COLOR = "#7c8a99";
+
 function renderFranconeriA() {
   const el = getContainer("chart-franconeri-a");
   if (!el || el.children.length > 0) return;
-  // Outer: lake. Inner: species side-by-side.
-  // Easy query: "how do species compare within a lake?"
-  Chart(seafood)
-    .flow(spread("lake", { dir: "x" }), stack("species", { dir: "x" }))
-    .mark(rect({ h: "count", fill: "species" }))
+  // Outer: age. Inner: Charlie vs River side-by-side via inner spread.
+  // Easy query: "who is taller at each age?"
+  Chart(franconeriHeights)
+    .flow(
+      spread("age", { dir: "x", spacing: 16 }),
+      spread("person", { dir: "x", spacing: 4 })
+    )
+    .mark(rect({ h: "height", fill: FRANCONERI_BAR_COLOR }))
+    .render(el, { w: CHART_W, h: CHART_H, axes: true });
+}
+
+function renderFranconeriAKey() {
+  const el = getContainer("chart-franconeri-a-key");
+  if (!el || el.children.length > 0) return;
+  Chart(franconeriHeights)
+    .flow(
+      spread("age", { dir: "x", spacing: 16 }),
+      spread("person", { dir: "x", spacing: 4 })
+    )
+    .mark(rect({ h: "height", fill: FRANCONERI_BAR_COLOR }))
     .render(el, { w: CHART_W, h: CHART_H, axes: true });
 }
 
 function renderFranconeriB() {
   const el = getContainer("chart-franconeri-b");
   if (!el || el.children.length > 0) return;
-  // Outer: species. Inner: lakes side-by-side.
-  // Easy query: "how does this species vary across lakes?"
-  Chart(seafood)
-    .flow(spread("species", { dir: "x" }), stack("lake", { dir: "x" }))
-    .mark(rect({ h: "count", fill: "lake" }))
+  // Outer: person. Inner: ages side-by-side via inner spread.
+  // Easy query: "how does height change across ages for each person?"
+  Chart(franconeriHeights)
+    .flow(
+      spread("person", { dir: "x", spacing: 16 }),
+      spread("age", { dir: "x", spacing: 4 })
+    )
+    .mark(rect({ h: "height", fill: FRANCONERI_BAR_COLOR }))
+    .render(el, { w: CHART_W, h: CHART_H, axes: true });
+}
+
+function renderFranconeriBKey() {
+  const el = getContainer("chart-franconeri-b-key");
+  if (!el || el.children.length > 0) return;
+  Chart(franconeriHeights)
+    .flow(
+      spread("person", { dir: "x", spacing: 16 }),
+      spread("age", { dir: "x", spacing: 4 })
+    )
+    .mark(rect({ h: "height", fill: FRANCONERI_BAR_COLOR }))
     .render(el, { w: CHART_W, h: CHART_H, axes: true });
 }
 
@@ -249,6 +296,8 @@ function renderBalloonChart() {
 export function renderCharts() {
   renderFranconeriA();
   renderFranconeriB();
+  renderFranconeriAKey();
+  renderFranconeriBKey();
   renderBarChart();
   renderStackedChart();
   renderStackedChart2();
@@ -262,7 +311,25 @@ export function renderCharts() {
 export const chartRenderers: Record<string, () => void> = {
   "chart-franconeri-a": renderFranconeriA,
   "chart-franconeri-b": renderFranconeriB,
+  "chart-franconeri-a-key": renderFranconeriAKey,
+  "chart-franconeri-b-key": renderFranconeriBKey,
   "chart-bar": renderBarChart,
+  "chart-bar-b": () => {
+    const el = getContainer("chart-bar-b");
+    if (!el || el.children.length > 0) return;
+    Chart(seafood)
+      .flow(spread("lake", { dir: "x" }))
+      .mark(rect({ h: "count" }))
+      .render(el, { w: CHART_W, h: CHART_H, axes: true });
+  },
+  "chart-bar-c": () => {
+    const el = getContainer("chart-bar-c");
+    if (!el || el.children.length > 0) return;
+    Chart(seafood)
+      .flow(spread("lake", { dir: "x" }))
+      .mark(rect({ h: "count" }))
+      .render(el, { w: CHART_W, h: CHART_H, axes: true });
+  },
   "chart-stacked": renderStackedChart,
   "chart-stacked-2": renderStackedChart2,
   "chart-ribbon": renderRibbonChart,
