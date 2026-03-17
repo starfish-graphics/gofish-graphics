@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
 import bottlePng from "../assets/wilsonblanco.png";
-import { Atop, Image, In, Mask as MaskOp, Out, Over, Rect, Xor } from "../../src/lib";
+import { Atop, image, In, Mask as MaskOp, Out, Over, rect, Xor } from "../../src/lib";
 
 const meta: Meta = {
   title: "Low Level Syntax/Porter-Duff Relations",
@@ -37,8 +37,8 @@ const buildChildren = (args: Args) => {
   const splitY = args.h - args.h * (args.splitY / 100);
   const splitH = args.h * (args.splitY / 100);
   return [
-    Image({ href: bottlePng, x: 0, y: 0, w: args.w, h: args.h }),
-    Rect({ x: 0, y: splitY, w: args.w, h: splitH, fill: args.bgColor }),
+    image({ href: bottlePng, x: 0, y: 0, w: args.w, h: args.h }),
+    rect({ x: 0, y: splitY, w: args.w, h: splitH, fill: args.bgColor }),
   ];
 };
 

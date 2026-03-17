@@ -2,14 +2,14 @@ const boxAndWhisker = ({ median, min, max, q1, q3, fill }) => {
   const minName = `min-${Math.random().toString(36).substring(2, 9)}`;
   const maxName = `max-${Math.random().toString(36).substring(2, 9)}`;
   return gf.Frame({}, [
-    gf.Rect({ w: 8, h: 1, y: gf.v(min), fill: "gray" }).name(minName),
-    gf.Rect({ w: 8, h: 1, y: gf.v(max), fill: "gray" }).name(maxName),
+    gf.rect({ w: 8, h: 1, y: gf.v(min), fill: "gray" }).name(minName),
+    gf.rect({ w: 8, h: 1, y: gf.v(max), fill: "gray" }).name(maxName),
     gf.ConnectY({ mode: "center-to-center", strokeWidth: 1 }, [
-      gf.Ref(minName),
-      gf.Ref(maxName),
+      gf.ref(minName),
+      gf.ref(maxName),
     ]),
-    gf.Rect({ w: 8, y: gf.v(q1), h: gf.v(q3 - q1), fill }),
-    gf.Rect({ w: 8, h: 1, y: gf.v(median), fill: "white" }),
+    gf.rect({ w: 8, y: gf.v(q1), h: gf.v(q3 - q1), fill }),
+    gf.rect({ w: 8, h: 1, y: gf.v(median), fill: "white" }),
   ]);
 };
 

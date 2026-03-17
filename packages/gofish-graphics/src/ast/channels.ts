@@ -1,5 +1,5 @@
 import { sumBy } from "lodash";
-import { MaybeValue, value } from "./data";
+import { MaybeValue, Value, value } from "./data";
 
 export type ChannelType = "size" | "color";
 
@@ -10,8 +10,8 @@ export type ChannelAnnotations<T> = {
 /**
  * Derive mark prop types from shape prop types + channel annotations.
  *
- * - "size" channels: mark accepts `number | keyof T` instead of `MaybeValue<number>`
- * - "color" channels: mark accepts `string | keyof T` instead of `MaybeValue<string>`
+ * - "size" channels: mark accepts `number | keyof T | Value<number>` instead of `MaybeValue<number>`
+ * - "color" channels: mark accepts `string | keyof T | Value<string>` instead of `MaybeValue<string>`
  * - unannotated props: passed through with the same type
  */
 export type DeriveMarkProps<
@@ -21,9 +21,9 @@ export type DeriveMarkProps<
 > = {
   [K in keyof ShapeProps]: K extends keyof Channels
     ? Channels[K] extends "size"
-      ? number | (keyof T & string) | undefined
+      ? number | (keyof T & string) | Value<number> | undefined
       : Channels[K] extends "color"
-        ? string | (keyof T & string) | undefined
+        ? string | (keyof T & string) | Value<string> | undefined
         : ShapeProps[K]
     : ShapeProps[K];
 } & { debug?: boolean };
@@ -35,7 +35,7 @@ export type DeriveMarkProps<
  */
 export const inferSize = <T>(
   accessor: string | number | undefined,
-  d: T | T[],
+  d: T | T[]
 ): MaybeValue<number> | undefined => {
   return typeof accessor === "number"
     ? accessor
@@ -51,10 +51,10 @@ export const inferSize = <T>(
  */
 export const inferColor = <T extends Record<string, any>>(
   accessor: string | undefined,
-  data: T[],
+  data: T[]
 ): MaybeValue<string> | undefined => {
   if (accessor === undefined) return undefined;
-  if (data.length > 0 && accessor in data[0]) {
+  if (data.length > 0 && data[0] != null && accessor in data[0]) {
     return value(data[0][accessor]);
   }
   return accessor;

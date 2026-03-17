@@ -3,7 +3,7 @@ import {
   tailwindColorsMuted,
   tailwindColorsVivid,
 } from "../color";
-import { Rect, SpreadX, SpreadY, StackX, StackY } from "../lib";
+import { rect, SpreadX, SpreadY, StackX, StackY } from "../lib";
 
 export const tailwindColorGrid = () => {
   const colorNames = Object.keys(tailwindColors);
@@ -17,7 +17,7 @@ export const tailwindColorGrid = () => {
     // Create squares for each shade
     const shadeSquares = shades.map((shade) => {
       const color = colorFamily[shade as keyof typeof colorFamily];
-      return Rect({
+      return rect({
         w: 40,
         h: 40,
         fill: color,
@@ -29,7 +29,7 @@ export const tailwindColorGrid = () => {
     // Stack the shade squares horizontally with the color name
     // return Frame([
     //   // Color name label
-    //   Rect({
+    //   rect({
     //     w: 80,
     //     h: 40,
     //     fill: "oklch(97% 0 0)",
@@ -59,7 +59,7 @@ export const tailwindColorGridCompact = () => {
 
     const shadeSquares = mainShades.map((shade) => {
       const color = colorFamily[shade as keyof typeof colorFamily];
-      return Rect({
+      return rect({
         w: 30,
         h: 30,
         fill: color,
@@ -85,7 +85,7 @@ const createColorGrid = (palette: typeof tailwindColors, spacing = 2) => {
 
     const shadeSquares = shades.map((shade) => {
       const color = colorFamily[shade as keyof typeof colorFamily];
-      return Rect({
+      return rect({
         w: 40,
         h: 40,
         fill: color,
@@ -110,7 +110,7 @@ const createColorGridCompact = (
 
     const shadeSquares = mainShades.map((shade) => {
       const color = colorFamily[shade as keyof typeof colorFamily];
-      return Rect({
+      return rect({
         w: 30,
         h: 30,
         fill: color,

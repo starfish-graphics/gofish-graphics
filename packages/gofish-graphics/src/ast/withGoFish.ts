@@ -8,6 +8,7 @@
 import type { JSX } from "solid-js";
 import { GoFishAST } from "./_ast";
 import { GoFishNode } from "./_node";
+import type { AxesOptions } from "./gofish";
 import _, { ListOfRecursiveArraysOrValues } from "lodash";
 import { ChartBuilder } from "./marks/chart";
 import type { LayerContext } from "./marks/chart";
@@ -17,6 +18,7 @@ import {
   inferSize,
   inferColor,
 } from "./channels";
+import { isValue } from "./data";
 import { Mark } from "./types";
 
 /**
@@ -30,15 +32,22 @@ export interface RenderOptions {
   transform?: { x?: number; y?: number };
   debug?: boolean;
   defs?: JSX.Element[];
-  axes?: boolean;
+  axes?: AxesOptions;
 }
 
 /**
- * Children input type that can be a recursive structure, a promise of it, or null
+ * A single child element: a GoFishAST node, a promise of one, or a mark (function).
+ * Marks are resolved by calling them with `undefined` (no data) to produce a node.
+ */
+type GoFishChild = GoFishAST | Promise<GoFishAST> | Mark<any>;
+
+/**
+ * Children input type that can be a recursive structure, a promise of it, or null.
+ * Accepts marks (functions) alongside GoFishAST nodes.
  */
 type GoFishChildrenInput =
-  | ListOfRecursiveArraysOrValues<GoFishAST | Promise<GoFishAST>>
-  | Promise<ListOfRecursiveArraysOrValues<GoFishAST | Promise<GoFishAST>>>
+  | ListOfRecursiveArraysOrValues<GoFishChild>
+  | Promise<ListOfRecursiveArraysOrValues<GoFishChild>>
   | null;
 
 /**
@@ -46,11 +55,11 @@ type GoFishChildrenInput =
  */
 type GoFishChildrenInputWithThunks =
   | ListOfRecursiveArraysOrValues<
-      GoFishAST | Promise<GoFishAST> | (() => GoFishAST | Promise<GoFishAST>)
+      GoFishChild | (() => GoFishAST | Promise<GoFishAST>)
     >
   | Promise<
       ListOfRecursiveArraysOrValues<
-        GoFishAST | Promise<GoFishAST> | (() => GoFishAST | Promise<GoFishAST>)
+        GoFishChild | (() => GoFishAST | Promise<GoFishAST>)
       >
     >
   | null;
@@ -206,8 +215,8 @@ export async function reifyChildrenSequentially(
 
   for (const child of children) {
     if (typeof child === "function") {
-      // It's a thunk, call it and await if it returns a promise
-      const result = child();
+      // It's a thunk or mark — call it (marks receive undefined as data)
+      const result = (child as any)(undefined);
       const resolvedChild = result instanceof Promise ? await result : result;
       if (resolvedChild != null) {
         // If it's a ChartBuilder, resolve it
@@ -264,19 +273,23 @@ export function createOperator<T extends Record<string, any>, R>(
       }
       // Flatten nested structures and await all promises
       const flattened = await flattenAndAwaitPromises<
-        GoFishAST | Promise<GoFishAST> | ChartBuilder<any, any>
+        GoFishAST | Promise<GoFishAST> | ChartBuilder<any, any> | Mark<any>
       >(children);
       const layerContext: LayerContext = {};
-      // Resolve any ChartBuilder instances and filter out promises
-      const resolvedBuilders = await Promise.all(
+      // Resolve marks (functions), ChartBuilder instances, and filter out promises
+      const resolvedAll = await Promise.all(
         flattened.map(async (child) => {
+          if (typeof child === "function") {
+            // It's a mark — call with undefined to produce a GoFishNode
+            return await (child as Mark<any>)(undefined as any);
+          }
           if (isChartBuilder(child)) {
             return await child.withLayerContext(layerContext).resolve();
           }
           return child;
         })
       );
-      const flatChildren = resolvedBuilders.filter(
+      const flatChildren = resolvedAll.filter(
         (child): child is GoFishAST =>
           child != null && !(child instanceof Promise)
       ) as GoFishAST[];
@@ -319,16 +332,19 @@ export function createOperatorSequential<T extends Record<string, any>, R>(
           `createOperatorSequential: Expected 0, 1, or 2 arguments, got ${args.length}`
         );
       }
-      // First phase: flatten nested structures and await promises, preserving thunks and ChartBuilder instances
+      // First phase: flatten nested structures and await promises, preserving thunks, marks, and ChartBuilder instances
       const flattenedWithThunks = await flattenAndAwaitPromises<
         | GoFishAST
         | (() => GoFishAST | Promise<GoFishAST>)
         | ChartBuilder<any, any>
+        | Mark<any>
       >(children);
       const layerContext: LayerContext = {};
       // Second phase: process thunks and ChartBuilder instances sequentially
-      const resolvedChildren =
-        await reifyChildrenSequentially(flattenedWithThunks, layerContext);
+      const resolvedChildren = await reifyChildrenSequentially(
+        flattenedWithThunks,
+        layerContext
+      );
       return func(opts, resolvedChildren);
     })();
     return addRenderMethod(promise);
@@ -394,7 +410,10 @@ export function createMark<
         const channelType = channels[propName as keyof C];
         const markValue = (markOpts as any)[propName];
 
-        if (channelType === "size") {
+        if (isValue(markValue)) {
+          // Already a Value wrapper (e.g. v(...)) — pass through directly
+          shapeProps[propName] = markValue;
+        } else if (channelType === "size") {
           shapeProps[propName] = inferSize(markValue, data);
         } else if (channelType === "color") {
           shapeProps[propName] = inferColor(markValue, data);
@@ -418,6 +437,8 @@ export function createMark<
         layerContext?: LayerContext
       ) => {
         const node = await baseMark(input, keyParam, layerContext);
+        // Set the node name for Ref() lookup in low-level context
+        (node as GoFishNode).name(layerName);
         if (layerContext && layerName) {
           if (!layerContext[layerName]) {
             layerContext[layerName] = { data: [], nodes: [] };

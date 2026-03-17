@@ -13,12 +13,12 @@ Chart(data)
 
 Each method has a specific role:
 
-| Method | Purpose |
-|--------|---------|
-| `Chart(data)` | Creates a builder with your dataset |
-| `.flow(...)` | Applies layout operators to position data |
-| `.mark(...)` | Sets the visual representation |
-| `.render(...)` | Renders the chart to a DOM element |
+| Method         | Purpose                                   |
+| -------------- | ----------------------------------------- |
+| `Chart(data)`  | Creates a builder with your dataset       |
+| `.flow(...)`   | Applies layout operators to position data |
+| `.mark(...)`   | Sets the visual representation            |
+| `.render(...)` | Renders the chart to a DOM element        |
 
 ## Step 1: Chart
 
@@ -31,13 +31,13 @@ const data = [
   { category: "C", value: 20 },
 ];
 
-Chart(data)
+Chart(data);
 ```
 
 You can also pass options for coordinate transforms (like polar coordinates for pie charts):
 
 ```ts
-Chart(data, { coord: clock() })
+Chart(data, { coord: clock() });
 ```
 
 ## Step 2: flow
@@ -82,9 +82,10 @@ Here `h: "value"` means the rectangle height comes from each item's `value` fiel
 ```
 
 Options:
+
 - `w` — width in pixels
 - `h` — height in pixels
-- `axes` — whether to show axes (boolean)
+- `axes` — `boolean | { x: boolean; y: boolean }` (use object form to toggle x/y axes individually)
 
 ## Composing operators
 
@@ -107,10 +108,7 @@ const data = [
 ];
 
 gf.Chart(data)
-  .flow(
-    gf.spread("category", { dir: "x" }),
-    gf.stack("group", { dir: "y" })
-  )
+  .flow(gf.spread("category", { dir: "x" }), gf.stack("group", { dir: "y" }))
   .mark(gf.rect({ h: "value", fill: "group" }))
   .render(root, { w: 400, h: 300, axes: true });
 ```
@@ -162,10 +160,7 @@ To stack bars, use `spread` then `stack` (perpendicular directions):
 
 ```js
 gf.Chart(seafood)
-  .flow(
-    gf.spread("lake", { dir: "x" }),
-    gf.stack("species", { dir: "y" })
-  )
+  .flow(gf.spread("lake", { dir: "x" }), gf.stack("species", { dir: "y" }))
   .mark(gf.rect({ h: "count", fill: "species" }))
   .render(root, { w: 400, h: 300, axes: true });
 ```
