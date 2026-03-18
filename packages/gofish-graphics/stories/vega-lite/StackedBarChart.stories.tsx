@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
-import { Chart, spread, stack, rect, derive, log } from "../../src/lib";
+import { Chart, spread, stack, rect, derive, log, palette } from "../../src/lib";
 import { groupBy } from "lodash";
 import data from "vega-datasets";
 import _ from "lodash";
@@ -43,14 +43,11 @@ export const Default: StoryObj<Args> = {
     // Seattle weather data: count of days per weather type per month.
     // Vega-Lite uses `timeUnit: "month"` and `aggregate: "count"` declaratively.
     // GoFish equivalent: use derive() to extract month from date, then group and count.
-    //
-    // MISSING FEATURE: Custom color palettes per field value are not yet supported.
-    // Vega-Lite maps weather types to specific colors (sun → "#e7ba52", fog → "#c7c7c7",
-    // drizzle → "#aec7e8", rain → "#1f77b4", snow → "#9467bd").
-    // GoFish assigns colors automatically from its default palette.
 
     // TODO: need a better way of aggregating by count or whatever.
-    Chart(context.loaded.weather as any[])
+    Chart(context.loaded.weather as any[], {
+      color: palette({ sun: "#e7ba52", fog: "#dfdfdf", drizzle: "#79a1d5", rain: "#1f77b4", snow: "#9467bd" }),
+    })
       .flow(
         derive((d: any[]) =>
           d.map((row) => ({

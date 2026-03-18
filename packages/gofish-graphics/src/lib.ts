@@ -87,4 +87,10 @@ export type {
   ChartOptions,
   ChartBuilder,
 } from "./ast/marks/chart";
+export { palette, gradient, assignGradientColor } from "./ast/colorSchemes";
+export type {
+  ColorConfig,
+  PaletteScale,
+  GradientScale,
+} from "./ast/colorSchemes";
 export type { NameableMark } from "./ast/withGoFish";

@@ -1,4 +1,5 @@
 import { createResource, For, Show, Suspense, type JSX } from "solid-js";
+import { type ColorConfig } from "./colorSchemes";
 import { render as solidRender } from "solid-js/web";
 import {
   debugInputSceneGraph,
@@ -23,7 +24,7 @@ import { path, pathToSVGPath, transformPath } from "../path";
 
 export type ScaleContext = {
   [measure: string]:
-    | { color: Map<any, string> }
+    | { color: Map<any, string>; colorConfig?: ColorConfig }
     | { domain: [number, number]; scaleFactor: number };
 };
 
@@ -271,6 +272,7 @@ export const gofish = (
     debug = false,
     defs,
     axes = false,
+    colorConfig,
   }: {
     w: number;
     h: number;
@@ -279,7 +281,8 @@ export const gofish = (
     transform?: { x?: number; y?: number };
     debug?: boolean;
     defs?: JSX.Element[];
-    axes?: AxesOptions;
+    axes?: boolean;
+    colorConfig?: ColorConfig;
   },
   child: GoFishNode | Promise<GoFishNode>
 ) => {
@@ -300,7 +303,7 @@ export const gofish = (
   const runGofish = async (): Promise<LayoutData> => {
     const session: RenderSession = {
       scopeContext: new Map(),
-      scaleContext: { unit: { color: new Map() } },
+      scaleContext: { unit: { color: new Map(), colorConfig } },
       keyContext: {},
     };
     try {
