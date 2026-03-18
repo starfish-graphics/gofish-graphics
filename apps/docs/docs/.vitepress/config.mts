@@ -229,7 +229,7 @@ export default defineConfig({
     socialLinks: [
       {
         icon: "github",
-        link: "https://github.com/starfish-graphics/gofish-graphics",
+        link: "https://github.com/gofish-graphics/gofish-graphics",
       },
     ],
   },
