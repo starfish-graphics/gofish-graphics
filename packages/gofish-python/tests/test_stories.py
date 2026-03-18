@@ -138,6 +138,51 @@ class TestVegaLite:
 
 
 # ---------------------------------------------------------------------------
+# Blocked stories — xfail until Layer + clock() coordinate are implemented
+# ---------------------------------------------------------------------------
+
+_LAYER_REASON = "requires Layer (multi-chart composition) — not yet in Python wrapper"
+_CLOCK_REASON = "requires Layer + clock() coordinate transform — not yet in Python wrapper"
+
+
+class TestBlockedStories:
+    @pytest.mark.xfail(raises=NotImplementedError, reason=_LAYER_REASON, strict=True)
+    def test_ribbon_basic(self):
+        from stories.forwardsyntax.ribbon import basic
+        basic()
+
+    @pytest.mark.xfail(raises=NotImplementedError, reason=_CLOCK_REASON, strict=True)
+    def test_ribbon_polar(self):
+        from stories.forwardsyntax.ribbon import polar
+        polar()
+
+    @pytest.mark.xfail(raises=NotImplementedError, reason=_LAYER_REASON, strict=True)
+    def test_line_chart(self):
+        from stories.forwardsyntax.line_chart import default
+        default()
+
+    @pytest.mark.xfail(raises=NotImplementedError, reason=_LAYER_REASON, strict=True)
+    def test_streamgraph(self):
+        from stories.forwardsyntax.streamgraph import default
+        default()
+
+    @pytest.mark.xfail(raises=NotImplementedError, reason=_LAYER_REASON, strict=True)
+    def test_bar_with_labels(self):
+        from stories.forwardsyntax.bar.bar_with_labels import default
+        default()
+
+    @pytest.mark.xfail(raises=NotImplementedError, reason=_LAYER_REASON, strict=True)
+    def test_scatter_connected(self):
+        from stories.forwardsyntax.scatter_connected import connected
+        connected()
+
+    @pytest.mark.xfail(raises=NotImplementedError, reason=_CLOCK_REASON, strict=True)
+    def test_scatter_with_pie_glyphs(self):
+        from stories.forwardsyntax.scatter_connected import with_pie_glyphs
+        with_pie_glyphs()
+
+
+# ---------------------------------------------------------------------------
 # Spot-check: verify IR operator/mark details for key stories
 # ---------------------------------------------------------------------------
 
