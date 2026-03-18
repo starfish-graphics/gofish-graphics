@@ -110,6 +110,7 @@ export default defineConfig({
           items: [
             { text: "spread", link: "/api/operators/spread" },
             { text: "stack", link: "/api/operators/stack" },
+            { text: "table", link: "/api/operators/table" },
             { text: "scatter", link: "/api/operators/scatter" },
             { text: "layer", link: "/api/operators/layer" },
             { text: "derive", link: "/api/operators/derive" },

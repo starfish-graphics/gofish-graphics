@@ -48,6 +48,7 @@ export { enclose as Enclose } from "./ast/graphicalOperators/enclose";
 export { frame as Frame } from "./ast/graphicalOperators/frame";
 export { position as Position } from "./ast/graphicalOperators/position";
 export { arrow as Arrow } from "./ast/graphicalOperators/arrow";
+export { table as Table } from "./ast/graphicalOperators/table";
 export {
   over as Over,
   inside as In,
@@ -68,6 +69,7 @@ export {
   chart as Chart,
   spread,
   stack,
+  table,
   scatter,
   group,
   derive,

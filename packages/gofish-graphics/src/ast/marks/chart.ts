@@ -3,6 +3,7 @@ import {
   Frame,
   Spread,
   Stack,
+  Table,
   sumBy,
   v,
   Position,
@@ -519,6 +520,66 @@ export function stack<T>(
     ...(optionsOrMarks as SpreadOptions<T>),
     spacing: 0,
   });
+}
+
+type TableOptions = {
+  spacing?: number;
+  xSpacing?: number;
+  ySpacing?: number;
+};
+
+export function table<T>(
+  xField: keyof T,
+  yField: keyof T,
+  options?: TableOptions
+): Operator<T[], T[]> {
+  return async (mark: Mark<T[]>) => {
+    return async (
+      d: T[],
+      key?: string | number,
+      layerContext?: LayerContext
+    ) => {
+      // Unique column keys (xField values) preserving insertion order
+      const colKeys = [
+        ...new Map(d.map((row) => [String(row[xField]), true])).keys(),
+      ];
+      // Unique row keys (yField values) preserving insertion order
+      const rowKeys = [
+        ...new Map(d.map((row) => [String(row[yField]), true])).keys(),
+      ];
+      const numCols = colKeys.length;
+
+      const xSpacing = options?.xSpacing ?? options?.spacing ?? 2;
+      const ySpacing = options?.ySpacing ?? options?.spacing ?? 2;
+
+      // Build cells in row-major order (outer=row, inner=col)
+      const cells: { data: T[]; colKey: string; rowKey: string }[] = [];
+      for (const rowKey of rowKeys) {
+        for (const colKey of colKeys) {
+          const cellData = d.filter(
+            (row) =>
+              String(row[xField]) === colKey && String(row[yField]) === rowKey
+          );
+          cells.push({ data: cellData, colKey, rowKey });
+        }
+      }
+
+      return Table(
+        { numCols, colKeys, rowKeys, spacing: [xSpacing, ySpacing] },
+        For(cells, async ({ data: cellData, colKey, rowKey }) => {
+          const cellKey =
+            key != undefined
+              ? `${key}-${colKey}-${rowKey}`
+              : `${colKey}-${rowKey}`;
+          const node = await resolveMarkResult(
+            mark(cellData, cellKey, layerContext),
+            layerContext
+          );
+          return node.setKey(cellKey);
+        })
+      );
+    };
+  };
 }
 
 export function scatter<T>(
