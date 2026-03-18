@@ -5,6 +5,8 @@ GoFish Graphics in Python
 from .ast import (
     chart,
     ChartBuilder,
+    Layer,
+    LayerBuilder,
     spread,
     stack,
     derive,
@@ -30,6 +32,8 @@ from .ast import (
 __all__ = [
     "chart",
     "ChartBuilder",
+    "Layer",
+    "LayerBuilder",
     "spread",
     "stack",
     "derive",

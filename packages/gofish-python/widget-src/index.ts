@@ -8,6 +8,7 @@
 import * as Arrow from "apache-arrow";
 import {
   Chart as chart,
+  Layer,
   spread,
   stack,
   scatter,
@@ -33,8 +34,8 @@ import {
 
 // Type definitions for widget model and IR
 interface WidgetModel {
-  get(key: "spec"): ChartSpec;
-  get(key: "arrow_data"): string; // base64-encoded Arrow IPC bytes
+  get(key: "spec"): ChartSpec | LayerSpec;
+  get(key: "arrow_data"): string; // base64-encoded Arrow IPC bytes (or JSON dict for layer)
   get(key: "width"): number;
   get(key: "height"): number;
   get(key: "axes"): boolean;
@@ -56,9 +57,16 @@ interface SelectSpec {
 }
 
 interface ChartSpec {
+  type?: string;
   data?: SelectSpec | null;
   operators?: OperatorSpec[];
   mark: MarkSpec;
+  options?: Record<string, any>;
+}
+
+interface LayerSpec {
+  type: "layer";
+  charts: ChartSpec[];
   options?: Record<string, any>;
 }
 
@@ -392,6 +400,114 @@ function renderError(
   `;
 }
 
+/**
+ * Decodes a base64 Arrow IPC buffer to an array of data objects.
+ */
+function decodeArrowB64(b64: string): Record<string, any>[] {
+  if (!b64) return [];
+  const arrowBuffer = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+  const table = Arrow.tableFromIPC(arrowBuffer);
+  return arrowTableToArray(table);
+}
+
+/**
+ * Builds a ChartBuilder from a ChartSpec + resolved data array.
+ */
+function buildChart(
+  chartSpec: ChartSpec,
+  data: Record<string, any>[],
+  model: WidgetModel,
+  experimental: ExperimentalAPI
+): ChartBuilder {
+  const operators: Operator<any, any>[] = [];
+  for (const opSpec of chartSpec.operators || []) {
+    const op = mapOperator(opSpec, model, experimental);
+    if (op) {
+      operators.push(op);
+    }
+  }
+
+  const markSpec = chartSpec.mark || { type: "rect" };
+  const mark = mapMark(markSpec);
+
+  const rawOptions = chartSpec.options || {};
+  const resolvedOptions: Record<string, any> = { ...rawOptions };
+  if (
+    resolvedOptions.color &&
+    typeof resolvedOptions.color === "object" &&
+    "_tag" in resolvedOptions.color
+  ) {
+    resolvedOptions.color = resolveColorConfig(resolvedOptions.color);
+  }
+
+  let chartData: any = data;
+  if (
+    chartSpec.data &&
+    typeof chartSpec.data === "object" &&
+    chartSpec.data.type === "select"
+  ) {
+    chartData = select(chartSpec.data.layer);
+  }
+
+  return chart(chartData, resolvedOptions)
+    .flow(...operators)
+    .mark(mark);
+}
+
+/**
+ * Renders a Layer (multi-chart composition) from widget model state.
+ */
+function renderLayer(
+  model: WidgetModel,
+  container: HTMLElement,
+  experimental: ExperimentalAPI
+): void {
+  const debug = model.get("debug");
+  const log = debug
+    ? (...args: any[]) => console.log("[GoFish Widget]", ...args)
+    : () => {};
+
+  log("Rendering layer...");
+
+  const spec = model.get("spec") as LayerSpec;
+  const arrowDataRaw = model.get("arrow_data");
+
+  // Parse per-chart arrow data dict
+  let arrowDict: Record<string, string> = {};
+  try {
+    arrowDict = JSON.parse(arrowDataRaw);
+  } catch (e) {
+    throw new Error(`Failed to parse layer arrow_data JSON: ${e}`);
+  }
+
+  // Build each child chart
+  const childCharts: ChartBuilder[] = spec.charts.map(
+    (chartSpec: ChartSpec, i: number) => {
+      const b64 = arrowDict[String(i)] || "";
+      const data = decodeArrowB64(b64);
+      log(`Building chart ${i}: ${data.length} rows`);
+      return buildChart(chartSpec, data, model, experimental);
+    }
+  );
+
+  // Resolve layer-level options
+  const rawOptions = spec.options || {};
+  const renderOptions: RenderOptions = {
+    w: model.get("width"),
+    h: model.get("height"),
+    axes: model.get("axes"),
+    debug: debug,
+  };
+
+  log("Calling Layer([...]).render()...");
+  if (Object.keys(rawOptions).length > 0) {
+    Layer(rawOptions, childCharts).render(container, renderOptions);
+  } else {
+    Layer(childCharts).render(container, renderOptions);
+  }
+  log("Layer rendered successfully!");
+}
+
 // Main chart rendering function
 /**
  * Renders a GoFish chart from widget model state.
@@ -401,6 +517,15 @@ function renderChart(
   container: HTMLElement,
   experimental: ExperimentalAPI
 ): void {
+  const spec = model.get("spec");
+
+  // Dispatch to layer renderer if spec.type === "layer"
+  if ((spec as any).type === "layer") {
+    renderLayer(model, container, experimental);
+    return;
+  }
+
+  const chartSpec = spec as ChartSpec;
   const debug = model.get("debug");
 
   // Log only if debug mode is enabled
@@ -416,12 +541,7 @@ function renderChart(
   if (arrowDataB64) {
     try {
       log("Decoding Arrow data...");
-      const arrowBuffer = Uint8Array.from(atob(arrowDataB64), (c) =>
-        c.charCodeAt(0)
-      );
-      const table = Arrow.tableFromIPC(arrowBuffer);
-      log(`Arrow table: ${table.numRows} rows`);
-      data = arrowTableToArray(table);
+      data = decodeArrowB64(arrowDataB64);
       log(`Converted to ${data.length} data objects`);
     } catch (error) {
       const err =
@@ -434,11 +554,10 @@ function renderChart(
   }
 
   // 2. Map IR operators to GoFish operators
-  const spec = model.get("spec");
-  log("Processing spec:", spec);
+  log("Processing spec:", chartSpec);
   const operators: Operator<any, any>[] = [];
 
-  for (const opSpec of spec.operators || []) {
+  for (const opSpec of chartSpec.operators || []) {
     log(`Mapping operator: ${opSpec.type}`);
     const op = mapOperator(opSpec, model, experimental);
     if (op) {
@@ -449,12 +568,12 @@ function renderChart(
   }
 
   // 3. Map IR mark to GoFish mark (with optional .name())
-  const markSpec = spec.mark || { type: "rect" };
+  const markSpec = chartSpec.mark || { type: "rect" };
   log(`Mapping mark: ${markSpec.type}`);
   const mark = mapMark(markSpec);
 
   // 4. Resolve options (transform color config if needed)
-  const rawOptions = spec.options || {};
+  const rawOptions = chartSpec.options || {};
   const resolvedOptions: Record<string, any> = { ...rawOptions };
   if (
     resolvedOptions.color &&
@@ -467,12 +586,12 @@ function renderChart(
   // 5. Determine chart data source (Arrow data or select() reference)
   let chartData: any = data;
   if (
-    spec.data &&
-    typeof spec.data === "object" &&
-    spec.data.type === "select"
+    chartSpec.data &&
+    typeof chartSpec.data === "object" &&
+    chartSpec.data.type === "select"
   ) {
-    log(`Using select("${spec.data.layer}") as data source`);
-    chartData = select(spec.data.layer);
+    log(`Using select("${chartSpec.data.layer}") as data source`);
+    chartData = select(chartSpec.data.layer);
   }
 
   // 6. Build and render chart

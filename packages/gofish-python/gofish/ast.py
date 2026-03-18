@@ -689,3 +689,123 @@ def chart(data: Any, options: Optional[dict] = None) -> ChartBuilder:
         ChartBuilder instance
     """
     return ChartBuilder(data, options)
+
+
+class LayerBuilder:
+    """Builder class for composing multiple ChartBuilder instances as a layer."""
+
+    def __init__(
+        self,
+        children: List[ChartBuilder],
+        options: Optional[dict] = None,
+    ):
+        self.children = children
+        self.options = options or {}
+
+    def to_ir(self) -> dict:
+        """Convert the layer specification to JSON IR."""
+        return {
+            "type": "layer",
+            "charts": [child.to_ir() for child in self.children],
+            "options": self.options,
+        }
+
+    def render(
+        self,
+        w: int = 800,
+        h: int = 600,
+        axes: bool = False,
+        debug: bool = False,
+    ):
+        """
+        Render the layer as an anywidget for Jupyter notebooks.
+
+        Args:
+            w: Chart width in pixels
+            h: Chart height in pixels
+            axes: Whether to show axes
+            debug: Whether to enable debug mode
+
+        Returns:
+            GoFishChartWidget instance that will display in Jupyter
+        """
+        import base64
+        import json
+        from .widget import GoFishChartWidget
+        from .arrow_utils import dataframe_to_arrow
+        import pandas as pd
+        import pyarrow as pa
+
+        def _serialize_child_data(child: ChartBuilder) -> str:
+            """Serialize a child chart's data to base64 Arrow bytes."""
+            if isinstance(child.data, LayerSelector):
+                schema = pa.schema([pa.field("_placeholder", pa.int32())])
+                table = pa.Table.from_arrays([], schema=schema)
+                sink = pa.BufferOutputStream()
+                with pa.ipc.new_stream(sink, schema) as writer:
+                    writer.write_table(table)
+                return base64.b64encode(sink.getvalue().to_pybytes()).decode("ascii")
+
+            if isinstance(child.data, pd.DataFrame):
+                df = child.data
+            elif child.data is None:
+                df = pd.DataFrame()
+            else:
+                df = pd.DataFrame(child.data)
+
+            if len(df) == 0:
+                schema = pa.schema([pa.field("_placeholder", pa.int32())])
+                table = pa.Table.from_arrays([], schema=schema)
+                sink = pa.BufferOutputStream()
+                with pa.ipc.new_stream(sink, schema) as writer:
+                    writer.write_table(table)
+                return base64.b64encode(sink.getvalue().to_pybytes()).decode("ascii")
+
+            return base64.b64encode(dataframe_to_arrow(df)).decode("ascii")
+
+        # Serialize each child's data and collect derive functions
+        arrow_dict: dict = {}
+        derive_functions: dict = {}
+        for i, child in enumerate(self.children):
+            arrow_dict[str(i)] = _serialize_child_data(child)
+            for op in child.operators:
+                if isinstance(op, DeriveOperator):
+                    derive_functions[op.lambda_id] = op.fn
+
+        arrow_data = json.dumps(arrow_dict)
+        spec = self.to_ir()
+
+        widget = GoFishChartWidget(
+            spec=spec,
+            arrow_data=arrow_data,
+            derive_functions=derive_functions,
+            width=w,
+            height=h,
+            axes=axes,
+            debug=debug,
+        )
+        return widget
+
+
+def Layer(
+    children_or_options: Union[List[ChartBuilder], dict],
+    children: Optional[List[ChartBuilder]] = None,
+) -> LayerBuilder:
+    """
+    Compose multiple ChartBuilder instances as a layered chart.
+
+    Two calling conventions:
+        Layer([chart1, chart2])
+        Layer({"coord": clock()}, [chart1, chart2])
+
+    Args:
+        children_or_options: List of ChartBuilders, or options dict
+        children: List of ChartBuilders (when first arg is options dict)
+
+    Returns:
+        LayerBuilder instance
+    """
+    if isinstance(children_or_options, list):
+        return LayerBuilder(children_or_options)
+    else:
+        return LayerBuilder(children or [], children_or_options)

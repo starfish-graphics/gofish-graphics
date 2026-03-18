@@ -6,7 +6,7 @@ with minimal stub data to verify the chart spec is structurally correct.
 """
 
 import pytest
-from gofish.ast import ChartBuilder
+from gofish.ast import ChartBuilder, LayerBuilder
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -21,6 +21,19 @@ def _assert_valid_ir(builder: ChartBuilder):
     assert "operators" in ir
     assert isinstance(ir["operators"], list)
     assert "options" in ir
+
+
+def _assert_valid_layer_ir(builder: LayerBuilder):
+    """Assert a LayerBuilder produces a structurally valid IR dict."""
+    assert isinstance(builder, LayerBuilder), "story must return a LayerBuilder"
+    ir = builder.to_ir()
+    assert ir["type"] == "layer"
+    assert "charts" in ir
+    assert isinstance(ir["charts"], list)
+    assert len(ir["charts"]) >= 2
+    for chart_ir in ir["charts"]:
+        assert "mark" in chart_ir
+        assert "type" in chart_ir["mark"]
 
 
 # ---------------------------------------------------------------------------
@@ -138,43 +151,45 @@ class TestVegaLite:
 
 
 # ---------------------------------------------------------------------------
-# Blocked stories — xfail until Layer + clock() coordinate are implemented
+# Layer stories — unblocked now that Layer is implemented
 # ---------------------------------------------------------------------------
 
-_LAYER_REASON = "requires Layer (multi-chart composition) — not yet in Python wrapper"
+class TestLayerStories:
+    def test_ribbon_basic(self):
+        from stories.forwardsyntax.ribbon import basic
+        _assert_valid_layer_ir(basic())
+
+    def test_line_chart(self):
+        from stories.forwardsyntax.line_chart import default
+        _assert_valid_layer_ir(default())
+
+    def test_streamgraph(self):
+        from stories.forwardsyntax.streamgraph import default
+        _assert_valid_layer_ir(default())
+
+    def test_scatter_connected(self):
+        from stories.forwardsyntax.scatter_connected import connected
+        _assert_valid_layer_ir(connected())
+
+
+# ---------------------------------------------------------------------------
+# Blocked stories — xfail until clock() coordinate is implemented
+# ---------------------------------------------------------------------------
+
 _CLOCK_REASON = "requires Layer + clock() coordinate transform — not yet in Python wrapper"
+_V1_REASON = "requires v1 primitives (Spread, ref) — not yet in Python wrapper"
 
 
 class TestBlockedStories:
-    @pytest.mark.xfail(raises=NotImplementedError, reason=_LAYER_REASON, strict=True)
-    def test_ribbon_basic(self):
-        from stories.forwardsyntax.ribbon import basic
-        basic()
-
     @pytest.mark.xfail(raises=NotImplementedError, reason=_CLOCK_REASON, strict=True)
     def test_ribbon_polar(self):
         from stories.forwardsyntax.ribbon import polar
         polar()
 
-    @pytest.mark.xfail(raises=NotImplementedError, reason=_LAYER_REASON, strict=True)
-    def test_line_chart(self):
-        from stories.forwardsyntax.line_chart import default
-        default()
-
-    @pytest.mark.xfail(raises=NotImplementedError, reason=_LAYER_REASON, strict=True)
-    def test_streamgraph(self):
-        from stories.forwardsyntax.streamgraph import default
-        default()
-
-    @pytest.mark.xfail(raises=NotImplementedError, reason=_LAYER_REASON, strict=True)
+    @pytest.mark.xfail(raises=NotImplementedError, reason=_V1_REASON, strict=True)
     def test_bar_with_labels(self):
         from stories.forwardsyntax.bar.bar_with_labels import default
         default()
-
-    @pytest.mark.xfail(raises=NotImplementedError, reason=_LAYER_REASON, strict=True)
-    def test_scatter_connected(self):
-        from stories.forwardsyntax.scatter_connected import connected
-        connected()
 
     @pytest.mark.xfail(raises=NotImplementedError, reason=_CLOCK_REASON, strict=True)
     def test_scatter_with_pie_glyphs(self):

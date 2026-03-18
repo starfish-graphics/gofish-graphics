@@ -3,6 +3,8 @@
 import pytest
 from gofish import (
     chart,
+    Layer,
+    LayerBuilder,
     spread,
     stack,
     derive,
@@ -272,6 +274,84 @@ class TestNewMarks:
             m = mark_fn().name("layer1")
             assert m._name == "layer1"
             assert m.to_dict()["name"] == "layer1"
+
+
+class TestLayerBuilder:
+    """Test LayerBuilder and Layer() factory."""
+
+    def test_layer_children_only(self):
+        """Test Layer([...]) with children only."""
+        data = [{"x": 1}]
+        c1 = chart(data).mark(rect(h="x").name("bars"))
+        c2 = chart(select("bars")).mark(line())
+        lb = Layer([c1, c2])
+        assert isinstance(lb, LayerBuilder)
+        assert lb.options == {}
+        assert len(lb.children) == 2
+
+    def test_layer_with_options(self):
+        """Test Layer(options, [...]) with options dict."""
+        data = [{"x": 1}]
+        c1 = chart(data).mark(rect(h="x"))
+        lb = Layer({"coord": "clock"}, [c1])
+        assert isinstance(lb, LayerBuilder)
+        assert lb.options == {"coord": "clock"}
+        assert len(lb.children) == 1
+
+    def test_layer_to_ir_structure(self):
+        """Test LayerBuilder.to_ir() produces correct structure."""
+        data = [{"x": 1}]
+        c1 = chart(data).mark(rect(h="x").name("bars"))
+        c2 = chart(select("bars")).mark(line())
+        ir = Layer([c1, c2]).to_ir()
+        assert ir["type"] == "layer"
+        assert len(ir["charts"]) == 2
+        assert ir["options"] == {}
+
+    def test_layer_to_ir_child_specs(self):
+        """Test child chart specs are correctly embedded in layer IR."""
+        data = [{"x": 1}]
+        c1 = chart(data).flow(spread("x", dir="x")).mark(rect(h="x").name("bars"))
+        c2 = chart(select("bars")).mark(line())
+        ir = Layer([c1, c2]).to_ir()
+
+        chart0 = ir["charts"][0]
+        assert chart0["mark"]["type"] == "rect"
+        assert chart0["mark"]["name"] == "bars"
+        assert chart0["operators"][0]["type"] == "spread"
+        assert chart0["data"] is None
+
+        chart1 = ir["charts"][1]
+        assert chart1["mark"]["type"] == "line"
+        assert chart1["data"] == {"type": "select", "layer": "bars"}
+
+    def test_layer_to_ir_with_options(self):
+        """Test Layer options appear in IR."""
+        data = [{"x": 1}]
+        c1 = chart(data).mark(rect(h="x"))
+        ir = Layer({"coord": "clock"}, [c1]).to_ir()
+        assert ir["options"] == {"coord": "clock"}
+
+    def test_layer_collect_derive_functions(self):
+        """Test derive functions from all children are collected."""
+        data = [{"x": 1}]
+        fn1 = lambda d: d
+        fn2 = lambda d: d
+        c1 = chart(data).flow(derive(fn1)).mark(rect(h="x").name("bars"))
+        c2 = chart(select("bars")).flow(derive(fn2)).mark(line())
+        lb = Layer([c1, c2])
+
+        # Collect derive functions manually (mirrors what render() does)
+        derive_functions = {}
+        for child in lb.children:
+            for op in child.operators:
+                from gofish.ast import DeriveOperator
+                if isinstance(op, DeriveOperator):
+                    derive_functions[op.lambda_id] = op.fn
+
+        assert len(derive_functions) == 2
+        assert fn1 in derive_functions.values()
+        assert fn2 in derive_functions.values()
 
 
 class TestChartBuilder:
