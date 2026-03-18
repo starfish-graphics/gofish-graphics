@@ -33,8 +33,8 @@ packages/gofish-graphics/stories/forwardsyntax/Bar/BarTemplate.stories.tsx
 # Forward syntax stories needing mark-as-function or nested chart
 packages/gofish-graphics/stories/forwardsyntax/FacetedChart.stories.tsx
 
-# Forward syntax stories needing coord transforms (clock)
-packages/gofish-graphics/stories/forwardsyntax/Pie.stories.tsx
+# Forward syntax stories needing coord transforms other than clock
+# (clock is now supported)
 
 # Vega-Lite stories needing external datasets or complex derives
 packages/gofish-graphics/stories/vega-lite/AggregateBarChart.stories.tsx

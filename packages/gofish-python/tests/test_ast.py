@@ -9,6 +9,7 @@ from gofish import (
     stack,
     derive,
     log,
+    clock,
     select,
     palette,
     gradient,
@@ -274,6 +275,27 @@ class TestNewMarks:
             m = mark_fn().name("layer1")
             assert m._name == "layer1"
             assert m.to_dict()["name"] == "layer1"
+
+
+class TestClockCoord:
+    """Test clock() coordinate transform."""
+
+    def test_clock_returns_dict(self):
+        """Test clock() returns the correct sentinel dict."""
+        c = clock()
+        assert c == {"type": "clock"}
+
+    def test_clock_in_chart_options_ir(self):
+        """Test clock() serializes correctly through chart options."""
+        c = chart([{"x": 1}], {"coord": clock()}).mark(rect(h="x"))
+        ir = c.to_ir()
+        assert ir["options"]["coord"] == {"type": "clock"}
+
+    def test_clock_in_layer_options_ir(self):
+        """Test clock() in Layer options IR."""
+        child = chart([{"x": 1}]).mark(rect(h="x"))
+        ir = Layer({"coord": clock()}, [child]).to_ir()
+        assert ir["options"]["coord"] == {"type": "clock"}
 
 
 class TestLayerBuilder:

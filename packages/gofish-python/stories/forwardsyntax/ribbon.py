@@ -1,6 +1,8 @@
 """Forward Syntax V3/Ribbon — mirrors Ribbon.stories.tsx"""
 
-from gofish import Layer, chart, spread, stack, derive, rect, select, area, group
+import math
+
+from gofish import Layer, chart, spread, stack, derive, rect, select, area, group, clock
 from stories.data.seafood import seafood
 
 TITLE = "Forward Syntax V3/Ribbon"
@@ -22,11 +24,15 @@ def basic(w=400, h=400):
 
 
 def polar(w=400, h=400):
-    """
-    Polar ribbon: same as basic but rendered in clock() coordinate space.
-
-    Blocked: needs Layer({ coord: clock() }, [...]) and clock() coordinate.
-    """
-    raise NotImplementedError(
-        "Polar ribbon requires Layer + clock() coordinate — not yet implemented in Python wrapper"
+    """Polar ribbon: stacked bars + area overlay in clock() coordinate space."""
+    bars = (
+        chart(seafood)
+        .flow(
+            spread("lake", dir="x", spacing=(2 * math.pi) / 6, mode="center", y=50, label=False),
+            derive(lambda d: sorted(d, key=lambda r: r["count"])),
+            stack("species", dir="y", label=False),
+        )
+        .mark(rect(w=0.1, h="count", fill="species").name("bars"))
     )
+    overlay = chart(select("bars")).flow(group("species")).mark(area(opacity=0.8))
+    return Layer({"coord": clock()}, [bars, overlay])

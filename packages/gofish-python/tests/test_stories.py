@@ -159,6 +159,10 @@ class TestLayerStories:
         from stories.forwardsyntax.ribbon import basic
         _assert_valid_layer_ir(basic())
 
+    def test_ribbon_polar(self):
+        from stories.forwardsyntax.ribbon import polar
+        _assert_valid_layer_ir(polar())
+
     def test_line_chart(self):
         from stories.forwardsyntax.line_chart import default
         _assert_valid_layer_ir(default())
@@ -173,25 +177,38 @@ class TestLayerStories:
 
 
 # ---------------------------------------------------------------------------
-# Blocked stories — xfail until clock() coordinate is implemented
+# Pie / clock() stories
 # ---------------------------------------------------------------------------
 
-_CLOCK_REASON = "requires Layer + clock() coordinate transform — not yet in Python wrapper"
+class TestPieStories:
+    def test_pie_basic(self):
+        from stories.forwardsyntax.pie import basic
+        _assert_valid_ir(basic())
+
+    def test_pie_donut(self):
+        from stories.forwardsyntax.pie import donut
+        _assert_valid_ir(donut())
+
+    def test_pie_rose(self):
+        from stories.forwardsyntax.pie import rose
+        _assert_valid_ir(rose())
+
+
+# ---------------------------------------------------------------------------
+# Blocked stories — xfail for remaining unsupported features
+# ---------------------------------------------------------------------------
+
 _V1_REASON = "requires v1 primitives (Spread, ref) — not yet in Python wrapper"
 
 
 class TestBlockedStories:
-    @pytest.mark.xfail(raises=NotImplementedError, reason=_CLOCK_REASON, strict=True)
-    def test_ribbon_polar(self):
-        from stories.forwardsyntax.ribbon import polar
-        polar()
 
     @pytest.mark.xfail(raises=NotImplementedError, reason=_V1_REASON, strict=True)
     def test_bar_with_labels(self):
         from stories.forwardsyntax.bar.bar_with_labels import default
         default()
 
-    @pytest.mark.xfail(raises=NotImplementedError, reason=_CLOCK_REASON, strict=True)
+    @pytest.mark.xfail(raises=NotImplementedError, reason="requires nested chart as mark function — not yet supported", strict=True)
     def test_scatter_with_pie_glyphs(self):
         from stories.forwardsyntax.scatter_connected import with_pie_glyphs
         with_pie_glyphs()

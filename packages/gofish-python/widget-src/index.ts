@@ -9,6 +9,7 @@ import * as Arrow from "apache-arrow";
 import {
   Chart as chart,
   Layer,
+  clock,
   spread,
   stack,
   scatter,
@@ -379,6 +380,38 @@ function resolveColorConfig(colorSpec: Record<string, any>): any {
   return colorSpec;
 }
 
+/**
+ * Resolves a coord config dict (with type) to a real coordinate transform.
+ */
+function resolveCoordConfig(coordSpec: Record<string, any>): any {
+  if (coordSpec.type === "clock") {
+    return clock();
+  }
+  return coordSpec;
+}
+
+/**
+ * Resolves all known special values in an options dict (color, coord).
+ */
+function resolveOptions(raw: Record<string, any>): Record<string, any> {
+  const resolved: Record<string, any> = { ...raw };
+  if (
+    resolved.color &&
+    typeof resolved.color === "object" &&
+    "_tag" in resolved.color
+  ) {
+    resolved.color = resolveColorConfig(resolved.color);
+  }
+  if (
+    resolved.coord &&
+    typeof resolved.coord === "object" &&
+    "type" in resolved.coord
+  ) {
+    resolved.coord = resolveCoordConfig(resolved.coord);
+  }
+  return resolved;
+}
+
 // Error rendering helper
 /**
  * Renders an error message to the container element.
@@ -430,15 +463,7 @@ function buildChart(
   const markSpec = chartSpec.mark || { type: "rect" };
   const mark = mapMark(markSpec);
 
-  const rawOptions = chartSpec.options || {};
-  const resolvedOptions: Record<string, any> = { ...rawOptions };
-  if (
-    resolvedOptions.color &&
-    typeof resolvedOptions.color === "object" &&
-    "_tag" in resolvedOptions.color
-  ) {
-    resolvedOptions.color = resolveColorConfig(resolvedOptions.color);
-  }
+  const resolvedOptions = resolveOptions(chartSpec.options || {});
 
   let chartData: any = data;
   if (
@@ -492,6 +517,7 @@ function renderLayer(
 
   // Resolve layer-level options
   const rawOptions = spec.options || {};
+  const resolvedLayerOptions = resolveOptions(rawOptions);
   const renderOptions: RenderOptions = {
     w: model.get("width"),
     h: model.get("height"),
@@ -500,8 +526,8 @@ function renderLayer(
   };
 
   log("Calling Layer([...]).render()...");
-  if (Object.keys(rawOptions).length > 0) {
-    Layer(rawOptions, childCharts).render(container, renderOptions);
+  if (Object.keys(resolvedLayerOptions).length > 0) {
+    Layer(resolvedLayerOptions, childCharts).render(container, renderOptions);
   } else {
     Layer(childCharts).render(container, renderOptions);
   }
@@ -572,16 +598,8 @@ function renderChart(
   log(`Mapping mark: ${markSpec.type}`);
   const mark = mapMark(markSpec);
 
-  // 4. Resolve options (transform color config if needed)
-  const rawOptions = chartSpec.options || {};
-  const resolvedOptions: Record<string, any> = { ...rawOptions };
-  if (
-    resolvedOptions.color &&
-    typeof resolvedOptions.color === "object" &&
-    "_tag" in resolvedOptions.color
-  ) {
-    resolvedOptions.color = resolveColorConfig(resolvedOptions.color);
-  }
+  // 4. Resolve options (color, coord, etc.)
+  const resolvedOptions = resolveOptions(chartSpec.options || {});
 
   // 5. Determine chart data source (Arrow data or select() reference)
   let chartData: any = data;

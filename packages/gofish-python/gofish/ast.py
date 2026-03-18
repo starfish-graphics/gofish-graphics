@@ -406,6 +406,20 @@ def gradient(stops: Union[str, List[str]]) -> dict:
     return {"_tag": "gradient", "stops": stops}
 
 
+# Coordinate transforms
+
+
+def clock() -> dict:
+    """
+    Clock coordinate transform — polar coordinates with 0° at 12 o'clock,
+    increasing clockwise. Use as: chart(data, {"coord": clock()}).
+
+    Returns:
+        Coord config dict for use in chart options
+    """
+    return {"type": "clock"}
+
+
 # Layer selection
 
 
