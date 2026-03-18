@@ -7,17 +7,25 @@
 
 import * as Arrow from "apache-arrow";
 import {
-  chart,
+  Chart as chart,
   spread,
   stack,
   scatter,
   group,
   derive,
+  log,
+  select,
+  palette,
+  gradient,
   rect,
   circle,
   line,
   scaffold,
   area,
+  ellipse,
+  petal,
+  text,
+  image,
   type ChartBuilder,
   type Operator,
   type Mark,
@@ -42,20 +50,36 @@ interface ExperimentalAPI {
   ): Promise<[T, DataView[]]>;
 }
 
+interface SelectSpec {
+  type: "select";
+  layer: string;
+}
+
 interface ChartSpec {
+  data?: SelectSpec | null;
   operators?: OperatorSpec[];
   mark: MarkSpec;
   options?: Record<string, any>;
 }
 
 interface OperatorSpec {
-  type: "derive" | "spread" | "stack" | "group" | "scatter";
+  type: "derive" | "spread" | "stack" | "group" | "scatter" | "log";
   lambdaId?: string;
   [key: string]: any;
 }
 
 interface MarkSpec {
-  type: "rect" | "circle" | "line" | "area" | "scaffold";
+  type:
+    | "rect"
+    | "circle"
+    | "line"
+    | "area"
+    | "scaffold"
+    | "ellipse"
+    | "petal"
+    | "text"
+    | "image";
+  name?: string;
   [key: string]: any;
 }
 
@@ -278,6 +302,13 @@ const OPERATOR_MAP: Record<
     const { field, x, y, ...rest } = opts;
     return scatter(field, { x, y, ...rest });
   },
+  log: (
+    opts: Record<string, any>,
+    _model: WidgetModel,
+    _experimental: ExperimentalAPI
+  ) => {
+    return log(opts.label);
+  },
 };
 
 /**
@@ -306,18 +337,38 @@ const MARK_MAP: Record<string, (opts: Record<string, any>) => Mark<any>> = {
   line: (opts: Record<string, any>) => line(opts),
   area: (opts: Record<string, any>) => area(opts),
   scaffold: (opts: Record<string, any>) => scaffold(opts),
+  ellipse: (opts: Record<string, any>) => ellipse(opts),
+  petal: (opts: Record<string, any>) => petal(opts),
+  text: (opts: Record<string, any>) => text(opts),
+  image: (opts: Record<string, any>) => image(opts),
 };
 
 /**
- * Maps an IR mark spec to a GoFish mark function.
+ * Maps an IR mark spec to a GoFish mark function, applying .name() if present.
  */
 function mapMark(markSpec: MarkSpec): Mark<any> {
-  const { type, ...opts } = markSpec;
+  const { type, name: layerName, ...opts } = markSpec;
   const factory = MARK_MAP[type];
   if (!factory) {
     throw new Error(`Unknown mark type: ${type}`);
   }
-  return factory(opts);
+  const mark = factory(opts);
+  if (layerName && typeof (mark as any).name === "function") {
+    return (mark as any).name(layerName);
+  }
+  return mark;
+}
+
+/**
+ * Resolves a color config dict (with _tag) to a real palette() or gradient() call.
+ */
+function resolveColorConfig(colorSpec: Record<string, any>): any {
+  if (colorSpec._tag === "palette") {
+    return palette(colorSpec.values);
+  } else if (colorSpec._tag === "gradient") {
+    return gradient(colorSpec.stops);
+  }
+  return colorSpec;
 }
 
 // Error rendering helper
@@ -397,15 +448,37 @@ function renderChart(
     }
   }
 
-  // 3. Map IR mark to GoFish mark
+  // 3. Map IR mark to GoFish mark (with optional .name())
   const markSpec = spec.mark || { type: "rect" };
   log(`Mapping mark: ${markSpec.type}`);
   const mark = mapMark(markSpec);
 
-  // 4. Build and render chart
+  // 4. Resolve options (transform color config if needed)
+  const rawOptions = spec.options || {};
+  const resolvedOptions: Record<string, any> = { ...rawOptions };
+  if (
+    resolvedOptions.color &&
+    typeof resolvedOptions.color === "object" &&
+    "_tag" in resolvedOptions.color
+  ) {
+    resolvedOptions.color = resolveColorConfig(resolvedOptions.color);
+  }
+
+  // 5. Determine chart data source (Arrow data or select() reference)
+  let chartData: any = data;
+  if (
+    spec.data &&
+    typeof spec.data === "object" &&
+    spec.data.type === "select"
+  ) {
+    log(`Using select("${spec.data.layer}") as data source`);
+    chartData = select(spec.data.layer);
+  }
+
+  // 6. Build and render chart
   try {
     log("Building chart...");
-    const chartBuilder = chart(data, spec.options || {});
+    const chartBuilder = chart(chartData, resolvedOptions);
     let node = chartBuilder.flow(...operators).mark(mark);
 
     const renderOptions: RenderOptions = {

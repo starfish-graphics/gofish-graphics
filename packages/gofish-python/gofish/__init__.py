@@ -10,11 +10,21 @@ from .ast import (
     derive,
     group,
     scatter,
+    log,
+    select,
+    palette,
+    gradient,
+    normalize,
+    repeat,
     rect,
     circle,
     line,
     area,
     scaffold,
+    ellipse,
+    petal,
+    text,
+    image,
 )
 
 __all__ = [
@@ -25,11 +35,21 @@ __all__ = [
     "derive",
     "group",
     "scatter",
+    "log",
+    "select",
+    "palette",
+    "gradient",
+    "normalize",
+    "repeat",
     "rect",
     "circle",
     "line",
     "area",
     "scaffold",
+    "ellipse",
+    "petal",
+    "text",
+    "image",
 ]
 
 __version__ = "0.1.0"

@@ -37,10 +37,35 @@ class Mark:
     def __init__(self, mark_type: str, **kwargs):
         self.mark_type = mark_type
         self.kwargs = kwargs
+        self._name: Optional[str] = None
+
+    def name(self, layer_name: str) -> "Mark":
+        """
+        Set a layer name on this mark for cross-chart referencing via select().
+
+        Args:
+            layer_name: Name to register this mark's output under
+
+        Returns:
+            New Mark with name set
+        """
+        new_mark = Mark(self.mark_type, **self.kwargs)
+        new_mark._name = layer_name
+        return new_mark
 
     def to_dict(self) -> dict:
         """Convert mark to dictionary for JSON IR."""
-        return {"type": self.mark_type, **self.kwargs}
+        d: dict = {"type": self.mark_type, **self.kwargs}
+        if self._name is not None:
+            d["name"] = self._name
+        return d
+
+
+class LayerSelector:
+    """Sentinel object representing a cross-chart layer reference."""
+
+    def __init__(self, layer_name: str):
+        self.layer_name = layer_name
 
 
 class ChartBuilder:
@@ -56,8 +81,8 @@ class ChartBuilder:
         Initialize a ChartBuilder.
 
         Args:
-            data: Input data (not serialized in IR)
-            options: Chart options (w, h, coord, etc.)
+            data: Input data or LayerSelector for cross-chart references
+            options: Chart options (w, h, coord, color, etc.)
             operators: List of operators to apply
         """
         self.data = data
@@ -95,24 +120,50 @@ class ChartBuilder:
         new_builder._mark = mark
         return new_builder
 
+    def facet(self, field: str, **kwargs: Any) -> "ChartBuilder":
+        """
+        Convenience method: spread data by field (shortcut for .flow(spread(field, ...))).
+
+        Args:
+            field: Field name to facet by
+            **kwargs: Options passed to spread() (must include dir)
+
+        Returns:
+            New ChartBuilder with spread operator added
+        """
+        return self.flow(spread(field, **kwargs))
+
+    def stack(self, field: str, **kwargs: Any) -> "ChartBuilder":
+        """
+        Convenience method: stack data by field (shortcut for .flow(stack(field, ...))).
+
+        Args:
+            field: Field name to stack by
+            **kwargs: Options passed to stack() (must include dir)
+
+        Returns:
+            New ChartBuilder with stack operator added
+        """
+        return self.flow(_stack(field, **kwargs))
+
     def to_ir(self) -> dict:
         """
         Convert the chart specification to JSON IR.
 
         Returns:
-            Dictionary representing the chart IR:
-            {
-                "data": None,  # Data is not included in IR
-                "operators": [...],
-                "mark": {...},
-                "options": {...}
-            }
+            Dictionary representing the chart IR
         """
         if self._mark is None:
             raise ValueError("Chart must have a mark before converting to IR")
 
+        # Serialize data: LayerSelector becomes a select spec, otherwise None
+        if isinstance(self.data, LayerSelector):
+            data_ir: Any = {"type": "select", "layer": self.data.layer_name}
+        else:
+            data_ir = None
+
         return {
-            "data": None,
+            "data": data_ir,
             "operators": [op.to_dict() for op in self.operators],
             "mark": self._mark.to_dict(),
             "options": self.options,
@@ -150,21 +201,9 @@ class ChartBuilder:
         from .arrow_utils import dataframe_to_arrow
         import pandas as pd
 
-        # Convert data to Arrow format
-        if isinstance(self.data, pd.DataFrame):
-            df = self.data
-        elif self.data is None:
-            # Empty data
-            df = pd.DataFrame()
-        else:
-            # Try to convert to DataFrame
-            df = pd.DataFrame(self.data)
-
-        # Convert to Arrow (even if empty)
-        if len(df) == 0:
-            # Create empty Arrow table with a dummy schema
+        # LayerSelector charts have no data of their own
+        if isinstance(self.data, LayerSelector):
             import pyarrow as pa
-
             schema = pa.schema([pa.field("_placeholder", pa.int32())])
             table = pa.Table.from_arrays([], schema=schema)
             sink = pa.BufferOutputStream()
@@ -172,7 +211,24 @@ class ChartBuilder:
                 writer.write_table(table)
             arrow_data = sink.getvalue().to_pybytes()
         else:
-            arrow_data = dataframe_to_arrow(df)
+            # Convert data to Arrow format
+            if isinstance(self.data, pd.DataFrame):
+                df = self.data
+            elif self.data is None:
+                df = pd.DataFrame()
+            else:
+                df = pd.DataFrame(self.data)
+
+            if len(df) == 0:
+                import pyarrow as pa
+                schema = pa.schema([pa.field("_placeholder", pa.int32())])
+                table = pa.Table.from_arrays([], schema=schema)
+                sink = pa.BufferOutputStream()
+                with pa.ipc.new_stream(sink, schema) as writer:
+                    writer.write_table(table)
+                arrow_data = sink.getvalue().to_pybytes()
+            else:
+                arrow_data = dataframe_to_arrow(df)
 
         # Get the IR spec
         spec = self.to_ir()
@@ -226,6 +282,19 @@ def spread(
     return Operator("spread", **opts)
 
 
+def _stack(
+    field: str,
+    dir: Optional[str] = None,
+    **options: Any,
+) -> Operator:
+    """Internal stack operator used by ChartBuilder.stack() convenience method."""
+    if dir is not None:
+        options["dir"] = dir
+    if "dir" not in options:
+        raise ValueError("stack() requires 'dir' option ('x' or 'y')")
+    return Operator("stack", field=field, **options)
+
+
 def stack(
     field: str,
     dir: Optional[str] = None,
@@ -242,11 +311,7 @@ def stack(
     Returns:
         Operator object
     """
-    if dir is not None:
-        options["dir"] = dir
-    if "dir" not in options:
-        raise ValueError("stack() requires 'dir' option ('x' or 'y')")
-    return Operator("stack", field=field, **options)
+    return _stack(field, dir, **options)
 
 
 def derive(fn: Callable) -> DeriveOperator:
@@ -296,6 +361,102 @@ def scatter(
     return Operator("scatter", field=field, x=x, y=y, **options)
 
 
+def log(label: Optional[str] = None) -> Operator:
+    """
+    Log operator - logs data to the console for debugging.
+
+    Args:
+        label: Optional label to prefix the log output
+
+    Returns:
+        Operator object
+    """
+    kwargs: Dict[str, Any] = {}
+    if label is not None:
+        kwargs["label"] = label
+    return Operator("log", **kwargs)
+
+
+# Color configuration
+
+
+def palette(values: Any) -> dict:
+    """
+    Create a palette color configuration.
+
+    Args:
+        values: Palette name (e.g. "tableau10") or list of color strings
+
+    Returns:
+        Color config dict for use in chart options
+    """
+    return {"_tag": "palette", "values": values}
+
+
+def gradient(stops: Union[str, List[str]]) -> dict:
+    """
+    Create a gradient color configuration.
+
+    Args:
+        stops: Color stop(s) - a single color string or list of color strings
+
+    Returns:
+        Color config dict for use in chart options
+    """
+    return {"_tag": "gradient", "stops": stops}
+
+
+# Layer selection
+
+
+def select(layer_name: str) -> LayerSelector:
+    """
+    Select a named layer from a previous chart for cross-chart referencing.
+
+    Args:
+        layer_name: Name of the layer to select (set via mark.name())
+
+    Returns:
+        LayerSelector sentinel for use as chart() data argument
+    """
+    return LayerSelector(layer_name)
+
+
+# Data utilities (for use inside derive() callbacks)
+
+
+def normalize(data: List[dict], field: str) -> List[dict]:
+    """
+    Normalize a numeric field so values sum to 1.
+
+    Args:
+        data: List of row dicts
+        field: Field name to normalize
+
+    Returns:
+        New list of dicts with field normalized
+    """
+    total = sum(row[field] for row in data)
+    if total == 0:
+        return data
+    return [{**row, field: row[field] / total} for row in data]
+
+
+def repeat(row: dict, field: str) -> List[dict]:
+    """
+    Repeat a row N times based on a numeric field value.
+
+    Args:
+        row: A single data row dict
+        field: Field name containing the repeat count
+
+    Returns:
+        List of copies of the row, length = row[field]
+    """
+    n = int(row[field])
+    return [row] * n
+
+
 # Mark factory functions
 
 
@@ -311,11 +472,20 @@ def rect(
     emY: Optional[bool] = None,
     rs: Optional[int] = None,
     ts: Optional[int] = None,
+    x: Optional[Union[int, str]] = None,
+    y: Optional[Union[int, str]] = None,
+    cx: Optional[Union[int, str]] = None,
+    cy: Optional[Union[int, str]] = None,
+    x2: Optional[Union[int, str]] = None,
+    y2: Optional[Union[int, str]] = None,
+    filter: Optional[str] = None,
+    label: Optional[str] = None,
+    key: Optional[str] = None,
     debug: Optional[bool] = None,
 ) -> Mark:
     """Rectangle mark."""
     kwargs: Dict[str, Any] = {}
-    for key, value in [
+    for k, value in [
         ("w", w),
         ("h", h),
         ("fill", fill),
@@ -327,10 +497,19 @@ def rect(
         ("emY", emY),
         ("rs", rs),
         ("ts", ts),
+        ("x", x),
+        ("y", y),
+        ("cx", cx),
+        ("cy", cy),
+        ("x2", x2),
+        ("y2", y2),
+        ("filter", filter),
+        ("label", label),
+        ("key", key),
         ("debug", debug),
     ]:
         if value is not None:
-            kwargs[key] = value
+            kwargs[k] = value
     return Mark("rect", **kwargs)
 
 
@@ -343,7 +522,7 @@ def circle(
 ) -> Mark:
     """Circle mark."""
     kwargs: Dict[str, Any] = {}
-    for key, value in [
+    for k, value in [
         ("r", r),
         ("fill", fill),
         ("stroke", stroke),
@@ -351,7 +530,7 @@ def circle(
         ("debug", debug),
     ]:
         if value is not None:
-            kwargs[key] = value
+            kwargs[k] = value
     return Mark("circle", **kwargs)
 
 
@@ -363,14 +542,14 @@ def line(
 ) -> Mark:
     """Line mark."""
     kwargs: Dict[str, Any] = {}
-    for key, value in [
+    for k, value in [
         ("stroke", stroke),
         ("strokeWidth", strokeWidth),
         ("opacity", opacity),
         ("interpolation", interpolation),
     ]:
         if value is not None:
-            kwargs[key] = value
+            kwargs[k] = value
     return Mark("line", **kwargs)
 
 
@@ -384,7 +563,7 @@ def area(
 ) -> Mark:
     """Area mark."""
     kwargs: Dict[str, Any] = {}
-    for key, value in [
+    for k, value in [
         ("stroke", stroke),
         ("strokeWidth", strokeWidth),
         ("opacity", opacity),
@@ -393,7 +572,7 @@ def area(
         ("interpolation", interpolation),
     ]:
         if value is not None:
-            kwargs[key] = value
+            kwargs[k] = value
     return Mark("area", **kwargs)
 
 
@@ -412,13 +591,99 @@ def scaffold(
     return Mark("scaffold", **scaffold_kwargs)
 
 
+def ellipse(
+    w: Optional[Union[int, str]] = None,
+    h: Optional[Union[int, str]] = None,
+    fill: Optional[str] = None,
+    stroke: Optional[str] = None,
+    strokeWidth: Optional[int] = None,
+    debug: Optional[bool] = None,
+) -> Mark:
+    """Ellipse mark."""
+    kwargs: Dict[str, Any] = {}
+    for k, value in [
+        ("w", w),
+        ("h", h),
+        ("fill", fill),
+        ("stroke", stroke),
+        ("strokeWidth", strokeWidth),
+        ("debug", debug),
+    ]:
+        if value is not None:
+            kwargs[k] = value
+    return Mark("ellipse", **kwargs)
+
+
+def petal(
+    w: Optional[Union[int, str]] = None,
+    h: Optional[Union[int, str]] = None,
+    fill: Optional[str] = None,
+    stroke: Optional[str] = None,
+    strokeWidth: Optional[int] = None,
+    debug: Optional[bool] = None,
+) -> Mark:
+    """Petal mark."""
+    kwargs: Dict[str, Any] = {}
+    for k, value in [
+        ("w", w),
+        ("h", h),
+        ("fill", fill),
+        ("stroke", stroke),
+        ("strokeWidth", strokeWidth),
+        ("debug", debug),
+    ]:
+        if value is not None:
+            kwargs[k] = value
+    return Mark("petal", **kwargs)
+
+
+def text(
+    fill: Optional[str] = None,
+    fontSize: Optional[Union[int, str]] = None,
+    fontWeight: Optional[Union[int, str]] = None,
+    label: Optional[str] = None,
+    debug: Optional[bool] = None,
+) -> Mark:
+    """Text mark."""
+    kwargs: Dict[str, Any] = {}
+    for k, value in [
+        ("fill", fill),
+        ("fontSize", fontSize),
+        ("fontWeight", fontWeight),
+        ("label", label),
+        ("debug", debug),
+    ]:
+        if value is not None:
+            kwargs[k] = value
+    return Mark("text", **kwargs)
+
+
+def image(
+    w: Optional[Union[int, str]] = None,
+    h: Optional[Union[int, str]] = None,
+    src: Optional[str] = None,
+    debug: Optional[bool] = None,
+) -> Mark:
+    """Image mark."""
+    kwargs: Dict[str, Any] = {}
+    for k, value in [
+        ("w", w),
+        ("h", h),
+        ("src", src),
+        ("debug", debug),
+    ]:
+        if value is not None:
+            kwargs[k] = value
+    return Mark("image", **kwargs)
+
+
 def chart(data: Any, options: Optional[dict] = None) -> ChartBuilder:
     """
     Create a new chart builder.
 
     Args:
-        data: Input data
-        options: Optional chart options
+        data: Input data or select() for cross-chart layer references
+        options: Optional chart options (w, h, color, etc.)
 
     Returns:
         ChartBuilder instance
