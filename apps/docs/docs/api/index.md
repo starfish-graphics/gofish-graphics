@@ -49,3 +49,62 @@ By combining operators and marks, you can create complex and automatic chart lay
 
 - [polar](/api/coords/polar) Polar coordinate transform.
 - [clock](/api/coords/clock) Clock-oriented polar coordinates.
+
+## Color Scales
+
+- [palette](#palette) Categorical color scale — maps field values to colors by index or explicit lookup.
+- [gradient](#gradient) Continuous color scale — interpolates colors across a numeric range.
+
+### palette
+
+```ts
+palette(values);
+```
+
+Creates a categorical color scale. Pass it to `chart(data, { color })` or `.render(el, { color })`.
+
+| `values` type            | Behavior                         |
+| ------------------------ | -------------------------------- |
+| `string`                 | Named scheme: `"tableau10"`      |
+| `string[]`               | Colors cycled by index           |
+| `Record<string, string>` | Explicit field value → color map |
+
+```ts
+// Named scheme
+chart(data, { color: palette("tableau10") })
+  .flow(spread("category", { dir: "x" }))
+  .mark(rect({ h: "value", fill: "category" }))
+  .render(container, { w: 500, h: 300 });
+
+// Explicit array
+chart(data, { color: palette(["#e15759", "#4e79a7", "#59a14f"]) });
+
+// Key → color map
+chart(data, { color: palette({ low: "#4e79a7", high: "#e15759" }) });
+```
+
+### gradient
+
+```ts
+gradient(stops);
+```
+
+Creates a continuous color scale. Colors are interpolated across the numeric range of the `fill` field.
+
+| `stops` type | Behavior                                       |
+| ------------ | ---------------------------------------------- |
+| `string`     | Named scheme: `"viridis"`, `"blues"`, `"reds"` |
+| `string[]`   | Custom color stops interpolated in LAB space   |
+
+```ts
+// Named scheme
+chart(data, { color: gradient("viridis") })
+  .flow(spread("category", { dir: "x" }))
+  .mark(rect({ h: "value", fill: "temperature" }))
+  .render(container, { w: 500, h: 300 });
+
+// Custom stops
+chart(data, { color: gradient(["#f7fbff", "#08306b"]) });
+```
+
+**Built-in gradient schemes:** `"viridis"`, `"blues"`, `"reds"`
