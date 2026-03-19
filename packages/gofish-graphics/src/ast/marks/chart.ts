@@ -3,10 +3,10 @@ import {
   Frame,
   Spread,
   Stack,
+  Scatter,
   Table,
   sumBy,
   v,
-  Position,
   meanBy,
   Connect,
   ref,
@@ -17,7 +17,7 @@ import { CoordinateTransform } from "../coordinateTransforms/coord";
 import { type ColorConfig } from "../colorSchemes";
 
 export type { ColorConfig };
-import { inferSize } from "../channels";
+import { inferSize, inferPos } from "../channels";
 import { Rect } from "../shapes/rect";
 import { rect as generatedRect } from "../shapes/rect";
 import { Mark, Operator } from "../types";
@@ -479,29 +479,12 @@ export function stack<T>(
 /** Operator form: stack(field, opts) → Operator */
 export function stack<T>(
   field: keyof T,
-  options: {
-    dir: "x" | "y";
-    x?: number;
-    y?: number;
-    w?: number | keyof T;
-    h?: number | keyof T;
-    spacing?: number;
-    alignment?: "start" | "middle" | "end" | "baseline";
-  }
+  options: SpreadOptions<T>
 ): Operator<T[], T[]>;
+/** Operator form: stack(opts) → Operator */
 export function stack<T>(
   fieldOrOptions: keyof T | SpreadOptions<T>,
-  optionsOrMarks?:
-    | {
-        dir: "x" | "y";
-        x?: number;
-        y?: number;
-        w?: number | keyof T;
-        h?: number | keyof T;
-        spacing?: number;
-        alignment?: "start" | "middle" | "end" | "baseline";
-      }
-    | Mark<any>[]
+  optionsOrMarks?: SpreadOptions<T> | Mark<any>[]
 ): Operator<T[], T[]> | (Mark<T> & { name(layerName: string): Mark<T> }) {
   // Mark combinator form: stack(opts, marks[])
   if (
@@ -515,8 +498,10 @@ export function stack<T>(
       optionsOrMarks as Mark<any>[]
     );
   }
-  // Operator form
-  return spread(fieldOrOptions as keyof T, {
+  if (typeof fieldOrOptions === "object") {
+    return spread({ ...fieldOrOptions, spacing: 0 });
+  }
+  return spread(fieldOrOptions, {
     ...(optionsOrMarks as SpreadOptions<T>),
     spacing: 0,
   });
@@ -583,37 +568,108 @@ export function table<T>(
 }
 
 export function scatter<T>(
-  field: keyof T,
-  options: {
-    x: keyof T;
-    y: keyof T;
+  fieldOrOptions:
+    | keyof T
+    | {
+        x?: number | (keyof T & string);
+        y?: number | (keyof T & string);
+        alignment?: "start" | "middle" | "end" | "baseline";
+        debug?: boolean;
+      },
+  options?: {
+    x?: number | (keyof T & string);
+    y?: number | (keyof T & string);
+    alignment?: "start" | "middle" | "end" | "baseline";
     debug?: boolean;
   }
 ): Operator<T[], T[]> {
+  const field: keyof T | undefined =
+    typeof fieldOrOptions === "object" ? undefined : fieldOrOptions;
+  const opts = (typeof fieldOrOptions === "object" ? fieldOrOptions : options)!;
+  if (opts.x === undefined && opts.y === undefined) {
+    throw new Error("scatter() requires at least one of x or y");
+  }
+
   return async (mark: Mark<T[]>) => {
     return async (
       d: T[],
       key?: string | number,
       layerContext?: LayerContext
     ) => {
-      // Group by the field
-      const groups = groupBy(d, field as ValueIteratee<T>);
-      if (options?.debug) console.log("scatter groups", groups);
-      return Frame(
-        For(groups, async (items, groupKey) => {
-          // Calculate average x and y values for this group
-          const avgX = meanBy(items, options.x as string);
-          const avgY = meanBy(items, options.y as string);
-          if (options?.debug)
-            console.log(`Group ${groupKey}: avgX=${avgX}, avgY=${avgY}`);
-
-          // Render the group items and wrap in Position operator
-          const currentKey = key != undefined ? `${key}-${groupKey}` : groupKey;
-          return Position({ x: v(avgX), y: v(avgY) }, [
-            mark(items, currentKey, layerContext) as any,
-          ]);
-        })
-      );
+      if (field !== undefined) {
+        // Group by field, position each group at its mean x/y
+        const groups = groupBy(d, field as ValueIteratee<T>);
+        if (opts?.debug) console.log("scatter groups", groups);
+        const entries = Object.entries(groups);
+        const resolved = await Promise.all(
+          entries.map(async ([groupKey, items]) => {
+            const x =
+              opts.x === undefined ? undefined : inferPos(opts.x, items);
+            const y =
+              opts.y === undefined ? undefined : inferPos(opts.y, items);
+            if (opts?.debug) console.log(`Group ${groupKey}: x=${x}, y=${y}`);
+            const currentKey =
+              key != undefined ? `${key}-${groupKey}` : groupKey;
+            return {
+              x,
+              y,
+              child: (await resolveMarkResult(
+                mark(items, currentKey, layerContext),
+                layerContext
+              )) as any,
+            };
+          })
+        );
+        return Scatter(
+          {
+            x:
+              opts.x === undefined
+                ? undefined
+                : resolved.map((entry) => entry.x!),
+            y:
+              opts.y === undefined
+                ? undefined
+                : resolved.map((entry) => entry.y!),
+            alignment: opts.alignment,
+          },
+          resolved.map((entry) => entry.child)
+        );
+      } else {
+        // No grouping — position each item at its own x/y
+        if (opts?.debug) console.log("scatter items", d);
+        const resolved = await Promise.all(
+          d.map(async (item, i) => {
+            const x =
+              opts.x === undefined ? undefined : inferPos(opts.x, [item]);
+            const y =
+              opts.y === undefined ? undefined : inferPos(opts.y, [item]);
+            if (opts?.debug) console.log(`Item ${i}: x=${x}, y=${y}`);
+            const currentKey = key != undefined ? `${key}-${i}` : i;
+            return {
+              x,
+              y,
+              child: (await resolveMarkResult(
+                mark([item], currentKey as any, layerContext),
+                layerContext
+              )) as any,
+            };
+          })
+        );
+        return Scatter(
+          {
+            x:
+              opts.x === undefined
+                ? undefined
+                : resolved.map((entry) => entry.x!),
+            y:
+              opts.y === undefined
+                ? undefined
+                : resolved.map((entry) => entry.y!),
+            alignment: opts.alignment,
+          },
+          resolved.map((entry) => entry.child)
+        );
+      }
     };
   };
 }

@@ -5,9 +5,11 @@ Groups data by `field` and positions each group at the mean `x`/`y` of its membe
 ::: starfish
 
 ```js
-const locations = Object.entries(lakeLocations).map(
-  ([lake, { x, y }]) => ({ lake, x, y })
-);
+const locations = Object.entries(lakeLocations).map(([lake, { x, y }]) => ({
+  lake,
+  x,
+  y,
+}));
 
 gf.Chart(locations)
   .flow(gf.scatter("lake", { x: "x", y: "y" }))
@@ -25,12 +27,12 @@ scatter(field, { x, y, debug? })
 
 ## Parameters
 
-| Option | Type | Description |
-|--------|------|-------------|
-| `field` | `string` | Field to group by |
-| `x` | `string` | Field to use for horizontal position |
-| `y` | `string` | Field to use for vertical position |
-| `debug` | `boolean` | Log group positions to console |
+| Option  | Type      | Description                          |
+| ------- | --------- | ------------------------------------ |
+| `field` | `string`  | Field to group by                    |
+| `x`     | `string`  | Field to use for horizontal position |
+| `y`     | `string`  | Field to use for vertical position   |
+| `debug` | `boolean` | Log group positions to console       |
 
 ## Example
 

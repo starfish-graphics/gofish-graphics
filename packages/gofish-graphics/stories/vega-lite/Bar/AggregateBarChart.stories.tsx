@@ -1,13 +1,13 @@
 import type { Meta, StoryObj } from "@storybook/html";
-import { initializeContainer } from "../helper";
-import { Chart, spread, stack, rect, derive, palette } from "../../src/lib";
+import { initializeContainer } from "../../helper";
+import { Chart, spread, rect, derive } from "../../../src/lib";
 import { groupBy, sumBy } from "lodash";
 import data from "vega-datasets";
 
-// Mirrors: https://vega.github.io/vega-lite/examples/stacked_bar_h.html
+// Mirrors: https://vega.github.io/vega-lite/examples/bar_aggregate.html
 
 const meta: Meta = {
-  title: "Vega-Lite/Horizontal Stacked Bar Chart",
+  title: "Vega-Lite/Aggregate Bar Chart",
   argTypes: {
     w: { control: { type: "number", min: 100, max: 1000, step: 10 } },
     h: { control: { type: "number", min: 100, max: 1000, step: 10 } },
@@ -19,14 +19,17 @@ export default meta;
 type Args = { w: number; h: number };
 
 export const Default: StoryObj<Args> = {
-  args: { w: 500, h: 400 },
-  loaders: [async () => ({ barley: await data["barley.json"]() })],
+  args: { w: 500, h: 300 },
+  loaders: [async () => ({ population: await data["population.json"]() })],
   render: (args: Args, context: any) => {
     const container = initializeContainer();
+    const year2000 = (context.loaded.population as any[]).filter(
+      (d) => d.year === 2000
+    );
 
-    Chart(context.loaded.barley as any[], { color: palette("tableau10") })
-      .flow(spread("variety", { dir: "y" }), stack("site", { dir: "x" }))
-      .mark(rect({ w: "yield", fill: "site" }))
+    Chart(year2000)
+      .flow(spread("age", { dir: "y", reverse: true }))
+      .mark(rect({ w: "people" }))
       .render(container, { w: args.w, h: args.h, axes: true });
 
     return container;

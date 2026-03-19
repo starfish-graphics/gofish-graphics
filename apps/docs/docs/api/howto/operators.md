@@ -4,11 +4,11 @@ GoFish provides three layout operators for positioning marks: **spread**, **stac
 
 ## Quick reference
 
-| Operator | Use when... | Typical charts |
-|----------|-------------|----------------|
-| `spread` | Items are independent and need their own regions | Grouped bars, faceted layouts, small multiples |
-| `stack` | Items are parts of a whole, sharing a continuous scale | Stacked bars, stacked areas, streamgraphs |
-| `scatter` | Marks need x/y coordinate positioning | Scatterplots, bubble charts |
+| Operator  | Use when...                                            | Typical charts                                 |
+| --------- | ------------------------------------------------------ | ---------------------------------------------- |
+| `spread`  | Items are independent and need their own regions       | Grouped bars, faceted layouts, small multiples |
+| `stack`   | Items are parts of a whole, sharing a continuous scale | Stacked bars, stacked areas, streamgraphs      |
+| `scatter` | Marks need x/y coordinate positioning                  | Scatterplots, bubble charts                    |
 
 ## Decision guide
 
@@ -92,7 +92,7 @@ chart(data)
     spread("category", { dir: "x", spacing: 24 }),
     spread("group", { dir: "x", spacing: 0 })
   )
-  .mark(rect({ h: "value", fill: "group" }))
+  .mark(rect({ h: "value", fill: "group" }));
 ```
 
 ## stack
@@ -109,11 +109,8 @@ Use `stack` when building part-to-whole visualizations where values should add u
 
 ```ts
 chart(data)
-  .flow(
-    spread("month", { dir: "x" }),
-    stack("category", { dir: "y" })
-  )
-  .mark(rect({ fill: "category" }))
+  .flow(spread("month", { dir: "x" }), stack("category", { dir: "y" }))
+  .mark(rect({ fill: "category" }));
 ```
 
 ## scatter
@@ -131,7 +128,7 @@ Use `scatter` when your data has numeric x and y fields and you want marks posit
 ```ts
 chart(penguins)
   .flow(scatter("species", { x: "bill_length", y: "flipper_length" }))
-  .mark(circle({ r: 4, fill: "species" }))
+  .mark(circle({ r: 4, fill: "species" }));
 ```
 
 ## Combining operators

@@ -79,12 +79,17 @@ function buildStoryIndex(): Map<string, string> {
         const storyId = m[1]
           .split("/")
           .map((s) =>
-            s.trim().toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")
+            s
+              .trim()
+              .toLowerCase()
+              .replace(/\s+/g, "-")
+              .replace(/[^a-z0-9-]/g, "")
           )
           .join("/");
         index.set(
           storyId,
-          "packages/gofish-graphics/stories/" + full.slice(STORIES_DIR.length + 1)
+          "packages/gofish-graphics/stories/" +
+            full.slice(STORIES_DIR.length + 1)
         );
       }
     }
@@ -135,7 +140,10 @@ function extractPythonCode(source: string): string {
     if (inDocstring) continue;
     result.push(line);
   }
-  return result.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+  return result
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 }
 
 /**
@@ -146,7 +154,9 @@ function domIdToPythonFile(id: string): string {
   const storyId = id.replace(/--[^/]*$/, "");
   const lastSlash = storyId.lastIndexOf("/");
   const dir = lastSlash >= 0 ? storyId.slice(0, lastSlash) : "";
-  const base = (lastSlash >= 0 ? storyId.slice(lastSlash + 1) : storyId).replace(/-/g, "_");
+  const base = (
+    lastSlash >= 0 ? storyId.slice(lastSlash + 1) : storyId
+  ).replace(/-/g, "_");
   return `tests/python-stories/${dir}/test_${base}.py`;
 }
 
@@ -213,7 +223,9 @@ for (const [, jsFile] of storyIndex) {
     pythonFile,
     checkType: "coverage",
     status: pythonExists ? "pass" : "warning",
-    message: pythonExists ? "Python counterpart present" : "No Python counterpart found",
+    message: pythonExists
+      ? "Python counterpart present"
+      : "No Python counterpart found",
     hasDomDiff: false,
     hasScreenshots: false,
   });
@@ -230,16 +242,19 @@ for (const diff of parityDiffs) {
       if (diff.afterScreenshotPath) pair.hasScreenshots = true;
       if (pair.status !== "fail") pair.status = "fail";
       pair.checkType = "dom";
-      pair.message = diff.beforeDom !== null
-        ? "DOM output does not match JS baseline"
-        : "No JS baseline exists yet";
+      pair.message =
+        diff.beforeDom !== null
+          ? "DOM output does not match JS baseline"
+          : "No JS baseline exists yet";
     }
     continue;
   }
   seenIds.add(id);
 
   const storyId = id.replace(/--[^/]*$/, "");
-  const jsFile = storyIndex.get(storyId) ?? `packages/gofish-graphics/stories/${id}.stories.tsx`;
+  const jsFile =
+    storyIndex.get(storyId) ??
+    `packages/gofish-graphics/stories/${id}.stories.tsx`;
   const pythonFile = domIdToPythonFile(id);
 
   pairs.push({
@@ -248,9 +263,10 @@ for (const diff of parityDiffs) {
     pythonFile,
     checkType: "dom",
     status: "fail",
-    message: diff.beforeDom !== null
-      ? "DOM output does not match JS baseline"
-      : "No JS baseline exists yet",
+    message:
+      diff.beforeDom !== null
+        ? "DOM output does not match JS baseline"
+        : "No JS baseline exists yet",
     hasDomDiff: diff.beforeDom !== null,
     hasScreenshots: diff.afterScreenshotPath !== null,
   });
@@ -296,10 +312,7 @@ for (const diff of parityDiffs) {
 // data/results.json  (written before screenshots so crashes there don't lose data)
 // ---------------------------------------------------------------------------
 
-write(
-  join(OUT_DIR, "data/results.json"),
-  JSON.stringify(pairs, null, 2)
-);
+write(join(OUT_DIR, "data/results.json"), JSON.stringify(pairs, null, 2));
 
 // ---------------------------------------------------------------------------
 // data/meta.json
@@ -805,10 +818,6 @@ write(join(OUT_DIR, "index.html"), html);
 // ---------------------------------------------------------------------------
 
 console.log(`\nParity review site built at: ${OUT_DIR}`);
-console.log(
-  `  index.html, data/results.json, data/meta.json`
-);
+console.log(`  index.html, data/results.json, data/meta.json`);
 console.log(`  ${parityDiffs.length} dom-diffs, ${pairs.length} story pairs`);
-console.log(
-  `\nTo preview:\n  npx wrangler pages dev ${OUT_DIR}`
-);
+console.log(`\nTo preview:\n  npx wrangler pages dev ${OUT_DIR}`);
