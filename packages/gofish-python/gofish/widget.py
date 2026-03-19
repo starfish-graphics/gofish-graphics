@@ -23,6 +23,9 @@ class GoFishChartWidget(anywidget.AnyWidget):
     axes = traitlets.Bool(False).tag(sync=True)
     debug = traitlets.Bool(False).tag(sync=True)
     container_id = traitlets.Unicode().tag(sync=True)
+    # Traitlet-based derive protocol (for marimo compatibility)
+    derive_request = traitlets.Dict({}).tag(sync=True)
+    derive_response = traitlets.Dict({}).tag(sync=True)
 
     def __init__(
         self,
@@ -110,12 +113,12 @@ class GoFishChartWidget(anywidget.AnyWidget):
         if fn is None:
             raise ValueError(f"Derive function with ID {lambda_id} not found")
 
-        # Decode Arrow to DataFrame
+        # Decode Arrow to list of row dicts
         arrow_bytes = base64.b64decode(arrow_b64)
         df = arrow_to_dataframe(arrow_bytes)
 
-        # Execute user function
-        result = fn(df)
+        # Execute user function (receives list of dicts, matching JS convention)
+        result = fn(df.to_dict("records"))
 
         # Normalize result to DataFrame
         try:
@@ -135,3 +138,41 @@ class GoFishChartWidget(anywidget.AnyWidget):
         result_b64 = base64.b64encode(result_arrow).decode("utf-8")
 
         return {"resultB64": result_b64}, buffers
+
+    @traitlets.observe("derive_request")
+    def _on_derive_request(self, change):
+        """Handle derive requests via traitlet sync (for marimo compatibility)."""
+        msg = change["new"]
+        if not msg:
+            return
+        request_id = msg.get("requestId")
+        lambda_id = msg.get("lambdaId")
+        arrow_b64 = msg.get("arrowB64")
+
+        if not request_id or not lambda_id or not arrow_b64:
+            return
+
+        fn = self.derive_functions.get(lambda_id)
+        if fn is None:
+            return
+
+        arrow_bytes = base64.b64decode(arrow_b64)
+        df = arrow_to_dataframe(arrow_bytes)
+        result = fn(df.to_dict("records"))
+
+        try:
+            import pandas as pd
+        except Exception as exc:  # pragma: no cover - import guard
+            raise RuntimeError("pandas is required for derive execution") from exc
+
+        if result is None:
+            result_df = pd.DataFrame()
+        elif isinstance(result, pd.DataFrame):
+            result_df = result
+        else:
+            result_df = pd.DataFrame(result)
+
+        result_arrow = dataframe_to_arrow(result_df)
+        result_b64 = base64.b64encode(result_arrow).decode("utf-8")
+
+        self.derive_response = {"requestId": request_id, "resultB64": result_b64}

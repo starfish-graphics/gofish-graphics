@@ -42,6 +42,10 @@ interface WidgetModel {
   get(key: "axes"): boolean;
   get(key: "debug"): boolean;
   get(key: "container_id"): string;
+  get(key: "derive_response"): { requestId: string; resultB64: string } | null;
+  set(key: string, value: any): void;
+  save_changes(): void;
+  on(event: string, callback: () => void): void;
 }
 
 interface ExperimentalAPI {
@@ -222,6 +226,36 @@ function arrayToArrow(rows: Record<string, any>[]): Uint8Array {
   }
 }
 
+// Module-level state for traitlet-based derive fallback
+// null = untested, true = invoke works, false = use traitlet fallback
+let useInvoke: boolean | null = null;
+const pendingDerivesByModel = new WeakMap<
+  object,
+  Map<string, { resolve: (v: string) => void; reject: (e: Error) => void }>
+>();
+const listenerSetupByModel = new WeakSet<object>();
+
+function setupDeriveResponseListener(model: WidgetModel): void {
+  const key = model as object;
+  if (listenerSetupByModel.has(key)) return;
+  listenerSetupByModel.add(key);
+  if (!pendingDerivesByModel.has(key)) {
+    pendingDerivesByModel.set(key, new Map());
+  }
+  // Guard: marimo may not support model.on()
+  if (typeof (model as any).on !== "function") return;
+  model.on("change:derive_response", () => {
+    const response = model.get("derive_response");
+    if (!response?.requestId) return;
+    const pending = pendingDerivesByModel.get(key);
+    const handlers = pending?.get(response.requestId);
+    if (handlers) {
+      pending!.delete(response.requestId);
+      handlers.resolve(response.resultB64);
+    }
+  });
+}
+
 // Operator mapping: IR operator specs -> GoFish API operators
 /**
  * Lookup table mapping operator type to factory function.
@@ -245,6 +279,9 @@ const OPERATOR_MAP: Record<
       throw new Error("derive operator missing lambdaId");
     }
 
+    // Ensure traitlet response listener is set up for this model
+    setupDeriveResponseListener(model);
+
     return derive(async (d: any) => {
       const rows = normalizeToArray(d);
       if (rows.length === 0) {
@@ -254,20 +291,62 @@ const OPERATOR_MAP: Record<
       const arrowBuffer = arrayToArrow(rows);
       const arrowB64 = btoa(String.fromCharCode(...arrowBuffer));
 
-      // Use experimental.invoke to call Python command
-      const [response] = await experimental.invoke<{ resultB64: string }>(
-        "_execute_derive",
-        {
-          lambdaId,
-          arrowB64,
-        }
-      );
+      let resultB64: string | undefined;
 
-      const resultB64 = response?.resultB64;
-      if (typeof resultB64 !== "string") {
-        throw new Error("Invalid executeDerive response from Python");
+      // Fast path: try experimental.invoke (works in Jupyter, not in marimo)
+      if (useInvoke !== false) {
+        try {
+          // Wrap in Promise.resolve to ensure synchronous throws become rejections
+          const [response] = await Promise.resolve().then(() =>
+            experimental.invoke<{ resultB64: string }>("_execute_derive", {
+              lambdaId,
+              arrowB64,
+            })
+          );
+          useInvoke = true;
+          const rb64 = response?.resultB64;
+          if (typeof rb64 !== "string") {
+            throw new Error("Invalid executeDerive response from Python");
+          }
+          resultB64 = rb64;
+        } catch (err: any) {
+          if (useInvoke === null) {
+            // First attempt failed — invoke not supported, fall back to traitlets
+            useInvoke = false;
+          } else {
+            throw err;
+          }
+        }
       }
-      const resultBuffer = Uint8Array.from(atob(resultB64), (c) =>
+
+      // Traitlet fallback: used when invoke is not supported (e.g. marimo)
+      if (useInvoke === false) {
+        if (
+          typeof (model as any).set !== "function" ||
+          typeof (model as any).save_changes !== "function"
+        ) {
+          throw new Error(
+            "GoFish derive: neither experimental.invoke nor traitlet sync (model.set/save_changes) is available in this environment"
+          );
+        }
+        const requestId = `r-${Math.random().toString(36).slice(2)}`;
+        resultB64 = await new Promise<string>((resolve, reject) => {
+          const pending = pendingDerivesByModel.get(model as object);
+          if (!pending) {
+            reject(
+              new Error(
+                "GoFish derive: pendingDerives map not initialized for this model"
+              )
+            );
+            return;
+          }
+          pending.set(requestId, { resolve, reject });
+          model.set("derive_request", { requestId, lambdaId, arrowB64 });
+          model.save_changes();
+        });
+      }
+
+      const resultBuffer = Uint8Array.from(atob(resultB64!), (c) =>
         c.charCodeAt(0)
       );
       const resultTable = Arrow.tableFromIPC(resultBuffer);

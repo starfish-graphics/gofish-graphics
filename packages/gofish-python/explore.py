@@ -61,11 +61,6 @@ def _(mo):
         ("Vega-Lite / Grouped Bar", vl_grouped_bar),
     ]
 
-    return EXAMPLES, mo
-
-
-@app.cell
-def _(EXAMPLES, mo):
     n = len(EXAMPLES)
 
     idx = mo.ui.slider(
@@ -76,9 +71,12 @@ def _(EXAMPLES, mo):
         full_width=True,
     )
 
+    return EXAMPLES, idx, n
+
+
+@app.cell
+def _(EXAMPLES, idx, mo, n):
     # Global keyboard handler: arrow keys advance/rewind the slider.
-    # Marimo sliders are backed by <input type="range">; dispatching a native
-    # 'input' event on the element is sufficient to trigger reactivity.
     keyboard_nav = mo.Html("""
     <script>
     (function () {
@@ -109,15 +107,10 @@ def _(EXAMPLES, mo):
     </script>
     """)
 
-    return idx, keyboard_nav, n
-
-
-@app.cell
-def _(EXAMPLES, idx, keyboard_nav, mo, n):
     name, story_fn = EXAMPLES[idx.value]
     widget = story_fn().render(w=700, h=500, axes=True)
 
-    return mo.vstack(
+    mo.vstack(
         [
             keyboard_nav,
             mo.hstack(
