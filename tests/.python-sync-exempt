@@ -26,19 +26,15 @@ packages/gofish-graphics/stories/shapes/ImageMarks.stories.tsx
 # Docs regression test
 packages/gofish-graphics/stories/DocsContextRegression.stories.tsx
 
-# Forward syntax stories needing Layer/select or unsupported features
-packages/gofish-graphics/stories/forwardsyntax/Area.stories.tsx
-packages/gofish-graphics/stories/forwardsyntax/LineChart.stories.tsx
-packages/gofish-graphics/stories/forwardsyntax/Scatter.stories.tsx
-packages/gofish-graphics/stories/forwardsyntax/Ribbon.stories.tsx
-packages/gofish-graphics/stories/forwardsyntax/Streamgraph.stories.tsx
+# Forward syntax stories needing unsupported features
 packages/gofish-graphics/stories/forwardsyntax/Bar/BarWithLabels.stories.tsx
 packages/gofish-graphics/stories/forwardsyntax/Bar/BarTemplate.stories.tsx
 
-# Forward syntax stories needing coord transforms (clock)
-packages/gofish-graphics/stories/forwardsyntax/Pie.stories.tsx
-packages/gofish-graphics/stories/forwardsyntax/MosaicChart.stories.tsx
-packages/gofish-graphics/stories/forwardsyntax/WaffleChart.stories.tsx
+# Forward syntax stories needing mark-as-function or nested chart
+packages/gofish-graphics/stories/forwardsyntax/FacetedChart.stories.tsx
+
+# Forward syntax stories needing coord transforms other than clock
+# (clock is now supported)
 
 # Vega-Lite stories needing external datasets or complex derives
 packages/gofish-graphics/stories/vega-lite/AggregateBarChart.stories.tsx

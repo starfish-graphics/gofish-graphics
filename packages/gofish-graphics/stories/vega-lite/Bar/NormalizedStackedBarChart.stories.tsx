@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../../helper";
-import { Chart, spread, stack, rect, derive, log } from "../../../src/lib";
+import { Chart, spread, stack, rect, derive, log, palette } from "../../../src/lib";
 import { groupBy, sumBy } from "lodash";
 import data from "vega-datasets";
 
@@ -24,11 +24,9 @@ export const Default: StoryObj<Args> = {
   render: (args: Args, context: any) => {
     const container = initializeContainer();
 
-    // MISSING FEATURE: Custom color ranges are not yet supported.
-    // Vega-Lite maps Female → "#675193", Male → "#ca8861".
-    // GoFish assigns colors automatically from its default palette.
-
-    Chart(context.loaded.population.filter((row) => row.year === 2000) as any[])
+    Chart(context.loaded.population.filter((row) => row.year === 2000) as any[], {
+      color: palette({ Female: "#675193", Male: "#ca8861" }),
+    })
       .flow(
         derive((d) =>
           d.map((row) => ({ ...row, sex: row.sex === 1 ? "Male" : "Female" }))

@@ -50,6 +50,7 @@ export { frame as Frame } from "./ast/graphicalOperators/frame";
 export { position as Position } from "./ast/graphicalOperators/position";
 export { scatter as Scatter } from "./ast/graphicalOperators/scatter";
 export { arrow as Arrow } from "./ast/graphicalOperators/arrow";
+export { table as Table } from "./ast/graphicalOperators/table";
 export {
   over as Over,
   inside as In,
@@ -70,6 +71,7 @@ export {
   chart as Chart,
   spread,
   stack,
+  table,
   scatter,
   group,
   derive,
@@ -89,4 +91,10 @@ export type {
   ChartOptions,
   ChartBuilder,
 } from "./ast/marks/chart";
+export { palette, gradient, assignGradientColor } from "./ast/colorSchemes";
+export type {
+  ColorConfig,
+  PaletteScale,
+  GradientScale,
+} from "./ast/colorSchemes";
 export type { NameableMark } from "./ast/withGoFish";

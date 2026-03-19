@@ -4,6 +4,7 @@ import {
   Spread,
   Stack,
   Scatter,
+  Table,
   sumBy,
   v,
   meanBy,
@@ -13,6 +14,9 @@ import {
 import { GoFishNode } from "../_node";
 import { For } from "../iterators/for";
 import { CoordinateTransform } from "../coordinateTransforms/coord";
+import { type ColorConfig } from "../colorSchemes";
+
+export type { ColorConfig };
 import { inferSize, inferPos } from "../channels";
 import { Rect } from "../shapes/rect";
 import { rect as generatedRect } from "../shapes/rect";
@@ -173,6 +177,7 @@ export type ChartOptions = {
   w?: number;
   h?: number;
   coord?: CoordinateTransform;
+  color?: ColorConfig;
 };
 
 export class ChartBuilder<TInput, TOutput = TInput> {
@@ -303,6 +308,11 @@ export class ChartBuilder<TInput, TOutput = TInput> {
       ).setShared([true, true]),
     ]);
 
+    // Embed colorConfig on the node so it survives .resolve() inside Layer
+    if (this.options?.color) {
+      node.colorConfig = this.options.color;
+    }
+
     return node;
   }
 
@@ -318,10 +328,14 @@ export class ChartBuilder<TInput, TOutput = TInput> {
 
   // render calls resolve and then renders
   async render(
-    ...args: Parameters<GoFishNode["render"]>
+    container: Parameters<GoFishNode["render"]>[0],
+    options: Parameters<GoFishNode["render"]>[1]
   ): Promise<ReturnType<GoFishNode["render"]>> {
     const node = await this.resolve();
-    return node.render(...args);
+    return node.render(container, {
+      ...options,
+      colorConfig: this.options?.color,
+    });
   }
 }
 
@@ -383,7 +397,7 @@ export function spread<T>(
       );
       return Spread(
         {
-          direction: opts.dir === "x" ? 0 : 1,
+          direction: opts.dir.startsWith("x") ? 0 : 1,
           spacing: opts.spacing ?? 0,
           alignment: opts.alignment ?? "baseline",
           sharedScale: opts.sharedScale,
@@ -422,9 +436,11 @@ export function spread<T>(
           : Map.groupBy(d, field as any)
         : d;
 
+      const spatialDir = (finalOptions.dir ?? "x").startsWith("x") ? "x" : "y";
+
       return Spread(
         {
-          direction: finalOptions.dir === "x" ? 0 : 1,
+          direction: spatialDir === "x" ? 0 : 1,
           x: finalOptions?.x ?? finalOptions?.t,
           y: finalOptions?.y ?? finalOptions?.r,
           mode: finalOptions?.mode
@@ -489,6 +505,66 @@ export function stack<T>(
     ...(optionsOrMarks as SpreadOptions<T>),
     spacing: 0,
   });
+}
+
+type TableOptions = {
+  spacing?: number;
+  xSpacing?: number;
+  ySpacing?: number;
+};
+
+export function table<T>(
+  xField: keyof T,
+  yField: keyof T,
+  options?: TableOptions
+): Operator<T[], T[]> {
+  return async (mark: Mark<T[]>) => {
+    return async (
+      d: T[],
+      key?: string | number,
+      layerContext?: LayerContext
+    ) => {
+      // Unique column keys (xField values) preserving insertion order
+      const colKeys = [
+        ...new Map(d.map((row) => [String(row[xField]), true])).keys(),
+      ];
+      // Unique row keys (yField values) preserving insertion order
+      const rowKeys = [
+        ...new Map(d.map((row) => [String(row[yField]), true])).keys(),
+      ];
+      const numCols = colKeys.length;
+
+      const xSpacing = options?.xSpacing ?? options?.spacing ?? 2;
+      const ySpacing = options?.ySpacing ?? options?.spacing ?? 2;
+
+      // Build cells in row-major order (outer=row, inner=col)
+      const cells: { data: T[]; colKey: string; rowKey: string }[] = [];
+      for (const rowKey of rowKeys) {
+        for (const colKey of colKeys) {
+          const cellData = d.filter(
+            (row) =>
+              String(row[xField]) === colKey && String(row[yField]) === rowKey
+          );
+          cells.push({ data: cellData, colKey, rowKey });
+        }
+      }
+
+      return Table(
+        { numCols, colKeys, rowKeys, spacing: [xSpacing, ySpacing] },
+        For(cells, async ({ data: cellData, colKey, rowKey }) => {
+          const cellKey =
+            key != undefined
+              ? `${key}-${colKey}-${rowKey}`
+              : `${colKey}-${rowKey}`;
+          const node = await resolveMarkResult(
+            mark(cellData, cellKey, layerContext),
+            layerContext
+          );
+          return node.setKey(cellKey);
+        })
+      );
+    };
+  };
 }
 
 export function scatter<T>(

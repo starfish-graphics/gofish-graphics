@@ -21,12 +21,13 @@ chart(data, options?)
 
 ## Parameters
 
-| Parameter       | Type                  | Description                           |
-| --------------- | --------------------- | ------------------------------------- |
-| `data`          | `T`                   | The dataset to visualize              |
-| `options.w`     | `number`              | Width hint for the chart frame        |
-| `options.h`     | `number`              | Height hint for the chart frame       |
-| `options.coord` | `CoordinateTransform` | Coordinate transform (e.g. `polar()`) |
+| Parameter       | Type                  | Description                                                                                                                                                  |
+| --------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `data`          | `T`                   | The dataset to visualize                                                                                                                                     |
+| `options.w`     | `number`              | Width hint for the chart frame                                                                                                                               |
+| `options.h`     | `number`              | Height hint for the chart frame                                                                                                                              |
+| `options.coord` | `CoordinateTransform` | Coordinate transform (e.g. `polar()`)                                                                                                                        |
+| `options.color` | `ColorConfig`         | Color scale applied to all marks in this chart. Use [`palette()`](/api/#palette) for categorical data or [`gradient()`](/api/#gradient) for continuous data. |
 
 Returns a `ChartBuilder<T>` with [`.flow()`](/api/core/flow), [`.mark()`](/api/core/mark), and [`.render()`](/api/core/render) methods.
 
