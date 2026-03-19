@@ -17,7 +17,7 @@ const values = [
 ];
 
 const meta: Meta = {
-  title: "Vega-Lite/Bar/Simple Bar Chart",
+  title: "Vega-Lite/Simple Bar Chart",
   argTypes: {
     h: {
       control: { type: "number", min: 100, max: 1000, step: 10 },

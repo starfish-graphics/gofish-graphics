@@ -7,7 +7,7 @@ import data from "vega-datasets";
 // Mirrors: https://vega.github.io/vega-lite/examples/stacked_bar_normalize.html
 
 const meta: Meta = {
-  title: "Vega-Lite/Bar/Normalized Stacked Bar Chart",
+  title: "Vega-Lite/Normalized Stacked Bar Chart",
   argTypes: {
     w: { control: { type: "number", min: 100, max: 1000, step: 10 } },
     h: { control: { type: "number", min: 100, max: 1000, step: 10 } },

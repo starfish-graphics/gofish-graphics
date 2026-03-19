@@ -22,7 +22,7 @@ const MONTHS = [
 ];
 
 const meta: Meta = {
-  title: "Vega-Lite/Bar/Stacked Bar Chart (Rounded Corners)",
+  title: "Vega-Lite/Stacked Bar Chart (Rounded Corners)",
   argTypes: {
     w: { control: { type: "number", min: 100, max: 1000, step: 10 } },
     h: { control: { type: "number", min: 100, max: 1000, step: 10 } },

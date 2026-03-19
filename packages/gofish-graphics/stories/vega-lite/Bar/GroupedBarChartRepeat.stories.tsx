@@ -6,7 +6,7 @@ import data from "vega-datasets";
 // Mirrors: https://vega.github.io/vega-lite/examples/bar_grouped_repeated.html
 
 const meta: Meta = {
-  title: "Vega-Lite/Bar/Grouped Bar Chart (Multiple Measure with Repeat)",
+  title: "Vega-Lite/Grouped Bar Chart (Multiple Measure with Repeat)",
   argTypes: {
     w: { control: { type: "number", min: 100, max: 1000, step: 10 } },
     h: { control: { type: "number", min: 100, max: 1000, step: 10 } },
