@@ -110,6 +110,7 @@ export default defineConfig({
           items: [
             { text: "spread", link: "/api/operators/spread" },
             { text: "stack", link: "/api/operators/stack" },
+            { text: "table", link: "/api/operators/table" },
             { text: "scatter", link: "/api/operators/scatter" },
             { text: "layer", link: "/api/operators/layer" },
             { text: "derive", link: "/api/operators/derive" },
@@ -229,7 +230,7 @@ export default defineConfig({
     socialLinks: [
       {
         icon: "github",
-        link: "https://github.com/starfish-graphics/gofish-graphics",
+        link: "https://github.com/gofish-graphics/gofish-graphics",
       },
     ],
   },

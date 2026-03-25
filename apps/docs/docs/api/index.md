@@ -36,6 +36,7 @@ By combining operators and marks, you can create complex and automatic chart lay
 
 - [spread](/api/operators/spread) Lays out groups along an axis.
 - [stack](/api/operators/stack) Stacks items edge-to-edge.
+- [table](/api/operators/table) Groups data by two fields and lays out groups in a 2D grid.
 - [scatter](/api/operators/scatter) Positions groups by mean x/y.
 - [layer](/api/operators/layer) Overlays children without offset.
 - [derive](/api/operators/derive) Transforms data in the pipeline.

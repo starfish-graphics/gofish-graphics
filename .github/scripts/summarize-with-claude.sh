@@ -77,7 +77,7 @@ Write a concise weekly summary using Slack mrkdwn format (NOT standard Markdown)
 - Use *Section Name* for section headers (Slack does NOT support # or ## headers)
 - Use • or - for bullet points
 - Use _underscores_ for italics if needed
-- When mentioning any PR in the summary, format it as a hyperlink using the URL from the data above: <PR_URL|PR #NUMBER> (e.g. <https://github.com/starfish-graphics/gofish-graphics/pull/123|PR #123>)
+- When mentioning any PR in the summary, format it as a hyperlink using the URL from the data above: <PR_URL|PR #NUMBER> (e.g. <https://github.com/gofish-graphics/gofish-graphics/pull/123|PR #123>)
 - Contributor coverage is REQUIRED: every contributor listed above must be called out by name with at least one specific contribution.
 - In *Highlights*, explicitly mention the number of PRs that landed this week using the PR count above.
 
