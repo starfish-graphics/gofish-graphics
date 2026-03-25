@@ -446,6 +446,7 @@ export class GoFishNode {
       debug = false,
       defs,
       axes = false,
+      legend = true,
       colorConfig,
     }: {
       w: number;
@@ -456,12 +457,13 @@ export class GoFishNode {
       debug?: boolean;
       defs?: JSX.Element[];
       axes?: boolean;
+      legend?: boolean;
       colorConfig?: ColorConfig;
     }
   ) {
     return gofish(
       container,
-      { w, h, x, y, transform, debug, defs, axes, colorConfig },
+      { w, h, x, y, transform, debug, defs, axes, legend, colorConfig },
       this
     );
   }

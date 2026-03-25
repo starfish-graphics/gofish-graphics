@@ -34,6 +34,7 @@ export interface RenderOptions {
   debug?: boolean;
   defs?: JSX.Element[];
   axes?: AxesOptions;
+  legend?: boolean;
   colorConfig?: ColorConfig;
 }
 

@@ -50,6 +50,75 @@
   color: #e94560;
 }
 
+/* Plain disc bullets (no ::before arrows — list markers only) */
+.reveal ul.stack-queries-list {
+  list-style: disc;
+  padding-left: 1.25rem;
+}
+.reveal ul.stack-queries-list li {
+  padding-left: 0;
+}
+.reveal ul.stack-queries-list li::before {
+  content: none;
+}
+
+.reveal ul.stack-queries-list li.stack-query-highlight {
+  background: rgba(255, 235, 150, 0.55);
+  border-radius: 3px;
+  padding: 0.12em 0.35em 0.12em 0.45em;
+  margin-left: -0.45em;
+}
+
+/* Stack slide: bar then stacked code in the same slot (no fade-out gap) */
+.stack-code-swap {
+  display: grid;
+  grid-template-columns: 1fr;
+  position: relative;
+}
+.stack-code-swap > .stack-code-pre {
+  grid-row: 1;
+  grid-column: 1;
+  align-self: start;
+}
+/* Hidden stacked fragment: no layout gap before it appears */
+.stack-code-swap > .stack-code-stacked.fragment:not(.visible) {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+/* Show stacked code and drop the bar block from layout */
+.stack-code-swap:has(.stack-code-stacked-base.visible) .stack-code-bar {
+  visibility: hidden;
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  pointer-events: none;
+}
+/* Comment variant: same slot as base stacked (Reveal keeps prior fragments visible) */
+.stack-code-swap:has(.stack-code-stacked-comment.visible)
+  .stack-code-stacked-base {
+  visibility: hidden;
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  pointer-events: none;
+}
+
 /* ─── Two-column layout ─────────────────────────────────────────────── */
 .two-col {
   display: grid;
@@ -71,6 +140,35 @@
   min-height: 320px;
 }
 
+/* stack() slide: chart with optional caption below */
+.two-col .col-chart.stack-slide-chart-col {
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 0.65rem;
+  min-height: 0;
+}
+
+.stack-slide-kv-box {
+  background: #f5f5f5;
+  border-radius: 6px;
+  padding: 0.5rem 0.7rem;
+  font-family: monospace;
+  font-size: 0.95em;
+  text-align: center;
+}
+
+.stack-slide-kv-aside {
+  color: #888;
+  font-size: 0.85em;
+}
+
+/* Gestalt taxonomy slide body (Reveal: avoid overlap with stacked content) */
+.gestalt-taxonomy-slide-body {
+  position: relative;
+  z-index: 1;
+}
+
 /* ─── Code blocks ───────────────────────────────────────────────────── */
 .reveal pre {
   font-size: 0.58em;
@@ -89,12 +187,26 @@
   overflow: auto;
 }
 
+/* Line highlights: full opacity on all lines; emphasize highlights with a band (reveal.js default dims non-highlighted lines) */
+.reveal .hljs.has-highlights tr:not(.highlight-line) {
+  opacity: 1;
+}
+
+.reveal .hljs.has-highlights tr.highlight-line td {
+  background: rgba(255, 235, 150, 0.55);
+}
+
+.reveal .hljs.has-highlights tr.highlight-line .hljs-ln-numbers {
+  opacity: 1;
+}
+
 /* ─── Chart containers ──────────────────────────────────────────────── */
 .chart-container {
   width: 100%;
-  min-height: 300px;
+  min-height: 0;
+  height: 372px;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   background: #fafafa;
   border-radius: 6px;
@@ -104,6 +216,7 @@
 
 .chart-container svg {
   display: block;
+  margin-top: -20px;
 }
 
 /* ─── Title slide ───────────────────────────────────────────────────── */
@@ -347,4 +460,208 @@
 .install-block .prompt {
   color: #e94560;
   margin-right: 0.5em;
+}
+
+/* ─── Spec slide layout (bar chart builder) ─────────────────────────── */
+.spec-slide-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-top: 0.8rem;
+}
+
+/* Two columns (not a 2×2 grid): breaks are independent — code→chart is higher
+   than diagram→queries, so the horizontal splits don’t line up across the slide. */
+.spec-slide-main.spec-slide-cols {
+  display: flex;
+  flex-direction: row;
+  gap: 2rem;
+  align-items: flex-start;
+}
+
+.spec-slide-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Left: code then chart — keep gap small so the code/chart break sits higher */
+.spec-slide-col-left {
+  gap: 0.35rem;
+}
+
+/* Right: diagram then queries — larger gap so that break sits lower */
+.spec-slide-col-right {
+  gap: 1.1rem;
+}
+
+.spec-slide-code {
+  min-width: 0;
+}
+
+.spec-slide-diagram {
+  min-width: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.spec-slide-diagram svg {
+  width: 100%;
+  max-width: 360px;
+  max-height: min(36vh, 300px);
+  height: auto;
+}
+
+.spec-slide-chart-cell {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.spec-slide-query {
+  min-width: 0;
+  font-size: 0.72em;
+  line-height: 1.85;
+}
+
+.spec-slide-query--empty {
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.chart-container.spec-slide-chart {
+  width: 100%;
+  max-width: min(88vw, 640px);
+  /* Override global .chart-container height: 372px — shorter box reads higher on the slide */
+  height: 300px;
+  min-height: 220px;
+}
+
+.spec-table {
+  text-align: left;
+}
+
+.spec-row {
+  display: grid;
+  grid-template-columns: 7em 1fr;
+  gap: 0.3em;
+  margin-bottom: 0.6em;
+  align-items: baseline;
+  transition: opacity 0.2s;
+}
+
+.spec-row.dim {
+  opacity: 0.18;
+}
+
+.spec-label {
+  font-size: 0.68em;
+  color: #888;
+  font-family: "Source Sans 3", "Helvetica Neue", sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding-top: 0.15em;
+}
+
+.spec-code {
+  font-family: "Fira Code", "Consolas", monospace;
+  font-size: 0.78em;
+  color: #222;
+  background: none;
+  padding: 0;
+}
+
+/* Nesting-order slide: three columns in one flex row; fragments 2–3 use Reveal’s
+   default opacity/visibility so hidden builds still occupy space (no reflow). */
+.kv-nesting-builder {
+  flex-wrap: nowrap;
+}
+
+/* ─── Before/after transition slides ───────────────────────────────── */
+.before-after {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 1.2rem;
+  align-items: center;
+  margin-top: 0.5rem;
+  height: 430px;
+}
+
+.ba-arrow {
+  font-size: 2.8em;
+  color: #4e79a7;
+  line-height: 1;
+}
+
+/* Close slide: tiled logo strips (top/bottom repeat-x, sides repeat-y) */
+.close-slide-logo-border-end {
+  width: 100%;
+  height: 38px;
+  box-sizing: border-box;
+  background-image: url(gofish-logo.png);
+  background-repeat: repeat-x;
+  background-size: auto 38px;
+  background-position: left center;
+  opacity: 0.88;
+}
+
+.close-slide-logo-border-end--top {
+  margin-bottom: 0.45rem;
+}
+
+.close-slide-logo-border-end--bottom {
+  margin-top: 0.45rem;
+  transform: scaleX(-1);
+}
+
+/* Close slide: two side-by-side boxes, each with its own logo frame */
+.close-slide-two-boxes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.5rem;
+  align-items: stretch;
+  width: 100%;
+}
+
+.close-slide-logo-frame {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.close-slide-logo-frame .close-slide-frame-mid {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* Close slide: vertical logo strips — completes a frame with top/bottom strips */
+.close-slide-frame-mid {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 0.45rem;
+  margin-top: 0;
+}
+
+.close-slide-frame-mid > .close-slide-box-content {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.close-slide-logo-border-side {
+  flex: 0 0 38px;
+  background-image: url(gofish-logo.png);
+  background-repeat: repeat-y;
+  background-size: 38px auto;
+  background-position: center top;
+  opacity: 0.88;
+}
+
+.close-slide-logo-border-side--right {
+  transform: scaleX(-1);
 }

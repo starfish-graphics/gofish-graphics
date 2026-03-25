@@ -272,6 +272,7 @@ export const gofish = (
     debug = false,
     defs,
     axes = false,
+    legend = true,
     colorConfig,
   }: {
     w: number;
@@ -282,6 +283,7 @@ export const gofish = (
     debug?: boolean;
     defs?: JSX.Element[];
     axes?: boolean;
+    legend?: boolean;
     colorConfig?: ColorConfig;
   },
   child: GoFishNode | Promise<GoFishNode>
@@ -348,6 +350,7 @@ export const gofish = (
               height: h,
               defs,
               axes,
+              legend,
               scaleContext: data.scaleContext,
               keyContext: data.keyContext,
               sizeDomains: data.sizeDomains,
@@ -433,6 +436,7 @@ export const render = (
     transform,
     defs,
     axes,
+    legend = true,
     scaleContext: scaleContextParam,
     keyContext: keyContextParam,
     sizeDomains,
@@ -446,6 +450,7 @@ export const render = (
     transform?: string;
     defs?: JSX.Element[];
     axes?: AxesOptions;
+    legend?: boolean;
     scaleContext: ScaleContext | null;
     keyContext: KeyContext | null;
     sizeDomains?: [any, any];
@@ -1107,45 +1112,41 @@ export const render = (
                     })()}
                   </Show>
                 </g>
-                {/* legend (discrete color for now) */}
-                <g>
-                  <For
-                    each={Array.from(
-                      (scaleContext?.unit && "color" in scaleContext.unit
-                        ? scaleContext.unit.color
-                        : new Map()
-                      ).entries()
-                    )}
-                  >
-                    {([key, value], i) => (
-                      <g
-                        transform={`translate(${width + PADDING * 3}, ${height - i() * 20})`}
-                      >
-                        <rect
-                          x={-20}
-                          y={-5}
-                          width={10}
-                          height={10}
-                          fill={value}
-                        />
-                        <text
-                          transform="scale(1, -1)"
-                          x={-5}
-                          y={0}
-                          text-anchor="start"
-                          dominant-baseline="middle"
-                          font-size="10px"
-                          fill="gray"
-                        >
-                          {key}
-                        </text>
-                      </g>
-                    )}
-                  </For>
-                </g>
               </>
             );
           })()}
+        </Show>
+        {/* legend (discrete color for now) */}
+        <Show when={legend !== false}>
+          <g>
+            <For
+              each={Array.from(
+                (scaleContext?.unit && "color" in scaleContext.unit
+                  ? scaleContext.unit.color
+                  : new Map()
+                ).entries()
+              )}
+            >
+              {([key, value], i) => (
+                <g
+                  transform={`translate(${width + PADDING * 3}, ${height - i() * 20})`}
+                >
+                  <rect x={-20} y={-5} width={10} height={10} fill={value} />
+                  <text
+                    transform="scale(1, -1)"
+                    x={-5}
+                    y={0}
+                    text-anchor="start"
+                    dominant-baseline="middle"
+                    font-size="10px"
+                    fill="gray"
+                  >
+                    {key}
+                  </text>
+                </g>
+              )}
+            </For>
+          </g>
         </Show>
       </g>
     </svg>

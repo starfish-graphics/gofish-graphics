@@ -3,7 +3,7 @@ import RevealHighlight from "reveal.js/plugin/highlight/highlight";
 import RevealNotes from "reveal.js/plugin/notes/notes";
 import "reveal.js/dist/reveal.css";
 import "reveal.js/dist/theme/white.css";
-import "reveal.js/plugin/highlight/monokai.css";
+import "./hljs-github-light.css";
 import "./style.css";
 import { renderCharts, chartRenderers } from "./charts";
 
@@ -14,6 +14,7 @@ const deck = new Reveal({
   width: 1280,
   height: 720,
   margin: 0.06,
+  slideNumber: true,
   plugins: [RevealHighlight, RevealNotes],
   highlight: {
     highlightOnLoad: true,

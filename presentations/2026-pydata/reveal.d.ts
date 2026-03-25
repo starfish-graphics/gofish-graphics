@@ -31,4 +31,4 @@ declare module "reveal.js/plugin/highlight/highlight" {
 
 declare module "reveal.js/dist/reveal.css" {}
 declare module "reveal.js/dist/theme/white.css" {}
-declare module "reveal.js/plugin/highlight/monokai.css" {}
+declare module "./hljs-github-light.css" {}

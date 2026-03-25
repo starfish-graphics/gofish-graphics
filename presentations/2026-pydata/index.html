@@ -26,9 +26,9 @@
               style="width: 100%; height: 100%; object-fit: contain"
             />
             <aside class="notes">
-              Opening. This is a provocation, not a product pitch. The
-              through-line for the whole talk: "A visualization is a data
-              structure you query with your eyes."
+              Today I want to talk to you about two things. First is about how
+              to design effective graphics for bespoke datasets. And the second
+              is a tool for building them.
             </aside>
           </section>
 
@@ -36,254 +36,142 @@
              OPENING
              ══════════════════════════════════════════════════════ -->
 
-          <!-- Opening question -->
+          <!-- "how do we decide what chart to use?" -->
           <section>
-            <h2>how do you pick the right chart to show your data?</h2>
-            <p
-              class="fragment"
-              style="
-                margin-top: 1.4rem;
-                font-size: 0.92em;
-                color: #444;
-                line-height: 1.7;
-              "
-            >
-              And once you've picked it — how do you tailor it to fit your use
-              case?
-            </p>
+            <h2>how do we decide what chart to use?</h2>
             <aside class="notes">
-              Open with the question directly. Let it sit for a moment. This is
-              the question the whole talk is building toward answering — but not
-              in the way people expect.
+              Now how do we decide what chart to use today? Maybe we are lucky
+              to have some existing collection of charts we know work well.
+              Maybe we can vibe code our way to something that looks alright.
+              But when we're faced with a new problem what should we do?
             </aside>
           </section>
 
-          <!-- Common heuristic — and its limits -->
+          <!-- Seaborn / gallery example -->
           <section>
-            <h2>the most common approach: a simple heuristic</h2>
             <div
               style="
-                margin-top: 1.2rem;
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 1.2rem;
-              "
-            >
-              <div
-                class="callout"
-                style="font-size: 0.88em; line-height: 1.7; text-align: center"
-              >
-                <strong style="font-size: 1.1em">bar chart</strong><br />
-                discrete comparisons
-              </div>
-              <div
-                class="callout"
-                style="font-size: 0.88em; line-height: 1.7; text-align: center"
-              >
-                <strong style="font-size: 1.1em">line chart</strong><br />
-                trends over time
-              </div>
-            </div>
-            <p
-              class="fragment"
-              style="
-                margin-top: 1.4rem;
-                font-size: 0.85em;
-                color: #555;
-                line-height: 1.7;
-              "
-            >
-              Convenient — especially when it's a problem you've seen before.
-            </p>
-            <p
-              class="fragment"
-              style="
-                margin-top: 0.6rem;
-                font-size: 0.85em;
-                color: #555;
-                line-height: 1.7;
-              "
-            >
-              But picking the chart type is only step one.
-            </p>
-            <aside class="notes">
-              Validate the heuristic — don't dismiss it. It genuinely works for
-              common cases. But set up the next beat: the chart type decision is
-              just the top of a long chain of smaller decisions.
-            </aside>
-          </section>
-
-          <!-- Picking chart type is just step one -->
-          <section>
-            <h2>then what?</h2>
-            <div
-              style="
-                margin-top: 1rem;
                 display: flex;
-                flex-direction: column;
-                gap: 0.5rem;
+                justify-content: center;
+                align-items: center;
+                margin-top: 0.8rem;
               "
             >
-              <div class="ladder-step">
-                <span class="step-num">1</span> chart type — bar, line, scatter,
-                …
-              </div>
-              <div class="ladder-step fragment">
-                <span class="step-num">2</span> which variant? stacked vs
-                grouped? shared vs independent axes?
-              </div>
-              <div class="ladder-step fragment">
-                <span class="step-num">3</span> colors — which dimension to
-                encode? how many?
-              </div>
-              <div class="ladder-step fragment">
-                <span class="step-num">4</span> labels — which values to
-                annotate? where?
-              </div>
-              <div class="ladder-step fragment">
-                <span class="step-num">5</span> …
-              </div>
+              <img
+                src="motivational-images/seaborn-gallery.png"
+                style="
+                  max-width: 90%;
+                  max-height: 440px;
+                  border-radius: 4px;
+                  object-fit: contain;
+                "
+                alt="Seaborn example gallery"
+              />
             </div>
             <aside class="notes">
-              Each of these is a real decision with real tradeoffs. The
-              chart-type heuristic gets you to step 1. Everything below it is
-              still up to you. Decision diagrams (like the "chart chooser"
-              posters) exist but they're clunky — they only go one or two levels
-              deep and they stop exactly where it gets interesting.
+              We could sift through giant galleries and books of cool examples,
+              seeing if any of them might apply to our problem.
             </aside>
           </section>
 
-          <!-- Models can help, but can't automate these away -->
           <section>
-            <h2>can't we just ask a model?</h2>
-            <p
-              class="fragment"
+            <div
               style="
-                margin-top: 1.2rem;
-                font-size: 0.88em;
-                color: #444;
-                line-height: 1.7;
-              "
-            >
-              Models are getting good at step 1. Sometimes step 2.
-            </p>
-            <p
-              class="fragment"
-              style="
+                display: flex;
+                justify-content: center;
+                align-items: center;
                 margin-top: 0.8rem;
-                font-size: 0.88em;
-                color: #444;
-                line-height: 1.7;
               "
             >
-              But the micro-decisions — which color encodes which dimension,
-              which values deserve a label, whether a stacked or small-multiples
-              layout better supports your reader's query — these require
-              <em>knowing what you're trying to say</em>.
-            </p>
-            <p
-              class="fragment"
-              style="
-                margin-top: 0.8rem;
-                font-size: 0.88em;
-                color: #555;
-                line-height: 1.7;
-              "
-            >
-              A model that can't articulate the tradeoff can't reliably make the
-              call. Neither can a chart-chooser diagram.
-            </p>
+              <img
+                src="motivational-images/choosing-a-good-chart-09-1.png"
+                style="
+                  max-width: 90%;
+                  max-height: min(85vh, 520px);
+                  border-radius: 4px;
+                  object-fit: contain;
+                "
+                alt="Chart type guide: relationship, comparison, distribution, composition"
+              />
+            </div>
             <aside class="notes">
-              Don't dismiss AI tools — they're genuinely useful. But they're
-              operating on the same vague heuristics. The missing ingredient is
-              a precise vocabulary for talking about visual structure. That's
-              what sets up GoFish.
+              We could consult guides that bucket the problem into
+              "relationship," "comparison," "distribution," "composition," and
+              so on. But those things are still too vague and leave us with
+              dozens of options to try, all of which can be pretty generic.
             </aside>
           </section>
 
-          <!-- Montage — graphics don't fall into neat taxonomies -->
+          <!-- Montage — bespoke graphics -->
           <section>
             <h2>graphics don't always fall into neat taxonomies</h2>
             <div
               style="
                 display: grid;
                 grid-template-columns: 1fr 1fr 1fr;
-                grid-template-rows: 1fr 1fr;
                 gap: 0.6rem;
                 margin-top: 0.8rem;
-                height: 300px;
+                height: 280px;
               "
             >
               <img
-                src="motivational-images/nyt.png"
-                style="
-                  width: 100%;
-                  height: 100%;
-                  object-fit: cover;
-                  border-radius: 4px;
-                "
-                alt="NYT Data Viz"
-              />
-              <img
                 src="motivational-images/science.png"
                 style="
+                  box-sizing: border-box;
                   width: 100%;
                   height: 100%;
                   object-fit: cover;
                   border-radius: 4px;
+                  border: 2px solid #ccc;
                 "
                 alt="Nature / Science"
               />
               <img
                 src="motivational-images/data-art.png"
                 style="
+                  box-sizing: border-box;
                   width: 100%;
                   height: 100%;
                   object-fit: cover;
                   border-radius: 4px;
+                  border: 2px solid #ccc;
                 "
                 alt="Data Art"
               />
               <img
-                src="motivational-images/math.png"
-                style="
-                  width: 100%;
-                  height: 100%;
-                  object-fit: cover;
-                  border-radius: 4px;
-                "
-                alt="Math diagrams"
-              />
-              <img
                 src="motivational-images/sosp.png"
                 style="
+                  box-sizing: border-box;
                   width: 100%;
                   height: 100%;
                   object-fit: cover;
                   border-radius: 4px;
+                  border: 2px solid #ccc;
                 "
                 alt="Systems diagrams"
               />
-              <div class="img-placeholder">Maps / Architecture</div>
             </div>
-            <p
-              class="fragment"
-              style="margin-top: 0.8rem; font-size: 0.82em; color: #555"
-            >
-              To design these, you have to understand <em>how they work</em> —
-              not just what to call them.
-            </p>
             <aside class="notes">
-              Quick montage. Don't dwell. NYT, Science, data art, math diagrams,
-              systems diagrams. The point: there is a huge universe of useful
-              visual representations. Our chart-type typology doesn't cover most
-              of them. ~2 min mark.
+              There's no way you could use a chart picker like that to come up
+              with a graphic like one of these or even know if it's useful.
             </aside>
           </section>
 
-          <!-- Franconeri A -->
+          <!-- Grouped bars — not interchangeable -->
           <section>
-            <h2>what's the first trend you notice?</h2>
+            <h2>grouped bar charts aren't created equal</h2>
+            <aside class="notes">
+              Even if we think we've found the right chart, our work isn't
+              necessarily done! In a second I'm going to show you three grouped
+              bar charts in sequence visualizing the heights of two children,
+              Charlie and River, over time. Your job is to just tell me the
+              first thing you see. You'll have five seconds per chart.
+            </aside>
+          </section>
+
+          <!-- Franconeri A — the hook -->
+          <section>
+            <h2>what trend do you see here?</h2>
             <div
               style="margin-top: 1.5rem; display: flex; justify-content: center"
             >
@@ -294,17 +182,15 @@
               ></div>
             </div>
             <aside class="notes">
-              Don't answer the question yet. Just ask it. Give the audience a
-              moment. The answer is: within a group, comparing the two people is
-              easy. Across groups for the same person is hard. Boger &amp;
-              Franconeri (2024): "Reading a Graph Is Like Reading a Paragraph" —
-              https://par.nsf.gov/servlets/purl/10552630
+              What trend do you see here? [show ~5 seconds then advance] Boger
+              &amp; Franconeri (2024): "Reading a Graph Is Like Reading a
+              Paragraph."
             </aside>
           </section>
 
           <!-- Franconeri B -->
           <section>
-            <h2>how about now?</h2>
+            <h2>what about now?</h2>
             <div
               style="margin-top: 1.5rem; display: flex; justify-content: center"
             >
@@ -315,498 +201,236 @@
               ></div>
             </div>
             <aside class="notes">
-              Same exact data. Two lines of code changed. Now "how does each
-              person grow across ages?" is easy. The structure primes the
-              question. Boger &amp; Franconeri (2024). ~3 min mark.
+              What about now? [show ~5 seconds then advance] Same exact data.
+              Boger &amp; Franconeri (2024).
             </aside>
           </section>
 
-          <!-- Through-line: same data, same chart type, different message -->
+          <!-- Franconeri A with color -->
+          <section>
+            <h2>how about now?</h2>
+            <div
+              style="margin-top: 1.5rem; display: flex; justify-content: center"
+            >
+              <div
+                id="chart-franconeri-a-color"
+                class="chart-container"
+                style="max-width: 80%"
+              ></div>
+            </div>
+            <aside class="notes">
+              How about now? These are all the same kind of chart, yet our
+              takeaways differ. How do we make sense of that?
+            </aside>
+          </section>
+
+          <!-- Boger & Franconeri — study results figure -->
           <section>
             <div
               style="
-                margin-top: 1.2rem;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                height: 100%;
+                margin: 0;
+              "
+            >
+              <div
+                style="
+                  flex: 1;
+                  display: flex;
+                  justify-content: center;
+                  align-items: center;
+                  min-height: 0;
+                  width: 100%;
+                "
+              >
+                <img
+                  src="motivational-images/boger-franconeri-results.png"
+                  alt="Boger and Franconeri study: separate bar charts vs grouped bars with participant miss rates"
+                  style="
+                    max-width: 95%;
+                    max-height: 78vh;
+                    border-radius: 4px;
+                    object-fit: contain;
+                  "
+                />
+              </div>
+              <p
+                style="
+                  margin: 0.4rem 0 0;
+                  font-size: 0.78em;
+                  color: #555;
+                  letter-spacing: 0.01em;
+                "
+              >
+                <a
+                  href="https://psycnet.apa.org/manuscript/2024-85347-001.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style="
+                    color: inherit;
+                    text-decoration: underline;
+                    text-underline-offset: 2px;
+                  "
+                  >Boger &amp; Franconeri 2024</a
+                >
+              </p>
+            </div>
+            <aside class="notes">
+              This was based on a study by Boger &amp; Franconeri where that
+              found that when you group the data by age fisrt, only 13% of
+              people missed the relationship, whereas 46% missed it when grouped
+              the other way.
+            </aside>
+          </section>
+
+          <!-- Three-thumbnail summary -->
+          <section>
+            <div
+              style="
+                margin-top: 1rem;
                 display: flex;
                 justify-content: center;
-                gap: 2.5rem;
+                gap: 1.5rem;
               "
             >
               <div
                 id="chart-franconeri-a-key"
                 class="chart-container"
-                style="max-width: 45%"
+                style="max-width: 30%; min-height: 0"
               ></div>
               <div
                 id="chart-franconeri-b-key"
                 class="chart-container"
-                style="max-width: 45%"
+                style="max-width: 30%; min-height: 0"
+              ></div>
+              <div
+                id="chart-franconeri-a-color-key"
+                class="chart-container"
+                style="max-width: 30%; min-height: 0"
               ></div>
             </div>
-            <h2 style="margin-top: 1.4rem; font-size: 1.4em; line-height: 1.4">
-              same data &nbsp;·&nbsp; same chart type &nbsp;·&nbsp;
-              <span class="highlight">different afforded message</span>
+            <h2 style="margin-top: 1.2rem; font-size: 1.3em; line-height: 1.4">
+              these are all the same kind of chart —
+              <span class="highlight">yet our takeaways differ</span>
             </h2>
-            <p
+            <!-- <p
               style="
-                margin-top: 0.8rem;
+                margin-top: 0.6rem;
                 font-size: 0.85em;
                 color: #444;
                 line-height: 1.7;
               "
             >
-              The data didn't change. The <strong>structure</strong> did — and
-              that changed what you could <em>query at a glance</em>.
-            </p>
+              How do we make sense of that?
+            </p> -->
             <aside class="notes">
-              Let this land. Same data, same chart type (grouped bar), but the
-              grouping choice is the whole game. Boger &amp; Franconeri (2024):
-              "Reading a Graph Is Like Reading a Paragraph." ~4 min mark.
+              And I want to highlight that these are all the same kind of chart,
+              but their takeaways are different. How do we make sense of that?
+              <!-- Same data, same chart type — but grouping order and color
+              completely change what a reader sees first. The chart-type
+              heuristic doesn't help here. We need a better way to think about
+              this. Boger &amp; Franconeri (2024): "Reading a Graph Is Like
+              Reading a Paragraph." -->
             </aside>
           </section>
 
-          <!-- Larkin & Simon: text description of pulley system -->
+          <!-- Key Idea -->
           <section>
             <div
-              style="
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 2rem;
-                margin-top: 0.6rem;
-                align-items: start;
-              "
-            >
-              <div
-                style="
-                  font-size: 0.72em;
-                  line-height: 1.85;
-                  color: #222;
-                  text-align: left;
-                "
-              >
-                <ol style="list-style: decimal; padding-left: 1.4em">
-                  <li style="margin-bottom: 0.4em">
-                    The first weight is suspended from the left end of a rope
-                    over Pulley A.
-                  </li>
-                  <li style="margin-bottom: 0.4em">
-                    The right end of this rope is attached to, and partially
-                    supports, the second weight.
-                  </li>
-                  <li style="margin-bottom: 0.4em">
-                    Pulley A is suspended from the left end of a rope that runs
-                    over Pulley B, and under Pulley C.
-                  </li>
-                  <li style="margin-bottom: 0.4em">
-                    Pulley B is suspended from the ceiling.
-                  </li>
-                  <li style="margin-bottom: 0.4em">
-                    The right end of the rope that runs under Pulley C is
-                    attached to the ceiling.
-                  </li>
-                  <li style="margin-bottom: 0.4em">
-                    Pulley C is attached to the second weight, supporting it
-                    jointly with the right end of the first rope.
-                  </li>
-                </ol>
-              </div>
-              <div
-                style="
-                  font-size: 0.72em;
-                  line-height: 1.85;
-                  color: #222;
-                  text-align: left;
-                "
-              >
-                <ul style="list-style: disc; padding-left: 1.2em">
-                  <li>Set W1 = 1</li>
-                  <li>What is affected by W1?</li>
-                  <li>[S1] Left end of rope over PA</li>
-                  <li>What is PA attached to?</li>
-                  <li>[S1→S2] "this rope" = PA, so W2</li>
-                  <li>[S2→S3] PA suspended over PB under PC</li>
-                  <li>What is PC attached to?</li>
-                  <li>[S3→S4] irrelevant</li>
-                  <li>[S4→S5] PC supported by ceiling</li>
-                  <li>What is PA attached to again?</li>
-                </ul>
-              </div>
-            </div>
-            <p
               style="
                 margin-top: 1rem;
-                font-size: 0.8em;
-                font-weight: 700;
-                color: #1a1a2e;
-                text-align: center;
-              "
-            >
-              Find the ratio of the second to the first weight, if the system is
-              in equilibrium.
-            </p>
-            <aside class="notes">
-              From Larkin &amp; Simon (1987). This is the sentential version —
-              you have to do a linear search through the sentences to
-              reconstruct the topology. It's exhausting. Give the audience a
-              moment to feel it.
-            </aside>
-          </section>
-
-          <!-- Larkin & Simon: diagram version -->
-          <section>
-            <div
-              style="
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 2rem;
-                margin-top: 0.6rem;
-                align-items: start;
-              "
-            >
-              <div style="display: flex; justify-content: center">
-                <svg
-                  viewBox="0 0 300 310"
-                  xmlns="http://www.w3.org/2000/svg"
-                  style="width: 100%; max-width: 320px"
-                >
-                  <!-- Ceiling -->
-                  <rect
-                    x="15"
-                    y="8"
-                    width="265"
-                    height="16"
-                    fill="#aaa"
-                    rx="2"
-                  />
-                  <!-- Rope: ceiling to PB -->
-                  <line
-                    x1="148"
-                    y1="24"
-                    x2="148"
-                    y2="60"
-                    stroke="#7a4a20"
-                    stroke-width="3"
-                  />
-                  <!-- PB -->
-                  <circle
-                    cx="148"
-                    cy="80"
-                    r="22"
-                    fill="#c8c8c8"
-                    stroke="#888"
-                    stroke-width="2"
-                  />
-                  <circle cx="148" cy="80" r="5" fill="#666" />
-                  <text
-                    x="160"
-                    y="70"
-                    font-size="13"
-                    fill="#222"
-                    font-weight="bold"
-                    font-family="sans-serif"
-                  >
-                    B
-                  </text>
-                  <!-- Rope x: PB left to PA -->
-                  <line
-                    x1="130"
-                    y1="97"
-                    x2="83"
-                    y2="148"
-                    stroke="#7a4a20"
-                    stroke-width="3"
-                  />
-                  <text
-                    x="93"
-                    y="127"
-                    font-size="12"
-                    fill="#555"
-                    font-family="sans-serif"
-                  >
-                    x
-                  </text>
-                  <!-- Rope y: PB right to PC -->
-                  <line
-                    x1="166"
-                    y1="97"
-                    x2="204"
-                    y2="153"
-                    stroke="#7a4a20"
-                    stroke-width="3"
-                  />
-                  <text
-                    x="191"
-                    y="127"
-                    font-size="12"
-                    fill="#555"
-                    font-family="sans-serif"
-                  >
-                    y
-                  </text>
-                  <!-- PA -->
-                  <circle
-                    cx="70"
-                    cy="163"
-                    r="22"
-                    fill="#c8c8c8"
-                    stroke="#888"
-                    stroke-width="2"
-                  />
-                  <circle cx="70" cy="163" r="5" fill="#666" />
-                  <text
-                    x="38"
-                    y="156"
-                    font-size="13"
-                    fill="#222"
-                    font-weight="bold"
-                    font-family="sans-serif"
-                  >
-                    A
-                  </text>
-                  <!-- Rope p: PA left down to W1 -->
-                  <line
-                    x1="57"
-                    y1="183"
-                    x2="57"
-                    y2="255"
-                    stroke="#7a4a20"
-                    stroke-width="3"
-                  />
-                  <text
-                    x="38"
-                    y="225"
-                    font-size="12"
-                    fill="#555"
-                    font-family="sans-serif"
-                  >
-                    p
-                  </text>
-                  <!-- Rope q: PA right to W2 -->
-                  <line
-                    x1="88"
-                    y1="177"
-                    x2="180"
-                    y2="255"
-                    stroke="#7a4a20"
-                    stroke-width="3"
-                  />
-                  <text
-                    x="135"
-                    y="228"
-                    font-size="12"
-                    fill="#555"
-                    font-family="sans-serif"
-                  >
-                    q
-                  </text>
-                  <!-- PC -->
-                  <circle
-                    cx="218"
-                    cy="170"
-                    r="22"
-                    fill="#c8c8c8"
-                    stroke="#888"
-                    stroke-width="2"
-                  />
-                  <circle cx="218" cy="170" r="5" fill="#666" />
-                  <text
-                    x="233"
-                    y="160"
-                    font-size="13"
-                    fill="#222"
-                    font-weight="bold"
-                    font-family="sans-serif"
-                  >
-                    C
-                  </text>
-                  <!-- Rope z: ceiling right to PC -->
-                  <line
-                    x1="265"
-                    y1="24"
-                    x2="236"
-                    y2="151"
-                    stroke="#7a4a20"
-                    stroke-width="3"
-                  />
-                  <text
-                    x="261"
-                    y="92"
-                    font-size="12"
-                    fill="#555"
-                    font-family="sans-serif"
-                  >
-                    z
-                  </text>
-                  <!-- Rope s: PC down to W2 -->
-                  <line
-                    x1="212"
-                    y1="191"
-                    x2="207"
-                    y2="255"
-                    stroke="#7a4a20"
-                    stroke-width="3"
-                  />
-                  <text
-                    x="219"
-                    y="230"
-                    font-size="12"
-                    fill="#555"
-                    font-family="sans-serif"
-                  >
-                    s
-                  </text>
-                  <!-- W1 -->
-                  <polygon points="37,255 77,255 73,280 41,280" fill="#333" />
-                  <text
-                    x="57"
-                    y="273"
-                    font-size="10"
-                    fill="white"
-                    text-anchor="middle"
-                    font-weight="bold"
-                    font-family="sans-serif"
-                  >
-                    W1
-                  </text>
-                  <!-- W2 -->
-                  <polygon
-                    points="158,255 228,255 224,280 162,280"
-                    fill="#222"
-                  />
-                  <text
-                    x="193"
-                    y="273"
-                    font-size="10"
-                    fill="white"
-                    text-anchor="middle"
-                    font-weight="bold"
-                    font-family="sans-serif"
-                  >
-                    W2
-                  </text>
-                </svg>
-              </div>
-              <div
-                style="
-                  font-size: 0.72em;
-                  line-height: 1.85;
-                  color: #222;
-                  text-align: left;
-                "
-              >
-                <ul style="list-style: disc; padding-left: 1.2em">
-                  <li>Set W1 = 1</li>
-                  <li>What is affected by W1?</li>
-                  <li>[W1→PA] W1 goes over PA</li>
-                  <li>[PA→W1] to W2</li>
-                  <li>[PA→B] and connected to B</li>
-                  <li>…</li>
-                </ul>
-              </div>
-            </div>
-            <p
-              style="
-                margin-top: 1rem;
-                font-size: 0.8em;
-                font-weight: 700;
-                color: #1a1a2e;
-                text-align: center;
-              "
-            >
-              Find the ratio of the second to the first weight, if the system is
-              in equilibrium.
-            </p>
-            <aside class="notes">
-              Same problem. Now the spatial structure makes the reasoning easy —
-              follow the ropes with your eyes. Larkin &amp; Simon (1987):
-              diagrammatic representations support "efficient lookups keyed to
-              one element of a relation." This is the whole point. A
-              visualization is a spatial encoding of relational structure that
-              makes certain inferences perceptual rather than logical.
-            </aside>
-          </section>
-
-          <!-- Larkin & Simon: summary slide -->
-          <section>
-            <h2>
-              diagrams can efficiently encode relational information in space
-            </h2>
-            <div
-              style="
-                margin-top: 1.2rem;
                 display: flex;
-                flex-direction: column;
-                gap: 0.8rem;
+                justify-content: center;
+                gap: 1.5rem;
               "
             >
-              <div class="callout" style="font-size: 0.82em; line-height: 1.7">
-                <strong>Sentential representation</strong> requires linear
-                search to discover facts.<br />
-                <span style="color: #888; font-size: 0.9em"
-                  >"A points to B", "B points to C", "A points to C" — what does
-                  A point to?</span
-                >
-              </div>
-              <div class="callout" style="font-size: 0.82em; line-height: 1.7">
-                <strong>Diagrammatic representation</strong> supports efficient
-                lookups keyed to one element of a relation.<br />
-                <span style="color: #888; font-size: 0.9em"
-                  >"Everything that points to A" or "everything A points to" are
-                  simple perceptual tasks of following lines.</span
-                >
-              </div>
+              <div
+                id="chart-franconeri-a-key-2"
+                class="chart-container"
+                style="max-width: 30%; min-height: 0"
+              ></div>
+              <div
+                id="chart-franconeri-b-key-2"
+                class="chart-container"
+                style="max-width: 30%; min-height: 0"
+              ></div>
+              <div
+                id="chart-franconeri-a-color-key-2"
+                class="chart-container"
+                style="max-width: 30%; min-height: 0"
+              ></div>
             </div>
-            <p
-              style="
-                margin-top: 1.4rem;
-                font-size: 0.65em;
-                color: #aaa;
-                text-align: right;
-              "
-            >
-              Larkin and Simon. "Why a Diagram is (Sometimes) Worth Ten Thousand
-              Words." 1987
-            </p>
-            <aside class="notes">
-              One more beat before the GoFish intro. This is why the structure
-              of a visualization matters so much — it's not decoration, it's
-              computation offloaded to the perceptual system. ~5 min mark.
-            </aside>
-          </section>
-
-          <!-- Bridge: from taxonomy to structure — and GoFish -->
-          <section>
-            <h2>thinking about graphics structurally, not taxonomically</h2>
             <div
               style="
                 margin-top: 1.2rem;
-                font-size: 0.85em;
-                line-height: 1.9;
-                color: #444;
+                font-size: 1em;
+                line-height: 1.7;
+                text-align: center;
+                padding: 1rem 1.6rem;
+                background: #e8e8e8;
+                border-radius: 6px;
+                font-family: &quot;Shantell Sans&quot;, sans-serif;
               "
             >
-              <p class="fragment">
-                Instead of asking
-                <em>"which chart type fits my data?"</em> —<br />
-                ask
-                <em
-                  >"what structure do I need to support the queries I want?"</em
-                >
-              </p>
-              <p class="fragment" style="margin-top: 0.8rem">
-                Picking a chart type is a convenient shortcut when the answer is
-                obvious. But structure is the underlying thing.
-              </p>
+              <span style="font-weight: 700; color: #1a1a2e">Key idea:</span>
+              when we design a graphic, we're doing more than picking a chart
+              type. We're creating a
+              <strong>visual structure</strong> for our readers to navigate.
+            </div>
+            <div
+              class="fragment"
+              style="
+                margin-top: 2.25rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 0.85rem;
+                flex-wrap: wrap;
+                font-family: &quot;Shantell Sans&quot;, sans-serif;
+                font-size: 1.4em;
+                color: #1a1a2e;
+              "
+            >
+              <span>data structure</span>
+              <span
+                style="color: #555; font-size: 1.1em; line-height: 1"
+                aria-hidden="true"
+                >→</span
+              >
+              <span>visual structure</span>
+              <span
+                style="color: #555; font-size: 1.1em; line-height: 1"
+                aria-hidden="true"
+                >→</span
+              >
+              <span>reader</span>
             </div>
             <aside class="notes">
-              The pivot. This is where we move from motivation to solution. The
-              chart-type vocabulary is a set of named structures. The
-              interesting question is how to reason about structure directly.
+              The key idea of this talk is that when we're designing a graphic,
+              we're doing a lot more than just picking a chart type — we're
+              creating a visual structure for our readers to navigate. The way
+              we arrange shapes and the colors we assign affect what our readers
+              see first, what comparisons they make, and what story they take
+              away.
+
+              <br />
+              <br />
+
+              In this talk you're going to see many examples of mapping data
+              structures to visual structures to reader experiences. And through
+              that process I'm gonna show you how thinking structurally frees
+              you from this useful, but rigid lens of chart types and
+              black-and-white design rules like banning pie charts, and helps
+              you think more precisely and creatively about visualization.
             </aside>
           </section>
 
           <!-- GoFish: the language -->
           <section>
-            <div class="fragment" style="margin-bottom: 1.2rem">
+            <div style="margin-bottom: 1.2rem">
               <p
                 style="
                   font-size: 0.85em;
@@ -833,31 +457,339 @@
                 style="height: 72px; object-fit: contain"
               />
               <div style="text-align: left">
-                <strong style="font-size: 1.15em; color: #1a1a2e">GoFish</strong
-                ><br />
+                <strong
+                  style="
+                    font-size: 1.15em;
+                    color: #1a1a2e;
+                    font-family:
+                      &quot;Shantell Sans&quot;, &quot;Comic Sans MS&quot;,
+                      cursive, sans-serif;
+                  "
+                  >GoFish
+                </strong>
+                <br />
                 <span style="font-size: 0.82em; color: #444; line-height: 1.6">
-                  A compositional language for visual structure —<br />
-                  open source, JS/TypeScript with Python bindings.
+                  A compositional language for visual structure<br />
+                  open source (MIT-licensed), TypeScript with Python bindings
+                  (quickly catching up to TS)<br />
+                  <span style="color: #777; font-size: 0.92em">
+                    <em>
+                      See papers:
+                      <a
+                        href="https://vis.csail.mit.edu/pubs/bluefish/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        >UIST 2024</a
+                      >,
+                      <a
+                        href="https://vis.csail.mit.edu/pubs/gofish/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        >VIS 2025</a
+                      >
+                    </em>
+                  </span>
                 </span>
               </div>
             </div>
-            <p
-              class="fragment"
+            <aside class="notes">
+              And to talk about visual structure precisely, we're gonna want a
+              language. I've spent my PhD studying how visual structure conveys
+              meaning and designing better libraries to take advantage of it.
+
+              <br /><br />
+
+              The culmination of that work is GoFish, a compositional language
+              for visual structure.
+            </aside>
+          </section>
+          <!-- GoFish is based on Gestalt grouping principles -->
+          <section>
+            <h2>GoFish is based on Gestalt grouping principles</h2>
+            <table
               style="
-                margin-top: 1.4rem;
-                font-size: 0.82em;
-                color: #777;
-                line-height: 1.6;
+                width: 60%;
+                margin: 1.2rem auto 0;
+                border-collapse: collapse;
+                font-size: 0.8em;
               "
             >
-              It's formal — but you can use it informally if you ignore most of
-              the attributes.<br />
-              Let me show you.
-            </p>
+              <tbody>
+                <tr style="border-bottom: 1px solid #e8e8e8">
+                  <td
+                    style="
+                      padding: 0.5rem 0.8rem;
+                      font-weight: 600;
+                      color: #1a1a2e;
+                    "
+                  >
+                    containment
+                  </td>
+                  <td style="padding: 0.5rem 0.8rem; text-align: center">
+                    <img
+                      src="gestalt/containment.png"
+                      style="width: 160px; object-fit: contain"
+                    />
+                  </td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e8e8e8">
+                  <td
+                    style="
+                      padding: 0.5rem 0.8rem;
+                      font-weight: 600;
+                      color: #1a1a2e;
+                    "
+                  >
+                    connection
+                  </td>
+                  <td style="padding: 0.5rem 0.8rem; text-align: center">
+                    <img
+                      src="gestalt/connection.png"
+                      style="width: 160px; object-fit: contain"
+                    />
+                  </td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e8e8e8">
+                  <td
+                    style="
+                      padding: 0.5rem 0.8rem;
+                      font-weight: 600;
+                      color: #1a1a2e;
+                    "
+                  >
+                    similar attribute
+                  </td>
+                  <td style="padding: 0.5rem 0.8rem; text-align: center">
+                    <img
+                      src="gestalt/similar_attribute.png"
+                      style="width: 160px; object-fit: contain"
+                    />
+                  </td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e8e8e8">
+                  <td
+                    style="
+                      padding: 0.5rem 0.8rem;
+                      font-weight: 600;
+                      color: #1a1a2e;
+                    "
+                  >
+                    alignment
+                  </td>
+                  <td style="padding: 0.5rem 0.8rem; text-align: center">
+                    <img
+                      src="gestalt/alignment.png"
+                      style="width: 160px; object-fit: contain"
+                    />
+                  </td>
+                </tr>
+                <tr>
+                  <td
+                    style="
+                      padding: 0.5rem 0.8rem;
+                      font-weight: 600;
+                      color: #1a1a2e;
+                    "
+                  >
+                    proximity / uniform density
+                  </td>
+                  <td style="padding: 0.5rem 0.8rem; text-align: center">
+                    <img
+                      src="gestalt/proximity-uniform-density.png"
+                      style="width: 160px; object-fit: contain"
+                    />
+                  </td>
+                </tr>
+              </tbody>
+            </table>
             <aside class="notes">
-              Two builds: first name the need (a language), then reveal GoFish.
-              20 seconds max on the pitch. Earn the library with demos. ~6 min
-              mark.
+              The big idea in GoFish is to identify these primitives of visual
+              structure, most often called Gestalt grouping principles, and turn
+              them in "graphical operators" that we can manipulate directly in
+              code. In fact with the grouped bar charts, similar attribute and
+              spatial proximity were driving the differences in our readings of
+              those charts. They made different visual "queries" easier or
+              harder.
+              <!-- GoFish's operators map directly onto Gestalt grouping principles,
+              ordered here by relational strength. Containment is the strongest
+              perceptual grouping cue — an enclosing boundary almost always
+              wins. Connection via lines is next. Similar attributes (color,
+              shape, size) are weaker but flexible. Alignment and proximity are
+              the weakest, but they're everywhere — a bar chart is just
+              alignment and uniform density. -->
+            </aside>
+          </section>
+
+          <!-- Science example + Gestalt grouping table (same rows as previous slide) -->
+          <section>
+            <!-- <h2>Gestalt structure, not a taxonomic menu</h2> -->
+            <div
+              class="gestalt-taxonomy-slide-body"
+              style="
+                display: flex;
+                flex-direction: column;
+                gap: 0.65rem;
+                margin-top: 0.5rem;
+                width: 100%;
+                box-sizing: border-box;
+              "
+            >
+              <div
+                style="
+                  display: flex;
+                  flex-direction: row;
+                  justify-content: center;
+                  align-items: center;
+                  flex-shrink: 0;
+                  width: 100%;
+                  min-height: 0;
+                "
+              >
+                <img
+                  src="motivational-images/science.png"
+                  style="
+                    display: block;
+                    max-width: 100%;
+                    width: auto;
+                    height: auto;
+                    max-height: clamp(200px, 36vh, 420px);
+                    object-fit: contain;
+                    border-radius: 4px;
+                  "
+                  alt="Nature / Science"
+                />
+              </div>
+              <div
+                style="
+                  display: flex;
+                  flex-direction: row;
+                  flex-wrap: wrap;
+                  gap: 0.75rem 1.25rem;
+                  justify-content: center;
+                  align-items: flex-start;
+                  width: 100%;
+                "
+              >
+                <table
+                  style="
+                    flex: 1 1 240px;
+                    max-width: 48%;
+                    min-width: min(100%, 240px);
+                    border-collapse: collapse;
+                    font-size: 0.68em;
+                  "
+                >
+                  <tbody>
+                    <tr style="border-bottom: 1px solid #e8e8e8">
+                      <td
+                        style="
+                          padding: 0.2rem 0.5rem;
+                          font-weight: 600;
+                          color: #1a1a2e;
+                        "
+                      >
+                        containment
+                      </td>
+                      <td style="padding: 0.2rem 0.5rem; text-align: center">
+                        <img
+                          src="gestalt/containment.png"
+                          style="width: 88px; object-fit: contain"
+                        />
+                      </td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #e8e8e8">
+                      <td
+                        style="
+                          padding: 0.2rem 0.5rem;
+                          font-weight: 600;
+                          color: #1a1a2e;
+                        "
+                      >
+                        connection
+                      </td>
+                      <td style="padding: 0.2rem 0.5rem; text-align: center">
+                        <img
+                          src="gestalt/connection.png"
+                          style="width: 88px; object-fit: contain"
+                        />
+                      </td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #e8e8e8">
+                      <td
+                        style="
+                          padding: 0.2rem 0.5rem;
+                          font-weight: 600;
+                          color: #1a1a2e;
+                        "
+                      >
+                        similar attribute
+                      </td>
+                      <td style="padding: 0.2rem 0.5rem; text-align: center">
+                        <img
+                          src="gestalt/similar_attribute.png"
+                          style="width: 88px; object-fit: contain"
+                        />
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+                <table
+                  style="
+                    flex: 1 1 240px;
+                    max-width: 48%;
+                    min-width: min(100%, 240px);
+                    border-collapse: collapse;
+                    font-size: 0.68em;
+                  "
+                >
+                  <tbody>
+                    <tr style="border-bottom: 1px solid #e8e8e8">
+                      <td
+                        style="
+                          padding: 0.2rem 0.5rem;
+                          font-weight: 600;
+                          color: #1a1a2e;
+                        "
+                      >
+                        alignment
+                      </td>
+                      <td style="padding: 0.2rem 0.5rem; text-align: center">
+                        <img
+                          src="gestalt/alignment.png"
+                          style="width: 88px; object-fit: contain"
+                        />
+                      </td>
+                    </tr>
+                    <tr>
+                      <td
+                        style="
+                          padding: 0.2rem 0.5rem;
+                          font-weight: 600;
+                          color: #1a1a2e;
+                        "
+                      >
+                        proximity / uniform density
+                      </td>
+                      <td style="padding: 0.2rem 0.5rem; text-align: center">
+                        <img
+                          src="gestalt/proximity-uniform-density.png"
+                          style="width: 88px; object-fit: contain"
+                        />
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <aside class="notes">
+              We can see this play out in a more complex graphic, too.
+              Containment is suggested by the axes in each of the charts here,
+              connection is used for labeling, similar attribute to group points
+              and parts of the diagrams together, and so on.
+
+              <br /><br />
+
+              Ok enough of the theory and motivation, let's get into the code!
             </aside>
           </section>
         </section>
@@ -878,30 +810,107 @@
           <!-- chart(data) -->
           <section>
             <h2>our first GoFish spec</h2>
-            <div class="two-col" style="align-items: start; margin-top: 0.8rem">
-              <div class="col-code">
-                <pre
-                  style="font-size: 0.78em"
-                ><code class="language-python" data-line-numbers="1">chart(data)
-    .flow(
-        spread("lake", dir="x"),
-    )
-    .mark(
-        rect(h="count")
-    )</code></pre>
-                <div
-                  class="callout"
-                  style="margin-top: 0.8rem; font-size: 0.82em"
-                >
-                  <strong>chart(data)</strong> — attach your data
+            <div class="spec-slide-layout">
+              <div class="spec-slide-main spec-slide-cols">
+                <div class="spec-slide-col spec-slide-col-left">
+                  <div class="spec-slide-code">
+                    <pre><code class="language-python" data-line-numbers="1">chart(seafood)
+    .flow(spread("lake", dir="x"))
+    .mark(rect(h="count"))</code></pre>
+                    <div
+                      class="callout"
+                      style="margin-top: 0.9rem; font-size: 0.82em"
+                    >
+                      <strong>chart(data)</strong> — attach your DataFrame
+                    </div>
+                  </div>
+                  <div class="spec-slide-chart-cell">
+                    <div
+                      id="chart-spec-bar-1"
+                      class="chart-container spec-slide-chart"
+                    ></div>
+                  </div>
                 </div>
-              </div>
-              <div class="col-chart">
-                <div
-                  id="chart-bar-b"
-                  class="chart-container"
-                  style="height: 320px"
-                ></div>
+                <div class="spec-slide-col spec-slide-col-right">
+                  <div class="spec-slide-diagram">
+                    <svg
+                      viewBox="0 0 260 310"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <rect
+                        x="10"
+                        y="8"
+                        width="240"
+                        height="100"
+                        fill="#f6f8fa"
+                        stroke="#d0d7de"
+                        stroke-width="1"
+                        rx="6"
+                      />
+                      <text
+                        x="20"
+                        y="26"
+                        font-family="Fira Code,Consolas,monospace"
+                        font-size="11"
+                        fill="#24292e"
+                      >
+                        seafood = [
+                      </text>
+                      <text
+                        x="28"
+                        y="41"
+                        font-family="Fira Code,Consolas,monospace"
+                        font-size="11"
+                        fill="#24292e"
+                      >
+                        {
+                      </text>
+                      <text
+                        x="28"
+                        y="56"
+                        font-family="Fira Code,Consolas,monospace"
+                        font-size="11"
+                      >
+                        <tspan fill="#005cc5">lake:</tspan>
+                        <tspan fill="#032f62">"Lake A"</tspan>
+                        <tspan fill="#24292e">,</tspan>
+                      </text>
+                      <text
+                        x="28"
+                        y="71"
+                        font-family="Fira Code,Consolas,monospace"
+                        font-size="11"
+                      >
+                        <tspan fill="#005cc5">species:</tspan>
+                        <tspan fill="#032f62">"Bass"</tspan>
+                        <tspan fill="#24292e">,</tspan>
+                      </text>
+                      <text
+                        x="28"
+                        y="86"
+                        font-family="Fira Code,Consolas,monospace"
+                        font-size="11"
+                      >
+                        <tspan fill="#005cc5">count:</tspan>
+                        <tspan fill="#005cc5">23</tspan>
+                        <tspan fill="#6a737d">, …</tspan>
+                      </text>
+                      <text
+                        x="20"
+                        y="101"
+                        font-family="Fira Code,Consolas,monospace"
+                        font-size="11"
+                        fill="#24292e"
+                      >
+                        }, … ]
+                      </text>
+                    </svg>
+                  </div>
+                  <div
+                    class="spec-slide-query spec-slide-query--empty"
+                    aria-hidden="true"
+                  ></div>
+                </div>
               </div>
             </div>
             <aside class="notes">Step 1 of 3: chart(data). ~7 min mark.</aside>
@@ -910,35 +919,197 @@
           <!-- .flow() -->
           <section>
             <h2>our first GoFish spec</h2>
-            <div class="two-col" style="align-items: start; margin-top: 0.8rem">
-              <div class="col-code">
-                <pre
-                  style="font-size: 0.78em"
-                ><code class="language-python" data-line-numbers="2-4">chart(data)
-    .flow(
-        spread("lake", dir="x"),
-    )
-    .mark(
-        rect(h="count")
-    )</code></pre>
-                <div
-                  class="callout"
-                  style="margin-top: 0.8rem; font-size: 0.82em"
-                >
-                  <strong>.flow()</strong> — graphical
-                  <em>operators</em> arrange data into positions in space
+            <div class="spec-slide-layout">
+              <div class="spec-slide-main spec-slide-cols">
+                <div class="spec-slide-col spec-slide-col-left">
+                  <div class="spec-slide-code">
+                    <pre><code class="language-python" data-line-numbers="2">chart(seafood)
+    .flow(spread("lake", dir="x"))
+    .mark(rect(h="count"))</code></pre>
+                    <div
+                      class="callout"
+                      style="margin-top: 0.9rem; font-size: 0.82em"
+                    >
+                      <strong>.flow()</strong> — graphical
+                      <em>operators</em> arrange data into positions in space
+                    </div>
+                  </div>
+                  <div class="spec-slide-chart-cell">
+                    <div
+                      id="chart-spec-bar-2"
+                      class="chart-container spec-slide-chart"
+                    ></div>
+                  </div>
                 </div>
-              </div>
-              <div class="col-chart">
-                <div
-                  id="chart-bar-c"
-                  class="chart-container"
-                  style="height: 320px"
-                ></div>
+                <div class="spec-slide-col spec-slide-col-right">
+                  <div class="spec-slide-diagram">
+                    <svg
+                      viewBox="0 0 260 310"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <rect
+                        x="10"
+                        y="8"
+                        width="240"
+                        height="100"
+                        fill="#f6f8fa"
+                        stroke="#d0d7de"
+                        stroke-width="1"
+                        rx="6"
+                      />
+                      <text
+                        x="20"
+                        y="26"
+                        font-family="Fira Code,Consolas,monospace"
+                        font-size="11"
+                        fill="#24292e"
+                      >
+                        seafood = [
+                      </text>
+                      <text
+                        x="28"
+                        y="41"
+                        font-family="Fira Code,Consolas,monospace"
+                        font-size="11"
+                        fill="#24292e"
+                      >
+                        {
+                      </text>
+                      <text
+                        x="28"
+                        y="56"
+                        font-family="Fira Code,Consolas,monospace"
+                        font-size="11"
+                      >
+                        <tspan fill="#005cc5">lake:</tspan>
+                        <tspan fill="#032f62">"Lake A"</tspan>
+                        <tspan fill="#24292e">,</tspan>
+                      </text>
+                      <text
+                        x="28"
+                        y="71"
+                        font-family="Fira Code,Consolas,monospace"
+                        font-size="11"
+                      >
+                        <tspan fill="#005cc5">species:</tspan>
+                        <tspan fill="#032f62">"Bass"</tspan>
+                        <tspan fill="#24292e">,</tspan>
+                      </text>
+                      <text
+                        x="28"
+                        y="86"
+                        font-family="Fira Code,Consolas,monospace"
+                        font-size="11"
+                      >
+                        <tspan fill="#005cc5">count:</tspan>
+                        <tspan fill="#005cc5">23</tspan>
+                        <tspan fill="#6a737d">, …</tspan>
+                      </text>
+                      <text
+                        x="20"
+                        y="101"
+                        font-family="Fira Code,Consolas,monospace"
+                        font-size="11"
+                        fill="#24292e"
+                      >
+                        }, … ]
+                      </text>
+                      <line
+                        x1="130"
+                        y1="111"
+                        x2="130"
+                        y2="135"
+                        stroke="#555"
+                        stroke-width="2"
+                      />
+                      <polygon points="130,143 124,131 136,131" fill="#555" />
+                      <text
+                        x="138"
+                        y="129"
+                        font-family="Source Sans 3,Helvetica,sans-serif"
+                        font-size="14"
+                        fill="#555"
+                        font-weight="600"
+                      >
+                        spread
+                      </text>
+                      <rect
+                        x="10"
+                        y="148"
+                        width="36"
+                        height="60"
+                        fill="none"
+                        stroke="#c026d3"
+                        stroke-dasharray="5,3"
+                        stroke-width="2"
+                        rx="2"
+                      />
+                      <rect
+                        x="51"
+                        y="148"
+                        width="36"
+                        height="60"
+                        fill="none"
+                        stroke="#c026d3"
+                        stroke-dasharray="5,3"
+                        stroke-width="2"
+                        rx="2"
+                      />
+                      <rect
+                        x="92"
+                        y="148"
+                        width="36"
+                        height="60"
+                        fill="none"
+                        stroke="#c026d3"
+                        stroke-dasharray="5,3"
+                        stroke-width="2"
+                        rx="2"
+                      />
+                      <rect
+                        x="133"
+                        y="148"
+                        width="36"
+                        height="60"
+                        fill="none"
+                        stroke="#c026d3"
+                        stroke-dasharray="5,3"
+                        stroke-width="2"
+                        rx="2"
+                      />
+                      <rect
+                        x="174"
+                        y="148"
+                        width="36"
+                        height="60"
+                        fill="none"
+                        stroke="#c026d3"
+                        stroke-dasharray="5,3"
+                        stroke-width="2"
+                        rx="2"
+                      />
+                      <rect
+                        x="215"
+                        y="148"
+                        width="35"
+                        height="60"
+                        fill="none"
+                        stroke="#c026d3"
+                        stroke-dasharray="5,3"
+                        stroke-width="2"
+                        rx="2"
+                      />
+                    </svg>
+                  </div>
+                  <div
+                    class="spec-slide-query spec-slide-query--empty"
+                    aria-hidden="true"
+                  ></div>
+                </div>
               </div>
             </div>
             <aside class="notes">
-              Step 2 of 3: .flow(). The spread operator places one column per
+              Step 2 of 3: .flow(). The spread operator places one slot per
               lake. ~7 min mark.
             </aside>
           </section>
@@ -946,46 +1117,236 @@
           <!-- .mark() — complete spec -->
           <section>
             <h2>our first GoFish spec</h2>
-            <div class="two-col" style="align-items: start; margin-top: 0.8rem">
-              <div class="col-code">
-                <pre
-                  style="font-size: 0.78em"
-                ><code class="language-python" data-line-numbers="5-7">chart(data)
-    .flow(
-        spread("lake", dir="x"),
-    )
-    .mark(
-        rect(h="count")
-    )</code></pre>
-                <div
-                  class="callout"
-                  style="margin-top: 0.8rem; font-size: 0.82em"
-                >
-                  <strong>.mark()</strong> — what <em>shape</em> to draw at each
-                  position, and what channels to encode
+            <div class="spec-slide-layout">
+              <div class="spec-slide-main spec-slide-cols">
+                <div class="spec-slide-col spec-slide-col-left">
+                  <div class="spec-slide-code">
+                    <pre><code class="language-python" data-line-numbers="3">chart(seafood)
+    .flow(spread("lake", dir="x"))
+    .mark(rect(h="count"))</code></pre>
+                    <div
+                      class="callout"
+                      style="margin-top: 0.9rem; font-size: 0.82em"
+                    >
+                      <strong>.mark()</strong> — what <em>shape</em> to draw at
+                      each position, and what channels to encode
+                    </div>
+                  </div>
+                  <div class="spec-slide-chart-cell">
+                    <div
+                      id="chart-spec-bar-3"
+                      class="chart-container spec-slide-chart"
+                    ></div>
+                  </div>
                 </div>
-                <p style="margin-top: 0.6rem; font-size: 0.72em; color: #777">
-                  Familiar territory. Nobody's impressed yet.
-                </p>
-              </div>
-              <div class="col-chart">
-                <div
-                  id="chart-bar"
-                  class="chart-container"
-                  style="height: 320px"
-                ></div>
+                <div class="spec-slide-col spec-slide-col-right">
+                  <div class="spec-slide-diagram">
+                    <svg
+                      viewBox="0 0 260 310"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <rect
+                        x="10"
+                        y="8"
+                        width="240"
+                        height="100"
+                        fill="#f6f8fa"
+                        stroke="#d0d7de"
+                        stroke-width="1"
+                        rx="6"
+                      />
+                      <text
+                        x="20"
+                        y="26"
+                        font-family="Fira Code,Consolas,monospace"
+                        font-size="11"
+                        fill="#24292e"
+                      >
+                        seafood = [
+                      </text>
+                      <text
+                        x="28"
+                        y="41"
+                        font-family="Fira Code,Consolas,monospace"
+                        font-size="11"
+                        fill="#24292e"
+                      >
+                        {
+                      </text>
+                      <text
+                        x="28"
+                        y="56"
+                        font-family="Fira Code,Consolas,monospace"
+                        font-size="11"
+                      >
+                        <tspan fill="#005cc5">lake:</tspan>
+                        <tspan fill="#032f62">"Lake A"</tspan>
+                        <tspan fill="#24292e">,</tspan>
+                      </text>
+                      <text
+                        x="28"
+                        y="71"
+                        font-family="Fira Code,Consolas,monospace"
+                        font-size="11"
+                      >
+                        <tspan fill="#005cc5">species:</tspan>
+                        <tspan fill="#032f62">"Bass"</tspan>
+                        <tspan fill="#24292e">,</tspan>
+                      </text>
+                      <text
+                        x="28"
+                        y="86"
+                        font-family="Fira Code,Consolas,monospace"
+                        font-size="11"
+                      >
+                        <tspan fill="#005cc5">count:</tspan>
+                        <tspan fill="#005cc5">23</tspan>
+                        <tspan fill="#6a737d">, …</tspan>
+                      </text>
+                      <text
+                        x="20"
+                        y="101"
+                        font-family="Fira Code,Consolas,monospace"
+                        font-size="11"
+                        fill="#24292e"
+                      >
+                        }, … ]
+                      </text>
+                      <line
+                        x1="130"
+                        y1="111"
+                        x2="130"
+                        y2="135"
+                        stroke="#555"
+                        stroke-width="2"
+                      />
+                      <polygon points="130,143 124,131 136,131" fill="#555" />
+                      <text
+                        x="138"
+                        y="129"
+                        font-family="Source Sans 3,Helvetica,sans-serif"
+                        font-size="14"
+                        fill="#555"
+                        font-weight="600"
+                      >
+                        spread
+                      </text>
+                      <rect
+                        x="10"
+                        y="148"
+                        width="36"
+                        height="60"
+                        fill="none"
+                        stroke="#c026d3"
+                        stroke-dasharray="5,3"
+                        stroke-width="2"
+                        rx="2"
+                      />
+                      <rect
+                        x="51"
+                        y="148"
+                        width="36"
+                        height="60"
+                        fill="none"
+                        stroke="#c026d3"
+                        stroke-dasharray="5,3"
+                        stroke-width="2"
+                        rx="2"
+                      />
+                      <rect
+                        x="92"
+                        y="148"
+                        width="36"
+                        height="60"
+                        fill="none"
+                        stroke="#c026d3"
+                        stroke-dasharray="5,3"
+                        stroke-width="2"
+                        rx="2"
+                      />
+                      <rect
+                        x="133"
+                        y="148"
+                        width="36"
+                        height="60"
+                        fill="none"
+                        stroke="#c026d3"
+                        stroke-dasharray="5,3"
+                        stroke-width="2"
+                        rx="2"
+                      />
+                      <rect
+                        x="174"
+                        y="148"
+                        width="36"
+                        height="60"
+                        fill="none"
+                        stroke="#c026d3"
+                        stroke-dasharray="5,3"
+                        stroke-width="2"
+                        rx="2"
+                      />
+                      <rect
+                        x="215"
+                        y="148"
+                        width="35"
+                        height="60"
+                        fill="none"
+                        stroke="#c026d3"
+                        stroke-dasharray="5,3"
+                        stroke-width="2"
+                        rx="2"
+                      />
+                      <line
+                        x1="130"
+                        y1="212"
+                        x2="130"
+                        y2="234"
+                        stroke="#555"
+                        stroke-width="2"
+                      />
+                      <polygon points="130,242 124,230 136,230" fill="#555" />
+                      <text
+                        x="138"
+                        y="228"
+                        font-family="Source Sans 3,Helvetica,sans-serif"
+                        font-size="14"
+                        fill="#555"
+                        font-weight="600"
+                      >
+                        rect
+                      </text>
+                      <rect
+                        x="70"
+                        y="246"
+                        width="120"
+                        height="56"
+                        fill="#4e79a7"
+                        rx="3"
+                      />
+                    </svg>
+                  </div>
+                  <div class="spec-slide-query fragment">
+                    <p style="margin-bottom: 0.35rem">
+                      <strong>Queries:</strong>
+                    </p>
+                    <ul class="stack-queries-list">
+                      <li>greatest / least total catch across lakes</li>
+                      <li>pairwise comparison between any two lakes</li>
+                    </ul>
+                  </div>
+                </div>
               </div>
             </div>
             <aside class="notes">
-              Step 3 of 3: .mark(). Get the API under people's fingers. Even
-              here: this chart has a structure. Position and length afford
-              "which category is largest?" But what's hard? Comparing species —
-              they're not in here yet. ~7 min mark.
+              Step 3 of 3: .mark(). This chart has a structure — position and
+              length afford "which lake is largest?" But comparing species? Not
+              in this structure yet. Second build: afforded queries after the
+              rect spec + chart. ~7 min mark.
             </aside>
           </section>
 
-          <section>
-            <!-- <div class="slide-subtitle">Part 1 · Step 1 — Bar chart</div> -->
+          <!-- <section>
             <h2>Data schema</h2>
             <div
               class="grammar-grid"
@@ -1010,30 +1371,20 @@
               lake is discrete because it drives a spread. count is continuous
               because it's encoded as height. The spec makes this explicit.
             </aside>
-          </section>
+          </section> -->
+
+          <!-- ─── TRANSITION: BAR → STACKED ────────────────────── -->
 
           <section>
-            <!-- <div class="slide-subtitle">Part 1 · Step 1 — Bar chart</div> -->
-            <h2>Tasks / queries this structure affords</h2>
-            <div
-              style="
-                margin-top: 1.2rem;
-                display: flex;
-                flex-direction: column;
-                gap: 0.5rem;
-              "
-            >
-              <div class="ladder-step">
-                greatest / least total catch across lakes
-              </div>
-              <div class="ladder-step">
-                pairwise comparison between any two lakes
-              </div>
+            <h2>part-to-whole relationships</h2>
+            <div class="before-after">
+              <div id="chart-ba1-a" class="chart-container"></div>
+              <div class="ba-arrow">→</div>
+              <div id="chart-ba1-b" class="chart-container"></div>
             </div>
             <aside class="notes">
-              Position + length: "which is biggest?" is a perceptual task.
-              What's hard: comparing species — they're not in this structure
-              yet.
+              Same data. One new operator. The structure changes — and so does
+              what the chart affords.
             </aside>
           </section>
 
@@ -1041,32 +1392,72 @@
 
           <section>
             <!-- <div class="slide-subtitle">Part 1 · Step 2 — Stacked bar</div> -->
-            <h2>The move: <code>stack()</code></h2>
+            <h2><code>stack()</code></h2>
             <div class="two-col">
               <div class="col-code">
-                <pre><code class="language-python" data-line-numbers="3">chart(data).flow(
+                <div class="stack-code-swap">
+                  <pre
+                    class="stack-code-pre stack-code-bar"
+                  ><code class="language-python">chart(data).flow(
     spread("lake",    dir="x"),
-    stack("species",  dir="y"),  # ← new
 ).mark(
-    rect(h="count", fill="species")  # ← fill
+    rect(h="count")
 )</code></pre>
+                  <pre
+                    class="fragment stack-code-pre stack-code-stacked stack-code-stacked-base"
+                  ><code class="language-python" data-line-numbers="3,7">chart(data).flow(
+    spread("lake",    dir="x"),
+    stack("species",  dir="y"),
+).mark(
+    rect(
+        h="count",
+        fill="species",
+    )
+)</code></pre>
+                  <pre
+                    class="fragment stack-code-pre stack-code-stacked stack-code-stacked-comment"
+                  ><code class="language-python" data-line-numbers="3,7">chart(data).flow( # operators can be chained!
+    spread("lake",    dir="x"),
+    stack("species",  dir="y"),
+).mark(
+    rect(
+        h="count",
+        fill="species",
+    )
+)</code></pre>
+                </div>
                 <div
+                  class="fragment"
                   style="
                     margin-top: 0.8rem;
                     font-size: 0.72em;
-                    line-height: 1.8;
+                    line-height: 1.85;
                   "
                 >
-                  <p>One new operator. One new channel.</p>
-                  <p>Part-to-whole queries now possible.</p>
-                  <p>
-                    Direct cross-lake comparison got harder —<br />
-                    subcategories no longer share a baseline.
+                  <p style="margin-bottom: 0.35rem">
+                    <strong>Queries:</strong>
                   </p>
+                  <ul class="stack-queries-list">
+                    <li>greatest/least lake total</li>
+                    <li>pairwise lake comparisons</li>
+                    <li class="stack-query-highlight">
+                      part-to-whole species comparisons (e.g., what % of Lake A
+                      is Bass?)
+                    </li>
+                    <li class="stack-query-highlight">
+                      pairwise comparisons of the same species across lakes
+                    </li>
+                  </ul>
                 </div>
               </div>
-              <div class="col-chart">
+              <div class="col-chart stack-slide-chart-col">
                 <div id="chart-stacked" class="chart-container"></div>
+                <div class="fragment stack-slide-kv-caption">
+                  <div class="stack-slide-kv-box">
+                    lake → species
+                    <span class="stack-slide-kv-aside">(part to whole)</span>
+                  </div>
+                </div>
               </div>
             </div>
             <aside class="notes">
@@ -1076,8 +1467,7 @@
             </aside>
           </section>
 
-          <section>
-            <!-- <div class="slide-subtitle">Part 1 · Step 2 — Stacked bar</div> -->
+          <!-- <section>
             <h2>Data schema</h2>
             <div
               class="grammar-grid"
@@ -1105,81 +1495,554 @@
               inner group within each lake. This is the structure that enables
               part-to-whole queries.
             </aside>
-          </section>
+          </section> -->
+
+          <!-- ─── KEY / VALUE STRUCTURE DIGRESSION ────────────── -->
 
           <section>
-            <!-- <div class="slide-subtitle">Part 1 · Step 2 — Stacked bar</div> -->
-            <h2>Tasks / queries this structure affords</h2>
+            <h2>nesting order matters</h2>
             <div
+              class="kv-nesting-builder"
               style="
-                margin-top: 1rem;
                 display: flex;
-                flex-direction: column;
-                gap: 0.5rem;
+                gap: 1.6rem;
+                margin-top: 1rem;
+                align-items: flex-start;
+                justify-content: center;
+                font-size: 0.72em;
               "
             >
-              <div class="ladder-step">
-                greatest / least lake total — pairwise lake comparisons
+              <!-- Stacked bar (visible on slide entry; columns 2–3 are fragments) -->
+              <div
+                style="
+                  flex: 1;
+                  display: flex;
+                  flex-direction: column;
+                  gap: 0.6rem;
+                "
+              >
+                <div
+                  style="
+                    background: #f5f5f5;
+                    border-radius: 6px;
+                    padding: 0.5rem 0.7rem;
+                    font-family: monospace;
+                    font-size: 1.05em;
+                  "
+                >
+                  lake → species
+                  <span style="color: #888; font-size: 0.85em"
+                    >(part to whole)</span
+                  >
+                </div>
+                <div id="chart-kv-stacked" class="chart-container"></div>
+                <pre
+                  style="margin: 0; font-size: 0.9em"
+                ><code class="language-python">chart(data).flow(
+  spread("lake",    dir="x"),
+  stack("species",  dir="y"),
+).mark(rect(h="count", fill="species"))</code></pre>
               </div>
-              <div class="ladder-step">
-                part-to-whole: what fraction of Lake A is Salmon?
+
+              <!-- Grouped bar -->
+              <div
+                class="fragment"
+                style="
+                  flex: 1;
+                  display: flex;
+                  flex-direction: column;
+                  gap: 0.6rem;
+                "
+              >
+                <div
+                  style="
+                    background: #f5f5f5;
+                    border-radius: 6px;
+                    padding: 0.5rem 0.7rem;
+                    font-family: monospace;
+                    font-size: 1.05em;
+                  "
+                >
+                  lake → species
+                </div>
+                <div id="chart-kv-grouped" class="chart-container"></div>
+                <pre
+                  style="margin: 0; font-size: 0.9em"
+                ><code class="language-python">chart(data).flow(
+  spread("lake",    dir="x"),
+  spread("species", dir="x"),
+).mark(rect(h="count", fill="species"))</code></pre>
               </div>
-              <div class="ladder-step">
-                general species trends within each lake
+
+              <!-- Grouped bar reversed -->
+              <div
+                class="fragment"
+                style="
+                  flex: 1;
+                  display: flex;
+                  flex-direction: column;
+                  gap: 0.6rem;
+                "
+              >
+                <div
+                  style="
+                    background: #f5f5f5;
+                    border-radius: 6px;
+                    padding: 0.5rem 0.7rem;
+                    font-family: monospace;
+                    font-size: 1.05em;
+                  "
+                >
+                  species → lake
+                </div>
+                <div id="chart-kv-grouped-r" class="chart-container"></div>
+                <pre
+                  style="margin: 0; font-size: 0.9em"
+                ><code class="language-python">chart(data).flow(
+  spread("species", dir="x"),
+  spread("lake",    dir="x"),
+).mark(rect(h="count", fill="species"))</code></pre>
               </div>
-            </div>
-            <div class="callout" style="margin-top: 1rem; font-size: 0.8em">
-              Hard: precise cross-lake species comparisons — subcategories no
-              longer share a baseline.
-              <br />A grouped bar would make exact readings much easier.
             </div>
             <aside class="notes">
-              Gained: part-to-whole. Lost: precise cross-category baseline. This
-              is the fundamental tradeoff of stacking.
+              Same data, three different structural choices. Stacked uses lake →
+              species with part-to-whole containment. The two grouped bars have
+              the same data but different key hierarchies — swapping the nesting
+              order changes which dimension you compare first. Advance twice to
+              reveal the second and third columns; layout stays fixed (hidden
+              fragments still reserve space).
             </aside>
           </section>
 
-          <!-- ─── STEP 3: RIBBON ────────────────────────────────── -->
+          <section>
+            <h2>flattening the hierarchy</h2>
+            <div
+              style="
+                display: flex;
+                gap: 1.6rem;
+                margin-top: 1rem;
+                align-items: flex-start;
+                font-size: 0.72em;
+              "
+            >
+              <!-- Stacked bar (reference) -->
+              <div
+                style="
+                  flex: 1;
+                  display: flex;
+                  flex-direction: column;
+                  gap: 0.6rem;
+                "
+              >
+                <div
+                  style="
+                    background: #f5f5f5;
+                    border-radius: 6px;
+                    padding: 0.5rem 0.7rem;
+                    font-family: monospace;
+                    font-size: 1.05em;
+                  "
+                >
+                  lake → species
+                  <span style="color: #888; font-size: 0.85em"
+                    >(part to whole)</span
+                  >
+                </div>
+                <div id="chart-kv-stacked-2" class="chart-container"></div>
+                <pre
+                  style="margin: 0; font-size: 0.9em"
+                ><code class="language-python">chart(data).flow(
+  spread("lake",    dir="x"),
+  stack("species",  dir="y"),
+).mark(rect(h="count", fill="species"))</code></pre>
+              </div>
+
+              <!-- Heatmap -->
+              <div
+                style="
+                  flex: 1;
+                  display: flex;
+                  flex-direction: column;
+                  gap: 0.6rem;
+                "
+              >
+                <div
+                  style="
+                    background: #f5f5f5;
+                    border-radius: 6px;
+                    padding: 0.5rem 0.7rem;
+                    font-family: monospace;
+                    font-size: 1.05em;
+                  "
+                >
+                  lake × species
+                </div>
+                <div id="chart-kv-heatmap" class="chart-container"></div>
+                <pre
+                  style="margin: 0; font-size: 0.9em"
+                ><code class="language-python">chart(data).flow(
+  table("lake", "species"),
+).mark(rect(fill="count"))</code></pre>
+              </div>
+            </div>
+            <aside class="notes">
+              The heatmap collapses the hierarchy entirely: (lake, species) is a
+              flat compound key. No nesting, no containment — just a grid. The
+              key structure you choose determines what queries your reader can
+              answer.
+            </aside>
+          </section>
+
+          <!-- ─── TRANSITION: STACKED → SORTED ────────────────── -->
 
           <section>
-            <!-- <div class="slide-subtitle">Part 1 · Step 3 — Ribbon</div> -->
-            <h2>The move: connect the stacks into a continuous ribbon</h2>
+            <h2>sorting keys</h2>
+            <div class="before-after">
+              <div id="chart-sort-before" class="chart-container"></div>
+              <div class="ba-arrow">→</div>
+              <div id="chart-sort-after" class="chart-container"></div>
+            </div>
+            <aside class="notes">
+              Same structure. One new operator: derive() sorts bars by count
+              within each stack before placing them. Small change, significant
+              effect on the ribbon that follows.
+            </aside>
+          </section>
+
+          <!-- ─── STEP 2b: SORT ─────────────────────────────────── -->
+
+          <section>
+            <h2><code>derive()</code> to sort</h2>
             <div class="two-col">
               <div class="col-code">
-                <pre><code class="language-python" data-line-numbers="1,4,7-9">Layer([
-  chart(data).flow(
+                <pre><code class="language-python" data-line-numbers="3">chart(data).flow(
+    spread("lake",   dir="x"),
+    derive(lambda d: sorted(d, key="count")),
+    stack("species", dir="y"),
+).mark(
+    rect(h="count", fill="species")
+)</code></pre>
+                <div
+                  class="fragment"
+                  style="
+                    margin-top: 0.8rem;
+                    font-size: 0.72em;
+                    line-height: 1.85;
+                  "
+                >
+                  <p style="margin-bottom: 0.35rem">
+                    <strong>Queries:</strong>
+                  </p>
+                  <ul class="stack-queries-list">
+                    <li>greatest/least lake total</li>
+                    <li>pairwise lake comparisons</li>
+                    <li class="stack-query-highlight">
+                      greatest/least species total within lake
+                    </li>
+                    <li>
+                      part-to-whole species comparisons (e.g., what % of Lake A
+                      is Bass?)
+                    </li>
+                    <li>
+                      pairwise comparisons of the same species across lakes
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              <div class="col-chart">
+                <div id="chart-sorted" class="chart-container"></div>
+              </div>
+            </div>
+            <aside class="notes">
+              Because we've separated our chart's construction into four steps
+              --- data, spread, stack, and rect --- we have a lot more control
+              over when and how data transforms happen than we typically do in
+              the GoG. As a result, we can just insert a special "derive"
+              operator into our flow, which will let us write any data
+              transformation we want after the spread but before the stacking.
+              So now I can pretty easily tell that trout is the most abundant in
+              Lake A, Catfish in Lake B, and Salmon in the rest. But it's harder
+              to tell how these values are changing over time.
+            </aside>
+          </section>
+
+          <!-- ─── TRANSITION: STACKED → RIBBON ─────────────────── -->
+
+          <section>
+            <h2>connect across groups</h2>
+            <div class="before-after">
+              <div id="chart-ba2-a" class="chart-container"></div>
+              <div class="ba-arrow">→</div>
+              <div id="chart-ba2-b" class="chart-container"></div>
+            </div>
+            <aside class="notes">
+              Same stacking structure. Adding area and group connects the bars
+              into a ribbon.
+            </aside>
+          </section>
+
+          <!-- ─── STEP 3: RIBBON (progressive build) ───────────── -->
+
+          <section>
+            <h2>connect the stacks into a continuous ribbon</h2>
+            <div class="two-col">
+              <!-- ── Code column: 8 stages ── -->
+              <div class="col-code" style="position: relative">
+                <!-- Step 0: sorted stacked bar (initial) -->
+                <div
+                  class="fragment fade-out"
+                  data-fragment-index="0"
+                  style="position: absolute; width: 100%"
+                >
+                  <pre><code class="language-python">chart(data).flow(
+    spread("lake",   dir="x"),
+    derive(lambda d: sorted(d, key="count")),
+    stack("species", dir="y"),
+).mark(
+    rect(h="count", fill="species")
+)</code></pre>
+                </div>
+
+                <!-- Step 1: + spacing=64 -->
+                <div
+                  class="fragment fade-in"
+                  data-fragment-index="0"
+                  style="position: absolute; width: 100%"
+                >
+                  <div class="fragment fade-out" data-fragment-index="1">
+                    <pre><code class="language-python" data-line-numbers="2">chart(data).flow(
     spread("lake", dir="x", spacing=64),
     derive(lambda d: sorted(d, key="count")),
     stack("species", dir="y"),
+).mark(
+    rect(h="count", fill="species")
+)</code></pre>
+                  </div>
+                </div>
+
+                <!-- Step 2: + Layer([...]) -->
+                <div
+                  class="fragment fade-in"
+                  data-fragment-index="1"
+                  style="position: absolute; width: 100%"
+                >
+                  <div class="fragment fade-out" data-fragment-index="2">
+                    <pre><code class="language-python" data-line-numbers="1,9">Layer([
+  chart(data).flow(
+      spread("lake", dir="x", spacing=64),
+      derive(lambda d: sorted(d, key="count")),
+      stack("species", dir="y"),
   ).mark(
-    rect(h="count", fill="species").name("bars")  # ← name it
+      rect(h="count", fill="species")
   ),
-  chart(select("bars"))           # ← new layer
+])</code></pre>
+                  </div>
+                </div>
+
+                <!-- Step 3: + .name("bars") -->
+                <div
+                  class="fragment fade-in"
+                  data-fragment-index="2"
+                  style="position: absolute; width: 100%"
+                >
+                  <div class="fragment fade-out" data-fragment-index="3">
+                    <pre><code class="language-python" data-line-numbers="7">Layer([
+  chart(data).flow(
+      spread("lake", dir="x", spacing=64),
+      derive(lambda d: sorted(d, key="count")),
+      stack("species", dir="y"),
+  ).mark(
+      rect(h="count", fill="species").name("bars")
+  ),
+])</code></pre>
+                  </div>
+                </div>
+
+                <!-- Step 4: + chart(???).flow(???).mark(???) -->
+                <div
+                  class="fragment fade-in"
+                  data-fragment-index="3"
+                  style="position: absolute; width: 100%"
+                >
+                  <div class="fragment fade-out" data-fragment-index="4">
+                    <pre><code class="language-python" data-line-numbers="9">Layer([
+  chart(data).flow(
+      spread("lake", dir="x", spacing=64),
+      derive(lambda d: sorted(d, key="count")),
+      stack("species", dir="y"),
+  ).mark(
+      rect(h="count", fill="species").name("bars")
+  ),
+  chart(???).flow(???).mark(???),
+])</code></pre>
+                  </div>
+                </div>
+
+                <!-- Step 5: select("bars") filled in -->
+                <div
+                  class="fragment fade-in"
+                  data-fragment-index="4"
+                  style="position: absolute; width: 100%"
+                >
+                  <div class="fragment fade-out" data-fragment-index="5">
+                    <pre><code class="language-python" data-line-numbers="9">Layer([
+  chart(data).flow(
+      spread("lake", dir="x", spacing=64),
+      derive(lambda d: sorted(d, key="count")),
+      stack("species", dir="y"),
+  ).mark(
+      rect(h="count", fill="species").name("bars")
+  ),
+  chart(select("bars")).flow(???).mark(???),
+])</code></pre>
+                  </div>
+                </div>
+
+                <!-- Step 6: group("species") filled in -->
+                <div
+                  class="fragment fade-in"
+                  data-fragment-index="5"
+                  style="position: absolute; width: 100%"
+                >
+                  <div class="fragment fade-out" data-fragment-index="6">
+                    <pre><code class="language-python" data-line-numbers="9">Layer([
+  chart(data).flow(
+      spread("lake", dir="x", spacing=64),
+      derive(lambda d: sorted(d, key="count")),
+      stack("species", dir="y"),
+  ).mark(
+      rect(h="count", fill="species").name("bars")
+  ),
+  chart(select("bars")).flow(group("species")).mark(???),
+])</code></pre>
+                  </div>
+                </div>
+
+                <!-- Step 7: area(opacity=0.8) filled in (final) -->
+                <div
+                  class="fragment fade-in"
+                  data-fragment-index="6"
+                  style="position: absolute; width: 100%"
+                >
+                  <pre><code class="language-python" data-line-numbers="9-11">Layer([
+  chart(data).flow(
+      spread("lake", dir="x", spacing=64),
+      derive(lambda d: sorted(d, key="count")),
+      stack("species", dir="y"),
+  ).mark(
+      rect(h="count", fill="species").name("bars")
+  ),
+  chart(select("bars"))
     .flow(group("species"))
     .mark(area(opacity=0.8)),
 ])</code></pre>
+                </div>
+
+                <!-- Spacer to hold column height -->
+                <div style="visibility: hidden">
+                  <pre><code class="language-python">Layer([
+  chart(data).flow(
+      spread("lake", dir="x", spacing=64),
+      derive(lambda d: sorted(d, key="count")),
+      stack("species", dir="y"),
+  ).mark(
+      rect(h="count", fill="species").name("bars")
+  ),
+  chart(select("bars"))
+    .flow(group("species"))
+    .mark(area(opacity=0.8)),
+])</code></pre>
+                </div>
+
+                <!-- select("bars") data preview (appears at step 5) -->
+                <div
+                  class="fragment fade-in"
+                  data-fragment-index="4"
+                  style="
+                    margin-top: 0.5rem;
+                    font-family: &quot;Fira Code&quot;, monospace;
+                    font-size: 0.52em;
+                    background: #f5f5f5;
+                    border: 1px solid #ddd;
+                    border-radius: 4px;
+                    padding: 0.5em 0.8em;
+                    color: #333;
+                    text-align: left;
+                    line-height: 1.6;
+                  "
+                >
+                  <span style="color: #888">select("bars") =</span><br />
+                  [<br />
+                  &nbsp;&nbsp;{ lake:
+                  <span style="color: #c41a16">"Lake A"</span>, species:
+                  <span style="color: #c41a16">"Trout"</span>, count:
+                  <span style="color: #1c00cf">31</span>, __ref:
+                  <span style="color: #888">&lt;GoFishMark&gt;</span> },<br />
+                  &nbsp;&nbsp;{ lake:
+                  <span style="color: #c41a16">"Lake A"</span>, species:
+                  <span style="color: #c41a16">"Bass"</span>,&nbsp; count:
+                  <span style="color: #1c00cf">23</span>, __ref:
+                  <span style="color: #888">&lt;GoFishMark&gt;</span> },<br />
+                  &nbsp;&nbsp;<span style="color: #888">...</span><br />
+                  ]
+                </div>
               </div>
-              <div class="col-chart">
-                <div id="chart-ribbon" class="chart-container"></div>
+
+              <!-- ── Chart column ── -->
+              <div class="col-chart" style="position: relative">
+                <!-- Sorted stacked (steps 0) -->
+                <div style="position: absolute; width: 100%">
+                  <div class="fragment fade-out" data-fragment-index="0">
+                    <div
+                      id="chart-ribbon-build-sorted"
+                      class="chart-container"
+                    ></div>
+                  </div>
+                </div>
+
+                <!-- Wider-spaced sorted stacked (steps 1–3) -->
+                <div
+                  class="fragment fade-in"
+                  data-fragment-index="0"
+                  style="position: absolute; width: 100%"
+                >
+                  <div class="fragment fade-out" data-fragment-index="3">
+                    <div
+                      id="chart-ribbon-build-spaced"
+                      class="chart-container"
+                    ></div>
+                  </div>
+                </div>
+
+                <!-- Ribbon (steps 4+) -->
+                <div
+                  class="fragment fade-in"
+                  data-fragment-index="3"
+                  style="position: absolute; width: 100%"
+                >
+                  <div
+                    id="chart-ribbon-build-ribbon"
+                    class="chart-container"
+                  ></div>
+                </div>
+
+                <!-- Spacer -->
+                <div style="visibility: hidden">
+                  <div class="chart-container"></div>
+                </div>
               </div>
-            </div>
-            <div
-              class="callout fragment"
-              style="font-size: 0.78em; margin-top: 0.4rem"
-            >
-              Same stacking structure — but a continuous axis opens up
-              <strong>trend queries</strong>: how does each species change
-              across lakes?
             </div>
             <aside class="notes">
               Key: we didn't throw away the stacked structure. We added
               continuity on top of it. The area mark connects the already-placed
-              rect nodes. ~11 min mark.
+              rect nodes. select("bars") gives you the placed marks as a dataset
+              — each row has the original data plus a __ref to the rendered
+              mark. group("species") then groups them so area() can draw one
+              ribbon per species. ~11 min mark.
             </aside>
           </section>
 
-          <section>
-            <!-- <div class="slide-subtitle">Part 1 · Step 3 — Ribbon</div> -->
+          <!-- <section>
             <h2>Data schema</h2>
             <div
               class="grammar-grid"
@@ -1213,48 +2076,90 @@
               structure — it adds a new relational dimension (contiguity across
               lakes per species) on top of it.
             </aside>
-          </section>
+          </section> -->
+
+          <!-- ─── TRANSITION: RIBBON → COLOR ───────────────────── -->
 
           <section>
-            <!-- <div class="slide-subtitle">Part 1 · Step 3 — Ribbon</div> -->
-            <h2>Tasks / queries this structure affords</h2>
-            <div
-              style="
-                margin-top: 1rem;
-                display: flex;
-                flex-direction: column;
-                gap: 0.5rem;
-              "
-            >
-              <div class="ladder-step">
-                everything the stacked bar afforded…
-              </div>
-              <div class="ladder-step">
-                + trends of each species across lakes
-              </div>
-            </div>
-            <div class="callout" style="margin-top: 1rem; font-size: 0.8em">
-              Gestalt: <strong>connection</strong> (the ribbon) is a stronger
-              grouping cue than <strong>proximity</strong> (adjacent bars).
-              Cross-lake trends now dominate — within-lake comparisons are still
-              possible but secondary.
+            <h2>steering attention with color</h2>
+            <div class="before-after">
+              <div id="chart-ba3-a" class="chart-container"></div>
+              <div class="ba-arrow">→</div>
+              <div id="chart-ba3-b" class="chart-container"></div>
             </div>
             <aside class="notes">
-              The ribbon doesn't just add trend queries — it reorganizes which
-              queries are primary and which are secondary, via Gestalt
-              principles.
+              Same structure, same data. Only the color encoding changes. But
+              the afforded queries are completely different.
             </aside>
           </section>
 
-          <!-- ─── STEP 4: POLAR RIBBON ──────────────────────────── -->
+          <!-- ─── STEP 4: COLOR + POLAR ─────────────────────────── -->
+
+          <section>
+            <!-- <div class="slide-subtitle">Part 1 · Step 4 — Highlighted ribbon</div> -->
+            <h2><code>palette()</code> for discrete colors</h2>
+            <div class="two-col">
+              <div class="col-code">
+                <pre><code class="language-python" data-line-numbers="2-5">Layer([
+  Chart(data, color=palette({
+      "Salmon": "#e15759",
+      "Trout":  "#4e79a7",
+  })).flow(
+    spread("lake", dir="x", spacing=64),
+    derive(lambda d: sorted(d, key="count")),
+    stack("species", dir="y"),
+  ).mark(
+    rect(h="count", fill="species").name("bars")
+  ),
+  chart(select("bars"))
+    .flow(group("species"))
+    .mark(area(opacity=0.6)),
+])</code></pre>
+                <p
+                  class="fragment"
+                  style="
+                    margin-top: 0.65rem;
+                    font-size: 0.78em;
+                    line-height: 1.55;
+                    color: #444;
+                    max-width: 36rem;
+                  "
+                >
+                  Color can promote and demote queries very precisely.
+
+                  <br /><br />
+
+                  Salmon and Trout read as the main story across lakes. Queries
+                  about grayed-out species are de-emphasized. Some queries
+                  become impossible!
+                </p>
+              </div>
+              <div class="col-chart">
+                <div id="chart-ribbon-highlight" class="chart-container"></div>
+              </div>
+            </div>
+            <aside class="notes">
+              One new argument. The color palette promotes Salmon and Trout;
+              everything else grays out. Same structure, same data — only the
+              color encoding changed. The set of easily-answered queries is now
+              completely different. Color is a rhetorical choice on top of the
+              structural choice: you have decided what the chart can show; now
+              you decide what it says first. Pointing at Salmon and Trout makes
+              their cross-lake trajectory the primary visual story — the rest
+              becomes context. ~15 min mark.
+            </aside>
+          </section>
 
           <section>
             <!-- <div class="slide-subtitle">Part 1 · Step 4 — Polar ribbon</div> -->
-            <h2>The move: wrap into polar coordinates</h2>
+            <h2>wrap into polar coordinates</h2>
             <div class="two-col">
               <div class="col-code">
                 <pre><code class="language-python" data-line-numbers="1">Layer({"coord": clock()}, [   # ← one change
-  chart(data).flow(
+  Chart(data, color=palette({
+      "Salmon": "#e15759",
+      "Trout":  "#4e79a7",
+  })).flow(
     spread("lake", dir="x",
            spacing=2π/6, mode="center"),
     derive(lambda d: sorted(d, key="count")),
@@ -1264,30 +2169,195 @@
   ),
   chart(select("bars"))
     .flow(group("species"))
-    .mark(area(opacity=0.8)),
+    .mark(area(opacity=0.6)),
 ])</code></pre>
               </div>
               <div class="col-chart">
-                <div id="chart-polar" class="chart-container"></div>
+                <div id="chart-polar-highlight" class="chart-container"></div>
               </div>
             </div>
             <div
-              class="callout fragment"
-              style="font-size: 0.78em; margin-top: 0.4rem"
+              class="fragment"
+              style="
+                margin-top: 0.75rem;
+                font-size: 0.78em;
+                line-height: 1.85;
+                max-width: 56rem;
+                text-align: left;
+              "
             >
-              Same structure. Different coordinate transform. Cyclical patterns
-              become visible. Precise magnitude comparison gets harder.
+              <p>
+                This use of polar space makes many queries very hard. Only a few
+                queries are afforded, like Trout starting high, crossing,
+                Salmon, and ending low. Vice versa for Salmon.
+              </p>
             </div>
             <aside class="notes">
-              Pause here. We've gone bar → stacked bar → ribbon → polar ribbon.
-              A typology treats these as four separate chart types. We got
-              between them through structural moves. The chart type labels are
-              just snapshots along the way. ~13 min mark.
+              Pause here. We've gone bar → stacked bar → ribbon → color → polar.
+              A typology treats these as separate chart types. We got between
+              them through structural moves. The chart type labels are just
+              snapshots along the way. Same chart, same data, same structure —
+              only color encoding and coordinate system changed. The set of
+              easily-answered queries is now completely different. ~13 min mark.
             </aside>
           </section>
 
           <section>
-            <!-- <div class="slide-subtitle">Part 1 · Step 4 — Polar ribbon</div> -->
+            <h2>mapping length to angle changes the afforded queries</h2>
+            <!-- <p
+              style="
+                font-size: 0.82em;
+                max-width: 52rem;
+                margin: 0.35rem auto 0.6rem;
+                line-height: 1.65;
+              "
+            >
+              Wrapping a Cartesian layout into polar coordinates is one way to
+              turn magnitude along an axis into angle. Pie and bar charts are
+              another: they can be more or less useful than each other depending
+              on what you need to do, not on which one is “better” in the
+              abstract.
+            </p> -->
+            <div
+              class="two-col"
+              style="
+                align-items: center;
+                gap: 8rem;
+                margin-top: 0.35rem;
+                grid-template-columns: auto auto;
+                justify-content: center;
+              "
+            >
+              <div style="text-align: center">
+                <img
+                  src="accuracy-efficiency/pie-even.png"
+                  alt="Pie chart with five similar wedges"
+                  style="
+                    max-width: 100%;
+                    max-height: 260px;
+                    object-fit: contain;
+                  "
+                />
+                <div style="font-size: 0.7em; margin-top: 0.3rem; color: #555">
+                  pie
+                </div>
+              </div>
+              <div style="text-align: center">
+                <img
+                  src="accuracy-efficiency/bar-even.png"
+                  alt="Bar chart with five similar values"
+                  style="
+                    max-width: 100%;
+                    max-height: 260px;
+                    object-fit: contain;
+                  "
+                />
+                <div style="font-size: 0.7em; margin-top: 0.3rem; color: #555">
+                  bar
+                </div>
+              </div>
+            </div>
+            <div
+              class="fragment"
+              style="
+                margin-top: 2rem;
+                font-size: 0.76em;
+                line-height: 1.55;
+                font-family: &quot;Shantell Sans&quot;, sans-serif;
+              "
+            >
+              Fine-grained comparison is MUCH harder
+            </div>
+            <aside class="notes">
+              Same point as polar: you swapped axis length for angle. Here the
+              bar/pie pair makes the tradeoff obvious before we abstract back to
+              clock().
+            </aside>
+          </section>
+
+          <section>
+            <h2>mapping length to angle changes the afforded queries</h2>
+            <!-- <p
+              style="
+                font-size: 0.82em;
+                max-width: 52rem;
+                margin: 0.35rem auto 0.6rem;
+                line-height: 1.65;
+              "
+            >
+              The flip side is tasks where you only need a coarse sense of
+              part-to-whole: at a glance you can treat each wedge as “about a
+              fifth,” “about a third,” “nearly half”—familiar angles become a
+              quick recognition problem. Getting the same whole-to-part read
+              from bars often means adding gridlines or leaning on the axis, and
+              the comparison is less visually immediate.
+            </p> -->
+            <div
+              class="two-col"
+              style="
+                align-items: center;
+                gap: 8rem;
+                margin-top: 0.35rem;
+                grid-template-columns: auto auto;
+                justify-content: center;
+              "
+            >
+              <div style="text-align: center">
+                <img
+                  src="accuracy-efficiency/pie-lopsided.png"
+                  alt="Pie chart with uneven wedges"
+                  style="
+                    max-width: 100%;
+                    max-height: 260px;
+                    object-fit: contain;
+                  "
+                />
+                <div style="font-size: 0.7em; margin-top: 0.3rem; color: #555">
+                  pie
+                </div>
+              </div>
+              <div style="text-align: center">
+                <img
+                  src="accuracy-efficiency/bar-lopsided.png"
+                  alt="Bar chart with uneven category values"
+                  style="
+                    max-width: 100%;
+                    max-height: 260px;
+                    object-fit: contain;
+                  "
+                />
+                <div style="font-size: 0.7em; margin-top: 0.3rem; color: #555">
+                  bar
+                </div>
+              </div>
+            </div>
+            <!-- <div
+              class="callout fragment"
+              style="margin-top: 0.65rem; font-size: 0.76em; line-height: 1.55"
+            >
+              So polar mapping is an <strong>accuracy–efficiency</strong> trade:
+              angle can be faster for coarse proportion, while a Cartesian axis
+              often wins for fine comparison—same data, different tasks.
+            </div> -->
+            <div
+              class="fragment"
+              style="
+                margin-top: 2rem;
+                font-size: 0.76em;
+                line-height: 1.55;
+                font-family: &quot;Shantell Sans&quot;, sans-serif;
+              "
+            >
+              But coarse part-to-whole comparisons are much easier!
+            </div>
+            <aside class="notes">
+              This is the scatter-pie intuition too: small pies stay glanceable
+              because proportion reads off angle. Tie back to the ribbon slide:
+              cyclical structure vs. magnitude precision.
+            </aside>
+          </section>
+
+          <!-- <section>
             <h2>Data schema</h2>
             <div
               class="grammar-grid"
@@ -1312,192 +2382,9 @@
               coordinate transform is the only diff. That's one attribute change
               in the spec.
             </aside>
-          </section>
-
-          <section>
-            <!-- <div class="slide-subtitle">Part 1 · Step 4 — Polar ribbon</div> -->
-            <h2>Tasks / queries this structure affords</h2>
-            <div
-              style="
-                margin-top: 1rem;
-                display: flex;
-                flex-direction: column;
-                gap: 0.5rem;
-              "
-            >
-              <div class="ladder-step">
-                similar to the ribbon — same Gestalt structure
-              </div>
-              <div class="ladder-step">
-                rotational / cyclical patterns visible at a glance
-              </div>
-            </div>
-            <div class="callout" style="margin-top: 1rem; font-size: 0.8em">
-              Things become <strong>less accurate</strong> — polar coordinates
-              distort magnitude. Approximate comparisons are still possible;
-              precise ones are harder.
-            </div>
-            <aside class="notes">
-              The tradeoff: you gain cyclical pattern recognition, you lose
-              precision. Whether that's worth it depends on whether your data
-              has a cyclical structure worth emphasizing.
-            </aside>
-          </section>
-
-          <!-- ─── STEP 4b: HIGHLIGHTED POLAR RIBBON ─────────────── -->
-
-          <section>
-            <!-- <div class="slide-subtitle">Part 1 · Step 4b — Highlighted polar ribbon</div> -->
-            <h2>The move: highlight one species</h2>
-            <div class="placeholder-slide">
-              <div class="placeholder-box">
-                [placeholder — highlighted polar ribbon chart]<br /><br />
-                <span style="font-size: 0.75em; color: #bbb">
-                  Waiting on color scale support (merging tomorrow).<br />
-                  One species in full color; all others grayed out.
-                </span>
-              </div>
-            </div>
-            <aside class="notes">
-              To be added once color scales are merged. The point: by graying
-              out all but one species, the highlighted trend dominates and the
-              others become indistinguishable — a deliberate affordance trade.
-            </aside>
-          </section>
-
-          <section>
-            <!-- <div class="slide-subtitle">Part 1 · Step 4b — Highlighted polar ribbon</div> -->
-            <h2>Tasks / queries this structure affords</h2>
-            <div
-              style="
-                margin-top: 1rem;
-                display: flex;
-                flex-direction: column;
-                gap: 0.5rem;
-              "
-            >
-              <div class="ladder-step">
-                highlighted species trend is immediately dominant
-              </div>
-              <div class="ladder-step">
-                non-highlighted species become indistinguishable
-              </div>
-            </div>
-            <div class="callout" style="margin-top: 1rem; font-size: 0.8em">
-              Same structure — but color choices actively
-              <strong>promote</strong> one query and <strong>demote</strong> all
-              others. This is how color steers attention within a fixed
-              structure.
-            </div>
-            <aside class="notes">
-              The key lesson: this is the same chart, same data, same structure.
-              Only the color encoding changed. But the set of easily-answered
-              queries is now completely different.
-            </aside>
-          </section>
+          </section> -->
 
           <!-- ─── COLOR + LABELS ────────────────────────────────── -->
-
-          <section>
-            <!-- <div class="slide-subtitle">Part 1 · Step 5 — Color and labels</div> -->
-            <h2>Keeping structure fixed — steering attention with color</h2>
-            <div class="two-col" style="align-items: start">
-              <div>
-                <p style="font-size: 0.78em; margin-bottom: 0.6em; color: #555">
-                  The structure is the stacked bar. Nothing about the GoFish
-                  spec changes. But color choices decide which queries you're
-                  <em>promoting</em>.
-                </p>
-                <div class="ladder" style="margin-top: 0.8rem">
-                  <div class="ladder-step" style="font-size: 0.75em">
-                    <strong>All species colored</strong> — highlight the
-                    composition
-                  </div>
-                  <div class="ladder-step" style="font-size: 0.75em">
-                    <strong>One species highlighted, rest gray</strong> — direct
-                    attention to a single trend
-                  </div>
-                  <div class="ladder-step" style="font-size: 0.75em">
-                    <strong>Labels on specific bars</strong> — anchor a specific
-                    data point you want readers to notice
-                  </div>
-                </div>
-                <div
-                  class="callout"
-                  style="margin-top: 1rem; font-size: 0.75em"
-                >
-                  This is the SWD-style advice — but grounded precisely.<br />
-                  You're not "reducing clutter." You're choosing which queries
-                  to
-                  <strong>promote</strong> and which to <strong>demote</strong>.
-                </div>
-              </div>
-              <div>
-                <div
-                  id="chart-stacked-2"
-                  class="chart-container"
-                  style="min-height: 240px"
-                ></div>
-                <p
-                  style="
-                    font-size: 0.65em;
-                    color: #aaa;
-                    text-align: center;
-                    margin-top: 0.4em;
-                  "
-                >
-                  [same chart — annotations placeholder]
-                </p>
-              </div>
-            </div>
-            <aside class="notes">
-              No new chart type. This is the design/rhetoric layer on top of the
-              structural layer. You've chosen a structure; now you choose which
-              afforded queries to highlight. ~15 min mark.
-            </aside>
-          </section>
-
-          <section>
-            <!-- <div class="slide-subtitle">Part 1 · Step 5 — Color and labels</div> -->
-            <h2>Tasks / queries — what are we steering attention toward?</h2>
-            <div class="placeholder-slide">
-              <div class="placeholder-box">
-                [placeholder — tasks / queries]<br /><br />
-                <span style="font-size: 0.75em; color: #bbb">
-                  Explicitly: what comparison do you want the reader to make
-                  first? Color the series that answers that question.
-                </span>
-              </div>
-            </div>
-          </section>
-
-          <!-- ─── INTERLUDE ─────────────────────────────────────── -->
-
-          <section>
-            <!-- <div class="slide-subtitle">Part 1 · Interlude</div> -->
-            <h2>What just happened</h2>
-            <div
-              style="margin-top: 1.5rem; font-size: 0.88em; line-height: 2.1"
-            >
-              <p class="fragment">
-                We took <strong>one dataset</strong> and made a series of
-                <strong>deliberate structural moves</strong>.
-              </p>
-              <p class="fragment">Each move changed what was easy to see.</p>
-              <p class="fragment">
-                None of these moves required picking from a menu — they were
-                <em>transformations of a continuous underlying structure</em>.
-              </p>
-              <p class="fragment">
-                The chart type labels — bar, stacked, ribbon, polar — are just
-                <strong>snapshots along the way</strong>.
-              </p>
-            </div>
-            <aside class="notes">
-              Hard reset before Part 2. Let this breathe for a moment. ~16 min
-              mark.
-            </aside>
-          </section>
         </section>
         <!-- /COLUMN 2 -->
 
@@ -1511,17 +2398,15 @@
 
           <section>
             <!-- <div class="slide-subtitle">Part 2 · Scatter pie</div> -->
-            <h2>Our GoFish spec</h2>
+            <h2>scatter -> pie = scatterpie</h2>
             <div class="two-col">
               <div class="col-code">
                 <pre><code class="language-python">chart(scatter_data).flow(
     scatter("lake", x="x", y="y")
 ).mark(
-    lambda data:
-        chart(data[0]["collection"],
-              coord=clock())
-        .flow(stack("species", dir="x"))
-        .mark(rect(w="count", fill="species"))
+    chart(coord=clock())
+    .flow(stack("species", dir="x"))
+    .mark(rect(w="count", fill="species"))
 )</code></pre>
                 <div
                   style="
@@ -1530,9 +2415,34 @@
                     line-height: 1.8;
                   "
                 >
-                  <p>Outer structure: scatter affords "where?" queries.</p>
-                  <p>Inner structure: pie affords "what fraction?" queries.</p>
-                  <p>The mark method takes a chart — same as faceting.</p>
+                  <p>
+                    <strong>Outer structure:</strong>
+                    <code>scatter()</code> affords "where?" queries.
+                  </p>
+                  <p>
+                    <strong>Inner structure:</strong> pie affords "what
+                    fraction?" queries.
+                  </p>
+                  <!-- <p>The mark method takes a chart — same as faceting.</p> -->
+                  <div
+                    class="spec-slide-query fragment"
+                    style="margin-top: 0.65rem"
+                  >
+                    <p style="margin-bottom: 0.35rem">
+                      <strong>Queries:</strong>
+                    </p>
+                    <ul class="stack-queries-list">
+                      <li>
+                        which species dominates each lake? (largest slice)
+                      </li>
+                      <li>
+                        how does species composition vary across geography?
+                      </li>
+                      <li>
+                        which lakes have similar mixes? (visual comparison)
+                      </li>
+                    </ul>
+                  </div>
                 </div>
               </div>
               <div class="col-chart">
@@ -1542,116 +2452,214 @@
             <aside class="notes">
               This is composition — nesting one query-affording structure inside
               another. It's the same idea as faceting: spreading a chart-making
-              function. ~18 min mark.
+              function. Pie affords proportion queries easily; magnitude queries
+              are hard because arc angle is a weaker encoding than length.
+              Cross-lake magnitude comparison is impossible because pies are
+              normalized. ~18 min mark.
+
+              <br /><br />
+
+              Now that we know what structures and queries we want to afford, we
+              can play a little looser with our representation.
             </aside>
           </section>
 
-          <section>
-            <!-- <div class="slide-subtitle">Part 2 · Scatter pie</div> -->
+          <!-- <section>
             <h2>Data schema</h2>
-            <div class="placeholder-slide">
-              <div class="placeholder-box">[placeholder — data schema]</div>
-            </div>
-          </section>
-
-          <section>
-            <!-- <div class="slide-subtitle">Part 2 · Scatter pie</div> -->
-            <h2>Tasks / queries this structure affords</h2>
-            <div class="placeholder-slide">
-              <div class="placeholder-box">
-                [placeholder — tasks / queries]<br /><br />
-                <span style="font-size: 0.75em; color: #bbb">
-                  Outer: "Which lakes are geographically close?"<br />
-                  Inner: "What's the species breakdown at each location?"
-                </span>
+            <div
+              class="grammar-grid"
+              style="margin-top: 2rem; font-size: 0.95em"
+            >
+              <div class="grammar-term">outer key</div>
+              <div class="grammar-def">
+                <code>lake: discrete</code><br />
+                <span style="font-size: 0.85em; color: #888"
+                  >scatter positions each lake at geographic (x, y)</span
+                >
+              </div>
+              <div class="grammar-term">inner key</div>
+              <div class="grammar-def">
+                <code>species: discrete → proportion</code><br />
+                <span style="font-size: 0.85em; color: #888"
+                  >clock() + stack() maps each species to an arc width</span
+                >
+              </div>
+              <div class="grammar-term">value</div>
+              <div class="grammar-def">
+                <code>count: continuous → arc width</code><br />
+                <span style="font-size: 0.85em; color: #888"
+                  >normalized to proportion within each lake</span
+                >
               </div>
             </div>
-          </section>
+            <aside class="notes">
+              Two-level key structure — lake is the outer, species is the inner.
+              The pie normalizes counts to proportions, so absolute magnitude is
+              lost.
+            </aside>
+          </section> -->
 
           <!-- ─── FLOWER CHART ──────────────────────────────────── -->
 
           <section>
             <!-- <div class="slide-subtitle">Part 2 · Flower chart</div> -->
-            <h2>Same outer structure — swap the inner glyph</h2>
+            <h2>Swap the inner chart for a different part-to-whole viz</h2>
             <div class="two-col">
               <div class="col-code">
-                <pre><code class="language-python"># Outer scatter: unchanged.
-# Inner glyph: petals instead of pie slices.
-# Petal length → magnitude comparison
-# (vs. pie slice → proportion comparison)
-
-chart(scatter_data).flow(
+                <pre><code class="language-python">chart(scatter_data).flow(
     scatter("lake", x="x", y="y")
 ).mark(
-    lambda data: Frame(
-        StackX(h=total(data)/7, [
-            Petal(w=d["count"], fill=colors[i])
-            for i, d in enumerate(data[0]["coll"])
-        ]),
-        coord=polar()
-    )
+    Flower(...)
 )</code></pre>
+                <!-- <div
+                  style="
+                    margin-top: 0.75rem;
+                    font-size: 0.72em;
+                    line-height: 1.85;
+                  "
+                >
+                  <p class="fragment">
+                    <strong>Tasks / queries</strong> (glyph change): which
+                    species has the highest count at each lake? (longest petal)
+                  </p>
+                  <p class="fragment" style="margin-top: 0.35rem">
+                    how does total activity compare across lakes? (flower
+                    fullness)
+                  </p>
+                  <p
+                    class="fragment"
+                    style="margin-top: 0.35rem; opacity: 0.55"
+                  >
+                    what fraction of catch is Bass? — <em>harder</em> (length
+                    doesn't naturally read as proportion)
+                  </p>
+                  <div
+                    class="callout fragment"
+                    style="margin-top: 0.55rem; font-size: 0.95em"
+                  >
+                    Pie → proportion queries easy, magnitude hard.<br />
+                    Flower → magnitude comparison easy, proportion hard.<br />
+                    <strong
+                      >Same data, same outer structure, different inner
+                      affordances.</strong
+                    >
+                  </div>
+                </div> -->
               </div>
               <div class="col-chart">
-                <div id="chart-flower" class="chart-container"></div>
+                <div
+                  class="chart-container"
+                  style="padding: 0.75rem; box-sizing: border-box"
+                >
+                  <img
+                    src="misc-files/flower-chart.png"
+                    alt="Flower chart: stem height and petal glyphs per lake"
+                    style="
+                      width: 100%;
+                      height: auto;
+                      max-height: 100%;
+                      object-fit: contain;
+                      display: block;
+                    "
+                  />
+                </div>
               </div>
             </div>
             <aside class="notes">
               Same outer scatter. Different inner glyph. The petal encodes
               magnitude differently from a pie slice — it affords comparison of
-              absolute values rather than proportions. ~21 min mark.
+              absolute values rather than proportions. Petal length is a
+              stronger encoding for magnitude than arc angle, but it gives up
+              proportion legibility — the tradeoff the grammar makes explicit.
+              ~21 min mark.
             </aside>
           </section>
 
-          <section>
-            <!-- <div class="slide-subtitle">Part 2 · Flower chart</div> -->
+          <!-- <section>
             <h2>Data schema</h2>
-            <div class="placeholder-slide">
-              <div class="placeholder-box">
-                [placeholder — data schema]<br /><br />
-                <span style="font-size: 0.75em; color: #bbb"
-                  >Same data as scatter pie — note what changed in the
-                  glyph.</span
+            <div
+              class="grammar-grid"
+              style="margin-top: 2rem; font-size: 0.95em"
+            >
+              <div class="grammar-term">outer key</div>
+              <div class="grammar-def">
+                <code>lake: discrete</code><br />
+                <span style="font-size: 0.85em; color: #888"
+                  >same scatter positioning as pie — unchanged</span
+                >
+              </div>
+              <div class="grammar-term">inner key</div>
+              <div class="grammar-def">
+                <code>species: discrete → petal</code><br />
+                <span style="font-size: 0.85em; color: #888"
+                  >polar layout; one petal per species</span
+                >
+              </div>
+              <div class="grammar-term">value</div>
+              <div class="grammar-def">
+                <code>count: continuous → petal length</code><br />
+                <span style="font-size: 0.85em; color: #888"
+                  >absolute magnitude — not normalized</span
                 >
               </div>
             </div>
-          </section>
-
-          <section>
-            <!-- <div class="slide-subtitle">Part 2 · Flower chart</div> -->
-            <h2>Tasks / queries — what changed because the glyph changed?</h2>
-            <div class="placeholder-slide">
-              <div class="placeholder-box">
-                [placeholder — tasks / queries]<br /><br />
-                <span style="font-size: 0.75em; color: #bbb">
-                  What's now easier? What's now harder?<br />
-                  Petal length vs. arc angle — which encodes magnitude more
-                  naturally?
-                </span>
-              </div>
-            </div>
-          </section>
+            <aside class="notes">
+              Key difference from pie: count maps to petal length (a linear
+              scale), not arc angle. The outer structure is identical. Only the
+              inner glyph changed.
+            </aside>
+          </section> -->
 
           <!-- ─── BALLOON CHART ─────────────────────────────────── -->
 
           <section>
             <!-- <div class="slide-subtitle">Part 2 · Balloon chart</div> -->
-            <h2>Same move again</h2>
+            <h2>balloons???</h2>
             <div class="two-col">
               <div class="col-code">
-                <pre><code class="language-python"># Same outer structure.
-# Inner glyph: balloons.
-# Scale → magnitude (area encoding).
-# Different affordances again.
-
-chart(scatter_data).flow(
+                <pre><code class="language-python">chart(scatter_data).flow(
     scatter("lake", x="x", y="y")
 ).mark(
-    lambda data: Balloon(
-        scale=data[0]["total"] / max_total,
-        color=palette[data[0]["dominant"]]
-    )
+    Balloon(...)
 )</code></pre>
+                <!-- <div
+                  style="
+                    margin-top: 0.75rem;
+                    font-size: 0.72em;
+                    line-height: 1.85;
+                  "
+                >
+                  <p class="fragment">
+                    <strong>Tasks / queries:</strong> which lake has the highest
+                    total catch? (biggest balloon)
+                  </p>
+                  <p class="fragment" style="margin-top: 0.35rem">
+                    which species dominates each lake? (color)
+                  </p>
+                  <p
+                    class="fragment"
+                    style="margin-top: 0.35rem; opacity: 0.55"
+                  >
+                    what's the Bass count at Lake Ontario? —
+                    <em>impossible</em> (not encoded)
+                  </p>
+                  <p
+                    class="fragment"
+                    style="margin-top: 0.35rem; opacity: 0.55"
+                  >
+                    how does species composition vary? —
+                    <em>impossible</em> (breakdown gone)
+                  </p>
+                  <div
+                    class="callout fragment"
+                    style="margin-top: 0.55rem; font-size: 0.95em"
+                  >
+                    Balloon loses all per-species breakdown. Gains:
+                    <strong>total magnitude is now the primary read</strong>
+                    — cleaner, more memorable, but radically reduced information
+                    density.
+                  </div>
+                </div> -->
               </div>
               <div class="col-chart">
                 <div id="chart-balloon" class="chart-container"></div>
@@ -1659,30 +2667,278 @@ chart(scatter_data).flow(
             </div>
             <aside class="notes">
               Third iteration. Each one changes the inner glyph, keeps the outer
-              scatter. Different encodings, different affordances. ~23 min mark.
+              scatter. Different encodings, different affordances. Each glyph
+              swap is a deliberate trade: pie → proportion focus, flower →
+              magnitude comparison, balloon → total + dominant only. The grammar
+              makes these trades explicit and nameable. ~23 min mark.
             </aside>
           </section>
 
-          <section>
-            <!-- <div class="slide-subtitle">Part 2 · Balloon chart</div> -->
-            <h2>Data schema</h2>
-            <div class="placeholder-slide">
-              <div class="placeholder-box">[placeholder — data schema]</div>
-            </div>
-          </section>
+          <!-- ─── PIVOT ──────────────────────────────────────────── -->
 
           <section>
-            <!-- <div class="slide-subtitle">Part 2 · Balloon chart</div> -->
-            <h2>Tasks / queries this structure affords</h2>
-            <div class="placeholder-slide">
-              <div class="placeholder-box">[placeholder — tasks / queries]</div>
+            <div
+              style="
+                margin-top: 1.4rem;
+                font-size: 0.98em;
+                line-height: 1.9;
+                color: #222;
+                font-weight: 500;
+                text-align: left;
+              "
+            >
+              When we think with structure instead of chart types, we can
+              compose structures to come up with new designs while still
+              reasoning precisely about what they communicate.
             </div>
+            <aside class="notes">
+              Names the pattern after the scatter-pie / flower / balloon demos:
+              structure is the real primitive; composed graphics need not match
+              a taxonomy. ~26 min mark.
+            </aside>
           </section>
+
+          <!-- ─── INTERLUDE ─────────────────────────────────────── -->
+
+          <section>
+            <!-- <div class="slide-subtitle">Part 1 · Interlude</div> -->
+            <h2>What just happened?</h2>
+            <div
+              style="
+                margin-top: 1.5rem;
+                font-size: 0.88em;
+                line-height: 2.1;
+                text-align: left;
+              "
+            >
+              <p class="fragment">
+                We took <strong>one dataset</strong> and made a series of
+                <strong>deliberate structural moves</strong>.
+              </p>
+              <p class="fragment">
+                Each move changed what was easy or hard to see.
+              </p>
+              <p class="fragment">
+                We didn't have to pick from a menu of charts... though those are
+                useful shorthands for common structures!
+              </p>
+              <p class="fragment">
+                Instead, chart type labels like bar or pie were just structural
+                motifs we encountered along the way.
+              </p>
+            </div>
+            <aside class="notes">
+              Synthesis after the scatter-pie → flower → balloon sequence (and
+              the bar→polar arc before it). Let this breathe. ~24 min mark.
+            </aside>
+          </section>
+
+          <!-- ─── OPERATOR / GESTALT TABLE ─────────────────────── -->
+
+          <section>
+            <h2>operators map data types to Gestalt relations</h2>
+            <table
+              style="
+                width: 100%;
+                margin-top: 1.2rem;
+                border-collapse: collapse;
+                font-size: 0.78em;
+                line-height: 1.6;
+              "
+            >
+              <thead>
+                <tr style="border-bottom: 2px solid #1a1a2e">
+                  <th
+                    style="
+                      text-align: left;
+                      padding: 0.4rem 0.8rem;
+                      color: #1a1a2e;
+                      font-weight: 700;
+                    "
+                  >
+                    Operator
+                  </th>
+                  <th
+                    style="
+                      text-align: left;
+                      padding: 0.4rem 0.8rem;
+                      color: #1a1a2e;
+                      font-weight: 700;
+                    "
+                  >
+                    Data type
+                  </th>
+                  <th
+                    style="
+                      text-align: left;
+                      padding: 0.4rem 0.8rem;
+                      color: #1a1a2e;
+                      font-weight: 700;
+                    "
+                  >
+                    Gestalt relation
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style="border-bottom: 1px solid #e8e8e8">
+                  <td style="padding: 0.45rem 0.8rem"><code>spread</code></td>
+                  <td style="padding: 0.45rem 0.8rem; color: #555">discrete</td>
+                  <td style="padding: 0.45rem 0.8rem; color: #555">
+                    alignment &amp; uniform density
+                  </td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e8e8e8">
+                  <td style="padding: 0.45rem 0.8rem"><code>stack</code></td>
+                  <td style="padding: 0.45rem 0.8rem; color: #555">
+                    partitioned continuous
+                  </td>
+                  <td style="padding: 0.45rem 0.8rem; color: #555">
+                    part-to-whole
+                  </td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e8e8e8">
+                  <td style="padding: 0.45rem 0.8rem"><code>scatter</code></td>
+                  <td style="padding: 0.45rem 0.8rem; color: #555">
+                    continuous × continuous
+                  </td>
+                  <td style="padding: 0.45rem 0.8rem; color: #aaa">
+                    <em>none — no discrete grouping</em>
+                  </td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e8e8e8">
+                  <td style="padding: 0.45rem 0.8rem">
+                    <code>area / line / ribbon</code>
+                  </td>
+                  <td style="padding: 0.45rem 0.8rem; color: #555">
+                    continuous or contiguous
+                  </td>
+                  <td style="padding: 0.45rem 0.8rem; color: #555">
+                    connection
+                  </td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e8e8e8">
+                  <td style="padding: 0.45rem 0.8rem"><code>table</code></td>
+                  <td style="padding: 0.45rem 0.8rem; color: #555">
+                    discrete × discrete
+                  </td>
+                  <td style="padding: 0.45rem 0.8rem; color: #555">
+                    uniform density
+                  </td>
+                </tr>
+                <!-- <tr>
+                  <td style="padding: 0.45rem 0.8rem">
+                    <code>align / distribute</code>
+                  </td>
+                  <td style="padding: 0.45rem 0.8rem; color: #aaa">
+                    <em>discrete?</em>
+                  </td>
+                  <td style="padding: 0.45rem 0.8rem; color: #555">
+                    alignment &amp; uniform density
+                  </td>
+                </tr> -->
+              </tbody>
+            </table>
+            <aside class="notes">
+              Each operator corresponds to a specific Gestalt principle. Spread
+              creates alignment and uniform density across discrete categories.
+              Stack creates part-to-whole contiguity. Area/line/ribbon use
+              element connectedness to imply continuity. Scatter deliberately
+              avoids a discrete grouping — proximity is the only cue. Table and
+              align/distribute are constraint-based; their Gestalt relation is
+              also alignment and density, but the mechanism differs.
+            </aside>
+          </section>
+
+          <!-- <section>
+            <h2>Data schema</h2>
+            <div
+              class="grammar-grid"
+              style="margin-top: 2rem; font-size: 0.95em"
+            >
+              <div class="grammar-term">outer key</div>
+              <div class="grammar-def">
+                <code>lake: discrete</code><br />
+                <span style="font-size: 0.85em; color: #888"
+                  >same scatter positioning — outer structure unchanged</span
+                >
+              </div>
+              <div class="grammar-term">value</div>
+              <div class="grammar-def">
+                <code>total catch → balloon scale (area)</code><br />
+                <span style="font-size: 0.85em; color: #888"
+                  >magnitude encoded as 2D area</span
+                >
+              </div>
+              <div class="grammar-term">channel</div>
+              <div class="grammar-def">
+                <code>dominant species → color</code><br />
+                <span style="font-size: 0.85em; color: #888"
+                  >only the top species survives — per-species breakdown is
+                  gone</span
+                >
+              </div>
+            </div>
+            <aside class="notes">
+              The inner glyph now encodes only two things: total magnitude and
+              dominant species. All per-species breakdown information is
+              discarded. This is a radical simplification compared to the pie or
+              flower.
+            </aside>
+          </section> -->
 
           <!-- ─── YOU HAVE CHOICE ───────────────────────────────── -->
 
-          <section>
-            <!-- <div class="slide-subtitle">Part 2 · The point</div> -->
+          <!-- ─── REAL-WORLD EXAMPLE ────────────────────────────── -->
+
+          <!-- <section>
+            <h2>the framework generalizes beyond the tool</h2>
+            <div class="two-col" style="align-items: start">
+              <div>
+                <img
+                  src="motivational-images/nyt.png"
+                  style="width: 100%; border-radius: 4px"
+                  alt="NYT complex visualization"
+                />
+              </div>
+              <div style="font-size: 0.78em; line-height: 1.85">
+                <p class="fragment">
+                  <strong>Outer structure</strong><br />
+                  <span style="color: #555"
+                    >small multiples: one panel per time period → enables
+                    change-over-time comparison</span
+                  >
+                </p>
+                <p class="fragment" style="margin-top: 0.7rem">
+                  <strong>Inner glyph</strong><br />
+                  <span style="color: #555"
+                    >connected scatter: position encodes two quantitative
+                    variables simultaneously</span
+                  >
+                </p>
+                <p class="fragment" style="margin-top: 0.7rem">
+                  <strong>Afforded queries</strong><br />
+                  <span style="color: #555"
+                    >trajectory shape (trend), outlier years, correlation
+                    between axes</span
+                  >
+                </p>
+                <p class="fragment" style="margin-top: 0.7rem; color: #888">
+                  <strong>Hard</strong><br />
+                  precise year-over-year value comparison across panels
+                </p>
+              </div>
+            </div>
+            <aside class="notes">
+              You don't need GoFish to apply this framework. Any complex graphic
+              can be analyzed as: outer structure (what's the primary grouping?)
+              + inner glyph (what does each unit show?) + afforded queries
+              (what's easy/hard to read?). The tool makes this precise. The
+              framework works even without the tool. ~25 min mark.
+            </aside>
+          </section> -->
+
+          <!-- <section>
             <h2>You have choice — and now you know how to make it</h2>
             <div
               style="margin-top: 1.2rem; font-size: 0.88em; line-height: 1.9"
@@ -1717,11 +2973,13 @@ chart(scatter_data).flow(
               on something they didn't before — a way to think about charts that
               isn't "pick the right chart type."
             </aside>
-          </section>
+          </section> -->
         </section>
         <!-- /COLUMN 3 -->
 
-        <!-- ═══ COLUMN 4: CLOSE ══════════════════════════════════ -->
+        <!-- COLUMN 4 retrospective (back to the beginning + charts A–C) omitted -->
+
+        <!-- ═══ COLUMN 5: CLOSE ══════════════════════════════════ -->
         <section>
           <!-- ══════════════════════════════════════════════════════
              CLOSE
@@ -1729,67 +2987,204 @@ chart(scatter_data).flow(
 
           <section>
             <!-- <div class="slide-subtitle">Close</div> -->
-            <h2 style="line-height: 1.5">
-              Making a chart is more than showing your data.
-            </h2>
+            <h2 style="line-height: 1.5">takeaways</h2>
             <div
-              style="margin-top: 1.5rem; font-size: 0.88em; line-height: 1.9"
+              style="
+                margin-top: 1.5rem;
+                font-size: 0.88em;
+                line-height: 1.9;
+                text-align: left;
+              "
             >
               <p class="fragment">
-                It's designing a data structure your readers will
-                <strong>query with their eyes</strong>.
+                <strong>1.</strong> Chart types are great shortcuts, but
+                graphics are really sophisticated visual structures.
               </p>
-              <p class="fragment">
-                Our tools should help us be deliberate about that structure —
-                not just pick from a menu of chart types.
+              <p class="fragment" style="margin-top: 0.8rem">
+                <strong>2.</strong> Changing this structure changes what your
+                reader can <em>and can't</em> see in (probably) predictable
+                ways.
               </p>
-              <p class="fragment">
-                GoFish is one attempt at that. I'm still figuring out where the
-                boundaries are.
+              <p class="fragment" style="margin-top: 0.8rem">
+                <strong>3.</strong> Thinking structurally helps us move beyond
+                familiar charts and rigid rules to designs that might better fit
+                our data or task.
               </p>
-              <p class="fragment">
-                I'd love to hear — in Q&amp;A, in the hallway, on GitHub —
+              <!-- <p class="fragment" style="margin-top: 1.2rem; color: #555">
+                GoFish is one attempt. I'd love to hear — in Q&amp;A, in the
+                hallway, on GitHub —
                 <strong
                   >where this does and doesn't match problems you actually
                   have.</strong
                 >
-              </p>
+              </p> -->
             </div>
             <aside class="notes">
-              Don't oversell. This is intellectual honesty. The Q&A is
-              needfinding, not defense. ~27 min mark.
+              Land all three explicitly. 1: the Part 1 journey — bar, stacked,
+              sorted, ribbon, polar — weren't different chart types, they were
+              structural moves. 2: affordances thread — every move opens some
+              queries and closes others. 3: the composition payoff —
+              scatter-pie, flower, balloon weren't in any dropdown. Then the
+              honest close: GoFish is one attempt, Q&A is needfinding. ~27 min
+              mark.
             </aside>
           </section>
 
-          <section>
+          <section data-background-color="#fff">
             <!-- <div class="slide-subtitle">27:30</div> -->
-            <h2>Try it</h2>
-            <div style="margin-top: 1.5rem; text-align: center">
-              <div class="install-block">
-                <span class="prompt">$</span>pip install gofish-graphics
+            <div class="close-slide-two-boxes">
+              <div class="close-slide-logo-frame">
+                <div
+                  class="close-slide-logo-border-end close-slide-logo-border-end--top"
+                  aria-hidden="true"
+                ></div>
+                <div class="close-slide-frame-mid">
+                  <div
+                    class="close-slide-logo-border-side close-slide-logo-border-side--left"
+                    aria-hidden="true"
+                  ></div>
+                  <div class="close-slide-box-content">
+                    <h2 style="margin-top: 0; margin-bottom: 1rem">Try it</h2>
+                    <div style="text-align: center">
+                      <div class="install-block">
+                        <span class="prompt">$</span>pip install gofish-graphics
+                      </div>
+                    </div>
+                    <p
+                      style="
+                        margin: 0.65rem 0 0 0;
+                        color: #666;
+                        font-size: 0.9em;
+                        font-weight: normal;
+                        text-align: center;
+                      "
+                    >
+                      Python alpha release coming soon!
+                    </p>
+                    <div
+                      style="
+                        margin-top: 1.25rem;
+                        font-size: 0.85em;
+                        line-height: 2.4;
+                        text-align: left;
+                      "
+                    >
+                      <p>
+                        🌐 <strong>Docs:</strong>
+                        <a
+                          href="https://gofish.graphics"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          ><code>gofish.graphics</code></a
+                        >
+                      </p>
+                      <p>
+                        🐙 <strong>GitHub:</strong>
+                        <a
+                          href="https://github.com/gofish-graphics/gofish-graphics"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          ><code>gofish-graphics/gofish-graphics</code></a
+                        >
+                      </p>
+                    </div>
+                  </div>
+                  <div
+                    class="close-slide-logo-border-side close-slide-logo-border-side--right"
+                    aria-hidden="true"
+                  ></div>
+                </div>
+                <div
+                  class="close-slide-logo-border-end close-slide-logo-border-end--bottom"
+                  aria-hidden="true"
+                ></div>
+              </div>
+              <div class="close-slide-logo-frame">
+                <div
+                  class="close-slide-logo-border-end close-slide-logo-border-end--top"
+                  aria-hidden="true"
+                ></div>
+                <div class="close-slide-frame-mid">
+                  <div
+                    class="close-slide-logo-border-side close-slide-logo-border-side--left"
+                    aria-hidden="true"
+                  ></div>
+                  <div class="close-slide-box-content">
+                    <h2 style="margin-top: 0; margin-bottom: 1.4rem">
+                      stay in the loop
+                    </h2>
+                    <div
+                      style="
+                        display: flex;
+                        align-items: center;
+                        justify-content: flex-start;
+                        gap: 1.5rem;
+                        flex-wrap: wrap;
+                      "
+                    >
+                      <img
+                        src="qr-code.png"
+                        alt="QR code for buttondown.com/jopo"
+                        style="width: 200px; height: 200px; display: block"
+                      />
+                      <div
+                        style="
+                          text-align: left;
+                          font-size: 0.85em;
+                          line-height: 2;
+                        "
+                      >
+                        <p
+                          style="
+                            font-size: 1.05em;
+                            font-weight: 600;
+                            margin-bottom: 0.4rem;
+                          "
+                        >
+                          <a
+                            href="https://buttondown.com/jopo"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style="color: inherit; text-decoration: underline"
+                            >buttondown.com/jopo</a
+                          >
+                        </p>
+                        <p
+                          style="
+                            color: #555;
+                            font-size: 0.9em;
+                            line-height: 1.7;
+                            max-width: 26ch;
+                          "
+                        >
+                          GoFish updates &amp; new features<br />
+                          (~weekly)<br /><br />
+                          Sneak peeks from the book on<br />
+                          designing better graphics<br />
+                          (longer cycles)
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    class="close-slide-logo-border-side close-slide-logo-border-side--right"
+                    aria-hidden="true"
+                  ></div>
+                </div>
+                <div
+                  class="close-slide-logo-border-end close-slide-logo-border-end--bottom"
+                  aria-hidden="true"
+                ></div>
               </div>
             </div>
-            <div
-              style="
-                margin-top: 1.5rem;
-                font-size: 0.85em;
-                line-height: 2.4;
-                max-width: 60%;
-                margin-left: auto;
-                margin-right: auto;
-                text-align: left;
-              "
-            >
-              <p>🌐 <strong>Docs:</strong> <code>gofish.graphics</code></p>
-              <p>
-                🐙 <strong>GitHub:</strong>
-                <code>starfish-graphics/gofish-graphics</code>
-              </p>
-            </div>
-            <aside class="notes">Quick. Then Q&A. ~28 min mark.</aside>
+            <aside class="notes">
+              Quick pip install, docs, and GitHub. Newsletter plug — scan or
+              type buttondown.com/jopo. Weekly cadence for GoFish updates,
+              slower cadence for book chapters. ~28 min mark.
+            </aside>
           </section>
 
-          <section>
+          <!-- <section>
             <div class="title-slide" style="padding-top: 3rem">
               <h2>Questions?</h2>
               <p class="subtitle" style="margin-top: 1rem; font-size: 0.9em">
@@ -1803,7 +3198,7 @@ chart(scatter_data).flow(
               real workflows. "Oh cool" + silence → the need isn't felt. That's
               data too.
             </aside>
-          </section>
+          </section> -->
         </section>
         <!-- /COLUMN 4 -->
       </div>
