@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
 import { Chart, scatter, rect, log } from "../../src/lib";
 import data from "vega-datasets";
+import { CoordinateTransform } from "../../src/ast/coordinateTransforms/coord";
 
 // Mirrors: https://vega.github.io/vega-lite/examples/tick_strip.html
 
@@ -31,7 +32,18 @@ export const Default: StoryObj<Args> = {
       cylinders: Math.round(d.Cylinders),
     }));
 
-    Chart(cars)
+    const flip = (): CoordinateTransform => {
+      return {
+        type: "flip",
+        transform: ([x, y]: [number, number]) => [x, -y],
+        domain: [
+          { min: 0, max: 100, size: 100 },
+          { min: -100, max: 0, size: 100 },
+        ],
+      };
+    };
+
+    Chart(cars, { coord: flip() } )
       .flow(log("cars before scatter"), scatter("name", { x: "horsepower", y: "cylinders", debug: true }))
       .mark(rect({ w: 1, h: 10, fill: "rgba(31, 119, 180, 0.4)", // semi‑transparent blue
         stroke: "#1f77b4",
