@@ -1,6 +1,6 @@
 """AST classes for building GoFish chart specifications."""
 
-from typing import Any, Callable, Dict, List, Optional, TypeVar, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, TypeVar, Union
 import uuid
 
 T = TypeVar("T")
@@ -146,6 +146,24 @@ class ChartBuilder:
         """
         return self.flow(_stack(field, **kwargs))
 
+    def _build_v2_spec(self, data_list: List[dict]) -> Tuple[dict, List[dict]]:
+        """
+        Build the v2 pre-processed spec: a DataTree + augmented operator list.
+
+        Runs all operators in Python:
+          - derive: executed eagerly, stripped from IR
+          - spread/stack/table/scatter/group: group data into tree levels
+          - data-dependent config (inferSize, colKeys, rowKeys) pre-computed
+
+        Returns:
+            (data_tree_root, augmented_operators) where:
+              - data_tree_root is the nested DataTreeNode dict
+              - augmented_operators is the flat operator list sent to JS
+        """
+        augmented_ops = _collect_augmented_ops(data_list, self.operators)
+        tree = _build_tree_only(data_list, self.operators)
+        return tree, augmented_ops
+
     def to_ir(self) -> dict:
         """
         Convert the chart specification to JSON IR.
@@ -201,7 +219,7 @@ class ChartBuilder:
         from .arrow_utils import dataframe_to_arrow
         import pandas as pd
 
-        # LayerSelector charts have no data of their own
+        # LayerSelector charts still use v1 path (no data transforms to run)
         if isinstance(self.data, LayerSelector):
             import pyarrow as pa
             schema = pa.schema([pa.field("_placeholder", pa.int32())])
@@ -210,48 +228,51 @@ class ChartBuilder:
             with pa.ipc.new_stream(sink, schema) as writer:
                 writer.write_table(table)
             arrow_data = sink.getvalue().to_pybytes()
+            spec = self.to_ir()
+            derive_functions = {
+                op.lambda_id: op.fn
+                for op in self.operators
+                if isinstance(op, DeriveOperator)
+            }
+            return GoFishChartWidget(
+                spec=spec,
+                arrow_data=arrow_data,
+                derive_functions=derive_functions,
+                width=w,
+                height=h,
+                axes=axes,
+                debug=debug,
+            )
+
+        # v2 path: run all data transforms in Python, send pre-processed tree to JS
+        if isinstance(self.data, pd.DataFrame):
+            data_list = self.data.to_dict("records")
+        elif self.data is None:
+            data_list = []
         else:
-            # Convert data to Arrow format
-            if isinstance(self.data, pd.DataFrame):
-                df = self.data
-            elif self.data is None:
-                df = pd.DataFrame()
-            else:
-                df = pd.DataFrame(self.data)
+            data_list = list(self.data)
 
-            if len(df) == 0:
-                import pyarrow as pa
-                schema = pa.schema([pa.field("_placeholder", pa.int32())])
-                table = pa.Table.from_arrays([], schema=schema)
-                sink = pa.BufferOutputStream()
-                with pa.ipc.new_stream(sink, schema) as writer:
-                    writer.write_table(table)
-                arrow_data = sink.getvalue().to_pybytes()
-            else:
-                arrow_data = dataframe_to_arrow(df)
-
-        # Get the IR spec
-        spec = self.to_ir()
-
-        # Collect derive functions for RPC execution in the widget
-        derive_functions = {
-            op.lambda_id: op.fn
-            for op in self.operators
-            if isinstance(op, DeriveOperator)
+        data_tree, augmented_ops = self._build_v2_spec(data_list)
+        spec = {
+            "version": 2,
+            "dataTree": data_tree,
+            "operators": augmented_ops,
+            "mark": self._mark.to_dict(),
+            "options": self.options,
+            "data": None,
         }
 
-        # Create and return widget
-        widget = GoFishChartWidget(
+        # No Arrow data needed (all data is in the tree as JSON)
+        # and no derive functions (they ran eagerly in Python)
+        return GoFishChartWidget(
             spec=spec,
-            arrow_data=arrow_data,
-            derive_functions=derive_functions,
+            arrow_data=b"",
+            derive_functions={},
             width=w,
             height=h,
             axes=axes,
             debug=debug,
         )
-
-        return widget
 
 
 # Operator factory functions
@@ -689,6 +710,168 @@ def image(
         if value is not None:
             kwargs[k] = value
     return Mark("image", **kwargs)
+
+
+def _groupby_ordered(data: List[dict], field: str) -> Dict[str, List[dict]]:
+    """Group a list of dicts by field, preserving first-seen key order (like JS Map.groupBy)."""
+    groups: Dict[str, List[dict]] = {}
+    for row in data:
+        key = str(row.get(field, ""))
+        if key not in groups:
+            groups[key] = []
+        groups[key].append(row)
+    return groups
+
+
+def _infer_size(accessor: Any, data: List[dict]) -> Any:
+    """Python equivalent of JS inferSize: sum a named field across data, or pass through a number."""
+    if isinstance(accessor, (int, float)):
+        return accessor
+    if isinstance(accessor, str) and data:
+        return sum(row.get(accessor, 0) for row in data)
+    return None
+
+
+def _collect_augmented_ops(data: List[dict], operators: List["Operator"]) -> List[dict]:
+    """
+    Build the flat augmented operator list for the v2 IR.
+
+    Processes operators in sequence, computing data-dependent config values
+    (inferSize for spread w/h, colKeys/rowKeys for table) using the data
+    as it exists at each point in the flat pipeline. Derive operators run
+    eagerly to advance the data; all other operators add an entry.
+    """
+    result: List[dict] = []
+    current_data = data
+    for op in operators:
+        if isinstance(op, DeriveOperator):
+            transformed = op.fn(current_data)
+            if not isinstance(transformed, list):
+                transformed = [transformed] if transformed is not None else []
+            current_data = transformed
+        elif op.op_type in ("spread", "stack"):
+            op_dict = op.to_dict()
+            if "w" in op.kwargs:
+                op_dict["w"] = _infer_size(op.kwargs["w"], current_data)
+            if "h" in op.kwargs:
+                op_dict["h"] = _infer_size(op.kwargs["h"], current_data)
+            result.append(op_dict)
+        elif op.op_type == "table":
+            x_field = op.kwargs.get("xField") or op.kwargs.get("x_field", "")
+            y_field = op.kwargs.get("yField") or op.kwargs.get("y_field", "")
+            col_keys = list(dict.fromkeys(str(row.get(x_field, "")) for row in current_data))
+            row_keys = list(dict.fromkeys(str(row.get(y_field, "")) for row in current_data))
+            spacing = op.kwargs.get("spacing")
+            x_spacing = op.kwargs.get("xSpacing") or spacing or 2
+            y_spacing = op.kwargs.get("ySpacing") or spacing or 2
+            op_dict = {
+                **op.to_dict(),
+                "numCols": len(col_keys),
+                "colKeys": col_keys,
+                "rowKeys": row_keys,
+                "spacing": [x_spacing, y_spacing],
+            }
+            result.append(op_dict)
+        else:
+            result.append(op.to_dict())
+    return result
+
+
+def _build_tree_only(data: List[dict], operators: List["Operator"]) -> dict:
+    """
+    Recursively build a DataTreeNode from data and operators.
+
+    Each grouping operator consumes one level of the data, producing children.
+    Derive operators run eagerly on the current data slice and are consumed.
+    Log operators are transparent (no tree effect).
+
+    Returns a DataTreeNode dict with either 'data' (leaf) or 'children' (non-leaf).
+    """
+    if not operators:
+        return {"data": data}
+
+    op = operators[0]
+    rest = operators[1:]
+
+    if isinstance(op, DeriveOperator):
+        transformed = op.fn(data)
+        if not isinstance(transformed, list):
+            transformed = [transformed] if transformed is not None else []
+        return _build_tree_only(transformed, rest)
+
+    if op.op_type == "log":
+        return _build_tree_only(data, rest)
+
+    if op.op_type in ("spread", "stack"):
+        field = op.kwargs.get("field")
+        if field:
+            groups = _groupby_ordered(data, field)
+        else:
+            groups = {str(i): [item] for i, item in enumerate(data)}
+        children = []
+        for key, group_data in groups.items():
+            child = _build_tree_only(group_data, rest)
+            child["key"] = key
+            children.append(child)
+        return {"children": children}
+
+    if op.op_type == "table":
+        x_field = op.kwargs.get("xField") or op.kwargs.get("x_field", "")
+        y_field = op.kwargs.get("yField") or op.kwargs.get("y_field", "")
+        col_keys = list(dict.fromkeys(str(row.get(x_field, "")) for row in data))
+        row_keys = list(dict.fromkeys(str(row.get(y_field, "")) for row in data))
+        children = []
+        for row_key in row_keys:
+            for col_key in col_keys:
+                cell_data = [
+                    row for row in data
+                    if str(row.get(x_field, "")) == col_key
+                    and str(row.get(y_field, "")) == row_key
+                ]
+                child = _build_tree_only(cell_data, rest)
+                child["key"] = f"{col_key}-{row_key}"
+                child["colKey"] = col_key
+                child["rowKey"] = row_key
+                children.append(child)
+        return {"children": children}
+
+    if op.op_type == "scatter":
+        field = op.kwargs.get("field", "")
+        x_field = op.kwargs.get("x", "")
+        y_field = op.kwargs.get("y", "")
+        groups = _groupby_ordered(data, field)
+        children = []
+        for key, group_data in groups.items():
+            avg_x = sum(row.get(x_field, 0) for row in group_data) / len(group_data) if group_data else 0
+            avg_y = sum(row.get(y_field, 0) for row in group_data) / len(group_data) if group_data else 0
+            child = _build_tree_only(group_data, rest)
+            child["key"] = key
+            child["x"] = avg_x
+            child["y"] = avg_y
+            children.append(child)
+        return {"children": children}
+
+    if op.op_type == "group":
+        field = op.kwargs.get("field", "")
+        groups = _groupby_ordered(data, field)
+        children = []
+        for key, group_data in groups.items():
+            child = _build_tree_only(group_data, rest)
+            child["key"] = key
+            children.append(child)
+        return {"children": children}
+
+    # Unknown operator: treat data as leaf at this level
+    return {"data": data}
+
+
+def _build_data_tree(
+    data: List[dict],
+    operators: List["Operator"],
+    _unused: List[dict],
+) -> dict:
+    """Wrapper kept for API compatibility; delegates to _build_tree_only."""
+    return _build_tree_only(data, operators)
 
 
 def chart(data: Any, options: Optional[dict] = None) -> ChartBuilder:

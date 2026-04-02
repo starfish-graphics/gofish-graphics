@@ -360,6 +360,70 @@ type SpreadOptions<T> = {
   label?: boolean;
 };
 
+export interface SpreadTransformResult<T = any> {
+  /** Grouped data: Map when field provided, plain array when not */
+  grouped: Map<any, T[]> | T[];
+  config: {
+    direction: 0 | 1;
+    x?: number;
+    y?: number;
+    mode?: string;
+    spacing: number;
+    sharedScale?: boolean;
+    alignment: string;
+    reverse?: boolean;
+    w?: any;
+    h?: any;
+  };
+}
+
+export function spreadTransform<T>(
+  d: T[],
+  field: keyof T | undefined,
+  opts: SpreadOptions<T>
+): SpreadTransformResult<T> {
+  const grouped: Map<any, T[]> | T[] = field
+    ? typeof field === "string"
+      ? Map.groupBy(d, (row) => (row as any)[field])
+      : Map.groupBy(d, field as any)
+    : d;
+  const spatialDir = (opts.dir ?? "x").startsWith("x") ? "x" : "y";
+  return {
+    grouped,
+    config: {
+      direction: spatialDir === "x" ? 0 : 1,
+      x: opts?.x ?? opts?.t,
+      y: opts?.y ?? opts?.r,
+      mode: opts?.mode ? connectXMode[opts.mode] : undefined,
+      spacing: opts?.spacing ?? 8,
+      sharedScale: opts?.sharedScale,
+      alignment: opts?.alignment ?? "baseline",
+      reverse: opts?.reverse,
+      w: opts?.w ? inferSize(opts.w as string | number, d) : undefined,
+      h: opts?.h ? inferSize(opts.h as string | number, d) : undefined,
+    },
+  };
+}
+
+export async function spreadLayout<T>(
+  result: SpreadTransformResult<T>,
+  mark: Mark<T[]>,
+  key: string | number | undefined,
+  layerContext: LayerContext | undefined
+): Promise<GoFishNode> {
+  return Spread(
+    result.config,
+    For(result.grouped as any, async (groupData: T[], k) => {
+      const currentKey = key != undefined ? `${key}-${k}` : k;
+      const node = await resolveMarkResult(
+        mark(groupData, currentKey, layerContext),
+        layerContext
+      );
+      return node.setKey(currentKey?.toString() ?? "");
+    })
+  );
+}
+
 /** Mark combinator form: spread(opts, marks[]) → NameableMark */
 export function spread<T>(
   options: SpreadOptions<T>,
@@ -429,44 +493,8 @@ export function spread<T>(
       key?: string | number,
       layerContext?: LayerContext
     ) => {
-      // Group by the field if provided, otherwise iterate over raw data
-      const grouped = field
-        ? typeof field === "string"
-          ? Map.groupBy(d, (row) => (row as any)[field])
-          : Map.groupBy(d, field as any)
-        : d;
-
-      const spatialDir = (finalOptions.dir ?? "x").startsWith("x") ? "x" : "y";
-
-      return Spread(
-        {
-          direction: spatialDir === "x" ? 0 : 1,
-          x: finalOptions?.x ?? finalOptions?.t,
-          y: finalOptions?.y ?? finalOptions?.r,
-          mode: finalOptions?.mode
-            ? connectXMode[finalOptions?.mode]
-            : undefined,
-          spacing: finalOptions?.spacing ?? 8,
-          sharedScale: finalOptions?.sharedScale,
-          alignment: finalOptions?.alignment,
-          reverse: finalOptions?.reverse,
-          w: finalOptions?.w
-            ? inferSize(finalOptions?.w as string | number, d)
-            : undefined,
-          h: finalOptions?.h
-            ? inferSize(finalOptions?.h as string | number, d)
-            : undefined,
-        },
-        For(grouped as any, async (groupData: T[], k) => {
-          const currentKey = key != undefined ? `${key}-${k}` : k;
-          const node = await resolveMarkResult(
-            mark(groupData, currentKey, layerContext),
-            layerContext
-          );
-          // Always set keys for ordinal axis mapping, regardless of label setting
-          return node.setKey(currentKey?.toString() ?? "");
-        })
-      );
+      const result = spreadTransform(d, field, finalOptions);
+      return spreadLayout(result, mark, key, layerContext);
     };
   };
 }
@@ -528,6 +556,71 @@ type TableOptions = {
   ySpacing?: number;
 };
 
+export interface TableTransformResult<T = any> {
+  cells: Array<{ data: T[]; colKey: string; rowKey: string }>;
+  config: {
+    numCols: number;
+    colKeys: string[];
+    rowKeys: string[];
+    spacing: [number, number];
+  };
+}
+
+export function tableTransform<T>(
+  d: T[],
+  xField: keyof T,
+  yField: keyof T,
+  options?: TableOptions
+): TableTransformResult<T> {
+  const colKeys = [
+    ...new Map(d.map((row) => [String(row[xField]), true])).keys(),
+  ];
+  const rowKeys = [
+    ...new Map(d.map((row) => [String(row[yField]), true])).keys(),
+  ];
+  const xSpacing = options?.xSpacing ?? options?.spacing ?? 2;
+  const ySpacing = options?.ySpacing ?? options?.spacing ?? 2;
+  const cells: { data: T[]; colKey: string; rowKey: string }[] = [];
+  for (const rowKey of rowKeys) {
+    for (const colKey of colKeys) {
+      const cellData = d.filter(
+        (row) =>
+          String(row[xField]) === colKey && String(row[yField]) === rowKey
+      );
+      cells.push({ data: cellData, colKey, rowKey });
+    }
+  }
+  return {
+    cells,
+    config: {
+      numCols: colKeys.length,
+      colKeys,
+      rowKeys,
+      spacing: [xSpacing, ySpacing],
+    },
+  };
+}
+
+export async function tableLayout<T>(
+  result: TableTransformResult<T>,
+  mark: Mark<T[]>,
+  key: string | number | undefined,
+  layerContext: LayerContext | undefined
+): Promise<GoFishNode> {
+  return Table(
+    result.config,
+    For(result.cells, async ({ data: cellData, colKey, rowKey }) => {
+      const cellKey =
+        key != undefined ? `${key}-${colKey}-${rowKey}` : `${colKey}-${rowKey}`;
+      const node = await resolveMarkResult(
+        mark(cellData, cellKey, layerContext),
+        layerContext
+      );
+      return node.setKey(cellKey);
+    })
+  );
+}
+
 export function table<T>(
   xField: keyof T,
   yField: keyof T,
@@ -539,47 +632,53 @@ export function table<T>(
       key?: string | number,
       layerContext?: LayerContext
     ) => {
-      // Unique column keys (xField values) preserving insertion order
-      const colKeys = [
-        ...new Map(d.map((row) => [String(row[xField]), true])).keys(),
-      ];
-      // Unique row keys (yField values) preserving insertion order
-      const rowKeys = [
-        ...new Map(d.map((row) => [String(row[yField]), true])).keys(),
-      ];
-      const numCols = colKeys.length;
-
-      const xSpacing = options?.xSpacing ?? options?.spacing ?? 2;
-      const ySpacing = options?.ySpacing ?? options?.spacing ?? 2;
-
-      // Build cells in row-major order (outer=row, inner=col)
-      const cells: { data: T[]; colKey: string; rowKey: string }[] = [];
-      for (const rowKey of rowKeys) {
-        for (const colKey of colKeys) {
-          const cellData = d.filter(
-            (row) =>
-              String(row[xField]) === colKey && String(row[yField]) === rowKey
-          );
-          cells.push({ data: cellData, colKey, rowKey });
-        }
-      }
-
-      return Table(
-        { numCols, colKeys, rowKeys, spacing: [xSpacing, ySpacing] },
-        For(cells, async ({ data: cellData, colKey, rowKey }) => {
-          const cellKey =
-            key != undefined
-              ? `${key}-${colKey}-${rowKey}`
-              : `${colKey}-${rowKey}`;
-          const node = await resolveMarkResult(
-            mark(cellData, cellKey, layerContext),
-            layerContext
-          );
-          return node.setKey(cellKey);
-        })
-      );
+      const result = tableTransform(d, xField, yField, options);
+      return tableLayout(result, mark, key, layerContext);
     };
   };
+}
+
+export interface ScatterGroupEntry<T = any> {
+  key: string;
+  x: number;
+  y: number;
+  items: T[];
+}
+
+export interface ScatterTransformResult<T = any> {
+  groups: ScatterGroupEntry<T>[];
+}
+
+export function scatterTransform<T>(
+  d: T[],
+  field: keyof T,
+  options: { x: keyof T; y: keyof T; debug?: boolean }
+): ScatterTransformResult<T> {
+  const grouped = groupBy(d, field as ValueIteratee<T>);
+  if (options?.debug) console.log("scatter groups", grouped);
+  const groups = Object.entries(grouped).map(([groupKey, items]) => {
+    const x = meanBy(items, options.x as string);
+    const y = meanBy(items, options.y as string);
+    if (options?.debug) console.log(`Group ${groupKey}: avgX=${x}, avgY=${y}`);
+    return { key: groupKey, x, y, items };
+  });
+  return { groups };
+}
+
+export async function scatterLayout<T>(
+  result: ScatterTransformResult<T>,
+  mark: Mark<T[]>,
+  key: string | number | undefined,
+  layerContext: LayerContext | undefined
+): Promise<GoFishNode> {
+  return Frame(
+    For(result.groups, async ({ key: groupKey, x, y, items }) => {
+      const currentKey = key != undefined ? `${key}-${groupKey}` : groupKey;
+      return Position({ x: v(x), y: v(y) }, [
+        mark(items, currentKey, layerContext) as any,
+      ]);
+    })
+  );
 }
 
 export function scatter<T>(
@@ -596,26 +695,36 @@ export function scatter<T>(
       key?: string | number,
       layerContext?: LayerContext
     ) => {
-      // Group by the field
-      const groups = groupBy(d, field as ValueIteratee<T>);
-      if (options?.debug) console.log("scatter groups", groups);
-      return Frame(
-        For(groups, async (items, groupKey) => {
-          // Calculate average x and y values for this group
-          const avgX = meanBy(items, options.x as string);
-          const avgY = meanBy(items, options.y as string);
-          if (options?.debug)
-            console.log(`Group ${groupKey}: avgX=${avgX}, avgY=${avgY}`);
-
-          // Render the group items and wrap in Position operator
-          const currentKey = key != undefined ? `${key}-${groupKey}` : groupKey;
-          return Position({ x: v(avgX), y: v(avgY) }, [
-            mark(items, currentKey, layerContext) as any,
-          ]);
-        })
-      );
+      const result = scatterTransform(d, field, options);
+      return scatterLayout(result, mark, key, layerContext);
     };
   };
+}
+
+export interface GroupTransformResult<T = any> {
+  groups: Record<string, T[]>;
+}
+
+export function groupTransform<T>(
+  d: T[],
+  field: keyof T
+): GroupTransformResult<T> {
+  return { groups: groupBy(d, field as ValueIteratee<T>) };
+}
+
+export async function groupLayout<T>(
+  result: GroupTransformResult<T>,
+  mark: Mark<T[]>,
+  key: string | number | undefined,
+  layerContext: LayerContext | undefined
+): Promise<GoFishNode> {
+  return Frame(
+    {},
+    For(result.groups, (items, groupKey) => {
+      const currentKey = key != undefined ? `${key}-${groupKey}` : groupKey;
+      return mark(items, currentKey, layerContext) as any;
+    })
+  );
 }
 
 export function group<T>(field: keyof T): Operator<T[], T[]> {
@@ -625,17 +734,8 @@ export function group<T>(field: keyof T): Operator<T[], T[]> {
       key?: string | number,
       layerContext?: LayerContext
     ) => {
-      // Group by the field
-      const groups = groupBy(d, field as ValueIteratee<T>);
-
-      return Frame(
-        {},
-        For(groups, (items, groupKey) => {
-          // Apply mark to each group
-          const currentKey = key != undefined ? `${key}-${groupKey}` : groupKey;
-          return mark(items, currentKey, layerContext) as any;
-        })
-      );
+      const result = groupTransform(d, field);
+      return groupLayout(result, mark, key, layerContext);
     };
   };
 }
