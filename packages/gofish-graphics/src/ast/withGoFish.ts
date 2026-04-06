@@ -21,6 +21,7 @@ import {
 } from "./channels";
 import { isValue } from "./data";
 import { Mark } from "./types";
+import type { LabelAccessor, LabelSpec } from "./labels/labelPlacement";
 
 /**
  * Options for rendering a GoFish node
@@ -76,6 +77,7 @@ export interface PromiseWithRender<T> extends Promise<T> {
     options: RenderOptions
   ): HTMLElement | Promise<HTMLElement>;
   name(name: string): PromiseWithRender<T>;
+  label(spec: LabelSpec | LabelAccessor): PromiseWithRender<T>;
   setKey(key: string): PromiseWithRender<T>;
   setShared(shared: [boolean, boolean]): PromiseWithRender<T>;
 }
@@ -122,6 +124,19 @@ export function addRenderMethod<T>(promise: Promise<T>): PromiseWithRender<T> {
       promise.then((result) => {
         if (result instanceof GoFishNode) {
           return result.name(name) as T;
+        }
+        return result;
+      })
+    );
+  };
+
+  (promise as any).label = function (
+    spec: LabelSpec | LabelAccessor
+  ): PromiseWithRender<T> {
+    return addRenderMethod(
+      promise.then((result) => {
+        if (result instanceof GoFishNode) {
+          return result.label(spec) as T;
         }
         return result;
       })
@@ -353,9 +368,10 @@ export function createOperatorSequential<T extends Record<string, any>, R>(
   };
 }
 
-/** A mark that can be named for layer selection via .name("layerName"). */
+/** A mark that can be named for layer selection via .name("layerName") and labeled via .label(spec). */
 export type NameableMark<T> = Mark<T> & {
   name(layerName: string): Mark<T>;
+  label(spec: LabelSpec | LabelAccessor): Mark<T>;
 };
 
 /**
@@ -451,8 +467,26 @@ export function createMark<
         return node;
       };
     };
+    const labelMethod = (
+      spec: LabelSpec | LabelAccessor
+    ): Mark<T | T[] | { item: T | T[]; key: number | string }> => {
+      return async (
+        input: T | T[] | { item: T | T[]; key: number | string },
+        keyParam?: string | number,
+        layerContext?: LayerContext
+      ) => {
+        const node = await baseMark(input, keyParam, layerContext);
+        (node as GoFishNode).label(spec);
+        return node;
+      };
+    };
     Object.defineProperty(baseMark, "name", {
       value: nameMethod,
+      writable: true,
+      configurable: true,
+    });
+    Object.defineProperty(baseMark, "label", {
+      value: labelMethod,
       writable: true,
       configurable: true,
     });

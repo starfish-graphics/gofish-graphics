@@ -21,6 +21,7 @@ import { inferSize } from "../channels";
 import { Rect } from "../shapes/rect";
 import { rect as generatedRect } from "../shapes/rect";
 import { Mark, Operator } from "../types";
+import type { LabelAccessor, LabelSpec } from "../labels/labelPlacement";
 
 export type { Mark, Operator };
 export { generatedRect as rect };
@@ -40,10 +41,13 @@ async function resolveMarkResult(
   return raw as unknown as GoFishNode;
 }
 
-/** Attach .name(layerName) to a mark so it registers each produced node when used in a chart. */
+/** Attach .name(layerName) and .label(spec) to a mark so it registers/labels each produced node when used in a chart. */
 function nameableMark<T>(
   base: Mark<T>
-): Mark<T> & { name(layerName: string): Mark<T> } {
+): Mark<T> & {
+  name(layerName: string): Mark<T>;
+  label(spec: LabelSpec | LabelAccessor): Mark<T>;
+} {
   const withName = (layerName: string): Mark<T> => {
     return async (d: T, key?: string | number, layerContext?: LayerContext) => {
       const node = await resolveMarkResult(
@@ -62,12 +66,30 @@ function nameableMark<T>(
       return node;
     };
   };
+  const withLabel = (spec: LabelSpec | LabelAccessor): Mark<T> => {
+    return async (d: T, key?: string | number, layerContext?: LayerContext) => {
+      const node = await resolveMarkResult(
+        base(d, key, layerContext),
+        layerContext
+      );
+      node.label(spec);
+      return node;
+    };
+  };
   Object.defineProperty(base, "name", {
     value: withName,
     writable: true,
     configurable: true,
   });
-  return base as Mark<T> & { name(layerName: string): Mark<T> };
+  Object.defineProperty(base, "label", {
+    value: withLabel,
+    writable: true,
+    configurable: true,
+  });
+  return base as Mark<T> & {
+    name(layerName: string): Mark<T>;
+    label(spec: LabelSpec | LabelAccessor): Mark<T>;
+  };
 }
 
 const connectXMode = {
