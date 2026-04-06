@@ -67,6 +67,7 @@ interface ChartSpec {
   operators?: OperatorSpec[];
   mark: MarkSpec;
   options?: Record<string, any>;
+  zOrder?: number;
 }
 
 interface LayerSpec {
@@ -553,9 +554,13 @@ function buildChart(
     chartData = select(chartSpec.data.layer);
   }
 
-  return chart(chartData, resolvedOptions)
+  let builder = chart(chartData, resolvedOptions)
     .flow(...operators)
     .mark(mark);
+  if (chartSpec.zOrder !== undefined) {
+    builder = builder.zOrder(chartSpec.zOrder);
+  }
+  return builder;
 }
 
 /**
@@ -658,44 +663,11 @@ function renderChart(
     }
   }
 
-  // 2. Map IR operators to GoFish operators
   log("Processing spec:", chartSpec);
-  const operators: Operator<any, any>[] = [];
-
-  for (const opSpec of chartSpec.operators || []) {
-    log(`Mapping operator: ${opSpec.type}`);
-    const op = mapOperator(opSpec, model, experimental);
-    if (op) {
-      operators.push(op);
-    } else {
-      log(`Warning: Unknown operator type: ${opSpec.type}`);
-    }
-  }
-
-  // 3. Map IR mark to GoFish mark (with optional .name())
-  const markSpec = chartSpec.mark || { type: "rect" };
-  log(`Mapping mark: ${markSpec.type}`);
-  const mark = mapMark(markSpec);
-
-  // 4. Resolve options (color, coord, etc.)
-  const resolvedOptions = resolveOptions(chartSpec.options || {});
-
-  // 5. Determine chart data source (Arrow data or select() reference)
-  let chartData: any = data;
-  if (
-    chartSpec.data &&
-    typeof chartSpec.data === "object" &&
-    chartSpec.data.type === "select"
-  ) {
-    log(`Using select("${chartSpec.data.layer}") as data source`);
-    chartData = select(chartSpec.data.layer);
-  }
-
-  // 6. Build and render chart
+  // 2. Build and render chart
   try {
     log("Building chart...");
-    const chartBuilder = chart(chartData, resolvedOptions);
-    let node = chartBuilder.flow(...operators).mark(mark);
+    let node = buildChart(chartSpec, data, model, experimental);
 
     const renderOptions: RenderOptions = {
       w: model.get("width"),

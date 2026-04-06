@@ -31,6 +31,12 @@ const PYTHON_STORIES_DIR = join(TESTS_DIR, "python-stories");
 const TMP_DIR = join(TESTS_DIR, "tmp/python");
 const DERIVE_SERVER_PORT = 3002;
 const HARNESS_PORT = 3001;
+const VITE_BIN = join(
+  TESTS_DIR,
+  "node_modules",
+  ".bin",
+  process.platform === "win32" ? "vite.cmd" : "vite"
+);
 
 // ---------------------------------------------------------------------------
 // Discover Python story files
@@ -266,9 +272,8 @@ print("OK")
 
 function startHarnessServer(): ChildProcess {
   const proc = spawn(
-    "npx",
+    VITE_BIN,
     [
-      "vite",
       "--config",
       join(HARNESS_DIR, "vite.config.ts"),
       "--port",

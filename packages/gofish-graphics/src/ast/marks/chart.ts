@@ -186,19 +186,22 @@ export class ChartBuilder<TInput, TOutput = TInput> {
   private readonly operators: Operator<any, any>[] = [];
   private readonly finalMark?: Mark<TOutput>;
   private readonly layerContext: LayerContext;
+  private readonly nodeZOrder?: number;
 
   constructor(
     data: TInput,
     options?: ChartOptions,
     operators: Operator<any, any>[] = [],
     finalMark?: Mark<TOutput>,
-    layerContext: LayerContext = {}
+    layerContext: LayerContext = {},
+    nodeZOrder?: number
   ) {
     this.data = data;
     this.options = options;
     this.operators = operators;
     this.finalMark = finalMark;
     this.layerContext = layerContext;
+    this.nodeZOrder = nodeZOrder;
   }
 
   // flow accumulates operators and returns a new builder for chaining
@@ -248,7 +251,8 @@ export class ChartBuilder<TInput, TOutput = TInput> {
       this.options,
       [...this.operators, ...ops],
       this.finalMark,
-      this.layerContext
+      this.layerContext,
+      this.nodeZOrder
     );
   }
 
@@ -276,7 +280,8 @@ export class ChartBuilder<TInput, TOutput = TInput> {
       this.options,
       this.operators,
       mark,
-      this.layerContext
+      this.layerContext,
+      this.nodeZOrder
     );
   }
 
@@ -313,6 +318,10 @@ export class ChartBuilder<TInput, TOutput = TInput> {
       node.colorConfig = this.options.color;
     }
 
+    if (this.nodeZOrder !== undefined) {
+      node.zOrder(this.nodeZOrder);
+    }
+
     return node;
   }
 
@@ -322,8 +331,24 @@ export class ChartBuilder<TInput, TOutput = TInput> {
       this.options,
       this.operators,
       this.finalMark,
-      layerContext
+      layerContext,
+      this.nodeZOrder
     );
+  }
+
+  zOrder(value: number): ChartBuilder<TInput, TOutput> {
+    return new ChartBuilder(
+      this.data,
+      this.options,
+      this.operators,
+      this.finalMark,
+      this.layerContext,
+      value
+    );
+  }
+
+  zIndex(value: number): ChartBuilder<TInput, TOutput> {
+    return this.zOrder(value);
   }
 
   // render calls resolve and then renders
