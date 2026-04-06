@@ -28,6 +28,12 @@ import {
   petal,
   text,
   image,
+  Spread,
+  Table,
+  Frame,
+  Position,
+  v,
+  For,
   type ChartBuilder,
   type Operator,
   type Mark,
@@ -61,12 +67,33 @@ interface SelectSpec {
   layer: string;
 }
 
+/** A node in the pre-processed data tree produced by Python-side transforms. */
+interface DataTreeNode {
+  /** Group key set by the operator (e.g., field value for spread/group). */
+  key?: string;
+  /** Leaf data rows — present only at leaf nodes (no further operators). */
+  data?: Record<string, any>[];
+  /** Child nodes produced by this level's operator — present at non-leaf nodes. */
+  children?: DataTreeNode[];
+  /** colKey for table cells */
+  colKey?: string;
+  /** rowKey for table cells */
+  rowKey?: string;
+  /** Pre-computed centroid x for scatter groups */
+  x?: number;
+  /** Pre-computed centroid y for scatter groups */
+  y?: number;
+}
+
 interface ChartSpec {
+  version?: 1 | 2;
   type?: string;
   data?: SelectSpec | null;
   operators?: OperatorSpec[];
   mark: MarkSpec;
   options?: Record<string, any>;
+  /** v2 only: pre-processed nested data tree produced by Python transforms */
+  dataTree?: DataTreeNode;
 }
 
 interface LayerSpec {
@@ -76,7 +103,7 @@ interface LayerSpec {
 }
 
 interface OperatorSpec {
-  type: "derive" | "spread" | "stack" | "group" | "scatter" | "log";
+  type: "derive" | "spread" | "stack" | "group" | "scatter" | "table" | "log";
   lambdaId?: string;
   [key: string]: any;
 }
@@ -523,6 +550,137 @@ function decodeArrowB64(b64: string): Record<string, any>[] {
 }
 
 /**
+ * Recursively walks a DataTreeNode and operator list to build a GoFishNode.
+ * Each operator level consumes one level of nesting from the tree:
+ *   - spread/stack: groups → Spread()
+ *   - table: cells (with colKey/rowKey) → Table()
+ *   - scatter: groups (with pre-computed x/y) → Frame + Position()
+ *   - group: groups → Frame()
+ * At leaves (no operators left, or no children), the mark is applied to node.data.
+ */
+async function buildFromTree(
+  node: DataTreeNode,
+  operators: OperatorSpec[],
+  mark: Mark<any>,
+  parentKey: string | number | undefined,
+  layerContext: any
+): Promise<any> {
+  // Leaf: no more operators, or no further grouping
+  if (operators.length === 0 || !node.children || node.children.length === 0) {
+    return mark(node.data ?? [], parentKey, layerContext);
+  }
+
+  const [op, ...rest] = operators;
+  const { type, ...opConfig } = op;
+
+  const recurse = (
+    child: DataTreeNode,
+    childKey: string | number | undefined
+  ) => buildFromTree(child, rest, mark, childKey, layerContext);
+
+  const childKey = (child: DataTreeNode, i: number) => {
+    const k = child.key ?? String(i);
+    return parentKey != undefined ? `${parentKey}-${k}` : k;
+  };
+
+  switch (type) {
+    case "spread":
+    case "stack": {
+      const config = {
+        direction: ((opConfig.dir ?? "x") as string).startsWith("x") ? 0 : 1,
+        spacing: opConfig.spacing ?? (type === "stack" ? 0 : 8),
+        alignment: opConfig.alignment ?? "baseline",
+        x: opConfig.x,
+        y: opConfig.y,
+        mode: opConfig.mode,
+        sharedScale: opConfig.sharedScale,
+        reverse: opConfig.reverse,
+        w: opConfig.w,
+        h: opConfig.h,
+      };
+      return Spread(
+        config,
+        For(node.children, async (child, i) => {
+          const k = childKey(child, i as number);
+          const resolved = await recurse(child, k);
+          return resolved.setKey ? resolved.setKey(String(k)) : resolved;
+        })
+      );
+    }
+
+    case "table": {
+      const config = {
+        numCols: opConfig.numCols,
+        colKeys: opConfig.colKeys,
+        rowKeys: opConfig.rowKeys,
+        spacing: opConfig.spacing ?? [2, 2],
+      };
+      return Table(
+        config,
+        For(node.children, async (child, i) => {
+          const k =
+            child.colKey && child.rowKey
+              ? parentKey != undefined
+                ? `${parentKey}-${child.colKey}-${child.rowKey}`
+                : `${child.colKey}-${child.rowKey}`
+              : childKey(child, i as number);
+          const resolved = await recurse(child, k);
+          return resolved.setKey ? resolved.setKey(String(k)) : resolved;
+        })
+      );
+    }
+
+    case "scatter": {
+      return Frame(
+        For(node.children, async (child, i) => {
+          const k = childKey(child, i as number);
+          return Position({ x: v(child.x ?? 0), y: v(child.y ?? 0) }, [
+            recurse(child, k) as any,
+          ]);
+        })
+      );
+    }
+
+    case "group": {
+      return Frame(
+        {},
+        For(node.children, (child, i) => {
+          const k = childKey(child, i as number);
+          return recurse(child, k) as any;
+        })
+      );
+    }
+
+    default:
+      throw new Error(`Unknown operator type in tree walker: ${type}`);
+  }
+}
+
+/**
+ * Builds a ChartBuilder from a v2 ChartSpec (with pre-processed dataTree).
+ * Operators are layout-only — no data transforms, no derive RPC.
+ */
+function buildChartFromTree(
+  chartSpec: ChartSpec,
+  model: WidgetModel
+): ChartBuilder {
+  const mark = mapMark(chartSpec.mark || { type: "rect" });
+  const resolvedOptions = resolveOptions(chartSpec.options || {});
+  const operators = (chartSpec.operators || []).filter(
+    (op) => op.type !== "derive"
+  );
+
+  // Wrap buildFromTree in a mark-like function that chart() can call
+  const treeMark: Mark<any> = async (
+    _data: any,
+    key: string | number | undefined,
+    layerContext: any
+  ) => buildFromTree(chartSpec.dataTree!, operators, mark, key, layerContext);
+
+  return chart([], resolvedOptions).mark(treeMark);
+}
+
+/**
  * Builds a ChartBuilder from a ChartSpec + resolved data array.
  */
 function buildChart(
@@ -584,9 +742,13 @@ function renderLayer(
     throw new Error(`Failed to parse layer arrow_data JSON: ${e}`);
   }
 
-  // Build each child chart
+  // Build each child chart (v2 or v1 path per chart)
   const childCharts: ChartBuilder[] = spec.charts.map(
     (chartSpec: ChartSpec, i: number) => {
+      if (chartSpec.version === 2 && chartSpec.dataTree) {
+        log(`Building chart ${i} (v2 tree path)`);
+        return buildChartFromTree(chartSpec, model);
+      }
       const b64 = arrowDict[String(i)] || "";
       const data = decodeArrowB64(b64);
       log(`Building chart ${i}: ${data.length} rows`);
@@ -694,8 +856,15 @@ function renderChart(
   // 6. Build and render chart
   try {
     log("Building chart...");
-    const chartBuilder = chart(chartData, resolvedOptions);
-    let node = chartBuilder.flow(...operators).mark(mark);
+    // v2: use pre-processed data tree from Python transforms
+    let node: ChartBuilder;
+    if (chartSpec.version === 2 && chartSpec.dataTree) {
+      log("Using v2 tree-based rendering path");
+      node = buildChartFromTree(chartSpec, model);
+    } else {
+      const chartBuilder = chart(chartData, resolvedOptions);
+      node = chartBuilder.flow(...operators).mark(mark);
+    }
 
     const renderOptions: RenderOptions = {
       w: model.get("width"),

@@ -155,7 +155,7 @@ function renderChart(spec: HarnessSpec) {
 
     const { w, h, axes, debug, ...restOpts } = spec.options || {};
     node.render(container, {
-      w: w ?? 400,
+      w: w,
       h: h ?? 400,
       axes: axes ?? false,
       debug: debug ?? false,
