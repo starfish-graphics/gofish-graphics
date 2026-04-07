@@ -422,7 +422,7 @@ export function spread<T>(
           resolveMarkResult(mark(d, key, layerContext), layerContext)
         )
       );
-      return Spread(
+      const node = await Spread(
         {
           direction: opts.dir.startsWith("x") ? 0 : 1,
           spacing: opts.spacing ?? 0,
@@ -431,6 +431,10 @@ export function spread<T>(
         },
         resolvedChildren
       );
+      // Stamp datum so a label on this spread renders at group level
+      // (rather than propagating down to individual child marks).
+      (node as any).datum = d;
+      return node;
     };
     return nameableMark(base);
   }

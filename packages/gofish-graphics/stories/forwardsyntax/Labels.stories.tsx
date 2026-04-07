@@ -32,7 +32,7 @@ export const Auto: StoryObj<Args> = {
     const container = initializeContainer();
     Chart(seafood)
       .flow(spread("lake", { dir: "x" }))
-      .mark(rect({ h: "count" }).label("count", { position: "auto" }))
+      .mark(rect({ h: "count" }).label("count"))
       .render(container, { w: args.w, h: args.h, axes: true });
     return container;
   },
@@ -244,6 +244,68 @@ export const AllPositions: StoryObj<{ w: number; h: number }> = {
 
     return outer;
   },
+};
+
+// ─── Label on spread (group label) ────────────────────────────────────────────
+// The label is on the spread combinator, not on individual marks.
+// Because the spread carries its own datum, resolveLabels keeps the label
+// at the group level instead of propagating it down to each child rect.
+// Result: one label per lake group, centred above the pair of bars.
+
+export const LabelOnSpread: StoryObj<Args> = {
+  name: "Label on spread",
+  args: { w: 500, h: 300 },
+  // want something like this??
+  // render: (args) => {
+  //   const container = initializeContainer();
+  //   Chart(seafood)
+  //     .flow(
+  //       spread("lake", { dir: "x" }).label("lake"),
+  //       stack("species", { dir: "x" })
+  //     )
+  //     .mark(
+  //       rect({ h: "count", fill: "species" })
+  //     )
+  //     .render(container, { w: args.w, h: args.h, axes: true });
+  //   return container;
+  // },
+
+  // // label only works on Mark combinator spread
+  // render: (args) => {
+  //   const container = initializeContainer();
+  //   Chart(seafood)
+  //     .flow(spread("lake", { dir: "x" }))
+  //     .mark(
+  //       // Mark combinator: two bars side-by-side per lake group.
+  //       // .label() is on the spread, not on either rect.
+  //       spread({ dir: "x", spacing: 4 }, [
+  //         rect({ h: "count", fill: "species" }),
+  //         rect({ h: "count", fill: "#ccc" }),
+  //       ]).label("lake", { position: "above", fontSize: 10 })
+  //     )
+  //     .render(container, { w: args.w, h: args.h, axes: false });
+  //   return container;
+  // },
+
+  // hack for label on group
+  render: (args) => {
+    const container = initializeContainer();
+    Chart(seafood)
+      .flow(spread("lake", { dir: "x", spacing: 50 }))
+      .mark(async (d: any, key) => {
+        const node = await Chart(d)
+          .flow(stack("species", { dir: "x" }))
+          .mark(rect({ h: "count", fill: "species" }))
+          .resolve();
+        // Stamp datum so resolveLabels keeps the label at group level
+        // instead of propagating it down to each species bar
+        (node as any).datum = d[0];
+        node.label("lake", { position: "left-start", fontSize: 13, offset: 20 });
+        return node;
+      })
+      .render(container, { w: args.w, h: args.h, axes: false });
+    return container;
+  }
 };
 
 // ─── Heatmap inside ────────────────────────────────────────────────────────────

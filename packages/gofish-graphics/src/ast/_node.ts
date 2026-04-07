@@ -489,7 +489,10 @@ export class GoFishNode {
   }
 
   public resolveLabels(): void {
-    if (this._label && this.children.length > 0) {
+    // Propagate only when this node has no datum of its own.
+    // Nodes with datum (leaf shapes, or spread combinators that carry group data)
+    // render their label directly rather than pushing it to children.
+    if (this._label && this.children.length > 0 && this.datum === undefined) {
       for (const child of this.children) {
         if (child instanceof GoFishNode && !child._label) {
           child._label = this._label;
