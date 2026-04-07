@@ -8,6 +8,7 @@ export interface LabelOptions {
   color?: string;
   offset?: number;
   minSpace?: number;
+  rotate?: number;
 }
 
 export interface LabelSpec<D = any> extends LabelOptions {

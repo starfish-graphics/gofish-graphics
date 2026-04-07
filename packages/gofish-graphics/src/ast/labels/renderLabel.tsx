@@ -96,9 +96,14 @@ export function renderLabelJSX(node: GoFishNode): JSX.Element | null {
   const labelColor = node._label.color ?? autoLabelColor(node, position);
   const textAnchor = getLabelTextAnchor(position);
 
+  const rotate = node._label.rotate;
+  const transform = rotate
+    ? `rotate(${-rotate},${cx + offset.x},${cy + offset.y}) scale(1,-1)`
+    : "scale(1,-1)";
+
   return (
     <text
-      transform="scale(1,-1)"
+      transform={transform}
       x={cx + offset.x}
       y={-(cy + offset.y)}
       fill={labelColor}

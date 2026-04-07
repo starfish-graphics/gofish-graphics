@@ -300,7 +300,7 @@ export const LabelOnSpread: StoryObj<Args> = {
         // Stamp datum so resolveLabels keeps the label at group level
         // instead of propagating it down to each species bar
         (node as any).datum = d[0];
-        node.label("lake", { position: "left-start", fontSize: 13, offset: 20 });
+        node.label("lake", { position: "above-start", fontSize: 13, offset: 50, rotate: 60 });
         return node;
       })
       .render(container, { w: args.w, h: args.h, axes: false });
@@ -332,5 +332,55 @@ export const HeatmapWithLabels: StoryObj<Args> = {
       )
       .render(container, { w: args.w, h: args.h, axes: true });
     return container;
+  },
+};
+
+// ─── Rotated labels ────────────────────────────────────────────────────────────
+// Labels rotate clockwise for positive values, pivoting at the label's center.
+
+export const Rotated: StoryObj<Args> = {
+  name: "Rotate: diagonal labels",
+  args: { w: 500, h: 300 },
+  render: (args) => {
+    const outer = document.createElement("div");
+    outer.style.display = "flex";
+    outer.style.flexDirection = "column";
+    outer.style.gap = "8px";
+    document.body.appendChild(outer);
+
+    const cases: { label: string; rotate: number }[] = [
+      { label: "rotate: 45°", rotate: 45 },
+      { label: "rotate: -30°", rotate: -30 },
+      { label: "rotate: 0°", rotate: 0 },
+    ];
+
+    for (const { label, rotate } of cases) {
+      const row = document.createElement("div");
+      row.style.display = "flex";
+      row.style.alignItems = "center";
+      row.style.gap = "8px";
+
+      const tag = document.createElement("div");
+      tag.textContent = label;
+      tag.style.width = "120px";
+      tag.style.fontSize = "12px";
+      tag.style.fontFamily = "monospace";
+      tag.style.flexShrink = "0";
+      row.appendChild(tag);
+
+      const container = document.createElement("div");
+      container.style.flex = "1";
+      row.appendChild(container);
+      outer.appendChild(row);
+
+      Chart(seafood)
+        .flow(spread("lake", { dir: "x" }))
+        .mark(
+          rect({ h: "count" }).label("count", { position: "above", rotate })
+        )
+        .render(container, { w: args.w, h: args.h, axes: true });
+    }
+
+    return outer;
   },
 };
