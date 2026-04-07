@@ -21,7 +21,7 @@ import {
 } from "./channels";
 import { isValue } from "./data";
 import { Mark } from "./types";
-import type { LabelAccessor, LabelSpec } from "./labels/labelPlacement";
+import type { LabelAccessor, LabelOptions } from "./labels/labelPlacement";
 
 /**
  * Options for rendering a GoFish node
@@ -77,7 +77,7 @@ export interface PromiseWithRender<T> extends Promise<T> {
     options: RenderOptions
   ): HTMLElement | Promise<HTMLElement>;
   name(name: string): PromiseWithRender<T>;
-  label(spec: LabelSpec | LabelAccessor): PromiseWithRender<T>;
+  label(accessor: LabelAccessor, options?: LabelOptions): PromiseWithRender<T>;
   setKey(key: string): PromiseWithRender<T>;
   setShared(shared: [boolean, boolean]): PromiseWithRender<T>;
 }
@@ -131,12 +131,13 @@ export function addRenderMethod<T>(promise: Promise<T>): PromiseWithRender<T> {
   };
 
   (promise as any).label = function (
-    spec: LabelSpec | LabelAccessor
+    accessor: LabelAccessor,
+    options?: LabelOptions
   ): PromiseWithRender<T> {
     return addRenderMethod(
       promise.then((result) => {
         if (result instanceof GoFishNode) {
-          return result.label(spec) as T;
+          return result.label(accessor, options) as T;
         }
         return result;
       })
@@ -368,10 +369,10 @@ export function createOperatorSequential<T extends Record<string, any>, R>(
   };
 }
 
-/** A mark that can be named for layer selection via .name("layerName") and labeled via .label(spec). */
+/** A mark that can be named for layer selection via .name("layerName") and labeled via .label(accessor, options?). */
 export type NameableMark<T> = Mark<T> & {
   name(layerName: string): Mark<T>;
-  label(spec: LabelSpec | LabelAccessor): Mark<T>;
+  label(accessor: LabelAccessor, options?: LabelOptions): Mark<T>;
 };
 
 /**
@@ -468,7 +469,8 @@ export function createMark<
       };
     };
     const labelMethod = (
-      spec: LabelSpec | LabelAccessor
+      accessor: LabelAccessor,
+      options?: LabelOptions
     ): Mark<T | T[] | { item: T | T[]; key: number | string }> => {
       return async (
         input: T | T[] | { item: T | T[]; key: number | string },
@@ -476,7 +478,7 @@ export function createMark<
         layerContext?: LayerContext
       ) => {
         const node = await baseMark(input, keyParam, layerContext);
-        (node as GoFishNode).label(spec);
+        (node as GoFishNode).label(accessor, options);
         return node;
       };
     };

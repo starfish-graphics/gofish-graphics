@@ -41,7 +41,11 @@ import {
   assignGradientColor,
   type ColorConfig,
 } from "./colorSchemes";
-import { type LabelAccessor, type LabelSpec } from "./labels/labelPlacement";
+import {
+  type LabelAccessor,
+  type LabelOptions,
+  type LabelSpec,
+} from "./labels/labelPlacement";
 import { renderLabelJSX } from "./labels/renderLabel";
 
 export type RenderSession = {
@@ -479,15 +483,8 @@ export class GoFishNode {
     return this;
   }
 
-  public label(specOrAccessor: LabelSpec | LabelAccessor): this {
-    if (
-      typeof specOrAccessor === "string" ||
-      typeof specOrAccessor === "function"
-    ) {
-      this._label = { accessor: specOrAccessor };
-    } else {
-      this._label = specOrAccessor;
-    }
+  public label(accessor: LabelAccessor, options?: LabelOptions): this {
+    this._label = { accessor, ...options };
     return this;
   }
 

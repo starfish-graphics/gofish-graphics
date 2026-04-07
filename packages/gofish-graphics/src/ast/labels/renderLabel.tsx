@@ -7,10 +7,9 @@ import {
   type ShapeInfo,
   inferLabelPosition,
   calculateLabelOffset,
+  getLabelTextAnchor,
   resolveLabelText,
 } from "./labelPlacement";
-
-const INSIDE_POSITIONS = new Set<LabelPosition>(["inside"]);
 
 /**
  * Resolve the fill color of a node to a CSS color string.
@@ -35,14 +34,14 @@ function resolveNodeFill(node: GoFishNode): string | null {
 
 /**
  * Compute an auto label color.
- * - Inside the shape: contrast against the fill (mix toward white on dark fills, black on light fills).
- * - Outside the shape: always on a white chart background, so mix the fill toward black for a
- *   readable dark tint that still relates to the bar color.
+ * - Inside the shape: contrast against the fill.
+ * - Outside the shape: darken the fill for a readable tint on white background.
  */
 function autoLabelColor(node: GoFishNode, position: LabelPosition): string {
   const fill = resolveNodeFill(node);
+  const isInside = (position as string).startsWith("inside");
 
-  if (INSIDE_POSITIONS.has(position)) {
+  if (isInside) {
     if (!fill) return "black";
     try {
       const luminance = chroma(fill).luminance();
@@ -53,7 +52,6 @@ function autoLabelColor(node: GoFishNode, position: LabelPosition): string {
     }
   }
 
-  // Outside: label is on white background — darken the fill for contrast
   if (!fill) return "#333333";
   try {
     return chroma.mix(fill, "black", 0.5, "lab").hex();
@@ -95,8 +93,8 @@ export function renderLabelJSX(node: GoFishNode): JSX.Element | null {
   const cx = (node.transform?.translate?.[0] ?? 0) + w / 2;
   const cy = (node.transform?.translate?.[1] ?? 0) + h / 2;
 
-  // Use explicit color if provided, otherwise derive from the fill automatically
   const labelColor = node._label.color ?? autoLabelColor(node, position);
+  const textAnchor = getLabelTextAnchor(position);
 
   return (
     <text
@@ -105,7 +103,7 @@ export function renderLabelJSX(node: GoFishNode): JSX.Element | null {
       y={-(cy + offset.y)}
       fill={labelColor}
       font-size={`${node._label.fontSize ?? 11}px`}
-      text-anchor="middle"
+      text-anchor={textAnchor}
       dominant-baseline="central"
       pointer-events="none"
     >

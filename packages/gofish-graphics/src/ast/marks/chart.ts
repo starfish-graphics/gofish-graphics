@@ -21,7 +21,11 @@ import { inferSize } from "../channels";
 import { Rect } from "../shapes/rect";
 import { rect as generatedRect } from "../shapes/rect";
 import { Mark, Operator } from "../types";
-import type { LabelAccessor, LabelSpec } from "../labels/labelPlacement";
+import type {
+  LabelAccessor,
+  LabelOptions,
+  LabelSpec,
+} from "../labels/labelPlacement";
 
 export type { Mark, Operator };
 export { generatedRect as rect };
@@ -41,12 +45,10 @@ async function resolveMarkResult(
   return raw as unknown as GoFishNode;
 }
 
-/** Attach .name(layerName) and .label(spec) to a mark so it registers/labels each produced node when used in a chart. */
-function nameableMark<T>(
-  base: Mark<T>
-): Mark<T> & {
+/** Attach .name(layerName) and .label(accessor, options?) to a mark so it registers/labels each produced node when used in a chart. */
+function nameableMark<T>(base: Mark<T>): Mark<T> & {
   name(layerName: string): Mark<T>;
-  label(spec: LabelSpec | LabelAccessor): Mark<T>;
+  label(accessor: LabelAccessor, options?: LabelOptions): Mark<T>;
 } {
   const withName = (layerName: string): Mark<T> => {
     return async (d: T, key?: string | number, layerContext?: LayerContext) => {
@@ -66,13 +68,16 @@ function nameableMark<T>(
       return node;
     };
   };
-  const withLabel = (spec: LabelSpec | LabelAccessor): Mark<T> => {
+  const withLabel = (
+    accessor: LabelAccessor,
+    options?: LabelOptions
+  ): Mark<T> => {
     return async (d: T, key?: string | number, layerContext?: LayerContext) => {
       const node = await resolveMarkResult(
         base(d, key, layerContext),
         layerContext
       );
-      node.label(spec);
+      node.label(accessor, options);
       return node;
     };
   };
@@ -88,7 +93,7 @@ function nameableMark<T>(
   });
   return base as Mark<T> & {
     name(layerName: string): Mark<T>;
-    label(spec: LabelSpec | LabelAccessor): Mark<T>;
+    label(accessor: LabelAccessor, options?: LabelOptions): Mark<T>;
   };
 }
 
@@ -674,7 +679,10 @@ export function circle<T extends Record<string, any>>({
   stroke?: string;
   strokeWidth?: number;
   debug?: boolean;
-}): Mark<T> & { name(layerName: string): Mark<T> } {
+}): Mark<T> & {
+  name(layerName: string): Mark<T>;
+  label(accessor: LabelAccessor, options?: LabelOptions): Mark<T>;
+} {
   const base: Mark<T> = async (
     d: T,
     key?: string | number,
