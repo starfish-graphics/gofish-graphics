@@ -10,11 +10,7 @@
 
 import { readFileSync, existsSync } from "fs";
 import { join } from "path";
-import {
-  BASELINE_DOM,
-  PYTHON_DIR,
-  listHtmlFiles,
-} from "./diff-utils.js";
+import { BASELINE_DOM, PYTHON_DIR, listHtmlFiles } from "./diff-utils.js";
 
 console.log("Comparing Python DOM output against JS baselines...");
 
