@@ -137,6 +137,7 @@ export class GoFishNode {
   public coordinateTransform?: CoordinateTransform;
   public color?: MaybeValue<string>;
   public colorConfig?: ColorConfig;
+  private _zOrder = 0;
   private renderSession?: RenderSession;
   constructor(
     {
@@ -479,6 +480,15 @@ export class GoFishNode {
   public setShared(shared: Size<boolean>): this {
     this.shared = shared;
     return this;
+  }
+
+  public zOrder(value: number): this {
+    this._zOrder = value;
+    return this;
+  }
+
+  public getZOrder(): number {
+    return this._zOrder;
   }
 }
 
