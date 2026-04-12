@@ -25,12 +25,6 @@ const TESTS_DIR = join(import.meta.dirname, "..");
 const HARNESS_DIR = join(TESTS_DIR, "harness");
 const TMP_DIR = join(TESTS_DIR, "tmp/js");
 const VITE_PORT = 3001;
-const VITE_BIN = join(
-  TESTS_DIR,
-  "node_modules",
-  ".bin",
-  process.platform === "win32" ? "vite.cmd" : "vite"
-);
 
 // ---------------------------------------------------------------------------
 // Story ID → file path mapping
@@ -60,8 +54,9 @@ function storyToPath(title: string, name: string): string {
 
 function startViteServer(): ChildProcess {
   const proc = spawn(
-    VITE_BIN,
+    "npx",
     [
+      "vite",
       "--config",
       join(HARNESS_DIR, "vite.config.ts"),
       "--port",
