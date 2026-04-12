@@ -87,7 +87,8 @@ export const Rect = ({
         label,
         dims,
       },
-      color: fill,
+      // Used to seed the unit color scale. Prefer whichever channel is data-driven.
+      color: isValue(fill) ? fill : stroke,
       resolveUnderlyingSpace: (
         _children: Size<UnderlyingSpace>[],
         _childNodes: GoFishAST[]
@@ -300,12 +301,20 @@ export const Rect = ({
         ];
 
         const scaleContext = node.getRenderSession().scaleContext;
+        const unit = scaleContext?.unit;
+        const unitColorScale = unit && "color" in unit ? unit.color : undefined;
         const originalFill = fill;
         fill = isValue(fill)
-          ? scaleContext?.unit?.color
-            ? (scaleContext.unit.color.get(getValue(fill)) ?? getValue(fill))
+          ? unitColorScale
+            ? (unitColorScale.get(getValue(fill)) ?? getValue(fill))
             : getValue(fill)
           : fill;
+
+        stroke = isValue(stroke)
+          ? unitColorScale
+            ? (unitColorScale.get(getValue(stroke)) ?? getValue(stroke))
+            : getValue(stroke)
+          : stroke;
 
         const resolvedFill = fill as string | undefined;
         const resolvedStroke =
@@ -449,7 +458,7 @@ export const Rect = ({
           return (
             <path
               d={pathToSVGPath(transformed)}
-              stroke={resolvedFill}
+              stroke={resolvedStroke}
               stroke-width={thickness + 0.5}
               fill="none"
               filter={filter}
@@ -539,4 +548,5 @@ export const rect = createMark(Rect, {
   w: "size",
   h: "size",
   fill: "color",
+  stroke: "color",
 });
