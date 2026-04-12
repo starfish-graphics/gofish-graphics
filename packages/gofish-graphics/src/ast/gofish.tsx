@@ -1,4 +1,5 @@
 import { createResource, For, Show, Suspense, type JSX } from "solid-js";
+import { type ColorConfig } from "./colorSchemes";
 import { render as solidRender } from "solid-js/web";
 import {
   debugInputSceneGraph,
@@ -23,11 +24,27 @@ import { path, pathToSVGPath, transformPath } from "../path";
 
 export type ScaleContext = {
   [measure: string]:
-    | { color: Map<any, string> }
+    | { color: Map<any, string>; colorConfig?: ColorConfig }
     | { domain: [number, number]; scaleFactor: number };
 };
 
 export type KeyContext = { [key: string]: GoFishNode };
+export type AxesOptions = boolean | { x: boolean; y: boolean };
+
+function resolveAxesVisibility(axes: AxesOptions | undefined): {
+  x: boolean;
+  y: boolean;
+} {
+  if (axes === true) {
+    return { x: true, y: true };
+  }
+  if (axes && typeof axes === "object") {
+    const x = axes.x === true;
+    const y = axes.y === true;
+    return { x, y };
+  }
+  return { x: false, y: false };
+}
 
 type OrdinalScale = (key: string) => number | undefined;
 
@@ -105,7 +122,7 @@ export async function layout(
     transform?: { x?: number; y?: number };
     debug?: boolean;
     defs?: JSX.Element[];
-    axes?: boolean;
+    axes?: AxesOptions;
   },
   child: GoFishNode | Promise<GoFishNode>,
   contexts?: {
@@ -255,6 +272,7 @@ export const gofish = (
     debug = false,
     defs,
     axes = false,
+    colorConfig,
   }: {
     w: number;
     h: number;
@@ -264,6 +282,7 @@ export const gofish = (
     debug?: boolean;
     defs?: JSX.Element[];
     axes?: boolean;
+    colorConfig?: ColorConfig;
   },
   child: GoFishNode | Promise<GoFishNode>
 ) => {
@@ -284,7 +303,7 @@ export const gofish = (
   const runGofish = async (): Promise<LayoutData> => {
     const session: RenderSession = {
       scopeContext: new Map(),
-      scaleContext: { unit: { color: new Map() } },
+      scaleContext: { unit: { color: new Map(), colorConfig } },
       keyContext: {},
     };
     try {
@@ -426,7 +445,7 @@ export const render = (
     height: number;
     transform?: string;
     defs?: JSX.Element[];
-    axes?: boolean;
+    axes?: AxesOptions;
     scaleContext: ScaleContext | null;
     keyContext: KeyContext | null;
     sizeDomains?: [any, any];
@@ -442,11 +461,15 @@ export const render = (
 ): JSX.Element => {
   const scaleContext = scaleContextParam;
   const keyContext = keyContextParam;
+  const axisVisibility = resolveAxesVisibility(axes);
+  const hasAnyVisibleAxis = axisVisibility.x || axisVisibility.y;
+  const axisPaddingX = axisVisibility.y ? 100 : 0;
+  const axisPaddingY = axisVisibility.x ? 100 : 0;
 
   let yTicks: number[] = [];
   let xTicks: number[] = [];
   if (
-    axes &&
+    hasAnyVisibleAxis &&
     scaleContext?.x &&
     scaleContext?.y &&
     "domain" in scaleContext.x &&
@@ -471,8 +494,8 @@ export const render = (
 
   const result = (
     <svg
-      width={width + PADDING * 6 + (axes ? 100 : 0)}
-      height={height + PADDING * 6 + (axes ? 100 : 0)}
+      width={width + PADDING * 6 + axisPaddingX}
+      height={height + PADDING * 6 + axisPaddingY}
       xmlns="http://www.w3.org/2000/svg"
     >
       <Show when={defs}>
@@ -484,7 +507,7 @@ export const render = (
         <Show when={transform} keyed fallback={child.INTERNAL_render()}>
           <g transform={transform ?? ""}>{child.INTERNAL_render()}</g>
         </Show>
-        <Show when={axes}>
+        <Show when={hasAnyVisibleAxis}>
           {(() => {
             // Check if we have a coordinate transform (polar/clock coordinates)
             const hasCoordTransform =
@@ -516,7 +539,7 @@ export const render = (
               stroke-width="1px"
             /> */}
                   {/* y axis (continuous) */}
-                  <Show when={isPOSITION(underlyingSpaceY)}>
+                  <Show when={axisVisibility.y && isPOSITION(underlyingSpaceY)}>
                     {(() => {
                       if (!isPOSITION(underlyingSpaceY)) return null;
                       const spaceY = underlyingSpaceY; // Type narrowed to POSITION_TYPE
@@ -637,6 +660,7 @@ export const render = (
                   </Show>
                   <Show
                     when={
+                      axisVisibility.y &&
                       isDIFFERENCE(underlyingSpaceY) &&
                       scaleContext?.y &&
                       "scaleFactor" in scaleContext.y
@@ -718,7 +742,7 @@ export const render = (
                   </Show>
 
                   {/* x axis (position) */}
-                  <Show when={isPOSITION(underlyingSpaceX)}>
+                  <Show when={axisVisibility.x && isPOSITION(underlyingSpaceX)}>
                     {(() => {
                       if (!isPOSITION(underlyingSpaceX)) return null;
                       const spaceX = underlyingSpaceX; // Type narrowed to POSITION_TYPE
@@ -879,6 +903,7 @@ export const render = (
                   {/* x axis (difference) */}
                   <Show
                     when={
+                      axisVisibility.x &&
                       isDIFFERENCE(underlyingSpaceX) &&
                       scaleContext?.x &&
                       "scaleFactor" in scaleContext.x
@@ -961,7 +986,7 @@ export const render = (
                   {/* x axis (discrete) */}
                   <Show
                     when={
-                      axes &&
+                      axisVisibility.x &&
                       isORDINAL(underlyingSpaceX) &&
                       ordinalScales[0] &&
                       keyContext
@@ -1022,7 +1047,7 @@ export const render = (
                   </Show>
                   <Show
                     when={
-                      axes &&
+                      axisVisibility.y &&
                       isORDINAL(underlyingSpaceY) &&
                       ordinalScales[1] &&
                       keyContext

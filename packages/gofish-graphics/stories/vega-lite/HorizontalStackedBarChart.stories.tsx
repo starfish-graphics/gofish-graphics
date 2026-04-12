@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
-import { Chart, spread, stack, rect, derive } from "../../src/lib";
+import { Chart, spread, stack, rect, derive, palette } from "../../src/lib";
 import { groupBy, sumBy } from "lodash";
 import data from "vega-datasets";
 
@@ -24,7 +24,7 @@ export const Default: StoryObj<Args> = {
   render: (args: Args, context: any) => {
     const container = initializeContainer();
 
-    Chart(context.loaded.barley as any[])
+    Chart(context.loaded.barley as any[], { color: palette("tableau10") })
       .flow(spread("variety", { dir: "y" }), stack("site", { dir: "x" }))
       .mark(rect({ w: "yield", fill: "site" }))
       .render(container, { w: args.w, h: args.h, axes: true });

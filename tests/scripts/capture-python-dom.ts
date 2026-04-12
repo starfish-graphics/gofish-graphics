@@ -100,14 +100,29 @@ function discoverPythonStories(): PythonStory[] {
 function extractIR(
   story: PythonStory
 ): { spec: any; data: any; options: any; deriveIds: string[] } | null {
+  const storyAbsPath = join(TESTS_DIR, story.file);
   const script = `
-import sys, json
-sys.path.insert(0, "${TESTS_DIR}")
+import sys, json, importlib.util
 sys.path.insert(0, "${join(ROOT, "packages/gofish-python")}")
+sys.path.insert(0, "${TESTS_DIR}")
 
-from ${story.module.replace(/-/g, "_")} import ${story.function}
+# Register "python_stories" as a package so story imports (e.g. from python_stories.data) work
+_pkg_dir = "${PYTHON_STORIES_DIR}"
+_pkg_init = "${PYTHON_STORIES_DIR}/__init__.py"
+_pkg_spec = importlib.util.spec_from_file_location(
+    "python_stories", _pkg_init,
+    submodule_search_locations=[_pkg_dir]
+)
+_pkg_mod = importlib.util.module_from_spec(_pkg_spec)
+sys.modules["python_stories"] = _pkg_mod
+_pkg_spec.loader.exec_module(_pkg_mod)
 
-result = ${story.function}()
+spec = importlib.util.spec_from_file_location("story_module", "${storyAbsPath}")
+mod = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(mod)
+fn = getattr(mod, "${story.function}")
+
+result = fn()
 if not isinstance(result, tuple):
     print(json.dumps({"error": "story function must return a tuple"}))
     sys.exit(1)
@@ -143,9 +158,10 @@ print(json.dumps(output))
 `;
 
   try {
-    const result = execSync(`python3 -c ${JSON.stringify(script)}`, {
+    const result = execSync(`python3 -`, {
       cwd: ROOT,
       encoding: "utf-8",
+      input: script,
       timeout: 30_000,
     });
     return JSON.parse(result.trim());
@@ -199,36 +215,44 @@ async function waitForServer(url: string, timeoutMs = 10_000) {
 // ---------------------------------------------------------------------------
 
 function registerDerives(story: PythonStory): void {
+  const storyAbsPath = join(TESTS_DIR, story.file);
   const script = `
-import sys, json
-sys.path.insert(0, "${TESTS_DIR}")
+import sys, importlib.util
 sys.path.insert(0, "${join(ROOT, "packages/gofish-python")}")
+sys.path.insert(0, "${TESTS_DIR}")
 
-# Import and register
-sys.path.insert(0, "${join(TESTS_DIR, "scripts")}")
-from importlib import import_module
+# Register "python_stories" as a package so story imports (e.g. from python_stories.data) work
+_pkg_dir = "${PYTHON_STORIES_DIR}"
+_pkg_init = "${PYTHON_STORIES_DIR}/__init__.py"
+_pkg_spec = importlib.util.spec_from_file_location(
+    "python_stories", _pkg_init,
+    submodule_search_locations=[_pkg_dir]
+)
+_pkg_mod = importlib.util.module_from_spec(_pkg_spec)
+sys.modules["python_stories"] = _pkg_mod
+_pkg_spec.loader.exec_module(_pkg_mod)
 
-# Use the derive server's registration function
 from gofish.ast import DeriveOperator
 
-mod = import_module("${story.module.replace(/-/g, "_")}")
+spec = importlib.util.spec_from_file_location("story_module", "${storyAbsPath}")
+mod = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(mod)
 fn = getattr(mod, "${story.function}")
 result = fn()
 builder = result[0]
 
 for op in builder.operators:
     if isinstance(op, DeriveOperator):
-        # We need to make the function available to the derive server
-        # The server will import the module itself
         pass
 
 print("OK")
 `;
 
   try {
-    execSync(`python3 -c ${JSON.stringify(script)}`, {
+    execSync(`python3 -`, {
       cwd: ROOT,
       encoding: "utf-8",
+      input: script,
       timeout: 10_000,
     });
   } catch {
@@ -419,7 +443,9 @@ async function main() {
   }
 }
 
-main().catch((err) => {
-  console.error("Fatal error:", err);
-  process.exit(1);
-});
+main()
+  .then(() => process.exit(0))
+  .catch((err) => {
+    console.error("Fatal error:", err);
+    process.exit(1);
+  });

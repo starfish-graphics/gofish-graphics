@@ -7,17 +7,27 @@
 
 import * as Arrow from "apache-arrow";
 import {
-  chart,
+  Chart as chart,
+  Layer,
+  clock,
   spread,
   stack,
   scatter,
   group,
   derive,
+  log,
+  select,
+  palette,
+  gradient,
   rect,
   circle,
   line,
   scaffold,
   area,
+  ellipse,
+  petal,
+  text,
+  image,
   type ChartBuilder,
   type Operator,
   type Mark,
@@ -25,13 +35,17 @@ import {
 
 // Type definitions for widget model and IR
 interface WidgetModel {
-  get(key: "spec"): ChartSpec;
-  get(key: "arrow_data"): string; // base64-encoded Arrow IPC bytes
+  get(key: "spec"): ChartSpec | LayerSpec;
+  get(key: "arrow_data"): string; // base64-encoded Arrow IPC bytes (or JSON dict for layer)
   get(key: "width"): number;
   get(key: "height"): number;
   get(key: "axes"): boolean;
   get(key: "debug"): boolean;
   get(key: "container_id"): string;
+  get(key: "derive_response"): { requestId: string; resultB64: string } | null;
+  set(key: string, value: any): void;
+  save_changes(): void;
+  on(event: string, callback: () => void): void;
 }
 
 interface ExperimentalAPI {
@@ -42,20 +56,43 @@ interface ExperimentalAPI {
   ): Promise<[T, DataView[]]>;
 }
 
+interface SelectSpec {
+  type: "select";
+  layer: string;
+}
+
 interface ChartSpec {
+  type?: string;
+  data?: SelectSpec | null;
   operators?: OperatorSpec[];
   mark: MarkSpec;
   options?: Record<string, any>;
 }
 
+interface LayerSpec {
+  type: "layer";
+  charts: ChartSpec[];
+  options?: Record<string, any>;
+}
+
 interface OperatorSpec {
-  type: "derive" | "spread" | "stack" | "group" | "scatter";
+  type: "derive" | "spread" | "stack" | "group" | "scatter" | "log";
   lambdaId?: string;
   [key: string]: any;
 }
 
 interface MarkSpec {
-  type: "rect" | "circle" | "line" | "area" | "scaffold";
+  type:
+    | "rect"
+    | "circle"
+    | "line"
+    | "area"
+    | "scaffold"
+    | "ellipse"
+    | "petal"
+    | "text"
+    | "image";
+  name?: string;
   [key: string]: any;
 }
 
@@ -189,6 +226,36 @@ function arrayToArrow(rows: Record<string, any>[]): Uint8Array {
   }
 }
 
+// Module-level state for traitlet-based derive fallback
+// null = untested, true = invoke works, false = use traitlet fallback
+let useInvoke: boolean | null = null;
+const pendingDerivesByModel = new WeakMap<
+  object,
+  Map<string, { resolve: (v: string) => void; reject: (e: Error) => void }>
+>();
+const listenerSetupByModel = new WeakSet<object>();
+
+function setupDeriveResponseListener(model: WidgetModel): void {
+  const key = model as object;
+  if (listenerSetupByModel.has(key)) return;
+  listenerSetupByModel.add(key);
+  if (!pendingDerivesByModel.has(key)) {
+    pendingDerivesByModel.set(key, new Map());
+  }
+  // Guard: marimo may not support model.on()
+  if (typeof (model as any).on !== "function") return;
+  model.on("change:derive_response", () => {
+    const response = model.get("derive_response");
+    if (!response?.requestId) return;
+    const pending = pendingDerivesByModel.get(key);
+    const handlers = pending?.get(response.requestId);
+    if (handlers) {
+      pending!.delete(response.requestId);
+      handlers.resolve(response.resultB64);
+    }
+  });
+}
+
 // Operator mapping: IR operator specs -> GoFish API operators
 /**
  * Lookup table mapping operator type to factory function.
@@ -212,6 +279,9 @@ const OPERATOR_MAP: Record<
       throw new Error("derive operator missing lambdaId");
     }
 
+    // Ensure traitlet response listener is set up for this model
+    setupDeriveResponseListener(model);
+
     return derive(async (d: any) => {
       const rows = normalizeToArray(d);
       if (rows.length === 0) {
@@ -221,20 +291,62 @@ const OPERATOR_MAP: Record<
       const arrowBuffer = arrayToArrow(rows);
       const arrowB64 = btoa(String.fromCharCode(...arrowBuffer));
 
-      // Use experimental.invoke to call Python command
-      const [response] = await experimental.invoke<{ resultB64: string }>(
-        "_execute_derive",
-        {
-          lambdaId,
-          arrowB64,
-        }
-      );
+      let resultB64: string | undefined;
 
-      const resultB64 = response?.resultB64;
-      if (typeof resultB64 !== "string") {
-        throw new Error("Invalid executeDerive response from Python");
+      // Fast path: try experimental.invoke (works in Jupyter, not in marimo)
+      if (useInvoke !== false) {
+        try {
+          // Wrap in Promise.resolve to ensure synchronous throws become rejections
+          const [response] = await Promise.resolve().then(() =>
+            experimental.invoke<{ resultB64: string }>("_execute_derive", {
+              lambdaId,
+              arrowB64,
+            })
+          );
+          useInvoke = true;
+          const rb64 = response?.resultB64;
+          if (typeof rb64 !== "string") {
+            throw new Error("Invalid executeDerive response from Python");
+          }
+          resultB64 = rb64;
+        } catch (err: any) {
+          if (useInvoke === null) {
+            // First attempt failed — invoke not supported, fall back to traitlets
+            useInvoke = false;
+          } else {
+            throw err;
+          }
+        }
       }
-      const resultBuffer = Uint8Array.from(atob(resultB64), (c) =>
+
+      // Traitlet fallback: used when invoke is not supported (e.g. marimo)
+      if (useInvoke === false) {
+        if (
+          typeof (model as any).set !== "function" ||
+          typeof (model as any).save_changes !== "function"
+        ) {
+          throw new Error(
+            "GoFish derive: neither experimental.invoke nor traitlet sync (model.set/save_changes) is available in this environment"
+          );
+        }
+        const requestId = `r-${Math.random().toString(36).slice(2)}`;
+        resultB64 = await new Promise<string>((resolve, reject) => {
+          const pending = pendingDerivesByModel.get(model as object);
+          if (!pending) {
+            reject(
+              new Error(
+                "GoFish derive: pendingDerives map not initialized for this model"
+              )
+            );
+            return;
+          }
+          pending.set(requestId, { resolve, reject });
+          model.set("derive_request", { requestId, lambdaId, arrowB64 });
+          model.save_changes();
+        });
+      }
+
+      const resultBuffer = Uint8Array.from(atob(resultB64!), (c) =>
         c.charCodeAt(0)
       );
       const resultTable = Arrow.tableFromIPC(resultBuffer);
@@ -278,6 +390,13 @@ const OPERATOR_MAP: Record<
     const { field, x, y, ...rest } = opts;
     return scatter(field, { x, y, ...rest });
   },
+  log: (
+    opts: Record<string, any>,
+    _model: WidgetModel,
+    _experimental: ExperimentalAPI
+  ) => {
+    return log(opts.label);
+  },
 };
 
 /**
@@ -306,18 +425,70 @@ const MARK_MAP: Record<string, (opts: Record<string, any>) => Mark<any>> = {
   line: (opts: Record<string, any>) => line(opts),
   area: (opts: Record<string, any>) => area(opts),
   scaffold: (opts: Record<string, any>) => scaffold(opts),
+  ellipse: (opts: Record<string, any>) => ellipse(opts),
+  petal: (opts: Record<string, any>) => petal(opts),
+  text: (opts: Record<string, any>) => text(opts),
+  image: (opts: Record<string, any>) => image(opts),
 };
 
 /**
- * Maps an IR mark spec to a GoFish mark function.
+ * Maps an IR mark spec to a GoFish mark function, applying .name() if present.
  */
 function mapMark(markSpec: MarkSpec): Mark<any> {
-  const { type, ...opts } = markSpec;
+  const { type, name: layerName, ...opts } = markSpec;
   const factory = MARK_MAP[type];
   if (!factory) {
     throw new Error(`Unknown mark type: ${type}`);
   }
-  return factory(opts);
+  const mark = factory(opts);
+  if (layerName && typeof (mark as any).name === "function") {
+    return (mark as any).name(layerName);
+  }
+  return mark;
+}
+
+/**
+ * Resolves a color config dict (with _tag) to a real palette() or gradient() call.
+ */
+function resolveColorConfig(colorSpec: Record<string, any>): any {
+  if (colorSpec._tag === "palette") {
+    return palette(colorSpec.values);
+  } else if (colorSpec._tag === "gradient") {
+    return gradient(colorSpec.stops);
+  }
+  return colorSpec;
+}
+
+/**
+ * Resolves a coord config dict (with type) to a real coordinate transform.
+ */
+function resolveCoordConfig(coordSpec: Record<string, any>): any {
+  if (coordSpec.type === "clock") {
+    return clock();
+  }
+  return coordSpec;
+}
+
+/**
+ * Resolves all known special values in an options dict (color, coord).
+ */
+function resolveOptions(raw: Record<string, any>): Record<string, any> {
+  const resolved: Record<string, any> = { ...raw };
+  if (
+    resolved.color &&
+    typeof resolved.color === "object" &&
+    "_tag" in resolved.color
+  ) {
+    resolved.color = resolveColorConfig(resolved.color);
+  }
+  if (
+    resolved.coord &&
+    typeof resolved.coord === "object" &&
+    "type" in resolved.coord
+  ) {
+    resolved.coord = resolveCoordConfig(resolved.coord);
+  }
+  return resolved;
 }
 
 // Error rendering helper
@@ -341,6 +512,107 @@ function renderError(
   `;
 }
 
+/**
+ * Decodes a base64 Arrow IPC buffer to an array of data objects.
+ */
+function decodeArrowB64(b64: string): Record<string, any>[] {
+  if (!b64) return [];
+  const arrowBuffer = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+  const table = Arrow.tableFromIPC(arrowBuffer);
+  return arrowTableToArray(table);
+}
+
+/**
+ * Builds a ChartBuilder from a ChartSpec + resolved data array.
+ */
+function buildChart(
+  chartSpec: ChartSpec,
+  data: Record<string, any>[],
+  model: WidgetModel,
+  experimental: ExperimentalAPI
+): ChartBuilder {
+  const operators: Operator<any, any>[] = [];
+  for (const opSpec of chartSpec.operators || []) {
+    const op = mapOperator(opSpec, model, experimental);
+    if (op) {
+      operators.push(op);
+    }
+  }
+
+  const markSpec = chartSpec.mark || { type: "rect" };
+  const mark = mapMark(markSpec);
+
+  const resolvedOptions = resolveOptions(chartSpec.options || {});
+
+  let chartData: any = data;
+  if (
+    chartSpec.data &&
+    typeof chartSpec.data === "object" &&
+    chartSpec.data.type === "select"
+  ) {
+    chartData = select(chartSpec.data.layer);
+  }
+
+  return chart(chartData, resolvedOptions)
+    .flow(...operators)
+    .mark(mark);
+}
+
+/**
+ * Renders a Layer (multi-chart composition) from widget model state.
+ */
+function renderLayer(
+  model: WidgetModel,
+  container: HTMLElement,
+  experimental: ExperimentalAPI
+): void {
+  const debug = model.get("debug");
+  const log = debug
+    ? (...args: any[]) => console.log("[GoFish Widget]", ...args)
+    : () => {};
+
+  log("Rendering layer...");
+
+  const spec = model.get("spec") as LayerSpec;
+  const arrowDataRaw = model.get("arrow_data");
+
+  // Parse per-chart arrow data dict
+  let arrowDict: Record<string, string> = {};
+  try {
+    arrowDict = JSON.parse(arrowDataRaw);
+  } catch (e) {
+    throw new Error(`Failed to parse layer arrow_data JSON: ${e}`);
+  }
+
+  // Build each child chart
+  const childCharts: ChartBuilder[] = spec.charts.map(
+    (chartSpec: ChartSpec, i: number) => {
+      const b64 = arrowDict[String(i)] || "";
+      const data = decodeArrowB64(b64);
+      log(`Building chart ${i}: ${data.length} rows`);
+      return buildChart(chartSpec, data, model, experimental);
+    }
+  );
+
+  // Resolve layer-level options
+  const rawOptions = spec.options || {};
+  const resolvedLayerOptions = resolveOptions(rawOptions);
+  const renderOptions: RenderOptions = {
+    w: model.get("width"),
+    h: model.get("height"),
+    axes: model.get("axes"),
+    debug: debug,
+  };
+
+  log("Calling Layer([...]).render()...");
+  if (Object.keys(resolvedLayerOptions).length > 0) {
+    Layer(resolvedLayerOptions, childCharts).render(container, renderOptions);
+  } else {
+    Layer(childCharts).render(container, renderOptions);
+  }
+  log("Layer rendered successfully!");
+}
+
 // Main chart rendering function
 /**
  * Renders a GoFish chart from widget model state.
@@ -350,6 +622,15 @@ function renderChart(
   container: HTMLElement,
   experimental: ExperimentalAPI
 ): void {
+  const spec = model.get("spec");
+
+  // Dispatch to layer renderer if spec.type === "layer"
+  if ((spec as any).type === "layer") {
+    renderLayer(model, container, experimental);
+    return;
+  }
+
+  const chartSpec = spec as ChartSpec;
   const debug = model.get("debug");
 
   // Log only if debug mode is enabled
@@ -365,12 +646,7 @@ function renderChart(
   if (arrowDataB64) {
     try {
       log("Decoding Arrow data...");
-      const arrowBuffer = Uint8Array.from(atob(arrowDataB64), (c) =>
-        c.charCodeAt(0)
-      );
-      const table = Arrow.tableFromIPC(arrowBuffer);
-      log(`Arrow table: ${table.numRows} rows`);
-      data = arrowTableToArray(table);
+      data = decodeArrowB64(arrowDataB64);
       log(`Converted to ${data.length} data objects`);
     } catch (error) {
       const err =
@@ -383,11 +659,10 @@ function renderChart(
   }
 
   // 2. Map IR operators to GoFish operators
-  const spec = model.get("spec");
-  log("Processing spec:", spec);
+  log("Processing spec:", chartSpec);
   const operators: Operator<any, any>[] = [];
 
-  for (const opSpec of spec.operators || []) {
+  for (const opSpec of chartSpec.operators || []) {
     log(`Mapping operator: ${opSpec.type}`);
     const op = mapOperator(opSpec, model, experimental);
     if (op) {
@@ -397,15 +672,29 @@ function renderChart(
     }
   }
 
-  // 3. Map IR mark to GoFish mark
-  const markSpec = spec.mark || { type: "rect" };
+  // 3. Map IR mark to GoFish mark (with optional .name())
+  const markSpec = chartSpec.mark || { type: "rect" };
   log(`Mapping mark: ${markSpec.type}`);
   const mark = mapMark(markSpec);
 
-  // 4. Build and render chart
+  // 4. Resolve options (color, coord, etc.)
+  const resolvedOptions = resolveOptions(chartSpec.options || {});
+
+  // 5. Determine chart data source (Arrow data or select() reference)
+  let chartData: any = data;
+  if (
+    chartSpec.data &&
+    typeof chartSpec.data === "object" &&
+    chartSpec.data.type === "select"
+  ) {
+    log(`Using select("${chartSpec.data.layer}") as data source`);
+    chartData = select(chartSpec.data.layer);
+  }
+
+  // 6. Build and render chart
   try {
     log("Building chart...");
-    const chartBuilder = chart(data, spec.options || {});
+    const chartBuilder = chart(chartData, resolvedOptions);
     let node = chartBuilder.flow(...operators).mark(mark);
 
     const renderOptions: RenderOptions = {
