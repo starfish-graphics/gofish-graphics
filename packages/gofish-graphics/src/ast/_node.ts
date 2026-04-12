@@ -448,6 +448,7 @@ export class GoFishNode {
       defs,
       axes = false,
       colorConfig,
+      isoScale = false,
     }: {
       w: number;
       h: number;
@@ -458,11 +459,13 @@ export class GoFishNode {
       defs?: JSX.Element[];
       axes?: boolean;
       colorConfig?: ColorConfig;
+      /** When true, both position axes share the same pixels-per-data-unit. */
+      isoScale?: boolean;
     }
   ) {
     return gofish(
       container,
-      { w, h, x, y, transform, debug, defs, axes, colorConfig },
+      { w, h, x, y, transform, debug, defs, axes, colorConfig, isoScale },
       this
     );
   }
