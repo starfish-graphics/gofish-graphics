@@ -487,10 +487,6 @@ export class GoFishNode {
     return this;
   }
 
-  public zIndex(value: number): this {
-    return this.zOrder(value);
-  }
-
   public getZOrder(): number {
     return this._zOrder;
   }

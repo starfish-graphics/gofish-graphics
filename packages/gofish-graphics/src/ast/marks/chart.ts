@@ -347,10 +347,6 @@ export class ChartBuilder<TInput, TOutput = TInput> {
     );
   }
 
-  zIndex(value: number): ChartBuilder<TInput, TOutput> {
-    return this.zOrder(value);
-  }
-
   // render calls resolve and then renders
   async render(
     container: Parameters<GoFishNode["render"]>[0],

@@ -79,7 +79,6 @@ export interface PromiseWithRender<T> extends Promise<T> {
   setKey(key: string): PromiseWithRender<T>;
   setShared(shared: [boolean, boolean]): PromiseWithRender<T>;
   zOrder(value: number): PromiseWithRender<T>;
-  zIndex(value: number): PromiseWithRender<T>;
 }
 
 /**
@@ -163,10 +162,6 @@ export function addRenderMethod<T>(promise: Promise<T>): PromiseWithRender<T> {
         return result;
       })
     );
-  };
-
-  (promise as any).zIndex = function (value: number): PromiseWithRender<T> {
-    return (promise as any).zOrder(value);
   };
 
   return promise as PromiseWithRender<T>;
