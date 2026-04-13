@@ -7,6 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 GoFish Graphics is a TypeScript/SolidJS library for creating charts and visualizations. It uses a declarative API based on an Abstract Syntax Tree (AST) approach where visual elements are composed through functional transformations.
 
 **This is a monorepo** with the following structure:
+
 - `packages/gofish-graphics/` - Main TypeScript/SolidJS library
 - `packages/gofish-python/` - Python bindings (in development)
 - `apps/docs/` - VitePress documentation site
@@ -47,7 +48,7 @@ The library is built around several key architectural patterns:
 
 1. **AST-based Rendering**: Visual elements are represented as nodes in an abstract syntax tree (`src/ast/_node.ts`)
 2. **Functional Composition**: Charts are built by composing shapes, transforms, and operators
-3. **Three-Pass Rendering**: 
+3. **Three-Pass Rendering**:
    - Domain inference (what data ranges exist)
    - Layout calculation (how to fit elements)
    - Placement/rendering (final positioning and SVG generation)
@@ -97,12 +98,13 @@ The library exports three API versions from `src/lib.ts`:
     - `normalize()`, `repeat()`, etc.
   - Selection (used within `chart()`): `select()`
   - Marks (used within `.mark()`): Return visual node; support `.name("layerName")` for layer selection
-    - `rect()`, `circle()`, `line()`, `area()`, `scaffold()`, etc.
+    - `rect()`, `circle()`, `line()`, `area()`, `blank()`, etc.
   - Example: `chart(data).flow(spread("category", { dir: "x" })).mark(rect({ h: "value" }).name("bars")).render(container, { w: 400, h: 300 })`
 
 ### Context System
 
 The library uses several global contexts during rendering:
+
 - `scopeContext` - Manages variable scoping
 - `scaleContext` - Handles color scales and axis scales
 - `keyContext` - Tracks named elements for axis labels
@@ -110,6 +112,7 @@ The library uses several global contexts during rendering:
 ### Coordinate Transforms
 
 Key coordinate systems available:
+
 - `linear` - Standard Cartesian coordinates
 - `polar` - Polar coordinate system
 - `bipolar` - Two-pole coordinate system

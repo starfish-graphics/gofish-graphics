@@ -22,7 +22,7 @@ import {
   rect,
   circle,
   line,
-  scaffold,
+  blank,
   area,
   ellipse,
   petal,
@@ -88,7 +88,7 @@ interface MarkSpec {
     | "circle"
     | "line"
     | "area"
-    | "scaffold"
+    | "blank"
     | "ellipse"
     | "petal"
     | "text"
@@ -425,7 +425,7 @@ const MARK_MAP: Record<string, (opts: Record<string, any>) => Mark<any>> = {
   circle: (opts: Record<string, any>) => circle(opts),
   line: (opts: Record<string, any>) => line(opts),
   area: (opts: Record<string, any>) => area(opts),
-  scaffold: (opts: Record<string, any>) => scaffold(opts),
+  blank: (opts: Record<string, any>) => blank(opts),
   ellipse: (opts: Record<string, any>) => ellipse(opts),
   petal: (opts: Record<string, any>) => petal(opts),
   text: (opts: Record<string, any>) => text(opts),

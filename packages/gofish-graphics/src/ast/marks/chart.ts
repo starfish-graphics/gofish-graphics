@@ -774,8 +774,8 @@ export function area<T extends Record<string, any>>(options?: {
   };
 }
 
-// scaffold() mark creates invisible guides for positioning
-export function scaffold<T extends Record<string, any>>({
+// blank() mark creates invisible guides for positioning
+export function blank<T extends Record<string, any>>({
   emX,
   emY,
   w = 0,
@@ -798,7 +798,7 @@ export function scaffold<T extends Record<string, any>>({
   strokeWidth?: number;
   debug?: boolean;
 } = {}): Mark<T | T[] | { item: T | T[]; key: number | string }> {
-  // scaffold is essentially a transparent/zero-size rect
+  // blank is essentially a transparent/zero-size rect
   return generatedRect({
     emX,
     emY,
