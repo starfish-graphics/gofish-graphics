@@ -9,7 +9,16 @@ import {
   rect,
   circle,
   gradient,
+  derive,
+  palette,
 } from "../../src/lib";
+import {
+  calculateLabelOffset,
+  getLabelTextAnchor,
+  type LabelPosition,
+} from "../../src/ast/labels/labelPlacement";
+import { sumBy, orderBy } from "lodash";
+import data from "vega-datasets";
 
 const meta: Meta = {
   title: "Forward Syntax V3/Labels",
@@ -62,28 +71,27 @@ export const Inside: StoryObj<Args> = {
   },
 };
 
-// ─── above ────────────────────────────────────────────────────────────────────
+// ─── outside-top ──────────────────────────────────────────────────────────────
 // Sits above the top edge of the shape.
 
 export const Above: StoryObj<Args> = {
-  name: "Position: above",
+  name: "Position: outside (top)",
   args: { w: 400, h: 300 },
   render: (args) => {
     const container = initializeContainer();
     Chart(seafood)
       .flow(spread("lake", { dir: "x" }))
-      .mark(rect({ h: "count" }).label("count", { position: "above" }))
+      .mark(rect({ h: "count" }).label("count", { position: "outside" }))
       .render(container, { w: args.w, h: args.h, axes: true });
     return container;
   },
 };
 
-// ─── below ────────────────────────────────────────────────────────────────────
-// Sits below the bottom edge of each segment. Shown on y-stacked bars so labels
-// land inside the chart (at each segment's baseline), away from the x-axis.
+// ─── outside-bottom ───────────────────────────────────────────────────────────
+// Sits below the bottom edge of each segment.
 
 export const Below: StoryObj<Args> = {
-  name: "Position: below",
+  name: "Position: outside-bottom",
   args: { w: 400, h: 300 },
   render: (args) => {
     const container = initializeContainer();
@@ -94,7 +102,7 @@ export const Below: StoryObj<Args> = {
       )
       .mark(
         rect({ w: "count", fill: "species" }).label("count", {
-          position: "below",
+          position: "outside-bottom",
           fontSize: 9,
         })
       )
@@ -103,12 +111,11 @@ export const Below: StoryObj<Args> = {
   },
 };
 
-// ─── left ─────────────────────────────────────────────────────────────────────
-// Sits to the left of each segment. Shown on x-stacked horizontal bars so labels
-// land inside the chart (at each segment's left edge), away from the y-axis.
+// ─── outside-left ─────────────────────────────────────────────────────────────
+// Sits to the left of each segment.
 
 export const Left: StoryObj<Args> = {
-  name: "Position: left",
+  name: "Position: outside-left",
   args: { w: 400, h: 300 },
   render: (args) => {
     const container = initializeContainer();
@@ -119,9 +126,9 @@ export const Left: StoryObj<Args> = {
       )
       .mark(
         rect({ w: "count", fill: "species" }).label("count", {
-          position: "left",
+          position: "outside-left",
           fontSize: 9,
-          offset: 7
+          offset: 13,
         })
       )
       .render(container, { w: args.w, h: args.h, axes: false });
@@ -129,27 +136,27 @@ export const Left: StoryObj<Args> = {
   },
 };
 
-// ─── right ────────────────────────────────────────────────────────────────────
+// ─── outside-right ────────────────────────────────────────────────────────────
 // Sits to the right of the shape. Natural for horizontal bars.
 
 export const Right: StoryObj<Args> = {
-  name: "Position: right",
+  name: "Position: outside-right",
   args: { w: 400, h: 300 },
   render: (args) => {
     const container = initializeContainer();
     Chart(seafood)
       .flow(spread("lake", { dir: "y" }))
-      .mark(rect({ w: "count" }).label("count", { position: "right" }))
+      .mark(rect({ w: "count" }).label("count", { position: "outside-right", offset: 15 }))
       .render(container, { w: args.w, h: args.h, axes: true });
     return container;
   },
 };
 
-// ─── above-start ──────────────────────────────────────────────────────────────
+// ─── outside-top-start ────────────────────────────────────────────────────────
 // Above the bar, label anchored at the left edge (start). Good for x-stacked bars.
 
 export const AboveStart: StoryObj<Args> = {
-  name: "Position: above-start",
+  name: "Position: outside-top-start",
   args: { w: 500, h: 300 },
   render: (args) => {
     const container = initializeContainer();
@@ -160,7 +167,7 @@ export const AboveStart: StoryObj<Args> = {
       )
       .mark(
         rect({ h: "count", fill: "species" }).label("count", {
-          position: "above-start",
+          position: "outside-top-start",
           fontSize: 9,
         })
       )
@@ -169,11 +176,11 @@ export const AboveStart: StoryObj<Args> = {
   },
 };
 
-// ─── above-end ────────────────────────────────────────────────────────────────
+// ─── outside-top-end ──────────────────────────────────────────────────────────
 // Above the bar, label anchored at the right edge (end). Good for x-stacked bars.
 
 export const AboveEnd: StoryObj<Args> = {
-  name: "Position: above-end",
+  name: "Position: outside-top-end",
   args: { w: 500, h: 300 },
   render: (args) => {
     const container = initializeContainer();
@@ -184,7 +191,7 @@ export const AboveEnd: StoryObj<Args> = {
       )
       .mark(
         rect({ h: "count", fill: "species" }).label("count", {
-          position: "above-end",
+          position: "outside-top-end",
           fontSize: 9,
         })
       )
@@ -199,12 +206,18 @@ export const AboveEnd: StoryObj<Args> = {
 const ALL_POSITIONS = [
   "auto",
   "inside",
-  "above",
-  "below",
-  "left",
-  "right",
-  "above-start",
-  "above-end",
+  "inside-top",
+  "inside-bottom",
+  "inside-left",
+  "inside-right",
+  "inside-top-start",
+  "inside-top-end",
+  "outside-top",
+  "outside-bottom",
+  "outside-left",
+  "outside-right",
+  "outside-top-start",
+  "outside-top-end",
 ] as const;
 
 export const AllPositions: StoryObj<{ w: number; h: number }> = {
@@ -300,7 +313,7 @@ export const LabelOnSpread: StoryObj<Args> = {
         // Stamp datum so resolveLabels keeps the label at group level
         // instead of propagating it down to each species bar
         (node as any).datum = d[0];
-        node.label("lake", { position: "above-start", fontSize: 13, offset: 50, rotate: 60 });
+        node.label("lake", { position: "outside-top-start", fontSize: 13, offset: 50, rotate: 60 });
         return node;
       })
       .render(container, { w: args.w, h: args.h, axes: false });
@@ -376,11 +389,177 @@ export const Rotated: StoryObj<Args> = {
       Chart(seafood)
         .flow(spread("lake", { dir: "x" }))
         .mark(
-          rect({ h: "count" }).label("count", { position: "above", rotate })
+          rect({ h: "count" }).label("count", { position: "outside-top", rotate })
         )
         .render(container, { w: args.w, h: args.h, axes: true });
     }
 
     return outer;
+  },
+};
+
+// ─── Normalized stacked bar (population by age + gender) ──────────────────────
+// Mirrors https://vega.github.io/vega-lite/examples/bar_stacked_normalize_labeled.html
+// Each horizontal bar represents one age group; segments are Male / Female,
+// normalized so every row spans 100%. Labels show the raw people count inside
+// each segment in white text.
+
+export const NormalizedStackedBarWithLabels: StoryObj<Args> = {
+  name: "Normalized stacked bar – inside labels",
+  args: { w: 350, h: 400 },
+  loaders: [async () => ({ population: await data["population.json"]() })],
+  render: (args: Args, context: any) => {
+    const container = initializeContainer();
+
+    Chart(
+      context.loaded.population.filter((row: any) => row.year === 2000) as any[],
+      { color: palette({ Female: "#675193", Male: "#ca8861" }) }
+    )
+      .flow(
+        // Decode the sex field to a readable string
+        derive((d: any[]) =>
+          d.map((row) => ({ ...row, sex: row.sex === 1 ? "Male" : "Female" }))
+        ),
+        // One row per age group, stacked horizontally
+        spread("age", { dir: "y", reverse: true, spacing: 2 }),
+        // Normalize within each age group so bars span 0→1
+        derive((d: any[]) =>
+          d.map((row) => ({
+            ...row,
+            proportion: row.people / sumBy(d, "people"),
+          }))
+        ),
+        // Female left, Male right
+        derive((d: any[]) => orderBy(d, "sex", "asc")),
+        stack("sex", { dir: "x" })
+      )
+      .mark(
+        rect({ w: "proportion", fill: "sex" }).label(
+          (d: any) => {
+            const row = Array.isArray(d) ? d[0] : d;
+            return row.people;
+          },
+          { position: "inside", color: "white" }
+        )
+      )
+      .render(container, { w: args.w, h: args.h, axes: true });
+
+    return container;
+  },
+};
+
+// ─── Position showcase ────────────────────────────────────────────────────────
+// A single large rectangle with every position string rendered at its computed
+// location. Blue = inside positions, amber = outside positions.
+
+const SHOWCASE_POSITIONS: LabelPosition[] = [
+  "inside",
+  "inside-top",
+  "inside-top-start",
+  "inside-top-end",
+  "inside-bottom",
+  "inside-bottom-start",
+  "inside-bottom-end",
+  "inside-left",
+  "inside-left-start",
+  "inside-left-end",
+  "inside-right",
+  "inside-right-start",
+  "inside-right-end",
+  "outside-top",
+  "outside-top-start",
+  "outside-top-end",
+  "outside-bottom",
+  "outside-bottom-start",
+  "outside-bottom-end",
+  "outside-left",
+  "outside-left-start",
+  "outside-left-end",
+  "outside-right",
+  "outside-right-start",
+  "outside-right-end",
+];
+
+export const PositionShowcase: StoryObj = {
+  name: "Position showcase – all positions on one rect",
+  render: () => {
+    const svgW = 700;
+    const svgH = 460;
+    const rectW = 320;
+    const rectH = 200;
+    const cx = svgW / 2;
+    const cy = svgH / 2;
+    const OFFSET = 14;
+
+    const ns = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(ns, "svg");
+    svg.setAttribute("width", String(svgW));
+    svg.setAttribute("height", String(svgH));
+    svg.style.fontFamily = "monospace";
+
+    const bg = document.createElementNS(ns, "rect");
+    bg.setAttribute("width", String(svgW));
+    bg.setAttribute("height", String(svgH));
+    bg.setAttribute("fill", "#f9fafb");
+    svg.appendChild(bg);
+
+    // Rectangle
+    const mainRect = document.createElementNS(ns, "rect");
+    mainRect.setAttribute("x", String(cx - rectW / 2));
+    mainRect.setAttribute("y", String(cy - rectH / 2));
+    mainRect.setAttribute("width", String(rectW));
+    mainRect.setAttribute("height", String(rectH));
+    mainRect.setAttribute("fill", "#dbeafe");
+    mainRect.setAttribute("stroke", "#3b82f6");
+    mainRect.setAttribute("stroke-width", "1.5");
+    svg.appendChild(mainRect);
+
+    // Crosshairs
+    for (const [x1, y1, x2, y2] of [
+      [cx - rectW / 2, cy, cx + rectW / 2, cy],
+      [cx, cy - rectH / 2, cx, cy + rectH / 2],
+    ] as [number, number, number, number][]) {
+      const line = document.createElementNS(ns, "line");
+      line.setAttribute("x1", String(x1));
+      line.setAttribute("y1", String(y1));
+      line.setAttribute("x2", String(x2));
+      line.setAttribute("y2", String(y2));
+      line.setAttribute("stroke", "#93c5fd");
+      line.setAttribute("stroke-dasharray", "3 3");
+      svg.appendChild(line);
+    }
+
+    for (const pos of SHOWCASE_POSITIONS) {
+      const { x, y } = calculateLabelOffset(pos, [rectW, rectH], {
+        offset: OFFSET,
+      });
+      const lx = cx + x;
+      const ly = cy - y; // negate: calculateLabelOffset uses y-up coords
+
+      const isInside = (pos as string).startsWith("inside");
+      const color = isInside ? "#1d4ed8" : "#92400e";
+
+      const dot = document.createElementNS(ns, "circle");
+      dot.setAttribute("cx", String(lx));
+      dot.setAttribute("cy", String(ly));
+      dot.setAttribute("r", "2.5");
+      dot.setAttribute("fill", color);
+      svg.appendChild(dot);
+
+      const text = document.createElementNS(ns, "text");
+      text.setAttribute("x", String(lx));
+      text.setAttribute("y", String(ly));
+      text.setAttribute("fill", color);
+      text.setAttribute("font-size", "9");
+      text.setAttribute("dominant-baseline", "central");
+      text.setAttribute("text-anchor", getLabelTextAnchor(pos));
+      text.textContent = pos;
+      svg.appendChild(text);
+    }
+
+    const wrapper = document.createElement("div");
+    wrapper.style.padding = "16px";
+    wrapper.appendChild(svg);
+    return wrapper;
   },
 };

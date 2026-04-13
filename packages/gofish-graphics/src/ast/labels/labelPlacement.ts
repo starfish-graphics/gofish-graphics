@@ -22,54 +22,76 @@ export function resolveLabelText(accessor: LabelAccessor, datum: any): string {
   return obj?.[accessor] != null ? String(obj[accessor]) : "";
 }
 
-export type LabelRelation = "inside" | "above" | "below" | "left" | "right";
+export type LabelSide = "inside" | "outside";
+export type LabelEdge = "top" | "bottom" | "left" | "right";
 export type LabelAlignment = "start" | "center" | "end";
 
 /**
- * Label position, Tailwind-style:
- * - `"auto"` – infer the best position automatically
- * - `"above"` – relation only, alignment defaults to `center`
- * - `"above-start"` – relation + alignment joined by a hyphen
+ * Label position — three optional dimensions separated by hyphens:
  *
- * Relations: `inside | above | below | left | right`
- * Alignments: `start | center | end`
+ * `side-edge-align`
+ *
+ * - `side`: `inside | outside` — whether the label sits inside or outside the shape
+ * - `edge`: `top | bottom | left | right` — which edge to anchor to
+ * - `align`: `start | center | end` — alignment along the perpendicular axis
+ *
+ * All dimensions are optional (right-to-left): just `"outside"`, `"outside-top"`,
+ * or the full `"outside-top-start"` are all valid.
+ *
+ * Defaults: side → `outside`, edge → `top`, align → `center`
  *
  * Alignment semantics:
- * - `above` / `below`: aligns along x — `start` = left edge, `end` = right edge
- * - `left` / `right`: aligns along y — `start` = top edge, `end` = bottom edge
- * - `inside`: aligns along x — `start` = near left edge, `end` = near right edge
+ * - `outside-top` / `outside-bottom` / `inside-top` / `inside-bottom`:
+ *   align is along x — `start` = left edge, `end` = right edge
+ * - `outside-left` / `outside-right` / `inside-left` / `inside-right`:
+ *   align is along y — `start` = top edge, `end` = bottom edge
+ *
+ * Special: `"inside"` with no edge defaults to center of shape.
  */
 export type LabelPosition =
   | "auto"
-  | LabelRelation
-  | `${LabelRelation}-${LabelAlignment}`;
+  | LabelSide
+  | `${LabelSide}-${LabelEdge}`
+  | `${LabelSide}-${LabelEdge}-${LabelAlignment}`;
 
-const RELATIONS = new Set<string>([
-  "inside",
-  "above",
-  "below",
-  "left",
-  "right",
-]);
+const SIDES = new Set<string>(["inside", "outside"]);
+const EDGES = new Set<string>(["top", "bottom", "left", "right"]);
 const ALIGNMENTS = new Set<string>(["start", "center", "end"]);
 
-/** Parse a resolved (non-auto) position into its relation and alignment. */
-function parseLabelPosition(position: Exclude<LabelPosition, "auto">): {
-  relation: LabelRelation;
+interface ParsedPosition {
+  side: LabelSide;
+  edge: LabelEdge | null;
   align: LabelAlignment;
-} {
-  const str = position as string;
-  // Try splitting on the LAST hyphen so "above-start" → ["above", "start"]
-  const idx = str.lastIndexOf("-");
-  if (idx !== -1) {
-    const rel = str.slice(0, idx);
-    const aln = str.slice(idx + 1);
-    if (RELATIONS.has(rel) && ALIGNMENTS.has(aln)) {
-      return { relation: rel as LabelRelation, align: aln as LabelAlignment };
-    }
+}
+
+/** Parse a resolved (non-auto) position into its three dimensions. */
+function parseLabelPosition(
+  position: Exclude<LabelPosition, "auto">
+): ParsedPosition {
+  const parts = (position as string).split("-");
+
+  // Try to extract side, edge, align from left to right
+  let side: LabelSide = "outside";
+  let edge: LabelEdge | null = null;
+  let align: LabelAlignment = "center";
+
+  let i = 0;
+
+  if (parts[i] && SIDES.has(parts[i])) {
+    side = parts[i] as LabelSide;
+    i++;
   }
-  // No valid suffix — treat the whole string as a relation with center alignment
-  return { relation: str as LabelRelation, align: "center" };
+
+  if (parts[i] && EDGES.has(parts[i])) {
+    edge = parts[i] as LabelEdge;
+    i++;
+  }
+
+  if (parts[i] && ALIGNMENTS.has(parts[i])) {
+    align = parts[i] as LabelAlignment;
+  }
+
+  return { side, edge, align };
 }
 
 export interface LabelConfig {
@@ -110,7 +132,7 @@ export const inferLabelPosition = (
     const area = shape.dimensions[0] * shape.dimensions[1];
     const threshold =
       context.chartBounds.width * context.chartBounds.height * 0.05;
-    return area < threshold ? "inside" : "right";
+    return area < threshold ? "inside" : "outside-right";
   }
 
   if (shape.isStacked) {
@@ -124,22 +146,22 @@ export const inferLabelPosition = (
 
     if (shape.stackDirection === 1) {
       return context.availableSpace.bottom > context.availableSpace.top
-        ? "below"
-        : "above";
+        ? "outside-bottom"
+        : "outside-top";
     } else {
       return context.availableSpace.right > context.availableSpace.left
-        ? "right"
-        : "left";
+        ? "outside-right"
+        : "outside-left";
     }
   }
 
   if (shape.isSpread) {
     const spreadDim = shape.spreadDirection ?? 0;
     if (spreadDim === 0) {
-      return context.hasAxes ? "below" : "above";
+      return context.hasAxes ? "outside-bottom" : "outside-top";
     }
     if (spreadDim === 1) {
-      return context.hasAxes ? "left" : "above";
+      return context.hasAxes ? "outside-left" : "outside-top";
     }
   }
 
@@ -147,7 +169,7 @@ export const inferLabelPosition = (
     (shape.type === "line" || shape.type === "area") &&
     context.isMultiSeries
   ) {
-    return "right";
+    return "outside-right";
   }
 
   if (shape.type === "rect" || shape.type === "ellipse") {
@@ -158,7 +180,7 @@ export const inferLabelPosition = (
     }
   }
 
-  return "above";
+  return "outside-top";
 };
 
 export const calculateLabelOffset = (
@@ -169,35 +191,77 @@ export const calculateLabelOffset = (
   if (position === "auto") return { x: 0, y: 0 };
   const baseOffset = config.offset ?? 10;
   const [width, height] = shapeSize;
-  const { relation, align } = parseLabelPosition(
+  const { side, edge, align } = parseLabelPosition(
     position as Exclude<LabelPosition, "auto">
   );
 
-  switch (relation) {
-    case "inside": {
-      if (align === "start") return { x: -width / 2 + baseOffset, y: 0 };
-      if (align === "end") return { x: width / 2 - baseOffset, y: 0 };
-      return { x: 0, y: 0 };
+  if (side === "outside") {
+    switch (edge ?? "top") {
+      case "top": {
+        const xAlign =
+          align === "start" ? -width / 2 : align === "end" ? width / 2 : 0;
+        return { x: xAlign, y: height / 2 + baseOffset };
+      }
+      case "bottom": {
+        const xAlign =
+          align === "start" ? -width / 2 : align === "end" ? width / 2 : 0;
+        return { x: xAlign, y: -(height / 2 + baseOffset) };
+      }
+      case "left": {
+        const yAlign =
+          align === "start" ? height / 2 : align === "end" ? -height / 2 : 0;
+        return { x: -(width / 2 + baseOffset), y: yAlign };
+      }
+      case "right": {
+        const yAlign =
+          align === "start" ? height / 2 : align === "end" ? -height / 2 : 0;
+        return { x: width / 2 + baseOffset, y: yAlign };
+      }
     }
-    case "above": {
+  }
+
+  // side === "inside"
+  if (edge === null) {
+    // "inside" alone — dead center
+    return { x: 0, y: 0 };
+  }
+
+  switch (edge) {
+    case "top": {
       const xAlign =
-        align === "start" ? -width / 2 : align === "end" ? width / 2 : 0;
-      return { x: xAlign, y: height / 2 + baseOffset };
+        align === "start"
+          ? -(width / 2 - baseOffset)
+          : align === "end"
+            ? width / 2 - baseOffset
+            : 0;
+      return { x: xAlign, y: height / 2 - baseOffset };
     }
-    case "below": {
+    case "bottom": {
       const xAlign =
-        align === "start" ? -width / 2 : align === "end" ? width / 2 : 0;
-      return { x: xAlign, y: -height / 2 - baseOffset };
+        align === "start"
+          ? -(width / 2 - baseOffset)
+          : align === "end"
+            ? width / 2 - baseOffset
+            : 0;
+      return { x: xAlign, y: -(height / 2 - baseOffset) };
     }
     case "left": {
       const yAlign =
-        align === "start" ? height / 2 : align === "end" ? -height / 2 : 0;
-      return { x: -width / 2 - baseOffset, y: yAlign };
+        align === "start"
+          ? height / 2 - baseOffset
+          : align === "end"
+            ? -(height / 2 - baseOffset)
+            : 0;
+      return { x: -(width / 2 - baseOffset), y: yAlign };
     }
     case "right": {
       const yAlign =
-        align === "start" ? height / 2 : align === "end" ? -height / 2 : 0;
-      return { x: width / 2 + baseOffset, y: yAlign };
+        align === "start"
+          ? height / 2 - baseOffset
+          : align === "end"
+            ? -(height / 2 - baseOffset)
+            : 0;
+      return { x: width / 2 - baseOffset, y: yAlign };
     }
     default:
       return { x: 0, y: 0 };
@@ -209,14 +273,27 @@ export const getLabelTextAnchor = (
   position: LabelPosition
 ): "start" | "middle" | "end" => {
   if (position === "auto") return "middle";
-  const { relation, align } = parseLabelPosition(
+  const { side, edge, align } = parseLabelPosition(
     position as Exclude<LabelPosition, "auto">
   );
-  // For above / below / inside the alignment is along x → maps to text-anchor directly.
-  if (relation === "above" || relation === "below" || relation === "inside") {
+
+  const resolvedEdge = edge ?? (side === "inside" ? null : "top");
+
+  // Horizontal edges (top/bottom): alignment is along x → maps directly to text-anchor
+  if (
+    resolvedEdge === "top" ||
+    resolvedEdge === "bottom" ||
+    resolvedEdge === null
+  ) {
     if (align === "start") return "start";
     if (align === "end") return "end";
+    return "middle";
   }
+
+  // Vertical edges (left/right): text reads inward from the edge
+  if (resolvedEdge === "left") return "start";
+  if (resolvedEdge === "right") return "end";
+
   return "middle";
 };
 
@@ -235,12 +312,28 @@ export const shouldShowLabel = (
   }
 
   if (isInside) {
+    const [w, h] = shape.dimensions;
     const estimatedTextWidth = labelText.length * 8;
     const estimatedTextHeight = 12;
-    return (
-      shape.dimensions[0] > estimatedTextWidth + 10 &&
-      shape.dimensions[1] > estimatedTextHeight + 5
+
+    if (position === "inside") {
+      // Centered — must fit in both dimensions
+      return w > estimatedTextWidth + 10 && h > estimatedTextHeight + 5;
+    }
+
+    const { edge } = parseLabelPosition(
+      position as Exclude<LabelPosition, "auto">
     );
+
+    // Edge-anchored inside labels: check the relevant dimension
+    if (edge === "top" || edge === "bottom") {
+      // Label sits at top/bottom interior — needs width to fit text, and enough height to not overlap center
+      return w > estimatedTextWidth + 10 && h > estimatedTextHeight + 5;
+    }
+    if (edge === "left" || edge === "right") {
+      // Label sits at left/right interior — needs height to fit text, and enough width
+      return w > estimatedTextWidth + 10 && h > estimatedTextHeight + 5;
+    }
   }
 
   return true;
