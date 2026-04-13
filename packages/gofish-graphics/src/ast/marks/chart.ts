@@ -680,13 +680,22 @@ export function circle<T extends Record<string, any>>({
     _layerContext?: LayerContext
   ) => {
     if (debug) console.log("circle", key, d);
+    // scatter passes an array of items; unwrap to first element for field lookup
+    const datum: Record<string, any> = Array.isArray(d) ? (d as any[])[0] : d;
+    const resolvedFill =
+      typeof fill === "string" && datum && fill in datum
+        ? v(datum[fill as string])
+        : fill;
+    const resolvedStroke =
+      typeof stroke === "string" && datum && stroke in datum
+        ? v(datum[stroke as string])
+        : stroke;
     const node = Ellipse({
       w: typeof r === "number" ? r * 2 : inferSize(r, d),
       h: typeof r === "number" ? r * 2 : inferSize(r, d),
       aspectRatio: 1,
-      fill:
-        typeof fill === "string" && fill in d ? v(d[fill as keyof T]) : fill,
-      stroke,
+      fill: resolvedFill,
+      stroke: resolvedStroke,
       strokeWidth,
     }).name(key?.toString() ?? "");
     (node as any).datum = d;
