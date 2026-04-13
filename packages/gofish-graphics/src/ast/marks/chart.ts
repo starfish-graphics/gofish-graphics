@@ -685,6 +685,7 @@ export function circle<T extends Record<string, any>>({
       h: typeof r === "number" ? r * 2 : inferSize(r, d),
       rx: typeof r === "number" ? r : 5,
       ry: typeof r === "number" ? r : 5,
+      aspectRatio: 1,
       fill:
         typeof fill === "string" && fill in d ? v(d[fill as keyof T]) : fill,
       stroke,
