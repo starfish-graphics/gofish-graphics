@@ -37,14 +37,15 @@ export const Ellipse = ({
   fill = color6_old[0],
   stroke = fill,
   strokeWidth = 0,
+  aspectRatio,
   ...fancyDims
 }: {
   name?: string;
   fill?: MaybeValue<string>;
   stroke?: MaybeValue<string>;
   strokeWidth?: number;
-  rx?: number;
-  ry?: number;
+  /** w/h ratio to enforce. When both dims are data-driven, the constraining axis is used. */
+  aspectRatio?: number;
 } & FancyDims<MaybeValue<number>>) => {
   const dims = elaborateDims(fancyDims).map(inferEmbedded);
   return new GoFishNode(
@@ -100,14 +101,37 @@ export const Ellipse = ({
       //   ];
       // },
       inferSizeDomains: (shared, children) => {
-        return {
-          w: isValue(dims[0].size)
-            ? Monotonic.linear(getValue(dims[0].size!), 0)
-            : Monotonic.linear(0, dims[0].size ?? 0),
-          h: isValue(dims[1].size)
-            ? Monotonic.linear(getValue(dims[1].size!), 0)
-            : Monotonic.linear(0, dims[1].size ?? 0),
-        };
+        const wDomain = isValue(dims[0].size)
+          ? Monotonic.linear(getValue(dims[0].size!), 0)
+          : Monotonic.linear(0, dims[0].size ?? 0);
+        const hDomain = isValue(dims[1].size)
+          ? Monotonic.linear(getValue(dims[1].size!), 0)
+          : Monotonic.linear(0, dims[1].size ?? 0);
+
+        if (aspectRatio !== undefined && aspectRatio > 0) {
+          const wIsData = isValue(dims[0].size);
+          const hIsData = isValue(dims[1].size);
+
+          if (wIsData && !hIsData) {
+            return {
+              w: wDomain,
+              h: Monotonic.linear(
+                (wDomain as Monotonic.Linear).slope / aspectRatio,
+                0
+              ),
+            };
+          } else if (hIsData && !wIsData) {
+            return {
+              w: Monotonic.linear(
+                (hDomain as Monotonic.Linear).slope * aspectRatio,
+                0
+              ),
+              h: hDomain,
+            };
+          }
+        }
+
+        return { w: wDomain, h: hDomain };
       },
       layout: (
         shared,
@@ -117,12 +141,28 @@ export const Ellipse = ({
         measurement,
         posScales
       ) => {
-        const w = isValue(dims[0].size)
+        let w = isValue(dims[0].size)
           ? getValue(dims[0].size!) * scaleFactors[0]!
           : (dims[0].size ?? size[0]);
-        const h = isValue(dims[1].size)
+        let h = isValue(dims[1].size)
           ? getValue(dims[1].size!) * scaleFactors[1]!
           : (dims[1].size ?? size[1]);
+
+        if (aspectRatio !== undefined && aspectRatio > 0) {
+          const wIsData = isValue(dims[0].size);
+          const hIsData = isValue(dims[1].size);
+
+          if (wIsData && !hIsData) {
+            h = w / aspectRatio;
+          } else if (hIsData && !wIsData) {
+            w = h * aspectRatio;
+          } else {
+            const containedW = Math.min(w, h * aspectRatio);
+            w = containedW;
+            h = containedW / aspectRatio;
+          }
+        }
+
         const x = isValue(dims[0].min)
           ? posScales[0]!(getValue(dims[0].min)!)
           : (dims[0].min ?? undefined);

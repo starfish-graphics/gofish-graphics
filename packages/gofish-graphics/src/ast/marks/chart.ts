@@ -683,6 +683,7 @@ export function circle<T extends Record<string, any>>({
     const node = Ellipse({
       w: typeof r === "number" ? r * 2 : inferSize(r, d),
       h: typeof r === "number" ? r * 2 : inferSize(r, d),
+      aspectRatio: 1,
       fill:
         typeof fill === "string" && fill in d ? v(d[fill as keyof T]) : fill,
       stroke,
