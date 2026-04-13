@@ -13,11 +13,11 @@ const lakeTotals = Object.entries(_.groupBy(seafood, "lake")).map(
 );
 
 gf.Layer([
-  gf.Chart(lakeTotals)
+  gf
+    .Chart(lakeTotals)
     .flow(gf.spread("lake", { dir: "x", spacing: 64 }))
-    .mark(gf.scaffold({ h: "count" }).name("points")),
-  gf.Chart(gf.select("points"))
-    .mark(gf.area({ opacity: 0.6 })),
+    .mark(gf.blank({ h: "count" }).name("points")),
+  gf.Chart(gf.select("points")).mark(gf.area({ opacity: 0.6 })),
 ]).render(root, { w: 400, h: 250, axes: true });
 ```
 
@@ -31,14 +31,14 @@ area({ stroke?, strokeWidth = 0, opacity?, mixBlendMode = "normal", dir = "x", i
 
 ## Parameters
 
-| Option | Type | Description |
-|--------|------|-------------|
-| `stroke` | `string` | Stroke color |
-| `strokeWidth` | `number` | Stroke width |
-| `opacity` | `number` | Opacity (0–1) |
-| `mixBlendMode` | `"normal" \| "multiply"` | Blend mode |
-| `dir` | `"x" \| "y"` | Direction axis |
-| `interpolation` | `"linear" \| "bezier"` | Curve interpolation |
+| Option          | Type                     | Description         |
+| --------------- | ------------------------ | ------------------- |
+| `stroke`        | `string`                 | Stroke color        |
+| `strokeWidth`   | `number`                 | Stroke width        |
+| `opacity`       | `number`                 | Opacity (0–1)       |
+| `mixBlendMode`  | `"normal" \| "multiply"` | Blend mode          |
+| `dir`           | `"x" \| "y"`             | Direction axis      |
+| `interpolation` | `"linear" \| "bezier"`   | Curve interpolation |
 
 ## Example
 

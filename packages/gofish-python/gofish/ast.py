@@ -608,19 +608,19 @@ def area(
     return Mark("area", **kwargs)
 
 
-def scaffold(
+def blank(
     w: Optional[Union[int, str]] = None,
     h: Optional[Union[int, str]] = None,
     **kwargs: Any,
 ) -> Mark:
-    """Scaffold mark - invisible guide for positioning."""
-    scaffold_kwargs: Dict[str, Any] = {}
+    """Blank mark - invisible guide for positioning."""
+    blank_kwargs: Dict[str, Any] = {}
     if w is not None:
-        scaffold_kwargs["w"] = w
+        blank_kwargs["w"] = w
     if h is not None:
-        scaffold_kwargs["h"] = h
-    scaffold_kwargs.update(kwargs)
-    return Mark("scaffold", **scaffold_kwargs)
+        blank_kwargs["h"] = h
+    blank_kwargs.update(kwargs)
+    return Mark("blank", **blank_kwargs)
 
 
 def ellipse(
