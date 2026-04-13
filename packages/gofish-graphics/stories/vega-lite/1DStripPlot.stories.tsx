@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
 import { Chart, scatter, rect, log } from "../../src/lib";
+import seedrandom from "seedrandom";
 import data from "vega-datasets";
 
 // Mirrors: https://vega.github.io/vega-lite/examples/tick_dot.html
@@ -25,10 +26,11 @@ export const Default: StoryObj<Args> = {
   render: (args: Args, context: any) => {
     const container = initializeContainer();
 
+    const rng = seedrandom("gofish");
     const weather = (context.loaded.weather as any[]).map(d => ({
       date: d.date,
       precipitation: d.precipitation,
-      stripY: Math.random() * 0.2, 
+      stripY: rng() * 0.2,
     }));
 
     Chart(weather)

@@ -7,9 +7,10 @@ const lakeTotals = Object.entries(_.groupBy(seafood, "lake")).map(
 );
 
 gf.Layer([
-  gf.Chart(lakeTotals)
+  gf
+    .Chart(lakeTotals)
     .flow(gf.spread("lake", { dir: "x", spacing: 64 }))
-    .mark(gf.scaffold({ h: "count" }).name("points")),
+    .mark(gf.blank({ h: "count" }).name("points")),
   gf.Chart(gf.select("points")).mark(gf.area({ opacity: 0.8 })),
 ]).render(root, {
   w: 500,

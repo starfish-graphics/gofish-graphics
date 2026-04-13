@@ -16,12 +16,7 @@
  */
 
 import { execSync } from "child_process";
-import {
-  readFileSync,
-  existsSync,
-  mkdirSync,
-  writeFileSync,
-} from "fs";
+import { readFileSync, existsSync, mkdirSync, writeFileSync } from "fs";
 import { join, dirname } from "path";
 import { mapJsToPython } from "./path-mapping.js";
 export { mapJsToPython } from "./path-mapping.js";
@@ -172,9 +167,7 @@ for (const jsFile of deletedJs) {
       status: "error",
       message: `JS story deleted but Python counterpart still exists (${pythonFile})`,
     });
-    console.error(
-      `  ERROR: ${jsFile} deleted but ${pythonFile} still exists`
-    );
+    console.error(`  ERROR: ${jsFile} deleted but ${pythonFile} still exists`);
     errors++;
   } else if (existsSync(join(ROOT_DIR, pythonFile)) || pythonDeleted) {
     results.push({
@@ -215,7 +208,9 @@ for (const jsFile of modifiedJs) {
       status: "warning",
       message: `JS story modified but no Python counterpart exists`,
     });
-    console.warn(`  WARNING: ${jsFile} modified but ${pythonFile} does not exist`);
+    console.warn(
+      `  WARNING: ${jsFile} modified but ${pythonFile} does not exist`
+    );
     continue;
   }
 

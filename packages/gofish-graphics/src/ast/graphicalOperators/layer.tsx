@@ -234,9 +234,20 @@ export const layer = createOperatorSequential(
             },
           };
         },
-        render: ({ intrinsicDims, transform }, children) => {
+        render: ({ intrinsicDims, transform }, children, node) => {
           const scaleX = options.transform?.scale?.x ?? 1;
           const scaleY = options.transform?.scale?.y ?? 1;
+          const orderedChildren = children
+            .map((child, index) => ({
+              child,
+              index,
+              zOrder:
+                node.children[index] instanceof GoFishNode
+                  ? node.children[index].getZOrder()
+                  : 0,
+            }))
+            .sort((a, b) => a.zOrder - b.zOrder || a.index - b.index)
+            .map(({ child }) => child);
 
           return (
             <g
@@ -244,7 +255,7 @@ export const layer = createOperatorSequential(
                 transform?.translate?.[1] ?? 0
               }) scale(${scaleX}, ${scaleY})`}
             >
-              {children}
+              {orderedChildren}
             </g>
           );
         },

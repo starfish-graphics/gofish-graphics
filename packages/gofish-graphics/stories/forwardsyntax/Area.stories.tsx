@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
 import { seafood } from "../../src/data/catch";
 import { streamgraphData } from "../../src/data/streamgraphData";
-import { Chart, spread, scaffold, stack, Layer, select } from "../../src/lib";
+import { Chart, spread, blank, stack, Layer, select } from "../../src/lib";
 import { area, group, log } from "../../src/ast/marks/chart";
 
 const meta: Meta = {
@@ -28,7 +28,7 @@ export const Basic: StoryObj<Args> = {
     Layer([
       Chart(seafood)
         .flow(spread("lake", { dir: "x", spacing: 64 }))
-        .mark(scaffold({ h: "count" }).name("points")),
+        .mark(blank({ h: "count" }).name("points")),
       Chart(select("points")).flow(log("points")).mark(area({ opacity: 0.8 })
     ),
     ]).render(container, {
@@ -52,7 +52,7 @@ export const Stacked: StoryObj<Args> = {
           spread("lake", { dir: "x", spacing: 64 }),
           stack("species", { dir: "y" })
         )
-        .mark(scaffold({ h: "count", fill: "species" }).name("bars")),
+        .mark(blank({ h: "count", fill: "species" }).name("bars")),
       Chart(select("bars"))
         .flow(group("species"))
         .mark(area({ opacity: 0.8 })),
@@ -73,7 +73,7 @@ export const Layered: StoryObj<Args> = {
     Layer([
       Chart(streamgraphData)
         .flow(group("c"), spread("x", { dir: "x", spacing: 50 }))
-        .mark(scaffold({ h: "y", fill: "c" }).name("points")),
+        .mark(blank({ h: "y", fill: "c" }).name("points")),
       Chart(select("points"))
         .flow(group("c"))
         .mark(area({ opacity: 0.7 })),
