@@ -7,7 +7,6 @@ import {
   stack,
   table,
   rect,
-  circle,
   gradient,
   derive,
   palette,
@@ -31,11 +30,11 @@ export default meta;
 
 type Args = { w: number; h: number };
 
-// ─── auto ─────────────────────────────────────────────────────────────────────
+// ─── default (no position) ────────────────────────────────────────────────────
 // Infers the best position based on shape geometry.
 
-export const Auto: StoryObj<Args> = {
-  name: "Position: auto",
+export const Default: StoryObj<Args> = {
+  name: "Position: default",
   args: { w: 400, h: 300 },
   render: (args) => {
     const container = initializeContainer();
@@ -47,11 +46,11 @@ export const Auto: StoryObj<Args> = {
   },
 };
 
-// ─── inside ───────────────────────────────────────────────────────────────────
+// ─── center ───────────────────────────────────────────────────────────────────
 // Centred within the shape. Auto-contrasts against the fill.
 
-export const Inside: StoryObj<Args> = {
-  name: "Position: inside",
+export const Center: StoryObj<Args> = {
+  name: "Position: center",
   args: { w: 400, h: 300 },
   render: (args) => {
     const container = initializeContainer();
@@ -62,7 +61,7 @@ export const Inside: StoryObj<Args> = {
       )
       .mark(
         rect({ h: "count", fill: "species" }).label("count", {
-          position: "inside",
+          position: "center",
           fontSize: 10,
         })
       )
@@ -71,27 +70,27 @@ export const Inside: StoryObj<Args> = {
   },
 };
 
-// ─── outside-top ──────────────────────────────────────────────────────────────
+// ─── outset (top) ─────────────────────────────────────────────────────────────
 // Sits above the top edge of the shape.
 
 export const Above: StoryObj<Args> = {
-  name: "Position: outside (top)",
+  name: "Position: outset (top)",
   args: { w: 400, h: 300 },
   render: (args) => {
     const container = initializeContainer();
     Chart(seafood)
       .flow(spread("lake", { dir: "x" }))
-      .mark(rect({ h: "count" }).label("count", { position: "outside" }))
+      .mark(rect({ h: "count" }).label("count", { position: "outset" }))
       .render(container, { w: args.w, h: args.h, axes: true });
     return container;
   },
 };
 
-// ─── outside-bottom ───────────────────────────────────────────────────────────
+// ─── outset-bottom ────────────────────────────────────────────────────────────
 // Sits below the bottom edge of each segment.
 
 export const Below: StoryObj<Args> = {
-  name: "Position: outside-bottom",
+  name: "Position: outset-bottom",
   args: { w: 400, h: 300 },
   render: (args) => {
     const container = initializeContainer();
@@ -102,7 +101,7 @@ export const Below: StoryObj<Args> = {
       )
       .mark(
         rect({ w: "count", fill: "species" }).label("count", {
-          position: "outside-bottom",
+          position: "outset-bottom",
           fontSize: 9,
         })
       )
@@ -111,11 +110,11 @@ export const Below: StoryObj<Args> = {
   },
 };
 
-// ─── outside-left ─────────────────────────────────────────────────────────────
+// ─── outset-left ──────────────────────────────────────────────────────────────
 // Sits to the left of each segment.
 
 export const Left: StoryObj<Args> = {
-  name: "Position: outside-left",
+  name: "Position: outset-left",
   args: { w: 400, h: 300 },
   render: (args) => {
     const container = initializeContainer();
@@ -126,7 +125,7 @@ export const Left: StoryObj<Args> = {
       )
       .mark(
         rect({ w: "count", fill: "species" }).label("count", {
-          position: "outside-left",
+          position: "outset-left",
           fontSize: 9,
           offset: 13,
         })
@@ -136,27 +135,27 @@ export const Left: StoryObj<Args> = {
   },
 };
 
-// ─── outside-right ────────────────────────────────────────────────────────────
+// ─── outset-right ─────────────────────────────────────────────────────────────
 // Sits to the right of the shape. Natural for horizontal bars.
 
 export const Right: StoryObj<Args> = {
-  name: "Position: outside-right",
+  name: "Position: outset-right",
   args: { w: 400, h: 300 },
   render: (args) => {
     const container = initializeContainer();
     Chart(seafood)
       .flow(spread("lake", { dir: "y" }))
-      .mark(rect({ w: "count" }).label("count", { position: "outside-right", offset: 15 }))
+      .mark(rect({ w: "count" }).label("count", { position: "outset-right", offset: 15 }))
       .render(container, { w: args.w, h: args.h, axes: true });
     return container;
   },
 };
 
-// ─── outside-top-start ────────────────────────────────────────────────────────
+// ─── outset-top-start ─────────────────────────────────────────────────────────
 // Above the bar, label anchored at the left edge (start). Good for x-stacked bars.
 
 export const AboveStart: StoryObj<Args> = {
-  name: "Position: outside-top-start",
+  name: "Position: outset-top-start",
   args: { w: 500, h: 300 },
   render: (args) => {
     const container = initializeContainer();
@@ -167,7 +166,7 @@ export const AboveStart: StoryObj<Args> = {
       )
       .mark(
         rect({ h: "count", fill: "species" }).label("count", {
-          position: "outside-top-start",
+          position: "outset-top-start",
           fontSize: 9,
         })
       )
@@ -176,11 +175,11 @@ export const AboveStart: StoryObj<Args> = {
   },
 };
 
-// ─── outside-top-end ──────────────────────────────────────────────────────────
+// ─── outset-top-end ───────────────────────────────────────────────────────────
 // Above the bar, label anchored at the right edge (end). Good for x-stacked bars.
 
 export const AboveEnd: StoryObj<Args> = {
-  name: "Position: outside-top-end",
+  name: "Position: outset-top-end",
   args: { w: 500, h: 300 },
   render: (args) => {
     const container = initializeContainer();
@@ -191,7 +190,7 @@ export const AboveEnd: StoryObj<Args> = {
       )
       .mark(
         rect({ h: "count", fill: "species" }).label("count", {
-          position: "outside-top-end",
+          position: "outset-top-end",
           fontSize: 9,
         })
       )
@@ -203,22 +202,22 @@ export const AboveEnd: StoryObj<Args> = {
 // ─── All positions grid ────────────────────────────────────────────────────────
 // One row per position so they can be compared side by side.
 
-const ALL_POSITIONS = [
-  "auto",
-  "inside",
-  "inside-top",
-  "inside-bottom",
-  "inside-left",
-  "inside-right",
-  "inside-top-start",
-  "inside-top-end",
-  "outside-top",
-  "outside-bottom",
-  "outside-left",
-  "outside-right",
-  "outside-top-start",
-  "outside-top-end",
-] as const;
+const ALL_POSITIONS: LabelPosition[] = [
+  "center",
+  "outset",
+  "inset-top",
+  "inset-bottom",
+  "inset-left",
+  "inset-right",
+  "inset-top-start",
+  "inset-top-end",
+  "outset-top",
+  "outset-bottom",
+  "outset-left",
+  "outset-right",
+  "outset-top-start",
+  "outset-top-end",
+];
 
 export const AllPositions: StoryObj<{ w: number; h: number }> = {
   name: "All positions – comparison",
@@ -268,52 +267,19 @@ export const AllPositions: StoryObj<{ w: number; h: number }> = {
 export const LabelOnSpread: StoryObj<Args> = {
   name: "Label on spread",
   args: { w: 500, h: 300 },
-  // want something like this??
-  // render: (args) => {
-  //   const container = initializeContainer();
-  //   Chart(seafood)
-  //     .flow(
-  //       spread("lake", { dir: "x" }).label("lake"),
-  //       stack("species", { dir: "x" })
-  //     )
-  //     .mark(
-  //       rect({ h: "count", fill: "species" })
-  //     )
-  //     .render(container, { w: args.w, h: args.h, axes: true });
-  //   return container;
-  // },
-
-  // // label only works on Mark combinator spread
-  // render: (args) => {
-  //   const container = initializeContainer();
-  //   Chart(seafood)
-  //     .flow(spread("lake", { dir: "x" }))
-  //     .mark(
-  //       // Mark combinator: two bars side-by-side per lake group.
-  //       // .label() is on the spread, not on either rect.
-  //       spread({ dir: "x", spacing: 4 }, [
-  //         rect({ h: "count", fill: "species" }),
-  //         rect({ h: "count", fill: "#ccc" }),
-  //       ]).label("lake", { position: "above", fontSize: 10 })
-  //     )
-  //     .render(container, { w: args.w, h: args.h, axes: false });
-  //   return container;
-  // },
-
-  // hack for label on group
   render: (args) => {
     const container = initializeContainer();
     Chart(seafood)
       .flow(spread("lake", { dir: "x", spacing: 50 }))
-      .mark(async (d: any, key) => {
+      .mark(async (d: any) => {
         const node = await Chart(d)
           .flow(stack("species", { dir: "x" }))
-          .mark(rect({ h: "count", fill: "species" }))
+          .mark(rect({ h: "count" as any, fill: "species" as any }))
           .resolve();
         // Stamp datum so resolveLabels keeps the label at group level
         // instead of propagating it down to each species bar
         (node as any).datum = d[0];
-        node.label("lake", { position: "outside-top-start", fontSize: 13, offset: 50, rotate: 60 });
+        node.label("lake", { position: "outset-top-start", fontSize: 13, offset: 50, rotate: 60 });
         return node;
       })
       .render(container, { w: args.w, h: args.h, axes: false });
@@ -321,7 +287,7 @@ export const LabelOnSpread: StoryObj<Args> = {
   }
 };
 
-// ─── Heatmap inside ────────────────────────────────────────────────────────────
+// ─── Heatmap center ────────────────────────────────────────────────────────────
 
 const heatData = ["Mon", "Tue", "Wed", "Thu", "Fri"].flatMap((day, di) =>
   ["9am", "12pm", "3pm"].map((hour, hi) => ({
@@ -334,14 +300,14 @@ const heatData = ["Mon", "Tue", "Wed", "Thu", "Fri"].flatMap((day, di) =>
 );
 
 export const HeatmapWithLabels: StoryObj<Args> = {
-  name: "Heatmap – inside labels (auto-contrast)",
+  name: "Heatmap – center labels (auto-contrast)",
   args: { w: 420, h: 280 },
   render: (args) => {
     const container = initializeContainer();
     Chart(heatData, { color: gradient(["#e0f3ff", "#08519c"]) })
       .flow(table("hour", "day", { spacing: 4 }))
       .mark(
-        rect({ fill: "value" }).label("value", { position: "inside", fontSize: 11 })
+        rect({ fill: "value" }).label("value", { position: "center", fontSize: 11 })
       )
       .render(container, { w: args.w, h: args.h, axes: true });
     return container;
@@ -389,7 +355,7 @@ export const Rotated: StoryObj<Args> = {
       Chart(seafood)
         .flow(spread("lake", { dir: "x" }))
         .mark(
-          rect({ h: "count" }).label("count", { position: "outside-top", rotate })
+          rect({ h: "count" }).label("count", { position: "outset-top", rotate })
         )
         .render(container, { w: args.w, h: args.h, axes: true });
     }
@@ -405,7 +371,7 @@ export const Rotated: StoryObj<Args> = {
 // each segment in white text.
 
 export const NormalizedStackedBarWithLabels: StoryObj<Args> = {
-  name: "Normalized stacked bar – inside labels",
+  name: "Normalized stacked bar – center labels",
   args: { w: 350, h: 400 },
   loaders: [async () => ({ population: await data["population.json"]() })],
   render: (args: Args, context: any) => {
@@ -439,7 +405,7 @@ export const NormalizedStackedBarWithLabels: StoryObj<Args> = {
             const row = Array.isArray(d) ? d[0] : d;
             return row.people;
           },
-          { position: "inside", color: "white" }
+          { position: "center", color: "white" }
         )
       )
       .render(container, { w: args.w, h: args.h, axes: true });
@@ -450,34 +416,34 @@ export const NormalizedStackedBarWithLabels: StoryObj<Args> = {
 
 // ─── Position showcase ────────────────────────────────────────────────────────
 // A single large rectangle with every position string rendered at its computed
-// location. Blue = inside positions, amber = outside positions.
+// location. Blue = inset positions, amber = outset positions.
 
 const SHOWCASE_POSITIONS: LabelPosition[] = [
-  "inside",
-  "inside-top",
-  "inside-top-start",
-  "inside-top-end",
-  "inside-bottom",
-  "inside-bottom-start",
-  "inside-bottom-end",
-  "inside-left",
-  "inside-left-start",
-  "inside-left-end",
-  "inside-right",
-  "inside-right-start",
-  "inside-right-end",
-  "outside-top",
-  "outside-top-start",
-  "outside-top-end",
-  "outside-bottom",
-  "outside-bottom-start",
-  "outside-bottom-end",
-  "outside-left",
-  "outside-left-start",
-  "outside-left-end",
-  "outside-right",
-  "outside-right-start",
-  "outside-right-end",
+  "center",
+  "inset-top",
+  "inset-top-start",
+  "inset-top-end",
+  "inset-bottom",
+  "inset-bottom-start",
+  "inset-bottom-end",
+  "inset-left",
+  "inset-left-start",
+  "inset-left-end",
+  "inset-right",
+  "inset-right-start",
+  "inset-right-end",
+  "outset-top",
+  "outset-top-start",
+  "outset-top-end",
+  "outset-bottom",
+  "outset-bottom-start",
+  "outset-bottom-end",
+  "outset-left",
+  "outset-left-start",
+  "outset-left-end",
+  "outset-right",
+  "outset-right-start",
+  "outset-right-end",
 ];
 
 export const PositionShowcase: StoryObj = {
@@ -536,8 +502,9 @@ export const PositionShowcase: StoryObj = {
       const lx = cx + x;
       const ly = cy - y; // negate: calculateLabelOffset uses y-up coords
 
-      const isInside = (pos as string).startsWith("inside");
-      const color = isInside ? "#1d4ed8" : "#92400e";
+      const isInset =
+        pos === "center" || (pos as string).startsWith("inset");
+      const color = isInset ? "#1d4ed8" : "#92400e";
 
       const dot = document.createElementNS(ns, "circle");
       dot.setAttribute("cx", String(lx));
