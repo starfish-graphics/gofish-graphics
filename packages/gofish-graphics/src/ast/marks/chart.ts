@@ -18,8 +18,8 @@ import { type ColorConfig } from "../colorSchemes";
 
 export type { ColorConfig };
 import { inferSize } from "../channels";
-import { Rect } from "../shapes/rect";
 import { rect as generatedRect } from "../shapes/rect";
+import { Ellipse } from "../shapes/ellipse";
 import { Mark, Operator } from "../types";
 
 export type { Mark, Operator };
@@ -680,11 +680,9 @@ export function circle<T extends Record<string, any>>({
     _layerContext?: LayerContext
   ) => {
     if (debug) console.log("circle", key, d);
-    const node = Rect({
+    const node = Ellipse({
       w: typeof r === "number" ? r * 2 : inferSize(r, d),
       h: typeof r === "number" ? r * 2 : inferSize(r, d),
-      rx: typeof r === "number" ? r : 5,
-      ry: typeof r === "number" ? r : 5,
       aspectRatio: 1,
       fill:
         typeof fill === "string" && fill in d ? v(d[fill as keyof T]) : fill,
