@@ -235,26 +235,26 @@ export const Ellipse = ({
             (displayDims[aestheticAxis].min ?? 0) +
             (displayDims[aestheticAxis].size ?? 0) / 2;
 
-          // For linear spaces, we can render a simple line
+          // For linear spaces, render as an ellipse spanning the data axis
           if (space.type === "linear") {
-            const x = isXEmbedded
-              ? (displayDims[0].min ?? 0)
-              : aestheticMid - thickness / 2;
-            const y = isXEmbedded
-              ? aestheticMid - thickness / 2
-              : (displayDims[1].min ?? 0);
-            const width = isXEmbedded
-              ? (displayDims[0].max ?? 0) - (displayDims[0].min ?? 0)
-              : thickness;
-            const height = isXEmbedded
-              ? thickness
-              : (displayDims[1].max ?? 0) - (displayDims[1].min ?? 0);
+            const cx = isXEmbedded
+              ? ((displayDims[0].min ?? 0) + (displayDims[0].max ?? 0)) / 2
+              : aestheticMid;
+            const cy = isXEmbedded
+              ? aestheticMid
+              : ((displayDims[1].min ?? 0) + (displayDims[1].max ?? 0)) / 2;
+            const rx = isXEmbedded
+              ? ((displayDims[0].max ?? 0) - (displayDims[0].min ?? 0)) / 2
+              : thickness / 2;
+            const ry = isXEmbedded
+              ? thickness / 2
+              : ((displayDims[1].max ?? 0) - (displayDims[1].min ?? 0)) / 2;
             return (
-              <rect
-                x={x}
-                y={y}
-                width={width}
-                height={height}
+              <ellipse
+                cx={cx}
+                cy={cy}
+                rx={rx}
+                ry={ry}
                 fill={fill}
                 stroke={stroke ?? fill ?? "black"}
                 stroke-width={strokeWidth ?? 0}
@@ -293,13 +293,23 @@ export const Ellipse = ({
 
         // Both dimensions are data - render as area
 
-        // If we're in a linear space, render as a rect element
+        // If we're in a linear space, render as an ellipse filling the available space
         if (space.type === "linear") {
           const x = displayDims[0].min ?? 0;
           const y = displayDims[1].min ?? 0;
           const width = (displayDims[0].max ?? 0) - x;
           const height = (displayDims[1].max ?? 0) - y;
-          return <rect x={x} y={y} width={width} height={height} fill={fill} />;
+          return (
+            <ellipse
+              cx={x + width / 2}
+              cy={y + height / 2}
+              rx={width / 2}
+              ry={height / 2}
+              fill={fill}
+              stroke={stroke ?? fill ?? "black"}
+              stroke-width={strokeWidth ?? 0}
+            />
+          );
         }
 
         const corners = path(
