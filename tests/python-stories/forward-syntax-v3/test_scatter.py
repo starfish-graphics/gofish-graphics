@@ -19,13 +19,12 @@ def story_connected():
         .flow(scatter("year", x="miles", y="gas"))
         .mark(circle(r=4, fill="white", stroke="black", strokeWidth=2).name("points"))
     )
-    lines = chart(select("points")).mark(line(stroke="black", strokeWidth=2))
-    dots = (
-        chart(DRIVING_SHIFTS)
-        .flow(scatter("year", x="miles", y="gas"))
-        .mark(circle(r=4, fill="white", stroke="black", strokeWidth=2))
+    lines = (
+        chart(select("points"))
+        .mark(line(stroke="black", strokeWidth=2))
+        .zOrder(-1)
     )
     return (
-        Layer([points, lines, dots]),
+        Layer([points, lines]),
         {"w": 400, "h": 400, "axes": True},
     )

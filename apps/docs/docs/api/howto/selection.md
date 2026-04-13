@@ -75,9 +75,9 @@ gf.Layer([
 
 The `line` mark automatically connects all selected points in order.
 
-## Example: Invisible scaffold with line
+## Example: Invisible blank with line
 
-Sometimes you want a connecting line without visible points. Use `scaffold()` to create invisible anchor points:
+Sometimes you want a connecting line without visible points. Use `blank()` to create invisible anchor points:
 
 ::: starfish
 
@@ -92,7 +92,7 @@ gf.Layer([
   gf
     .Chart(locations)
     .flow(gf.scatter("lake", { x: "x", y: "y" }))
-    .mark(gf.scaffold().name("points")),
+    .mark(gf.blank().name("points")),
   gf
     .Chart(gf.select("points"))
     .mark(gf.line({ stroke: "steelblue", strokeWidth: 2 })),
@@ -114,9 +114,9 @@ This allows overlay marks to position themselves relative to the original marks 
 
 ## Common use cases
 
-| Goal                | Pattern                                                     |
-| ------------------- | ----------------------------------------------------------- |
-| Labels on bars      | `rect().name("bars")` → `select("bars")` + `text`           |
-| Line through points | `circle().name("points")` → `select("points")` + `line()`   |
-| Area under line     | `scaffold().name("points")` → `select("points")` + `area()` |
-| Annotations         | Name any mark → select and add custom overlay               |
+| Goal                | Pattern                                                   |
+| ------------------- | --------------------------------------------------------- |
+| Labels on bars      | `rect().name("bars")` → `select("bars")` + `text`         |
+| Line through points | `circle().name("points")` → `select("points")` + `line()` |
+| Area under line     | `blank().name("points")` → `select("points")` + `area()`  |
+| Annotations         | Name any mark → select and add custom overlay             |

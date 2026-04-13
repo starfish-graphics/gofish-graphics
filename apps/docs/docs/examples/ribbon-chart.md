@@ -15,7 +15,7 @@ import {
   Layer,
   select,
   rect,
-  scaffold,
+  blank,
   area,
   group,
 } from "gofish-graphics";

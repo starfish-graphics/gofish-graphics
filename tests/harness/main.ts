@@ -20,7 +20,7 @@ import {
   circle,
   line,
   area,
-  scaffold,
+  blank,
   type Operator,
   type Mark,
 } from "gofish-graphics";
@@ -119,7 +119,7 @@ const MARK_MAP: Record<string, (opts: Record<string, any>) => Mark<any>> = {
   circle: (opts) => circle(opts),
   line: (opts) => line(opts),
   area: (opts) => area(opts),
-  scaffold: (opts) => scaffold(opts),
+  blank: (opts) => blank(opts),
 };
 
 function mapMark(spec: MarkSpec): Mark<any> {
