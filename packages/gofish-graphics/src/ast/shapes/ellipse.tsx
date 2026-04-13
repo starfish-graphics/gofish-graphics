@@ -241,6 +241,12 @@ export const Ellipse = ({
             : getValue(fill)
           : fill;
 
+        stroke = isValue(stroke)
+          ? scaleContext?.unit?.color
+            ? scaleContext.unit.color.get(getValue(stroke))
+            : getValue(stroke)
+          : stroke;
+
         // Both dimensions are aesthetic - render as transformed point
         if (!isXEmbedded && !isYEmbedded) {
           const center: [number, number] = [
