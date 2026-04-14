@@ -1,5 +1,13 @@
 import { createResource, For, Show, Suspense, type JSX } from "solid-js";
-import { type ColorConfig } from "./colorSchemes";
+import {
+  renderDiscreteColorLegend,
+  renderContinuousColorLegend,
+} from "./legends/colorLegend";
+import {
+  type ColorConfig,
+  type GradientScale,
+  type PaletteScale,
+} from "./colorSchemes";
 import { render as solidRender } from "solid-js/web";
 import {
   debugInputSceneGraph,
@@ -22,9 +30,24 @@ import { continuous } from "./domain";
 import { interval } from "../util/interval";
 import { path, pathToSVGPath, transformPath } from "../path";
 
+export type ColorScaleInfo =
+  | {
+      type: "discrete";
+      color: Map<any, string>;
+      domain: string[];
+      colorConfig?: PaletteScale;
+    }
+  | {
+      type: "continuous";
+      color: Map<any, string>;
+      scaleFn: (v: number) => string;
+      domain: [number, number];
+      colorConfig: GradientScale;
+    };
+
 export type ScaleContext = {
   [measure: string]:
-    | { color: Map<any, string>; colorConfig?: ColorConfig }
+    | ColorScaleInfo
     | { domain: [number, number]; scaleFactor: number };
 };
 
@@ -164,7 +187,11 @@ export async function layout(
   child.resolveKeys();
   child.resolveLabels();
   const sizeDomains = child.inferSizeDomains();
-  const [underlyingSpaceX, underlyingSpaceY] = child.resolveUnderlyingSpace();
+  const {
+    x: underlyingSpaceX,
+    y: underlyingSpaceY,
+    color: underlyingSpaceColor,
+  } = child.resolveUnderlyingSpace();
 
   // Apply nice rounding to POSITION space domains
   let niceUnderlyingSpaceX = underlyingSpaceX;
@@ -304,7 +331,24 @@ export const gofish = (
   const runGofish = async (): Promise<LayoutData> => {
     const session: RenderSession = {
       scopeContext: new Map(),
-      scaleContext: { unit: { color: new Map(), colorConfig } },
+      scaleContext: {
+        unit:
+          colorConfig?._tag === "gradient"
+            ? {
+                type: "continuous" as const,
+                color: new Map(),
+                scaleFn: () => "#ccc",
+                domain: [0, 1] as [number, number],
+                colorConfig,
+              }
+            : {
+                type: "discrete" as const,
+                color: new Map(),
+                domain: [] as string[],
+                colorConfig:
+                  colorConfig?._tag === "palette" ? colorConfig : undefined,
+              },
+      },
       keyContext: {},
     };
     try {
@@ -1108,46 +1152,27 @@ export const render = (
                     })()}
                   </Show>
                 </g>
-                {/* legend (discrete color for now) */}
-                <g>
-                  <For
-                    each={Array.from(
-                      (scaleContext?.unit && "color" in scaleContext.unit
-                        ? scaleContext.unit.color
-                        : new Map()
-                      ).entries()
-                    )}
-                  >
-                    {([key, value], i) => (
-                      <g
-                        transform={`translate(${width + PADDING * 3}, ${height - i() * 20})`}
-                      >
-                        <rect
-                          x={-20}
-                          y={-5}
-                          width={10}
-                          height={10}
-                          fill={value}
-                        />
-                        <text
-                          transform="scale(1, -1)"
-                          x={-5}
-                          y={0}
-                          text-anchor="start"
-                          dominant-baseline="middle"
-                          font-size="10px"
-                          fill="gray"
-                        >
-                          {key}
-                        </text>
-                      </g>
-                    )}
-                  </For>
-                </g>
               </>
             );
           })()}
         </Show>
+        {/* color legend — shown whenever a color scale has entries */}
+        {(() => {
+          const unit = scaleContext?.unit;
+          if (!unit || !("color" in unit) || unit.color.size === 0) return null;
+          const legendPos = { x: width + PADDING * 3, y: height };
+          if (unit.type === "continuous") {
+            return renderContinuousColorLegend(
+              unit as Extract<typeof unit, { type: "continuous" }>,
+              legendPos
+            );
+          } else {
+            return renderDiscreteColorLegend(
+              unit as Extract<typeof unit, { type: "discrete" }>,
+              legendPos
+            );
+          }
+        })()}
       </g>
     </svg>
   );

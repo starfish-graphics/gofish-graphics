@@ -1,6 +1,7 @@
 // import { ContinuousDomain } from "./domain";
 import { interval, Interval } from "../util/interval";
 import { CoordinateTransform } from "./coordinateTransforms/coord";
+import type { GradientScale, PaletteScale } from "./colorSchemes";
 
 export type UnderlyingSpaceKind =
   | "position"
@@ -16,6 +17,8 @@ export type POSITION_TYPE = {
   ordinalGroupId?: string;
   source?: string;
   coordinateTransform?: CoordinateTransform;
+  /** Only used when this space describes the color dimension */
+  colorConfig?: GradientScale;
 };
 
 export type DIFFERENCE_TYPE = {
@@ -40,6 +43,8 @@ export type ORDINAL_TYPE = {
   ordinalGroupId?: string;
   source?: string;
   domain?: string[]; // Top-level category keys for axis labels
+  /** Only used when this space describes the color dimension */
+  colorConfig?: PaletteScale;
 };
 
 export type UNDEFINED_TYPE = {
@@ -56,10 +61,15 @@ export type UnderlyingSpace =
   | ORDINAL_TYPE
   | UNDEFINED_TYPE;
 
-export const POSITION = (domain: Interval, coordinateTransform?: CoordinateTransform): UnderlyingSpace => ({
+export const POSITION = (
+  domain: Interval,
+  coordinateTransform?: CoordinateTransform,
+  colorConfig?: GradientScale
+): UnderlyingSpace => ({
   kind: "position",
   domain,
   coordinateTransform,
+  colorConfig,
 });
 
 export const isPOSITION = (space: UnderlyingSpace): space is POSITION_TYPE =>
@@ -80,9 +90,13 @@ export const SIZE = (value: number): UnderlyingSpace => ({
 export const isSIZE = (space: UnderlyingSpace): space is SIZE_TYPE =>
   space.kind === "size";
 
-export const ORDINAL = (domain?: string[]): UnderlyingSpace => ({
+export const ORDINAL = (
+  domain?: string[],
+  colorConfig?: PaletteScale
+): UnderlyingSpace => ({
   kind: "ordinal",
   domain,
+  colorConfig,
 });
 export const isORDINAL = (space: UnderlyingSpace): space is ORDINAL_TYPE =>
   space.kind === "ordinal";
@@ -90,3 +104,11 @@ export const isORDINAL = (space: UnderlyingSpace): space is ORDINAL_TYPE =>
 export const UNDEFINED: UnderlyingSpace = { kind: "undefined" };
 export const isUNDEFINED = (space: UnderlyingSpace): space is UNDEFINED_TYPE =>
   space.kind === "undefined";
+
+/** Bundles x, y, and color underlying spaces for a node. */
+export type SpaceTree = {
+  x: UnderlyingSpace;
+  y: UnderlyingSpace;
+  /** POSITION (continuous) or ORDINAL (discrete) when color-encoded; UNDEFINED otherwise */
+  color: UnderlyingSpace;
+};

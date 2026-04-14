@@ -290,16 +290,19 @@ export const Text = ({
         const anchorY = transform?.translate?.[1] ?? 0;
 
         const unit = node.getRenderSession().scaleContext?.unit;
-        const unitColorScale = unit && "color" in unit ? unit.color : undefined;
+        const unitInfo = unit && "color" in unit ? unit : undefined;
+        const resolveTextColor = (val: any): string | undefined => {
+          const mapResult = unitInfo?.color.get(val);
+          if (mapResult !== undefined) return mapResult;
+          if (unitInfo && "scaleFn" in unitInfo && typeof val === "number")
+            return (unitInfo as any).scaleFn(val);
+          return typeof val === "string" ? val : undefined;
+        };
         const resolvedFill = isValue(fill)
-          ? unitColorScale
-            ? unitColorScale.get(getValue(fill))
-            : getValue(fill)
+          ? resolveTextColor(getValue(fill))
           : (fill as string | undefined);
         const resolvedStroke = isValue(stroke)
-          ? unitColorScale
-            ? unitColorScale.get(getValue(stroke))
-            : getValue(stroke)
+          ? resolveTextColor(getValue(stroke))
           : (stroke as string | undefined);
 
         const layout =

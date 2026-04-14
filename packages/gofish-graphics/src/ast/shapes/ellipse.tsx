@@ -235,17 +235,23 @@ export const Ellipse = ({
         ];
 
         const scaleContext = node.getRenderSession().scaleContext;
-        fill = isValue(fill)
-          ? scaleContext?.unit?.color
-            ? scaleContext.unit.color.get(getValue(fill))
-            : getValue(fill)
-          : fill;
-
-        stroke = isValue(stroke)
-          ? scaleContext?.unit?.color
-            ? scaleContext.unit.color.get(getValue(stroke))
-            : getValue(stroke)
-          : stroke;
+        const unitInfo =
+          scaleContext?.unit && "color" in scaleContext.unit
+            ? scaleContext.unit
+            : undefined;
+        const resolveColor = (val: any): string | undefined => {
+          const mapResult = unitInfo?.color.get(val);
+          if (mapResult !== undefined) return mapResult;
+          if (unitInfo && "scaleFn" in unitInfo && typeof val === "number")
+            return (unitInfo as any).scaleFn(val);
+          return typeof val === "string" ? val : undefined;
+        };
+        fill = (
+          isValue(fill) ? resolveColor(getValue(fill)) : fill
+        ) as typeof fill;
+        stroke = (
+          isValue(stroke) ? resolveColor(getValue(stroke)) : stroke
+        ) as typeof stroke;
 
         // Both dimensions are aesthetic - render as transformed point
         if (!isXEmbedded && !isYEmbedded) {

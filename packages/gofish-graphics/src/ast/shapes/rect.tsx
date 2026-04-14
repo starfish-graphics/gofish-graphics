@@ -350,19 +350,21 @@ export const Rect = ({
 
         const scaleContext = node.getRenderSession().scaleContext;
         const unit = scaleContext?.unit;
-        const unitColorScale = unit && "color" in unit ? unit.color : undefined;
+        const unitInfo = unit && "color" in unit ? unit : undefined;
+        const resolveColor = (val: any): string | undefined => {
+          const mapResult = unitInfo?.color.get(val);
+          if (mapResult !== undefined) return mapResult;
+          if (unitInfo && "scaleFn" in unitInfo && typeof val === "number")
+            return (unitInfo as any).scaleFn(val);
+          return typeof val === "string" ? val : undefined;
+        };
         const originalFill = fill;
-        fill = isValue(fill)
-          ? unitColorScale
-            ? (unitColorScale.get(getValue(fill)) ?? getValue(fill))
-            : getValue(fill)
-          : fill;
-
-        stroke = isValue(stroke)
-          ? unitColorScale
-            ? (unitColorScale.get(getValue(stroke)) ?? getValue(stroke))
-            : getValue(stroke)
-          : stroke;
+        fill = (
+          isValue(fill) ? resolveColor(getValue(fill)) : fill
+        ) as typeof fill;
+        stroke = (
+          isValue(stroke) ? resolveColor(getValue(stroke)) : stroke
+        ) as typeof stroke;
 
         const resolvedFill = fill as string | undefined;
         const resolvedStroke =

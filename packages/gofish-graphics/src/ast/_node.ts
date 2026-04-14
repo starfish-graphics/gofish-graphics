@@ -31,15 +31,21 @@ import {
   isORDINAL,
   isPOSITION,
   isUNDEFINED,
+  ORDINAL,
+  POSITION,
+  UNDEFINED,
   UnderlyingSpace,
+  type SpaceTree,
 } from "./underlyingSpace";
-import { toJSON } from "../util/interval";
-import type { KeyContext, ScaleContext } from "./gofish";
+import { interval, toJSON } from "../util/interval";
+import type { ColorScaleInfo, KeyContext, ScaleContext } from "./gofish";
 import type { ScopeContext } from "./scopeContext";
 import {
   assignPaletteColor,
-  assignGradientColor,
+  createGradientScale,
   type ColorConfig,
+  type GradientScale,
+  type PaletteScale,
 } from "./colorSchemes";
 import {
   type LabelAccessor,
@@ -129,7 +135,7 @@ export class GoFishNode {
   public datum?: any;
   // private inferDomains: (childDomains: Size<Domain>[]) => FancySize<Domain | undefined>;
   private _resolveUnderlyingSpace: ResolveUnderlyingSpace;
-  private _underlyingSpace?: Size<UnderlyingSpace> = undefined;
+  private _underlyingSpace?: SpaceTree = undefined;
   private _inferSizeDomains: InferSizeDomains;
   private _layout: Layout;
   private _render: Render;
@@ -206,29 +212,28 @@ export class GoFishNode {
 
   public resolveColorScale(): void {
     const scaleContext = this.getRenderSession().scaleContext;
-    const unit = scaleContext.unit as {
-      color: Map<any, string>;
-      colorConfig?: ColorConfig;
-    };
+    // scaleContext.unit is always a ColorScaleInfo (set in runGofish)
+    const unit = scaleContext.unit as ColorScaleInfo;
 
-    // If this node carries its own colorConfig (set by ChartBuilder.resolve()),
-    // temporarily apply it for this subtree, then restore for siblings.
+    // Determine which colorConfig is active for this subtree
+    const activeConfig: ColorConfig | undefined =
+      this.colorConfig ??
+      (unit.type === "continuous" ? unit.colorConfig : unit.colorConfig);
+
+    // If this node carries its own colorConfig, apply it for this subtree
     if (this.colorConfig) {
-      const saved = unit.colorConfig;
-      unit.colorConfig = this.colorConfig;
-      this._applyColorConfig(unit);
-      unit.colorConfig = saved;
-      // Recurse so children can override with their own configs
+      this._applyColorConfig(unit, this.colorConfig);
+      // Recurse — children may override with their own configs
       this.children.forEach((child) => {
         if (child instanceof GoFishNode) child.resolveColorScale();
       });
       return;
     }
 
-    if (unit.colorConfig) {
-      this._applyColorConfig(unit);
+    if (activeConfig) {
+      this._applyColorConfig(unit, activeConfig);
     } else {
-      // No colorConfig — single-pass: cycle color6, skip literal CSS colors
+      // No colorConfig — default discrete: cycle color6, skip literal CSS colors
       if (this.color !== undefined && isValue(this.color)) {
         const color = getValue(this.color);
         const isLiteralColor =
@@ -236,11 +241,15 @@ export class GoFishNode {
           (color.startsWith("#") ||
             color.startsWith("rgb") ||
             color.startsWith("hsl"));
-        if (!isLiteralColor && !scaleContext.unit.color.has(color)) {
-          scaleContext.unit.color.set(
-            color,
-            color6[scaleContext.unit.color.size % 6]
-          );
+        if (!isLiteralColor && !unit.color.has(color)) {
+          const discreteUnit = unit as Extract<
+            ColorScaleInfo,
+            { type: "discrete" }
+          >;
+          unit.color.set(color, color6[unit.color.size % 6]);
+          if (!discreteUnit.domain.includes(String(color))) {
+            discreteUnit.domain.push(String(color));
+          }
         }
       }
       this.children.forEach((child) => {
@@ -249,27 +258,42 @@ export class GoFishNode {
     }
   }
 
-  private _applyColorConfig(unit: {
-    color: Map<any, string>;
-    colorConfig?: ColorConfig;
-  }): void {
+  private _applyColorConfig(
+    unit: ColorScaleInfo,
+    colorConfig: ColorConfig
+  ): void {
     const orderedKeys: any[] = [];
     this.collectColorValues(orderedKeys);
-    const colorConfig = unit.colorConfig!;
 
     if (colorConfig._tag === "gradient") {
-      const min = Math.min(...orderedKeys);
-      const max = Math.max(...orderedKeys);
+      const numericKeys = orderedKeys.filter((k) => typeof k === "number");
+      const min = numericKeys.length > 0 ? Math.min(...numericKeys) : 0;
+      const max = numericKeys.length > 0 ? Math.max(...numericKeys) : 1;
+      const scaleFn = createGradientScale(colorConfig, [min, max]);
+
+      // Upgrade unit to continuous (mutate in place to keep the same reference in scaleContext)
+      const continuousUnit = unit as any;
+      continuousUnit.type = "continuous";
+      continuousUnit.scaleFn = scaleFn;
+      continuousUnit.domain = [min, max];
+      continuousUnit.colorConfig = colorConfig;
+
       orderedKeys.forEach((key) => {
         if (!unit.color.has(key)) {
-          const t = max === min ? 0 : (key - min) / (max - min);
-          unit.color.set(key, assignGradientColor(colorConfig, t));
+          unit.color.set(key, scaleFn(key));
         }
       });
     } else {
+      // Palette — discrete
+      const discreteUnit = unit as any;
+      discreteUnit.type = "discrete";
+      discreteUnit.colorConfig = colorConfig;
+
       orderedKeys.forEach((key, i) => {
         if (!unit.color.has(key)) {
           unit.color.set(key, assignPaletteColor(colorConfig, String(key), i));
+          const domain = discreteUnit.domain as string[];
+          if (!domain.includes(String(key))) domain.push(String(key));
         }
       });
     }
@@ -293,16 +317,76 @@ export class GoFishNode {
     });
   }
 
-  public resolveUnderlyingSpace(): Size<UnderlyingSpace> {
+  /** Resolves the color dimension of the underlying space for this subtree. */
+  private resolveColorSpace(
+    childColorSpaces: UnderlyingSpace[]
+  ): UnderlyingSpace {
+    // Collect all data-driven color values in this subtree
+    const colorValues: any[] = [];
+    this.collectColorValues(colorValues);
+
+    if (colorValues.length === 0) {
+      // No data-driven color in this subtree — check children
+      const definedChildren = childColorSpaces.filter((s) => !isUNDEFINED(s));
+      if (definedChildren.length === 0) return UNDEFINED;
+      // Merge children: if all are POSITION, envelope domains; if all ORDINAL, union domains
+      if (definedChildren.every(isPOSITION)) {
+        const positions = definedChildren.filter(isPOSITION);
+        const mins = positions.map((s) => s.domain.min ?? 0);
+        const maxs = positions.map((s) => s.domain.max ?? 0);
+        const colorConfig = positions[0].colorConfig as
+          | GradientScale
+          | undefined;
+        return POSITION(
+          interval(Math.min(...mins), Math.max(...maxs)),
+          undefined,
+          colorConfig
+        );
+      }
+      if (definedChildren.every(isORDINAL)) {
+        const ordinals = definedChildren.filter(isORDINAL);
+        const allKeys = Array.from(
+          new Set(ordinals.flatMap((s) => s.domain ?? []))
+        );
+        const colorConfig = ordinals[0].colorConfig as PaletteScale | undefined;
+        return ORDINAL(allKeys, colorConfig);
+      }
+      return definedChildren[0];
+    }
+
+    // Determine colorConfig from node or scaleContext
+    const colorConfig = this.colorConfig;
+
+    if (colorConfig?._tag === "gradient") {
+      const numericValues = colorValues.filter((v) => typeof v === "number");
+      const min = numericValues.length > 0 ? Math.min(...numericValues) : 0;
+      const max = numericValues.length > 0 ? Math.max(...numericValues) : 1;
+      return POSITION(interval(min, max), undefined, colorConfig);
+    }
+
+    // Palette or default — discrete/ordinal
+    const uniqueKeys = colorValues.map(String);
+    return ORDINAL(
+      uniqueKeys,
+      colorConfig?._tag === "palette" ? colorConfig : undefined
+    );
+  }
+
+  public resolveUnderlyingSpace(): SpaceTree {
     if (this._underlyingSpace) {
       return this._underlyingSpace;
     }
-    this._underlyingSpace = elaborateSize(
+    const childSpaces = this.children.map((child) =>
+      child.resolveUnderlyingSpace()
+    );
+    const [x, y] = elaborateSize(
       this._resolveUnderlyingSpace(
-        this.children.map((child) => child.resolveUnderlyingSpace()),
+        childSpaces.map((s) => [s.x, s.y] as Size<UnderlyingSpace>),
         this.children
       )
     );
+    const color = this.resolveColorSpace(childSpaces.map((s) => s.color));
+    this._underlyingSpace = { x, y, color };
     return this._underlyingSpace;
   }
 
@@ -635,42 +719,24 @@ export const debugUnderlyingSpaceTree = (
   indent: string = ""
 ): void => {
   // Get the underlying space for this node
-  const underlyingSpace = node.resolveUnderlyingSpace();
+  const spaceTree = node.resolveUnderlyingSpace();
 
-  // Format the underlying space for display
-  const formatUnderlyingSpace = (
-    space: UnderlyingSpace | Size<UnderlyingSpace>
-  ): string => {
-    if (Array.isArray(space)) {
-      return `[${space
-        .map((s) => {
-          if (isPOSITION(s)) {
-            return `position(${toJSON(s.domain)})`;
-          } else if (isDIFFERENCE(s)) {
-            return `difference(${s.width})`;
-          } else if (isORDINAL(s)) {
-            return `ordinal(${s.domain})`;
-          } else if (isUNDEFINED(s)) {
-            return `undefined`;
-          } else {
-            return s.kind;
-          }
-        })
-        .join(", ")}]`;
+  // Format a single UnderlyingSpace
+  const formatSpace = (space: UnderlyingSpace): string => {
+    if (isPOSITION(space)) {
+      return `position(${toJSON(space.domain)})`;
+    } else if (isDIFFERENCE(space)) {
+      return `difference(${space.width})`;
+    } else if (isORDINAL(space)) {
+      return `ordinal(${space.domain})`;
+    } else if (isUNDEFINED(space)) {
+      return `undefined`;
     } else {
-      if (isPOSITION(space)) {
-        return `position(${toJSON(space.domain)})`;
-      } else if (isDIFFERENCE(space)) {
-        return `difference(${space.width})`;
-      } else if (isORDINAL(space)) {
-        return `ordinal(${space.domain})`;
-      } else if (isUNDEFINED(space)) {
-        return `undefined`;
-      } else {
-        return space.kind;
-      }
+      return space.kind;
     }
   };
+
+  const spaceLabel = `x:${formatSpace(spaceTree.x)}, y:${formatSpace(spaceTree.y)}, color:${formatSpace(spaceTree.color)}`;
 
   // Get the name for display (handle both GoFishNode and GoFishRef)
   const nodeName = isGoFishNode(node) ? node._name : node.name;
@@ -680,11 +746,11 @@ export const debugUnderlyingSpaceTree = (
   // Create a group for this node only if it has children
   if (hasChildren) {
     console.group(
-      `${indent}${node.type}${nodeName ? ` (${nodeName})` : ""} → ${formatUnderlyingSpace(underlyingSpace)}`
+      `${indent}${node.type}${nodeName ? ` (${nodeName})` : ""} → ${spaceLabel}`
     );
   } else {
     console.log(
-      `${indent}${node.type}${nodeName ? ` (${nodeName})` : ""} → ${formatUnderlyingSpace(underlyingSpace)}`
+      `${indent}${node.type}${nodeName ? ` (${nodeName})` : ""} → ${spaceLabel}`
     );
   }
 

@@ -329,11 +329,24 @@ export const connect = createOperator(
         ) => {
           const scaleContext = node.getRenderSession().scaleContext;
           fill = fill ?? renderData.defaultColor;
-          fill = isValue(fill)
-            ? scaleContext?.unit?.color
-              ? scaleContext.unit.color.get(getValue(fill))
-              : getValue(fill)
-            : fill;
+          const connectUnitInfo =
+            scaleContext?.unit && "color" in scaleContext.unit
+              ? scaleContext.unit
+              : undefined;
+          const resolveConnectColor = (val: any): string | undefined => {
+            const mapResult = connectUnitInfo?.color.get(val);
+            if (mapResult !== undefined) return mapResult;
+            if (
+              connectUnitInfo &&
+              "scaleFn" in connectUnitInfo &&
+              typeof val === "number"
+            )
+              return (connectUnitInfo as any).scaleFn(val);
+            return typeof val === "string" ? val : undefined;
+          };
+          fill = (
+            isValue(fill) ? resolveConnectColor(getValue(fill)) : fill
+          ) as typeof fill;
 
           return (
             <g

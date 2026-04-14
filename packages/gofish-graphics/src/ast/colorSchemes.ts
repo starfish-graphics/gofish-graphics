@@ -76,3 +76,23 @@ export function assignGradientColor(config: GradientScale, t: number): string {
   }
   return chroma.scale(stops).mode("lab")(t).hex();
 }
+
+/**
+ * Returns a scale function (value: number) => string for a gradient config
+ * and domain [min, max]. The returned function clamps to the domain.
+ */
+export function createGradientScale(
+  config: GradientScale,
+  domain: [number, number]
+): (value: number) => string {
+  const [min, max] = domain;
+  const stops =
+    typeof config.stops === "string"
+      ? (schemes[config.stops]?.colors ?? [config.stops])
+      : config.stops;
+  const chromaScale = chroma.scale(stops).mode("lab");
+  return (value: number) => {
+    const t = max === min ? 0 : (value - min) / (max - min);
+    return chromaScale(Math.max(0, Math.min(1, t))).hex();
+  };
+}
