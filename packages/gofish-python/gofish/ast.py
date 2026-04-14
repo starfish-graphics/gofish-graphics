@@ -76,6 +76,7 @@ class ChartBuilder:
         data: Any,
         options: Optional[dict] = None,
         operators: Optional[List[Operator]] = None,
+        z_order: Optional[float] = None,
     ):
         """
         Initialize a ChartBuilder.
@@ -89,6 +90,7 @@ class ChartBuilder:
         self.options = options or {}
         self.operators: List[Operator] = operators or []
         self._mark: Optional[Mark] = None
+        self._z_order = z_order
 
     def flow(self, *ops: Operator) -> "ChartBuilder":
         """
@@ -104,6 +106,7 @@ class ChartBuilder:
             self.data,
             self.options,
             operators=[*self.operators, *ops],
+            z_order=self._z_order,
         )
 
     def mark(self, mark: Mark) -> "ChartBuilder":
@@ -116,9 +119,23 @@ class ChartBuilder:
         Returns:
             New ChartBuilder with mark set
         """
-        new_builder = ChartBuilder(self.data, self.options, self.operators)
+        new_builder = ChartBuilder(
+            self.data, self.options, self.operators, z_order=self._z_order
+        )
         new_builder._mark = mark
         return new_builder
+
+    def zOrder(self, value: float) -> "ChartBuilder":
+        """Set z-order for this chart when rendered inside a Layer."""
+        new_builder = ChartBuilder(
+            self.data, self.options, self.operators, z_order=value
+        )
+        new_builder._mark = self._mark
+        return new_builder
+
+    def zIndex(self, value: float) -> "ChartBuilder":
+        """Alias for zOrder()."""
+        return self.zOrder(value)
 
     def facet(self, field: str, **kwargs: Any) -> "ChartBuilder":
         """
@@ -167,6 +184,7 @@ class ChartBuilder:
             "operators": [op.to_dict() for op in self.operators],
             "mark": self._mark.to_dict(),
             "options": self.options,
+            "zOrder": self._z_order,
         }
 
     def render(
@@ -590,19 +608,19 @@ def area(
     return Mark("area", **kwargs)
 
 
-def scaffold(
+def blank(
     w: Optional[Union[int, str]] = None,
     h: Optional[Union[int, str]] = None,
     **kwargs: Any,
 ) -> Mark:
-    """Scaffold mark - invisible guide for positioning."""
-    scaffold_kwargs: Dict[str, Any] = {}
+    """Blank mark - invisible guide for positioning."""
+    blank_kwargs: Dict[str, Any] = {}
     if w is not None:
-        scaffold_kwargs["w"] = w
+        blank_kwargs["w"] = w
     if h is not None:
-        scaffold_kwargs["h"] = h
-    scaffold_kwargs.update(kwargs)
-    return Mark("scaffold", **scaffold_kwargs)
+        blank_kwargs["h"] = h
+    blank_kwargs.update(kwargs)
+    return Mark("blank", **blank_kwargs)
 
 
 def ellipse(

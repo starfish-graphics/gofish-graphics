@@ -12,7 +12,7 @@ import {
   spread,
   Layer,
   select,
-  scaffold,
+  blank,
   area,
   group,
 } from "gofish-graphics";
@@ -23,7 +23,7 @@ const container = document.getElementById("app");
 Layer([
   Chart(streamgraphData)
     .flow(spread("x", { dir: "x", spacing: 50 }))
-    .mark(scaffold({ h: "y", fill: "c" }).name("points")),
+    .mark(blank({ h: "y", fill: "c" }).name("points")),
   Chart(select("points"))
     .flow(group("c"))
     .mark(area({ opacity: 0.7 })),

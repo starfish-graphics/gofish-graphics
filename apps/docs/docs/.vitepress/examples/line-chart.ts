@@ -3,9 +3,10 @@ const catchLocationsArray = Object.entries(lakeLocations).map(
 );
 
 gf.Layer([
-  gf.Chart(catchLocationsArray)
+  gf
+    .Chart(catchLocationsArray)
     .flow(gf.scatter("lake", { x: "x", y: "y" }))
-    .mark(gf.scaffold().name("points")),
+    .mark(gf.blank().name("points")),
   gf.Chart(gf.select("points")).mark(gf.line()),
 ]).render(root, {
   w: 500,

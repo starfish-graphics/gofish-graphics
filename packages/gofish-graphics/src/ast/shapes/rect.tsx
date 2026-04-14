@@ -57,6 +57,7 @@ export const Rect = ({
   ry = 0,
   filter,
   label,
+  aspectRatio,
   ...fancyDims
 }: {
   key?: string;
@@ -68,6 +69,9 @@ export const Rect = ({
   ry?: number;
   filter?: string;
   label?: boolean;
+  /** w/h ratio to enforce. w = h * aspectRatio. When both dims are data-driven,
+   *  the constraining axis (smaller of the two scaled sizes) is used. */
+  aspectRatio?: number;
 } & FancyDims<MaybeValue<number>>) => {
   const dims = elaborateDims(fancyDims).map(inferEmbedded);
   return new GoFishNode(
@@ -169,10 +173,36 @@ export const Rect = ({
         return [underlyingSpaceX, underlyingSpaceY];
       },
       inferSizeDomains: (shared, children) => {
-        return {
-          w: computeIntrinsicSize(dims[0].size),
-          h: computeIntrinsicSize(dims[1].size),
-        };
+        const wDomain = computeIntrinsicSize(dims[0].size);
+        const hDomain = computeIntrinsicSize(dims[1].size);
+
+        if (aspectRatio !== undefined && aspectRatio > 0) {
+          const wIsData = isValue(dims[0].size);
+          const hIsData = isValue(dims[1].size);
+
+          if (wIsData && !hIsData) {
+            // w is primary; derive h so parent allocates the right height
+            return {
+              w: wDomain,
+              h: Monotonic.linear(
+                (wDomain as Monotonic.Linear).slope / aspectRatio,
+                0
+              ),
+            };
+          } else if (hIsData && !wIsData) {
+            // h is primary; derive w so parent allocates the right width
+            return {
+              w: Monotonic.linear(
+                (hDomain as Monotonic.Linear).slope * aspectRatio,
+                0
+              ),
+              h: hDomain,
+            };
+          }
+          // Both data-driven (circle) or neither: correction happens in layout()
+        }
+
+        return { w: wDomain, h: hDomain };
       },
       layout: (
         shared,
@@ -231,6 +261,24 @@ export const Rect = ({
         }
         if (h === undefined || !Number.isFinite(h)) {
           h = DEFAULT_RECT_SIZE;
+        }
+
+        if (aspectRatio !== undefined && aspectRatio > 0) {
+          const wIsData = isValue(dims[0].size);
+          const hIsData = isValue(dims[1].size);
+
+          if (wIsData && !hIsData) {
+            // w is primary; derive h
+            h = w / aspectRatio;
+          } else if (hIsData && !wIsData) {
+            // h is primary; derive w
+            w = h * aspectRatio;
+          } else {
+            // Both data-driven or neither: contain within available space
+            const containedW = Math.min(w, h * aspectRatio);
+            w = containedW;
+            h = containedW / aspectRatio;
+          }
         }
 
         const result = {

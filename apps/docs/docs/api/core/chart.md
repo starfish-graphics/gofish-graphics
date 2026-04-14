@@ -29,7 +29,7 @@ chart(data, options?)
 | `options.coord` | `CoordinateTransform` | Coordinate transform (e.g. `polar()`)                                                                                                                        |
 | `options.color` | `ColorConfig`         | Color scale applied to all marks in this chart. Use [`palette()`](/api/#palette) for categorical data or [`gradient()`](/api/#gradient) for continuous data. |
 
-Returns a `ChartBuilder<T>` with [`.flow()`](/api/core/flow), [`.mark()`](/api/core/mark), and [`.render()`](/api/core/render) methods.
+Returns a `ChartBuilder<T>` with [`.flow()`](/api/core/flow), [`.mark()`](/api/core/mark), [`.render()`](/api/core/render), and [`.zOrder()`](#zorder) methods.
 
 ## Example
 
@@ -38,4 +38,28 @@ chart(data)
   .flow(spread("category", { dir: "x" }))
   .mark(rect({ h: "value" }))
   .render(container, { w: 500, h: 300, axes: true });
+```
+
+## .zOrder()
+
+Controls the rendering order of this chart when it is a child of a [`layer`](/api/operators/layer). Lower values are drawn first (underneath); higher values are drawn on top.
+
+```ts
+chartBuilder.zOrder(value: number): ChartBuilder
+```
+
+Children with the same z-order keep their original array order. The default z-order is `0`.
+
+```ts
+Layer([
+  chart(data)
+    .flow(scatter("x", { y: "y" }))
+    .mark(line())
+    .zOrder(0),
+  chart(data)
+    .flow(scatter("x", { y: "y" }))
+    .mark(circle({ r: 5 }))
+    .zOrder(1),
+]);
+// circles are always drawn on top of the line, regardless of array position
 ```
