@@ -96,3 +96,8 @@ export type {
   GradientScale,
 } from "./ast/colorSchemes";
 export type { NameableMark } from "./ast/withGoFish";
+export type {
+  LabelSpec,
+  LabelOptions,
+  LabelAccessor,
+} from "./ast/labels/labelPlacement";

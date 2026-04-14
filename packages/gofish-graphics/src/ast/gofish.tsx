@@ -162,6 +162,7 @@ export async function layout(
   child.resolveColorScale();
   child.resolveNames();
   child.resolveKeys();
+  child.resolveLabels();
   const sizeDomains = child.inferSizeDomains();
   const [underlyingSpaceX, underlyingSpaceY] = child.resolveUnderlyingSpace();
 

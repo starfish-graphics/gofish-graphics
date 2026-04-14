@@ -21,6 +21,11 @@ import { inferSize } from "../channels";
 import { rect as generatedRect } from "../shapes/rect";
 import { Ellipse } from "../shapes/ellipse";
 import { Mark, Operator } from "../types";
+import type {
+  LabelAccessor,
+  LabelOptions,
+  LabelSpec,
+} from "../labels/labelPlacement";
 
 export type { Mark, Operator };
 export { generatedRect as rect };
@@ -40,10 +45,11 @@ async function resolveMarkResult(
   return raw as unknown as GoFishNode;
 }
 
-/** Attach .name(layerName) to a mark so it registers each produced node when used in a chart. */
-function nameableMark<T>(
-  base: Mark<T>
-): Mark<T> & { name(layerName: string): Mark<T> } {
+/** Attach .name(layerName) and .label(accessor, options?) to a mark so it registers/labels each produced node when used in a chart. */
+function nameableMark<T>(base: Mark<T>): Mark<T> & {
+  name(layerName: string): Mark<T>;
+  label(accessor: LabelAccessor, options?: LabelOptions): Mark<T>;
+} {
   const withName = (layerName: string): Mark<T> => {
     return async (d: T, key?: string | number, layerContext?: LayerContext) => {
       const node = await resolveMarkResult(
@@ -62,12 +68,33 @@ function nameableMark<T>(
       return node;
     };
   };
+  const withLabel = (
+    accessor: LabelAccessor,
+    options?: LabelOptions
+  ): Mark<T> => {
+    return async (d: T, key?: string | number, layerContext?: LayerContext) => {
+      const node = await resolveMarkResult(
+        base(d, key, layerContext),
+        layerContext
+      );
+      node.label(accessor, options);
+      return node;
+    };
+  };
   Object.defineProperty(base, "name", {
     value: withName,
     writable: true,
     configurable: true,
   });
-  return base as Mark<T> & { name(layerName: string): Mark<T> };
+  Object.defineProperty(base, "label", {
+    value: withLabel,
+    writable: true,
+    configurable: true,
+  });
+  return base as Mark<T> & {
+    name(layerName: string): Mark<T>;
+    label(accessor: LabelAccessor, options?: LabelOptions): Mark<T>;
+  };
 }
 
 const connectXMode = {
@@ -416,7 +443,7 @@ export function spread<T>(
           resolveMarkResult(mark(d, key, layerContext), layerContext)
         )
       );
-      return Spread(
+      const node = await Spread(
         {
           direction: opts.dir.startsWith("x") ? 0 : 1,
           spacing: opts.spacing ?? 0,
@@ -425,6 +452,10 @@ export function spread<T>(
         },
         resolvedChildren
       );
+      // Stamp datum so a label on this spread renders at group level
+      // (rather than propagating down to individual child marks).
+      (node as any).datum = d;
+      return node;
     };
     return nameableMark(base);
   }
@@ -673,7 +704,10 @@ export function circle<T extends Record<string, any>>({
   stroke?: string;
   strokeWidth?: number;
   debug?: boolean;
-}): Mark<T> & { name(layerName: string): Mark<T> } {
+}): Mark<T> & {
+  name(layerName: string): Mark<T>;
+  label(accessor: LabelAccessor, options?: LabelOptions): Mark<T>;
+} {
   const base: Mark<T> = async (
     d: T,
     key?: string | number,

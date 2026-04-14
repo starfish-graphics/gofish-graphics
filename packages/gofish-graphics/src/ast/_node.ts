@@ -41,6 +41,12 @@ import {
   assignGradientColor,
   type ColorConfig,
 } from "./colorSchemes";
+import {
+  type LabelAccessor,
+  type LabelOptions,
+  type LabelSpec,
+} from "./labels/labelPlacement";
+import { renderLabelJSX } from "./labels/renderLabel";
 
 export type RenderSession = {
   scopeContext: ScopeContext;
@@ -137,6 +143,7 @@ export class GoFishNode {
   public coordinateTransform?: CoordinateTransform;
   public color?: MaybeValue<string>;
   public colorConfig?: ColorConfig;
+  public _label?: LabelSpec;
   private _zOrder = 0;
   private renderSession?: RenderSession;
   constructor(
@@ -397,7 +404,7 @@ export class GoFishNode {
   public INTERNAL_render(
     coordinateTransform?: CoordinateTransform
   ): JSX.Element {
-    return this._render(
+    const shapeJSX = this._render(
       {
         intrinsicDims: this.intrinsicDims,
         transform: this.transform,
@@ -412,6 +419,11 @@ export class GoFishNode {
       ),
       this
     );
+    if (this._label && this.intrinsicDims) {
+      const labelJSX = this._renderLabel();
+      if (labelJSX) return [shapeJSX, labelJSX] as unknown as JSX.Element;
+    }
+    return shapeJSX;
   }
 
   public setRenderSession(session: RenderSession): void {
@@ -470,6 +482,32 @@ export class GoFishNode {
   public name(name: string): this {
     this._name = name;
     return this;
+  }
+
+  public label(accessor: LabelAccessor, options?: LabelOptions): this {
+    this._label = { accessor, ...options };
+    return this;
+  }
+
+  public resolveLabels(): void {
+    // Propagate only when this node has no datum of its own.
+    // Nodes with datum (leaf shapes, or spread combinators that carry group data)
+    // render their label directly rather than pushing it to children.
+    if (this._label && this.children.length > 0 && this.datum === undefined) {
+      for (const child of this.children) {
+        if (child instanceof GoFishNode && !child._label) {
+          child._label = this._label;
+        }
+      }
+      this._label = undefined;
+    }
+    for (const child of this.children) {
+      if (child instanceof GoFishNode) child.resolveLabels();
+    }
+  }
+
+  private _renderLabel(): JSX.Element | null {
+    return renderLabelJSX(this);
   }
 
   public setKey(key: string): this {

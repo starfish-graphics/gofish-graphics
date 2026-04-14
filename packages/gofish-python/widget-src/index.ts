@@ -82,6 +82,16 @@ interface OperatorSpec {
   [key: string]: any;
 }
 
+interface LabelSpec {
+  accessor: string;
+  position?: string;
+  fontSize?: number;
+  color?: string;
+  offset?: number;
+  minSpace?: number;
+  rotate?: number;
+}
+
 interface MarkSpec {
   type:
     | "rect"
@@ -94,6 +104,7 @@ interface MarkSpec {
     | "text"
     | "image";
   name?: string;
+  label?: LabelSpec;
   [key: string]: any;
 }
 
@@ -433,17 +444,24 @@ const MARK_MAP: Record<string, (opts: Record<string, any>) => Mark<any>> = {
 };
 
 /**
- * Maps an IR mark spec to a GoFish mark function, applying .name() if present.
+ * Maps an IR mark spec to a GoFish mark function, applying .name() and .label() if present.
  */
 function mapMark(markSpec: MarkSpec): Mark<any> {
-  const { type, name: layerName, ...opts } = markSpec;
+  const { type, name: layerName, label: labelSpec, ...opts } = markSpec;
   const factory = MARK_MAP[type];
   if (!factory) {
     throw new Error(`Unknown mark type: ${type}`);
   }
-  const mark = factory(opts);
+  let mark = factory(opts);
   if (layerName && typeof (mark as any).name === "function") {
-    return (mark as any).name(layerName);
+    mark = (mark as any).name(layerName);
+  }
+  if (labelSpec && typeof (mark as any).label === "function") {
+    const { accessor, ...labelOpts } = labelSpec;
+    mark = (mark as any).label(
+      accessor,
+      Object.keys(labelOpts).length > 0 ? labelOpts : undefined
+    );
   }
   return mark;
 }
