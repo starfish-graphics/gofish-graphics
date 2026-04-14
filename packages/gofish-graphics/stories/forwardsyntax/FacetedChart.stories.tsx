@@ -2,6 +2,8 @@ import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
 import { seafood } from "../../src/data/catch";
 import { Chart, spread, rect } from "../../src/lib";
+import { drivingShifts } from "../../src/data/drivingShifts";
+import { scatter, circle } from "../../src/ast/marks/chart";
 
 const meta: Meta = {
   title: "Forward Syntax V3/Faceted Chart",
@@ -34,6 +36,29 @@ export const Default: StoryObj<Args> = {
         w: args.w,
         h: args.h,
         axes: true,
+      });
+
+    return container;
+  },
+};
+
+export const FacetedScatterDriving: StoryObj<Args> = {
+  args: { w: 800, h: 400 },
+  render: (args: Args) => {
+    const container = initializeContainer();
+
+    Chart(drivingShifts)
+      .flow(spread("side", { dir: "x", spacing: 50 }))
+      .mark((data) =>
+        Chart(data)
+          .flow(scatter("year", { x: "year", y: "miles" }))
+          .mark(circle({ r: 3, fill: "#4682b4" }))
+      )
+      .render(container, {
+        w: args.w,
+        h: args.h,
+        axes: true,
+        debug: true,
       });
 
     return container;

@@ -26,6 +26,8 @@ import {
 } from "../underlyingSpace";
 import { UnderlyingSpace } from "../underlyingSpace";
 import * as Interval from "../../util/interval";
+import { computePosScale, continuous } from "../domain";
+import { nice, ticks } from "d3-array";
 
 // Utility function to unwrap lodash wrapped arrays
 const unwrapLodashArray = function <T>(value: T[] | Collection<T>): T[] {
@@ -304,8 +306,40 @@ export const spread = createOperator(
           modifiedSize[alignDir] = size[alignDir];
           // console.log(size[stackDir], size[alignDir]);
 
-          const childPlaceables = children.map((child) =>
-            child.layout(modifiedSize, scaleFactors, posScales)
+          const childPlaceables = children.map((child) => {
+            let localPosScales = posScales;
+
+            if (child instanceof GoFishNode) {
+              const childSpace = child.resolveUnderlyingSpace();
+
+              for (const dir of [0, 1] as (0 | 1)[]) {
+                if (!localPosScales?.[dir] && isPOSITION(childSpace[dir])) {
+                  const domain = childSpace[dir].domain;
+                  const [niceMin, niceMax] = nice(domain.min, domain.max, 10);
+                  localPosScales = [...localPosScales] as typeof localPosScales;
+                  localPosScales[dir] = computePosScale(
+                    continuous({ value: [niceMin, niceMax], measure: "unit" }),
+                    modifiedSize[dir]
+                  );
+                }
+              }
+            }
+
+            return child.layout(modifiedSize, scaleFactors, localPosScales);
+          });
+
+          for (let i = 0; i < childPlaceables.length; i++) {
+            const cp = childPlaceables[i];
+            const d = cp.dims;
+            console.log(
+              `spread child[${i}] stack(${stackDir}): min=${d[stackDir].min} max=${d[stackDir].max} size=${d[stackDir].size} | align(${alignDir}): min=${d[alignDir].min} max=${d[alignDir].max} size=${d[alignDir].size}`
+            );
+          }
+          console.log(
+            "spread modifiedSize:",
+            modifiedSize[stackDir],
+            "size:",
+            size[stackDir]
           );
 
           // Fixed-position children have dims already defined (e.g. Ref to another layer)
@@ -496,14 +530,89 @@ export const spread = createOperator(
                   stackPos !== undefined ? stackPos - stackMin : undefined,
               },
             },
+            renderData: {
+              perChildAxes: childPlaceables.map((cp, i) => {
+                const child = children[i];
+                if (child instanceof GoFishNode) {
+                  const childSpace = child.resolveUnderlyingSpace();
+                  if (
+                    !posScales?.[stackDir] &&
+                    isPOSITION(childSpace[stackDir])
+                  ) {
+                    const domain = childSpace[stackDir].domain;
+                    const [niceMin, niceMax] = nice(domain.min, domain.max, 10);
+                    const localScale = computePosScale(
+                      continuous({
+                        value: [niceMin, niceMax],
+                        measure: "unit",
+                      }),
+                      modifiedSize[stackDir]
+                    );
+                    return {
+                      dir: stackDir,
+                      domain: { min: niceMin, max: niceMax },
+                      offset: cp.dims[stackDir].min ?? 0,
+                      size: modifiedSize[stackDir],
+                      scale: localScale,
+                    };
+                  }
+                }
+                return null;
+              }),
+            },
           };
         },
-        render: ({ intrinsicDims, transform }, children) => {
+        render: ({ intrinsicDims, transform, renderData }, children) => {
+          const PADDING = 10;
           return (
             <g
               transform={`translate(${transform?.translate?.[0] ?? 0}, ${transform?.translate?.[1] ?? 0})`}
             >
               {children}
+              {renderData?.perChildAxes?.map((axis: any) => {
+                if (!axis) return null;
+                const axisTicks = ticks(axis.domain.min, axis.domain.max, 5);
+                if (axis.dir === 0) {
+                  return (
+                    <g transform={`translate(${axis.offset}, 0)`}>
+                      <line
+                        x1={0}
+                        y1={-PADDING}
+                        x2={axis.size}
+                        y2={-PADDING}
+                        stroke="#888"
+                        stroke-width={0.5}
+                      />
+                      {axisTicks.map((t: number) => {
+                        const px = axis.scale(t);
+                        return (
+                          <g>
+                            <line
+                              x1={px}
+                              y1={-PADDING}
+                              x2={px}
+                              y2={-PADDING * 1.5}
+                              stroke="#888"
+                              stroke-width={0.5}
+                            />
+                            <text
+                              x={px}
+                              y={-PADDING * 1.75}
+                              text-anchor="middle"
+                              font-size={9}
+                              fill="#666"
+                              transform={`scale(1,-1) translate(0, ${PADDING * 3.5})`}
+                            >
+                              {t}
+                            </text>
+                          </g>
+                        );
+                      })}
+                    </g>
+                  );
+                }
+                return null;
+              })}
             </g>
           );
         },

@@ -92,18 +92,21 @@ export const position = createOperator(
           childPlaceable.place("y", offsetY);
 
           return {
+            // intrinsicDims = local extent BEFORE translation.
+            // The dims getter adds transform.translate on top, so we must NOT
+            // include offsetX/Y here (child is placed at origin).
             intrinsicDims: [
               {
-                min: childPlaceable.dims[0].min! + offsetX,
+                min: 0,
                 size: childWidth,
-                center: xPos,
-                max: childPlaceable.dims[0].max! + offsetX,
+                center: childWidth / 2,
+                max: childWidth,
               },
               {
-                min: childPlaceable.dims[1].min! + offsetY,
+                min: 0,
                 size: childHeight,
-                center: yPos,
-                max: childPlaceable.dims[1].max! + offsetY,
+                center: childHeight / 2,
+                max: childHeight,
               },
             ],
             transform: {
