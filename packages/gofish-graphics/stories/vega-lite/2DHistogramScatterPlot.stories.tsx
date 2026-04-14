@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
-import { Chart, circle, scatter, log, rect } from "../../src/lib";
+import { Chart, circle, scatter, log, rect, v } from "../../src/lib";
 import data from "vega-datasets";
 import { uniq } from "lodash";
 
@@ -42,17 +42,39 @@ export const Default: StoryObj<Args> = {
     // Build a flat list of (x, y) bin coordinates.
     const coords = xs.flatMap((x) => ys.map((y) => [x, y] as const));
 
-    const movieCounts = coords.map(([x, y]) => ({
-      x,
-      y,
-      count: movies.filter((d) => d.x === x && d.y === y).length / movies.length,
-    })).filter((d) => d.count > 0).map((d, i) => ({ ...d, id: i }));
+    const counts = coords
+      .map(([x, y]) => ({
+        x,
+        y,
+        count: movies.filter((d) => d.x === x && d.y === y).length,
+      }))
+      .filter((d) => d.count > 0);
+
+    const maxCount = Math.max(1, ...counts.map((d) => d.count));
+
+    // Map counts to mark sizes, capped by bin size so marks stay inside bins.
+    const movieCounts = counts.map((d, i) => {
+      const t = d.count / maxCount; // 0..1
+      const w = Math.max(1, xbinSize * 10 * t) / xs.length;
+      const h = Math.max(1, ybinSize * 10* t) / ys.length;
+      return { ...d, w, h, id: i };
+    });
     
 
     Chart(movieCounts) 
       .flow(log("scatter locations"), scatter("id", { x: "x", y: "y", debug: true}))
-      // Draw a heatmap-like cell per bin (fill encodes count).
-      .mark(rect({ w: "count", h: "count", fill: "black", stroke: "black", strokeWidth: 1 } as any))
+      // Size each cell by bucket count.
+      .mark(
+        rect({
+          w: "w",
+          h: "h",
+          fill: "transparent",
+          stroke: "black",
+          strokeWidth: 1,
+          rx: 2,
+          ry: 2,
+        } as any)
+      )
       .render(container, { w: args.w, h: args.h, axes: true });
 
     return container;
