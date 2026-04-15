@@ -113,6 +113,7 @@ export default defineConfig({
             { text: "table", link: "/api/operators/table" },
             { text: "scatter", link: "/api/operators/scatter" },
             { text: "layer", link: "/api/operators/layer" },
+            { text: "constrain", link: "/api/operators/constrain" },
             { text: "derive", link: "/api/operators/derive" },
             { text: "log", link: "/api/operators/log" },
           ],
