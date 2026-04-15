@@ -101,7 +101,7 @@ export default defineConfig({
             { text: "ellipse", link: "/api/marks/ellipse" },
             { text: "line", link: "/api/marks/line" },
             { text: "area", link: "/api/marks/area" },
-            { text: "scaffold", link: "/api/marks/scaffold" },
+            { text: "blank", link: "/api/marks/blank" },
             { text: "ref", link: "/api/marks/ref" },
           ],
         },

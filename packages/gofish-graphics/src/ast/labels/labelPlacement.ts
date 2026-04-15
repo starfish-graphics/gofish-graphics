@@ -22,7 +22,7 @@ export function resolveLabelText(accessor: LabelAccessor, datum: any): string {
   return obj?.[accessor] != null ? String(obj[accessor]) : "";
 }
 
-export type LabelSide = "inside" | "outside";
+export type LabelSide = "inset" | "outset";
 export type LabelEdge = "top" | "bottom" | "left" | "right";
 export type LabelAlignment = "start" | "center" | "end";
 
@@ -31,30 +31,30 @@ export type LabelAlignment = "start" | "center" | "end";
  *
  * `side-edge-align`
  *
- * - `side`: `inside | outside` — whether the label sits inside or outside the shape
+ * - `side`: `inset | outset` — whether the label sits inside or outside the shape
  * - `edge`: `top | bottom | left | right` — which edge to anchor to
  * - `align`: `start | center | end` — alignment along the perpendicular axis
  *
- * All dimensions are optional (right-to-left): just `"outside"`, `"outside-top"`,
- * or the full `"outside-top-start"` are all valid.
+ * Special tokens:
+ * - `"center"` — dead center of the shape (no edge)
+ * - `"outset"` — shorthand for `outset-top-center`
+ * - `inset` always requires an edge: `"inset-top"`, `"inset-bottom"`, etc.
  *
- * Defaults: side → `outside`, edge → `top`, align → `center`
+ * Defaults: side → `outset`, edge → `top`, align → `center`
  *
  * Alignment semantics:
- * - `outside-top` / `outside-bottom` / `inside-top` / `inside-bottom`:
+ * - `outset-top` / `outset-bottom` / `inset-top` / `inset-bottom`:
  *   align is along x — `start` = left edge, `end` = right edge
- * - `outside-left` / `outside-right` / `inside-left` / `inside-right`:
+ * - `outset-left` / `outset-right` / `inset-left` / `inset-right`:
  *   align is along y — `start` = top edge, `end` = bottom edge
- *
- * Special: `"inside"` with no edge defaults to center of shape.
  */
 export type LabelPosition =
-  | "auto"
-  | LabelSide
+  | "center"
+  | "outset"
   | `${LabelSide}-${LabelEdge}`
   | `${LabelSide}-${LabelEdge}-${LabelAlignment}`;
 
-const SIDES = new Set<string>(["inside", "outside"]);
+const SIDES = new Set<string>(["inset", "outset"]);
 const EDGES = new Set<string>(["top", "bottom", "left", "right"]);
 const ALIGNMENTS = new Set<string>(["start", "center", "end"]);
 
@@ -64,14 +64,14 @@ interface ParsedPosition {
   align: LabelAlignment;
 }
 
-/** Parse a resolved (non-auto) position into its three dimensions. */
-function parseLabelPosition(
-  position: Exclude<LabelPosition, "auto">
-): ParsedPosition {
+/** Parse a position string into its three dimensions. */
+function parseLabelPosition(position: LabelPosition): ParsedPosition {
+  if (position === "center")
+    return { side: "inset", edge: null, align: "center" };
+
   const parts = (position as string).split("-");
 
-  // Try to extract side, edge, align from left to right
-  let side: LabelSide = "outside";
+  let side: LabelSide = "outset";
   let edge: LabelEdge | null = null;
   let align: LabelAlignment = "center";
 
@@ -124,7 +124,7 @@ export const inferLabelPosition = (
   context: LayoutContext,
   config: LabelConfig = {}
 ): LabelPosition => {
-  if (config.position && config.position !== "auto") {
+  if (config.position) {
     return config.position;
   }
 
@@ -132,7 +132,7 @@ export const inferLabelPosition = (
     const area = shape.dimensions[0] * shape.dimensions[1];
     const threshold =
       context.chartBounds.width * context.chartBounds.height * 0.05;
-    return area < threshold ? "inside" : "outside-right";
+    return area < threshold ? "center" : "outset-right";
   }
 
   if (shape.isStacked) {
@@ -141,27 +141,27 @@ export const inferLabelPosition = (
     const minSize = config.minSpace ?? 20;
 
     if (size > minSize && config.preferInside !== false) {
-      return "inside";
+      return "center";
     }
 
     if (shape.stackDirection === 1) {
       return context.availableSpace.bottom > context.availableSpace.top
-        ? "outside-bottom"
-        : "outside-top";
+        ? "outset-bottom"
+        : "outset-top";
     } else {
       return context.availableSpace.right > context.availableSpace.left
-        ? "outside-right"
-        : "outside-left";
+        ? "outset-right"
+        : "outset-left";
     }
   }
 
   if (shape.isSpread) {
     const spreadDim = shape.spreadDirection ?? 0;
     if (spreadDim === 0) {
-      return context.hasAxes ? "outside-bottom" : "outside-top";
+      return context.hasAxes ? "outset-bottom" : "outset-top";
     }
     if (spreadDim === 1) {
-      return context.hasAxes ? "outside-left" : "outside-top";
+      return context.hasAxes ? "outset-left" : "outset-top";
     }
   }
 
@@ -169,18 +169,18 @@ export const inferLabelPosition = (
     (shape.type === "line" || shape.type === "area") &&
     context.isMultiSeries
   ) {
-    return "outside-right";
+    return "outset-right";
   }
 
   if (shape.type === "rect" || shape.type === "ellipse") {
     const area = shape.dimensions[0] * shape.dimensions[1];
     const threshold = config.minSpace ?? 20;
     if (area > threshold * threshold) {
-      return "inside";
+      return "center";
     }
   }
 
-  return "outside-top";
+  return "outset-top";
 };
 
 export const calculateLabelOffset = (
@@ -188,14 +188,12 @@ export const calculateLabelOffset = (
   shapeSize: Size,
   config: LabelConfig = {}
 ): { x: number; y: number } => {
-  if (position === "auto") return { x: 0, y: 0 };
+  if (position === "center") return { x: 0, y: 0 };
   const baseOffset = config.offset ?? 10;
   const [width, height] = shapeSize;
-  const { side, edge, align } = parseLabelPosition(
-    position as Exclude<LabelPosition, "auto">
-  );
+  const { side, edge, align } = parseLabelPosition(position);
 
-  if (side === "outside") {
+  if (side === "outset") {
     switch (edge ?? "top") {
       case "top": {
         const xAlign =
@@ -220,9 +218,8 @@ export const calculateLabelOffset = (
     }
   }
 
-  // side === "inside"
+  // side === "inset"
   if (edge === null) {
-    // "inside" alone — dead center
     return { x: 0, y: 0 };
   }
 
@@ -272,12 +269,10 @@ export const calculateLabelOffset = (
 export const getLabelTextAnchor = (
   position: LabelPosition
 ): "start" | "middle" | "end" => {
-  if (position === "auto") return "middle";
-  const { side, edge, align } = parseLabelPosition(
-    position as Exclude<LabelPosition, "auto">
-  );
+  if (position === "center") return "middle";
+  const { side, edge, align } = parseLabelPosition(position);
 
-  const resolvedEdge = edge ?? (side === "inside" ? null : "top");
+  const resolvedEdge = edge ?? (side === "inset" ? null : "top");
 
   // Horizontal edges (top/bottom): alignment is along x → maps directly to text-anchor
   if (
@@ -291,8 +286,8 @@ export const getLabelTextAnchor = (
   }
 
   // Vertical edges (left/right): text reads inward from the edge
-  if (resolvedEdge === "left") return "start";
-  if (resolvedEdge === "right") return "end";
+  if (resolvedEdge === "left") return side === "inset" ? "start" : "end";
+  if (resolvedEdge === "right") return side === "inset" ? "end" : "start";
 
   return "middle";
 };
@@ -304,26 +299,25 @@ export const shouldShowLabel = (
   config: LabelConfig = {}
 ): boolean => {
   const minSpace = config.minSpace ?? 20;
-  const isInside = (position as string).startsWith("inside");
+  const isInset =
+    position === "center" || (position as string).startsWith("inset");
 
   const area = shape.dimensions[0] * shape.dimensions[1];
-  if (area < minSpace && !isInside) {
+  if (area < minSpace && !isInset) {
     return false;
   }
 
-  if (isInside) {
+  if (isInset) {
     const [w, h] = shape.dimensions;
     const estimatedTextWidth = labelText.length * 8;
     const estimatedTextHeight = 12;
 
-    if (position === "inside") {
+    if (position === "center") {
       // Centered — must fit in both dimensions
       return w > estimatedTextWidth + 10 && h > estimatedTextHeight + 5;
     }
 
-    const { edge } = parseLabelPosition(
-      position as Exclude<LabelPosition, "auto">
-    );
+    const { edge } = parseLabelPosition(position);
 
     // Edge-anchored inside labels: check the relevant dimension
     if (edge === "top" || edge === "bottom") {

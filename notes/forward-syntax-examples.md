@@ -32,7 +32,7 @@ chart(seafood)
 layer([
   chart(seafood)
     .flow(scatter({ x: "lakeLocX" }))
-    .mark(scaffold())
+    .mark(blank())
     .as("points"),
   chart(select("points")).mark(line()),
 ]);
@@ -47,14 +47,14 @@ chart(seafood)
 ```ts
 chart(seafood)
   .flow(scatter("lake", { x: "lakeLocX" }))
-  .mark(scaffold())
+  .mark(blank())
   .layer(connect(), line());
 ```
 
 ```ts
 chart(seafood)
   .flow(scatter("lake", { x: "lakeLocX" }))
-  .mark(scaffold())
+  .mark(blank())
   .layer(chart().flow(connect()).mark(line()));
 ```
 
@@ -64,7 +64,7 @@ chart(seafood)
 layer([
   chart(seafood)
     .flow(scatter({ x: "lakeLocX" }))
-    .mark(scaffold({ h: "count" }))
+    .mark(blank({ h: "count" }))
     .as("points"),
   chart(select("points")).mark(connect()),
 ]);
@@ -102,7 +102,7 @@ chart(seafood)
 layer([
   chart(seafood)
     .flow(scatter({ x: "lakeLocX" }), stack("species", { dir: "y" }))
-    .mark(scaffold({ h: "count" }))
+    .mark(blank({ h: "count" }))
     .as("points"),
   chart(select("points")).mark(group("species"), connect()),
 ]);
@@ -136,7 +136,7 @@ layer([
       scatter({ x: "lakeLocX", alignment: "middle" }),
       stack("species", { dir: "y" })
     )
-    .mark(scaffold({ h: "count" }))
+    .mark(blank({ h: "count" }))
     .as("points"),
   chart(select("points")).mark(group("species"), connect()),
 ]);
@@ -218,7 +218,7 @@ const area = createMark((data, { x, y }) =>
   layer([
     chart(data)
       .flow(scatter({ x }))
-      .mark(scaffold({ h: y }))
+      .mark(blank({ h: y }))
       .as("points"),
     chart(select("points")).mark(connect()),
   ])
@@ -236,7 +236,7 @@ const area = createMark((data, { x, y }) =>
   layer([
     chart(data)
       .flow(scatter({ x }))
-      .mark(scaffold({ h: y }))
+      .mark(blank({ h: y }))
       .as("points"),
     chart(select("points")).mark(connect()),
   ])
@@ -350,7 +350,7 @@ const violin = createMark((data, { x, fill }) => {
   layer([
     chart(densityData)
       .flow(scatter({ y: "y", alignment: "middle" }))
-      .mark(scaffold({ w: "x", fill }))
+      .mark(blank({ w: "x", fill }))
       .as("points"),
     chart(select("points")).mark(connect()),
   ]);

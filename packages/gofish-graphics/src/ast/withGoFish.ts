@@ -80,6 +80,7 @@ export interface PromiseWithRender<T> extends Promise<T> {
   label(accessor: LabelAccessor, options?: LabelOptions): PromiseWithRender<T>;
   setKey(key: string): PromiseWithRender<T>;
   setShared(shared: [boolean, boolean]): PromiseWithRender<T>;
+  zOrder(value: number): PromiseWithRender<T>;
 }
 
 /**
@@ -162,6 +163,17 @@ export function addRenderMethod<T>(promise: Promise<T>): PromiseWithRender<T> {
       promise.then((result) => {
         if (result instanceof GoFishNode) {
           return result.setShared(shared) as T;
+        }
+        return result;
+      })
+    );
+  };
+
+  (promise as any).zOrder = function (value: number): PromiseWithRender<T> {
+    return addRenderMethod(
+      promise.then((result) => {
+        if (result instanceof GoFishNode) {
+          return result.zOrder(value) as T;
         }
         return result;
       })

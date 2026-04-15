@@ -77,7 +77,7 @@ export {
   circle,
   select,
   line,
-  scaffold,
+  blank,
   area,
   normalize,
   repeat,

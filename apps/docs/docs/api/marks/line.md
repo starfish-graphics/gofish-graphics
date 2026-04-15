@@ -5,15 +5,19 @@ Connects data points center-to-center with a line. Typically used on data return
 ::: starfish
 
 ```js
-const locations = Object.entries(lakeLocations).map(
-  ([lake, { x, y }]) => ({ lake, x, y })
-);
+const locations = Object.entries(lakeLocations).map(([lake, { x, y }]) => ({
+  lake,
+  x,
+  y,
+}));
 
 gf.Layer([
-  gf.Chart(locations)
+  gf
+    .Chart(locations)
     .flow(gf.scatter("lake", { x: "x", y: "y" }))
-    .mark(gf.scaffold().name("points")),
-  gf.Chart(gf.select("points"))
+    .mark(gf.blank().name("points")),
+  gf
+    .Chart(gf.select("points"))
     .mark(gf.line({ stroke: "steelblue", strokeWidth: 2 })),
 ]).render(root, { w: 400, h: 250, axes: true });
 ```
@@ -28,11 +32,11 @@ line({ stroke?, strokeWidth = 1, opacity?, interpolation = "linear" })
 
 ## Parameters
 
-| Option | Type | Description |
-|--------|------|-------------|
-| `stroke` | `string` | Line color |
-| `strokeWidth` | `number` | Line thickness |
-| `opacity` | `number` | Opacity (0–1) |
+| Option          | Type                   | Description        |
+| --------------- | ---------------------- | ------------------ |
+| `stroke`        | `string`               | Line color         |
+| `strokeWidth`   | `number`               | Line thickness     |
+| `opacity`       | `number`               | Opacity (0–1)      |
 | `interpolation` | `"linear" \| "bezier"` | Line interpolation |
 
 ## Example

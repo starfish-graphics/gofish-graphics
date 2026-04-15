@@ -90,7 +90,7 @@ The Python layer provides a fluent, builder-pattern API for constructing chart s
 
 **Mark**
 
-- Base class for all marks (rect, circle, line, area, scaffold)
+- Base class for all marks (rect, circle, line, area, blank)
 - Stores mark type and visual encoding parameters
 - `to_dict()` method serializes to IR format
 
@@ -99,7 +99,7 @@ The Python layer provides a fluent, builder-pattern API for constructing chart s
 The module exports factory functions for ergonomic API:
 
 - Operators: `spread()`, `stack()`, `derive()`, `group()`, `scatter()`
-- Marks: `rect()`, `circle()`, `line()`, `area()`, `scaffold()`
+- Marks: `rect()`, `circle()`, `line()`, `area()`, `blank()`
 - Chart: `chart(data, options)`
 
 ### 2. Data Marshaling (`gofish/arrow_utils.py`)

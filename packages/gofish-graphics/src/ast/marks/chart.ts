@@ -18,8 +18,8 @@ import { type ColorConfig } from "../colorSchemes";
 
 export type { ColorConfig };
 import { inferSize } from "../channels";
-import { Rect } from "../shapes/rect";
 import { rect as generatedRect } from "../shapes/rect";
+import { Ellipse } from "../shapes/ellipse";
 import { Mark, Operator } from "../types";
 import type {
   LabelAccessor,
@@ -213,19 +213,22 @@ export class ChartBuilder<TInput, TOutput = TInput> {
   private readonly operators: Operator<any, any>[] = [];
   private readonly finalMark?: Mark<TOutput>;
   private readonly layerContext: LayerContext;
+  private readonly nodeZOrder?: number;
 
   constructor(
     data: TInput,
     options?: ChartOptions,
     operators: Operator<any, any>[] = [],
     finalMark?: Mark<TOutput>,
-    layerContext: LayerContext = {}
+    layerContext: LayerContext = {},
+    nodeZOrder?: number
   ) {
     this.data = data;
     this.options = options;
     this.operators = operators;
     this.finalMark = finalMark;
     this.layerContext = layerContext;
+    this.nodeZOrder = nodeZOrder;
   }
 
   // flow accumulates operators and returns a new builder for chaining
@@ -275,7 +278,8 @@ export class ChartBuilder<TInput, TOutput = TInput> {
       this.options,
       [...this.operators, ...ops],
       this.finalMark,
-      this.layerContext
+      this.layerContext,
+      this.nodeZOrder
     );
   }
 
@@ -303,7 +307,8 @@ export class ChartBuilder<TInput, TOutput = TInput> {
       this.options,
       this.operators,
       mark,
-      this.layerContext
+      this.layerContext,
+      this.nodeZOrder
     );
   }
 
@@ -340,6 +345,10 @@ export class ChartBuilder<TInput, TOutput = TInput> {
       node.colorConfig = this.options.color;
     }
 
+    if (this.nodeZOrder !== undefined) {
+      node.zOrder(this.nodeZOrder);
+    }
+
     return node;
   }
 
@@ -349,7 +358,19 @@ export class ChartBuilder<TInput, TOutput = TInput> {
       this.options,
       this.operators,
       this.finalMark,
-      layerContext
+      layerContext,
+      this.nodeZOrder
+    );
+  }
+
+  zOrder(value: number): ChartBuilder<TInput, TOutput> {
+    return new ChartBuilder(
+      this.data,
+      this.options,
+      this.operators,
+      this.finalMark,
+      this.layerContext,
+      value
     );
   }
 
@@ -693,14 +714,22 @@ export function circle<T extends Record<string, any>>({
     _layerContext?: LayerContext
   ) => {
     if (debug) console.log("circle", key, d);
-    const node = Rect({
+    // scatter passes an array of items; unwrap to first element for field lookup
+    const datum: Record<string, any> = Array.isArray(d) ? (d as any[])[0] : d;
+    const resolvedFill =
+      typeof fill === "string" && datum && fill in datum
+        ? v(datum[fill as string])
+        : fill;
+    const resolvedStroke =
+      typeof stroke === "string" && datum && stroke in datum
+        ? v(datum[stroke as string])
+        : stroke;
+    const node = Ellipse({
       w: typeof r === "number" ? r * 2 : inferSize(r, d),
       h: typeof r === "number" ? r * 2 : inferSize(r, d),
-      rx: typeof r === "number" ? r : 5,
-      ry: typeof r === "number" ? r : 5,
-      fill:
-        typeof fill === "string" && fill in d ? v(d[fill as keyof T]) : fill,
-      stroke,
+      aspectRatio: 1,
+      fill: resolvedFill,
+      stroke: resolvedStroke,
       strokeWidth,
     }).name(key?.toString() ?? "");
     (node as any).datum = d;
@@ -786,8 +815,8 @@ export function area<T extends Record<string, any>>(options?: {
   };
 }
 
-// scaffold() mark creates invisible guides for positioning
-export function scaffold<T extends Record<string, any>>({
+// blank() mark creates invisible guides for positioning
+export function blank<T extends Record<string, any>>({
   emX,
   emY,
   w = 0,
@@ -810,7 +839,7 @@ export function scaffold<T extends Record<string, any>>({
   strokeWidth?: number;
   debug?: boolean;
 } = {}): Mark<T | T[] | { item: T | T[]; key: number | string }> {
-  // scaffold is essentially a transparent/zero-size rect
+  // blank is essentially a transparent/zero-size rect
   return generatedRect({
     emX,
     emY,

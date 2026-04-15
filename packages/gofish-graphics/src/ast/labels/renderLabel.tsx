@@ -39,7 +39,8 @@ function resolveNodeFill(node: GoFishNode): string | null {
  */
 function autoLabelColor(node: GoFishNode, position: LabelPosition): string {
   const fill = resolveNodeFill(node);
-  const isInside = (position as string).startsWith("inside");
+  const isInside =
+    position === "center" || (position as string).startsWith("inset");
 
   if (isInside) {
     if (!fill) return "black";
