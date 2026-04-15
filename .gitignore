@@ -21,6 +21,5 @@ __pycache__/
 *.egg-info/
 _static/
 .cursor/
-
-# Local Claude settings
 .claude/
+tests/tmp/

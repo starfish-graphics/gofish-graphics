@@ -10,14 +10,14 @@ gf.StackX(
       gf.StackY(
         { spacing: 0, alignment: "middle" },
         gf.For(density, (d) =>
-          gf.Rect({ y: d.x / 40, w: d.y * 100000, h: 0, fill: gf.v(species) }).name(
-            `${species}-${d.x}`
-          )
+          gf
+            .rect({ y: d.x / 40, w: d.y * 100000, h: 0, fill: gf.v(species) })
+            .name(`${species}-${d.x}`)
         )
       ),
       gf.ConnectY(
         { opacity: 1, mixBlendMode: "normal" },
-        gf.For(density, (d) => gf.Ref(`${species}-${d.x}`))
+        gf.For(density, (d) => gf.ref(`${species}-${d.x}`))
       ),
     ]);
   })

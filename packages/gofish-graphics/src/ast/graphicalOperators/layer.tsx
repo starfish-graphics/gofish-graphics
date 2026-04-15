@@ -170,13 +170,19 @@ export const layer = createOperatorSequential(
           for (let i = 0; i < children.length; i++) {
             const child = children[i];
             const childPlaceable = child.layout(size, scaleFactors, posScales);
+
+            childPlaceable.place("x", 0, "baseline");
+            childPlaceable.place("y", 0, "baseline");
             childPlaceables.push(childPlaceable);
           }
 
           if (node.constraints.length > 0) {
             // Constraint-based placement:
             // Build name -> placeable map from named children
-            const nameToPlaceable = new Map<string, (typeof childPlaceables)[number]>();
+            const nameToPlaceable = new Map<
+              string,
+              (typeof childPlaceables)[number]
+            >();
             const constrainedNames = new Set<string>();
             for (let i = 0; i < node.children.length; i++) {
               const childNode = node.children[i];
@@ -204,9 +210,15 @@ export const layer = createOperatorSequential(
             for (let i = 0; i < children.length; i++) {
               const childNode = node.children[i];
               const childName =
-                "_name" in childNode ? (childNode as GoFishNode)._name : undefined;
+                "_name" in childNode
+                  ? (childNode as GoFishNode)._name
+                  : undefined;
               if (childName && constrainedNames.has(childName)) continue;
-              childPlaceables[i] = children[i].layout(size, scaleFactors, posScales);
+              childPlaceables[i] = children[i].layout(
+                size,
+                scaleFactors,
+                posScales
+              );
             }
 
             // Default any unplaced axes to 0
@@ -280,9 +292,20 @@ export const layer = createOperatorSequential(
             },
           };
         },
-        render: ({ intrinsicDims, transform }, children) => {
+        render: ({ intrinsicDims, transform }, children, node) => {
           const scaleX = options.transform?.scale?.x ?? 1;
           const scaleY = options.transform?.scale?.y ?? 1;
+          const orderedChildren = children
+            .map((child, index) => ({
+              child,
+              index,
+              zOrder:
+                node.children[index] instanceof GoFishNode
+                  ? node.children[index].getZOrder()
+                  : 0,
+            }))
+            .sort((a, b) => a.zOrder - b.zOrder || a.index - b.index)
+            .map(({ child }) => child);
 
           return (
             <g
@@ -290,7 +313,7 @@ export const layer = createOperatorSequential(
                 transform?.translate?.[1] ?? 0
               }) scale(${scaleX}, ${scaleY})`}
             >
-              {children}
+              {orderedChildren}
             </g>
           );
         },

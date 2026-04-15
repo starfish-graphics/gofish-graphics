@@ -10,12 +10,12 @@ To start, duplicate this tab to follow along in the live editor!
 
 <!-- ```ts index.ts
 // prettier-ignore
-import { StackX, StackY, ConnectX, Rect, Ref, For, v, color, Frame, polar, groupBy, sumBy, orderBy } from "gofish-graphics";
+import { StackX, StackY, ConnectX, rect, ref, For, v, color, Frame, polar, groupBy, sumBy, orderBy } from "gofish-graphics";
 import { seafood } from "./dataset";
 
 const root = document.getElementById("app");
 
-Rect({ x: 0, y: 0, w: 32, h: 300, fill: color.green[5] }).render(root, {
+rect({ x: 0, y: 0, w: 32, h: 300, fill: gf.color.green[5] }).render(root, {
   w: 500,
   h: 300,
 });
@@ -24,14 +24,14 @@ Rect({ x: 0, y: 0, w: 32, h: 300, fill: color.green[5] }).render(root, {
 ::: starfish-live {template=vanilla-ts rtl lightTheme=aquaBlue darkTheme=atomDark previewHeight=400 coderHeight=500}
 
 ```ts index.ts
-// prettier-ignore
-import { Chart, rect, color, spread, orderBy, derive, stack, Layer, select, area, group } from "gofish-graphics";
+import * as gf from "gofish-graphics";
 import { seafood } from "./dataset";
+import * as _ from "lodash";
 
 const root = document.getElementById("app");
 
-Chart(seafood)
-  .mark(rect({ fill: color.green[5] }))
+gf.Chart(seafood)
+  .mark(gf.rect({ fill: gf.color.green[5] }))
   .render(root, { w: 500, h: 300 });
 ```
 
@@ -261,14 +261,14 @@ Next, we render a rectangle into it!
 :::starfish
 
 ```ts
-Chart(seafood)
-  .mark(rect({ fill: color.green[5] }))
+gf.Chart(seafood)
+  .mark(gf.rect({ fill: gf.color.green[5] }))
   .render(root, { w: 500, h: 300 });
 ```
 
 :::
 
-`Chart()` creates a chart from data. We pass an array with a single object containing the rectangle's
+`gf.Chart()` creates a chart from data. We pass an array with a single object containing the rectangle's
 position and size. Then we use `.mark()` to specify that we want to render `rect` shapes. The `fill` parameter specifies the color.
 We are using a green from GoFish's default color palette for this chart. Try changing `green` to `blue`
 or changing `5` to a higher or lower number.
@@ -286,9 +286,9 @@ each lake in the dataset:
 :::starfish
 
 ```ts
-Chart(seafood)
-  .flow(spread("lake", { dir: "x" }))
-  .mark(rect({ w: 32, h: 300, fill: color.green[5] }))
+gf.Chart(seafood)
+  .flow(gf.spread("lake", { dir: "x" }))
+  .mark(gf.rect({ w: 32, h: 300, fill: gf.color.green[5] }))
   .render(root, { w: 500, h: 300 });
 ```
 
@@ -311,9 +311,9 @@ quantity.
 :::starfish
 
 ```ts
-Chart(seafood)
-  .flow(spread("lake", { dir: "x" }))
-  .mark(rect({ w: 32, h: "count", fill: color.green[5] }))
+gf.Chart(seafood)
+  .flow(gf.spread("lake", { dir: "x" }))
+  .mark(gf.rect({ w: 32, h: "count", fill: gf.color.green[5] }))
   .render(root, { w: 500, h: 300 });
 ```
 
@@ -328,9 +328,9 @@ width of each rectangle.
 :::starfish
 
 ```ts
-Chart(seafood)
-  .flow(spread("lake", { dir: "x" }))
-  .mark(rect({ h: "count", fill: color.green[5] }))
+gf.Chart(seafood)
+  .flow(gf.spread("lake", { dir: "x" }))
+  .mark(gf.rect({ h: "count", fill: gf.color.green[5] }))
   .render(root, { w: 500, h: 300 });
 ```
 
@@ -344,9 +344,9 @@ your spec as long as you put `axes: true` in the `render` method like so:
 :::starfish
 
 ```ts
-Chart(seafood)
-  .flow(spread("lake", { dir: "x" }))
-  .mark(rect({ h: "count", fill: color.green[5] }))
+gf.Chart(seafood)
+  .flow(gf.spread("lake", { dir: "x" }))
+  .mark(gf.rect({ h: "count", fill: gf.color.green[5] }))
   .render(root, { w: 500, h: 300, axes: true });
 ```
 
@@ -360,8 +360,8 @@ not tied to an argument like `h`, we'll need to pass a `key` field to the object
 ```ts
 StackX(
   { spacing: 8, sharedScale: true },
-  For(groupBy(seafood, "lake"), (lake, key) =>
-    Rect({ key, w: 32, h: v(sumBy(lake, "count")), fill: color.green[5] })
+  For(_.groupBy(seafood, "lake"), (lake, key) =>
+    rect({ key, w: 32, h: v(_.sumBy(lake, "count")), fill: gf.color.green[5] })
   )
 ).render(root, { w: 500, h: 300, axes: true });
 ```
@@ -370,7 +370,7 @@ StackX(
 
 Voila! Now we have a y-axis and labels for each of the bars.
 
-<!-- Notice also that we've added a `key` field to the `Rect`. This let's GoFish know the identity of -->
+<!-- Notice also that we've added a `key` field to `rect`. This let's GoFish know the identity of -->
 <!-- each -->
 
 ## Stacked Bar Chart
@@ -382,12 +382,12 @@ like a normal bar chart, except instead of a line of rectangles, it's a line of 
 :::starfish
 
 ```ts
-Chart(seafood)
+gf.Chart(seafood)
   .flow(
-    spread("lake", { dir: "x" }), //
-    stack("species", { dir: "y", label: false })
+    gf.spread("lake", { dir: "x" }), //
+    gf.stack("species", { dir: "y", label: false })
   )
-  .mark(rect({ h: "count", fill: color.green[5] }))
+  .mark(gf.rect({ h: "count", fill: gf.color.green[5] }))
   .render(root, { w: 500, h: 300, axes: true });
 ```
 
@@ -402,12 +402,12 @@ color encoding so that each rectangle's color corresponds to the species of fish
 :::starfish
 
 ```ts
-Chart(seafood)
+gf.Chart(seafood)
   .flow(
-    spread("lake", { dir: "x" }), //
-    stack("species", { dir: "y", label: false })
+    gf.spread("lake", { dir: "x" }), //
+    gf.stack("species", { dir: "y", label: false })
   )
-  .mark(rect({ h: "count", fill: "species" }))
+  .mark(gf.rect({ h: "count", fill: "species" }))
   .render(root, { w: 500, h: 300, axes: true });
 ```
 
@@ -432,13 +432,13 @@ their counts:
 :::starfish
 
 ```ts
-Chart(seafood)
+gf.Chart(seafood)
   .flow(
-    spread("lake", { dir: "x" }),
-    derive((d) => orderBy(d, "count")),
-    stack("species", { dir: "y", label: false })
+    gf.spread("lake", { dir: "x" }),
+    gf.derive((d) => _.orderBy(d, "count")),
+    gf.stack("species", { dir: "y", label: false })
   )
-  .mark(rect({ h: "count", fill: "species" }))
+  .mark(gf.rect({ h: "count", fill: "species" }))
   .render(root, { w: 500, h: 300, axes: true });
 ```
 
@@ -455,17 +455,19 @@ together.
 :::starfish
 
 ```ts
-Layer([
-  Chart(seafood)
+gf.Layer([
+  gf
+    .Chart(seafood)
     .flow(
-      spread("lake", { dir: "x" }),
-      derive((d) => orderBy(d, "count", "desc")),
-      stack("species", { dir: "y", label: false })
+      gf.spread("lake", { dir: "x" }),
+      gf.derive((d) => _.orderBy(d, "count", "desc")),
+      gf.stack("species", { dir: "y", label: false })
     )
-    .mark(rect({ h: "count", fill: "species" }).name("bars")),
-  Chart(select("bars"))
-    .flow(group("species"))
-    .mark(area({ opacity: 0.8 })),
+    .mark(gf.rect({ h: "count", fill: "species" }).name("bars")),
+  gf
+    .Chart(gf.select("bars"))
+    .flow(gf.group("species"))
+    .mark(gf.area({ opacity: 0.8 })),
 ]).render(root, {
   w: 500,
   h: 300,
@@ -480,12 +482,12 @@ but first let's understand what's going on.
 
 To add some ribbons, we first created a `Layer` so we can add the ribbons as a second layer. Then
 we name the marks in the first layer using `.name("bars")` and `select` those marks in the second
-layer. We group them by species using `group("species")`, and finally draw an `area` mark for each group.
+layer. We group them by species using `gf.group("species")`, and finally draw an `area` mark for each group.
 
 <!-- First, we've added a `layer` operator that lets us layer on multiple elements in the same space.
 We create the bars with the first `chart` and use `.name("bars")` on the mark to give them a name so we can refer
-to them later. Then we use `select("bars")` in a second chart to reference those bars. Finally,
-we use `group("species")` to group by species and `area()` to connect the bars horizontally. -->
+to them later. Then we use `gf.select("bars")` in a second chart to reference those bars. Finally,
+we use `gf.group("species")` to group by species and `gf.area()` to connect the bars horizontally. -->
 
 To make this look more like a traditional ribbon chart, all we have to do is change the spacing of
 the `spread` operator.
@@ -493,17 +495,19 @@ the `spread` operator.
 :::starfish
 
 ```ts
-Layer([
-  Chart(seafood)
+gf.Layer([
+  gf
+    .Chart(seafood)
     .flow(
-      spread("lake", { dir: "x", spacing: 64 }),
-      derive((d) => orderBy(d, "count", "desc")),
-      stack("species", { dir: "y", label: false })
+      gf.spread("lake", { dir: "x", spacing: 64 }),
+      gf.derive((d) => _.orderBy(d, "count", "desc")),
+      gf.stack("species", { dir: "y", label: false })
     )
-    .mark(rect({ h: "count", fill: "species" }).name("bars")),
-  Chart(select("bars"))
-    .flow(group("species"))
-    .mark(area({ opacity: 0.8 })),
+    .mark(gf.rect({ h: "count", fill: "species" }).name("bars")),
+  gf
+    .Chart(gf.select("bars"))
+    .flow(gf.group("species"))
+    .mark(gf.area({ opacity: 0.8 })),
 ]).render(root, {
   w: 500,
   h: 300,
@@ -519,21 +523,21 @@ Layer([
 Frame([
   StackX(
     { spacing: 64, sharedScale: true },
-    For(groupBy(seafood, "lake"), (lake, key) =>
+    For(_.groupBy(seafood, "lake"), (lake, key) =>
       StackY(
         { key, spacing: 1 },
-        For(orderBy(lake, "count", "desc"), (d) =>
-          Rect({ w: 16, h: v(d.count), fill: v(d.species) }).name(
+        For(_.orderBy(lake, "count", "desc"), (d) =>
+          rect({ w: 16, h: v(d.count), fill: v(d.species) }).name(
             `${d.lake}-${d.species}`
           )
         )
       )
     )
   ),
-  For(groupBy(seafood, "species"), (items) =>
+  For(_.groupBy(seafood, "species"), (items) =>
     ConnectX(
       { opacity: 0.8 },
-      For(items, (d) => Ref(`${d.lake}-${d.species}`))
+      For(items, (d) => ref(`${d.lake}-${d.species}`))
     )
   ),
 ]).render(root, { w: 500, h: 300, axes: true });
@@ -550,23 +554,25 @@ so that it looks better in polar space.
 :::starfish
 
 ```ts
-Layer({ coord: clock() }, [
-  Chart(seafood)
+gf.Layer({ coord: gf.clock() }, [
+  gf
+    .Chart(seafood)
     .flow(
-      spread("lake", {
+      gf.spread("lake", {
         dir: "x",
         spacing: (2 * Math.PI) / 6,
         mode: "center",
         y: 50,
         label: false,
       }),
-      derive((d) => orderBy(d, "count")),
-      stack("species", { dir: "y", label: false })
+      gf.derive((d) => _.orderBy(d, "count")),
+      gf.stack("species", { dir: "y", label: false })
     )
-    .mark(rect({ h: "count", fill: "species" }).name("bars")),
-  Chart(select("bars"))
-    .flow(group("species"))
-    .mark(area({ opacity: 0.8 })),
+    .mark(gf.rect({ h: "count", fill: "species" }).name("bars")),
+  gf
+    .Chart(gf.select("bars"))
+    .flow(gf.group("species"))
+    .mark(gf.area({ opacity: 0.8 })),
 ]).render(root, {
   w: 500,
   h: 300,

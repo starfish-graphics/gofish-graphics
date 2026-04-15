@@ -30,16 +30,19 @@ export { For } from "./ast/iterators/for";
 export { groupBy, sumBy, orderBy, meanBy } from "lodash";
 
 // Shapes
-export { Rect } from "./ast/shapes/rect";
-export { ellipse as Ellipse } from "./ast/shapes/ellipse";
-export { Image } from "./ast/shapes/image";
-export { petal as Petal } from "./ast/shapes/petal";
-export { ref as Ref } from "./ast/shapes/ref";
-export { text as Text } from "./ast/shapes/text";
+export { ref } from "./ast/shapes/ref";
 
 // Constraints
 export { Constraint } from "./ast/constraints";
-export type { ConstraintRef, ConstraintSpec, AlignConstraint, DistributeConstraint, DistributeOptions, Axis, Alignment } from "./ast/constraints";
+export type {
+  ConstraintRef,
+  ConstraintSpec,
+  AlignConstraint,
+  DistributeConstraint,
+  DistributeOptions,
+  Axis,
+  Alignment,
+} from "./ast/constraints";
 
 // Graphical Operators
 export { stack as Stack } from "./ast/graphicalOperators/stack";
@@ -57,13 +60,28 @@ export { enclose as Enclose } from "./ast/graphicalOperators/enclose";
 export { frame as Frame } from "./ast/graphicalOperators/frame";
 export { position as Position } from "./ast/graphicalOperators/position";
 export { arrow as Arrow } from "./ast/graphicalOperators/arrow";
-export { over as Over, inside as In, xor as Xor, out as Out, atop as Atop, mask as Mask } from "./ast/graphicalOperators/porterDuff";
+export { table as Table } from "./ast/graphicalOperators/table";
+export {
+  over as Over,
+  inside as In,
+  xor as Xor,
+  out as Out,
+  atop as Atop,
+  mask as Mask,
+} from "./ast/graphicalOperators/porterDuff";
+
+// Marks (lowercase, from createMark)
+export { ellipse } from "./ast/shapes/ellipse";
+export { petal } from "./ast/shapes/petal";
+export { text } from "./ast/shapes/text";
+export { image } from "./ast/shapes/image";
 
 /* Chart Syntax */
 export {
   chart as Chart,
   spread,
   stack,
+  table,
   scatter,
   group,
   derive,
@@ -71,7 +89,7 @@ export {
   circle,
   select,
   line,
-  scaffold,
+  blank,
   area,
   normalize,
   repeat,
@@ -83,4 +101,15 @@ export type {
   ChartOptions,
   ChartBuilder,
 } from "./ast/marks/chart";
+export { palette, gradient, assignGradientColor } from "./ast/colorSchemes";
+export type {
+  ColorConfig,
+  PaletteScale,
+  GradientScale,
+} from "./ast/colorSchemes";
 export type { NameableMark } from "./ast/withGoFish";
+export type {
+  LabelSpec,
+  LabelOptions,
+  LabelAccessor,
+} from "./ast/labels/labelPlacement";

@@ -1,4 +1,4 @@
-import { coord, For, groupBy, polar_DEPRECATED, Rect, Stack, StackX, v } from "../lib";
+import { coord, For, groupBy, polar_DEPRECATED, rect, Stack, StackX, v } from "../lib";
 import { nightingale } from "../data/nightingale";
 
 export const testRoseChart = () =>
@@ -9,7 +9,7 @@ export const testRoseChart = () =>
         StackX(
           { spacing: 0 },
           For(d, (d) =>
-            Rect({
+            rect({
               w: Math.sqrt(d.Death) * 3,
               h: /* value(d.b, "value") */ (Math.PI * 2) / 12,
               emY: true,

@@ -48,7 +48,7 @@ layout: false
 
 <StackH width="fit-content" gap="1rem" style="margin: 0 auto; margin-top: -1rem; margin-bottom: -4rem">
 <div style="font-family: 'Fira Code', monospace; background-color: var(--vp-c-brand-soft); color: #fdf6f3; font-weight: 700; padding: 0.5rem 1rem; border-radius: 8px; display: inline-block; margin: 2rem 0;">
-  npm install starfish-graphics
+  npm install gofish-graphics@nightly
 </div>
 <div style="display: flex; gap: 0.5rem; justify-content: center;">
 <VPButton

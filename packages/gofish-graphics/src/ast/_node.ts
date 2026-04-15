@@ -1,5 +1,6 @@
 import type { JSX } from "solid-js";
 import {
+  Anchor,
   Dimensions,
   elaborateDims,
   elaborateDirection,
@@ -16,9 +17,8 @@ import {
   Transform,
 } from "./dims";
 import { ContinuousDomain } from "./domain";
-import {
-  gofish,
-} from "./gofish";
+import { gofish } from "./gofish";
+import type { AxesOptions } from "./gofish";
 import { GoFishRef } from "./_ref";
 import { GoFishAST } from "./_ast";
 import { CoordinateTransform } from "./coordinateTransforms/coord";
@@ -38,6 +38,17 @@ import type { KeyContext, ScaleContext } from "./gofish";
 import type { ScopeContext } from "./scopeContext";
 import type { ConstraintSpec, ConstraintRef } from "./constraints";
 import { collectConstraintRefs } from "./constraints";
+import {
+  assignPaletteColor,
+  assignGradientColor,
+  type ColorConfig,
+} from "./colorSchemes";
+import {
+  type LabelAccessor,
+  type LabelOptions,
+  type LabelSpec,
+} from "./labels/labelPlacement";
+import { renderLabelJSX } from "./labels/renderLabel";
 
 export type RenderSession = {
   scopeContext: ScopeContext;
@@ -62,7 +73,7 @@ export const findScaleFactor = (
 
 export type Placeable = {
   dims: Dimensions;
-  place: (pos: FancyPosition) => void;
+  place: (axis: FancyDirection, value: number, anchor?: Anchor) => void;
 };
 
 export type InferSizeDomains = (
@@ -134,6 +145,9 @@ export class GoFishNode {
   public coordinateTransform?: CoordinateTransform;
   public color?: MaybeValue<string>;
   public constraints: ConstraintSpec[] = [];
+  public colorConfig?: ColorConfig;
+  public _label?: LabelSpec;
+  private _zOrder = 0;
   private renderSession?: RenderSession;
   constructor(
     {
@@ -183,23 +197,85 @@ export class GoFishNode {
     this.color = color;
   }
 
+  private collectColorValues(out: any[]): void {
+    if (this.color !== undefined && isValue(this.color)) {
+      const val = getValue(this.color);
+      if (!out.includes(val)) out.push(val);
+    }
+    this.children.forEach((child) => {
+      if (child instanceof GoFishNode) child.collectColorValues(out);
+    });
+  }
+
   public resolveColorScale(): void {
     const scaleContext = this.getRenderSession().scaleContext;
-    if (this.color !== undefined && isValue(this.color)) {
-      const color = getValue(this.color);
-      if (!scaleContext.unit.color.has(color)) {
-        scaleContext.unit.color.set(
-          color,
-          color6[scaleContext.unit.color.size % 6]
-        );
-      }
+    const unit = scaleContext.unit as {
+      color: Map<any, string>;
+      colorConfig?: ColorConfig;
+    };
+
+    // If this node carries its own colorConfig (set by ChartBuilder.resolve()),
+    // temporarily apply it for this subtree, then restore for siblings.
+    if (this.colorConfig) {
+      const saved = unit.colorConfig;
+      unit.colorConfig = this.colorConfig;
+      this._applyColorConfig(unit);
+      unit.colorConfig = saved;
+      // Recurse so children can override with their own configs
+      this.children.forEach((child) => {
+        if (child instanceof GoFishNode) child.resolveColorScale();
+      });
+      return;
     }
 
-    this.children.forEach((child) => {
-      if (child instanceof GoFishNode) {
-        child.resolveColorScale();
+    if (unit.colorConfig) {
+      this._applyColorConfig(unit);
+    } else {
+      // No colorConfig — single-pass: cycle color6, skip literal CSS colors
+      if (this.color !== undefined && isValue(this.color)) {
+        const color = getValue(this.color);
+        const isLiteralColor =
+          typeof color === "string" &&
+          (color.startsWith("#") ||
+            color.startsWith("rgb") ||
+            color.startsWith("hsl"));
+        if (!isLiteralColor && !scaleContext.unit.color.has(color)) {
+          scaleContext.unit.color.set(
+            color,
+            color6[scaleContext.unit.color.size % 6]
+          );
+        }
       }
-    });
+      this.children.forEach((child) => {
+        if (child instanceof GoFishNode) child.resolveColorScale();
+      });
+    }
+  }
+
+  private _applyColorConfig(unit: {
+    color: Map<any, string>;
+    colorConfig?: ColorConfig;
+  }): void {
+    const orderedKeys: any[] = [];
+    this.collectColorValues(orderedKeys);
+    const colorConfig = unit.colorConfig!;
+
+    if (colorConfig._tag === "gradient") {
+      const min = Math.min(...orderedKeys);
+      const max = Math.max(...orderedKeys);
+      orderedKeys.forEach((key) => {
+        if (!unit.color.has(key)) {
+          const t = max === min ? 0 : (key - min) / (max - min);
+          unit.color.set(key, assignGradientColor(colorConfig, t));
+        }
+      });
+    } else {
+      orderedKeys.forEach((key, i) => {
+        if (!unit.color.has(key)) {
+          unit.color.set(key, assignPaletteColor(colorConfig, String(key), i));
+        }
+      });
+    }
   }
 
   public resolveNames(): void {
@@ -291,31 +367,37 @@ export class GoFishNode {
     return [dim(0), dim(1)];
   }
 
-  public place(pos: FancyPosition): void {
-    const elabPos = elaboratePosition(pos);
-    /* For each dimension, if intrinsic dim is not defined, assign pos to that.
-     * Otherwise, compute translation to position the implicit anchor point.
-     *
-     * The anchor point is always the local origin (0). Shapes set up their
-     * intrinsic dimensions so that one edge is at 0:
-     * - For positive sizes: min = 0 (anchor at bottom)
-     * - For negative sizes: max = 0 (anchor at top)
-     */
-    for (let i = 0; i < elabPos.length; i++) {
-      if (elabPos[i] === undefined) continue;
-      if (this.intrinsicDims?.[i]?.min === undefined) {
-        this.intrinsicDims![i].min = elabPos[i]!;
-      } else if (this.transform?.translate?.[i] === undefined) {
-        this.transform!.translate![i] = elabPos[i]!;
-      } else {
-        // console.warn(
-        //   "placing node with both intrinsic and transform defined:",
-        //   this.type,
-        //   this.transform!.translate![i]
-        // );
-        // this.transform!.translate![i] = elabPos[i]! - (this.intrinsicDims![i].min ?? 0);
-      }
+  public place(
+    axis: FancyDirection,
+    value: number,
+    anchor: Anchor = "min"
+  ): void {
+    const dir = elaborateDirection(axis);
+    const intrinsic = this.intrinsicDims?.[dir];
+
+    const anchorToDim = {
+      min: intrinsic?.min,
+      max: intrinsic?.max,
+      center: intrinsic?.center,
+      // TODO: revisit baseline case
+      baseline: intrinsic?.min,
+    };
+
+    if (anchorToDim[anchor] === undefined) {
+      this.intrinsicDims![dir][anchor] = value;
+      return;
     }
+
+    if (this.transform?.translate?.[dir] !== undefined) return;
+
+    const anchorToPoint = {
+      min: intrinsic!.min ?? 0,
+      max: intrinsic!.max ?? 0,
+      center: intrinsic!.center ?? 0,
+      baseline: 0,
+    };
+
+    this.transform!.translate![dir] = value - anchorToPoint[anchor];
   }
 
   public embed(direction: FancyDirection): void {
@@ -325,7 +407,7 @@ export class GoFishNode {
   public INTERNAL_render(
     coordinateTransform?: CoordinateTransform
   ): JSX.Element {
-    return this._render(
+    const shapeJSX = this._render(
       {
         intrinsicDims: this.intrinsicDims,
         transform: this.transform,
@@ -340,12 +422,20 @@ export class GoFishNode {
       ),
       this
     );
+    if (this._label && this.intrinsicDims) {
+      const labelJSX = this._renderLabel();
+      if (labelJSX) return [shapeJSX, labelJSX] as unknown as JSX.Element;
+    }
+    return shapeJSX;
   }
 
   public setRenderSession(session: RenderSession): void {
     this.renderSession = session;
     this.children.forEach((child) => {
-      if ("setRenderSession" in child && typeof child.setRenderSession === "function") {
+      if (
+        "setRenderSession" in child &&
+        typeof child.setRenderSession === "function"
+      ) {
         child.setRenderSession(session);
       }
     });
@@ -372,6 +462,7 @@ export class GoFishNode {
       debug = false,
       defs,
       axes = false,
+      colorConfig,
     }: {
       w: number;
       h: number;
@@ -381,11 +472,12 @@ export class GoFishNode {
       debug?: boolean;
       defs?: JSX.Element[];
       axes?: boolean;
+      colorConfig?: ColorConfig;
     }
   ) {
     return gofish(
       container,
-      { w, h, x, y, transform, debug, defs, axes },
+      { w, h, x, y, transform, debug, defs, axes, colorConfig },
       this
     );
   }
@@ -393,6 +485,32 @@ export class GoFishNode {
   public name(name: string): this {
     this._name = name;
     return this;
+  }
+
+  public label(accessor: LabelAccessor, options?: LabelOptions): this {
+    this._label = { accessor, ...options };
+    return this;
+  }
+
+  public resolveLabels(): void {
+    // Propagate only when this node has no datum of its own.
+    // Nodes with datum (leaf shapes, or spread combinators that carry group data)
+    // render their label directly rather than pushing it to children.
+    if (this._label && this.children.length > 0 && this.datum === undefined) {
+      for (const child of this.children) {
+        if (child instanceof GoFishNode && !child._label) {
+          child._label = this._label;
+        }
+      }
+      this._label = undefined;
+    }
+    for (const child of this.children) {
+      if (child instanceof GoFishNode) child.resolveLabels();
+    }
+  }
+
+  private _renderLabel(): JSX.Element | null {
+    return renderLabelJSX(this);
   }
 
   public setKey(key: string): this {
@@ -411,6 +529,15 @@ export class GoFishNode {
     const refs = collectConstraintRefs(this.children);
     this.constraints = fn(refs);
     return this;
+  }
+
+  public zOrder(value: number): this {
+    this._zOrder = value;
+    return this;
+  }
+
+  public getZOrder(): number {
+    return this._zOrder;
   }
 }
 
@@ -533,7 +660,7 @@ export const debugUnderlyingSpaceTree = (
           } else if (isDIFFERENCE(s)) {
             return `difference(${s.width})`;
           } else if (isORDINAL(s)) {
-            return `ordinal(${s.spacing})`;
+            return `ordinal(${s.domain})`;
           } else if (isUNDEFINED(s)) {
             return `undefined`;
           } else {
@@ -547,7 +674,7 @@ export const debugUnderlyingSpaceTree = (
       } else if (isDIFFERENCE(space)) {
         return `difference(${space.width})`;
       } else if (isORDINAL(space)) {
-        return `ordinal(${space.spacing})`;
+        return `ordinal(${space.domain})`;
       } else if (isUNDEFINED(space)) {
         return `undefined`;
       } else {

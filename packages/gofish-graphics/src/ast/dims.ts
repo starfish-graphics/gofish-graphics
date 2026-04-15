@@ -50,17 +50,39 @@ export const elaborateDims = <T>(dims: FancyDims<T>): Dimensions<T> => {
     ];
   }
 
-  if (!("x" in dims)) dims.x = dims.cx !== undefined && dims.w !== undefined ? dims.cx - dims.w / 2 : undefined;
-  if (!("y" in dims)) dims.y = dims.cy !== undefined && dims.h !== undefined ? dims.cy - dims.h / 2 : undefined;
+  if (!("x" in dims))
+    dims.x =
+      dims.cx !== undefined && dims.w !== undefined
+        ? dims.cx - dims.w / 2
+        : undefined;
+  if (!("y" in dims))
+    dims.y =
+      dims.cy !== undefined && dims.h !== undefined
+        ? dims.cy - dims.h / 2
+        : undefined;
 
   return [
-    { min: dims.x, center: dims.cx, max: dims.x2, size: dims.w, embedded: dims.emX },
-    { min: dims.y, center: dims.cy, max: dims.y2, size: dims.h, embedded: dims.emY },
+    {
+      min: dims.x,
+      center: dims.cx,
+      max: dims.x2,
+      size: dims.w,
+      embedded: dims.emX,
+    },
+    {
+      min: dims.y,
+      center: dims.cy,
+      max: dims.y2,
+      size: dims.h,
+      embedded: dims.emY,
+    },
   ];
 };
 
 export type Direction = 0 | 1;
 export type FancyDirection = "x" | "y" | Direction;
+
+export type Anchor = "min" | "max" | "center" | "baseline";
 
 export const elaborateDirection = (direction: FancyDirection): Direction => {
   switch (direction) {
@@ -75,7 +97,10 @@ export const elaborateDirection = (direction: FancyDirection): Direction => {
 
 export type Position = [number | undefined, number | undefined];
 
-export type FancyPosition = { x?: number; y?: number } | { 0?: number; 1?: number } | Position;
+export type FancyPosition =
+  | { x?: number; y?: number }
+  | { 0?: number; 1?: number }
+  | Position;
 
 export const elaboratePosition = (position: FancyPosition): Position => {
   if (Array.isArray(position)) {
@@ -91,7 +116,10 @@ export const elaboratePosition = (position: FancyPosition): Position => {
 
 export type Size<T = number> = [T, T];
 
-export type FancySize<T = number> = { w: T; h: T } | { [K in Direction]: T } | Size<T>;
+export type FancySize<T = number> =
+  | { w: T; h: T }
+  | { [K in Direction]: T }
+  | Size<T>;
 
 export const elaborateSize = <T>(size: FancySize<T>): Size<T> => {
   if (Array.isArray(size)) {

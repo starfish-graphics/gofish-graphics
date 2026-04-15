@@ -7,7 +7,15 @@
 ::: starfish-live {template=vanilla-ts rtl lightTheme=aquaBlue darkTheme=atomDark previewHeight=400 coderHeight=512}
 
 ```ts index.ts
-import { Chart, spread, derive, Layer, select, scaffold, area } from "gofish-graphics";
+import {
+  Chart,
+  spread,
+  derive,
+  Layer,
+  select,
+  blank,
+  area,
+} from "gofish-graphics";
 import { groupBy } from "lodash";
 import { seafood } from "./dataset";
 
@@ -16,7 +24,7 @@ const container = document.getElementById("app");
 // Aggregate total count per lake
 const lakeTotals = Object.entries(groupBy(seafood, "lake")).map(
   ([lake, items]) => ({
-    lake: lake as typeof seafood[0]["lake"],
+    lake: lake as (typeof seafood)[0]["lake"],
     count: items.reduce((sum, item) => sum + item.count, 0),
   })
 );
@@ -24,7 +32,7 @@ const lakeTotals = Object.entries(groupBy(seafood, "lake")).map(
 Layer([
   Chart(lakeTotals)
     .flow(spread("lake", { dir: "x", spacing: 64 }))
-    .mark(scaffold({ h: "count" }).name("points")),
+    .mark(blank({ h: "count" }).name("points")),
   Chart(select("points")).mark(area({ opacity: 0.8 })),
 ]).render(container, {
   w: 500,

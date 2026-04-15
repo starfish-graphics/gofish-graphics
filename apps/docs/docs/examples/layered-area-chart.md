@@ -12,7 +12,7 @@ import {
   spread,
   Layer,
   select,
-  scaffold,
+  blank,
   area,
   group,
 } from "gofish-graphics";
@@ -23,7 +23,7 @@ const container = document.getElementById("app");
 Layer([
   Chart(streamgraphData)
     .flow(spread("x", { dir: "x", spacing: 50 }))
-    .mark(scaffold({ h: "y", fill: "c" }).name("points")),
+    .mark(blank({ h: "y", fill: "c" }).name("points")),
   Chart(select("points"))
     .flow(group("c"))
     .mark(area({ opacity: 0.7 })),
@@ -90,7 +90,7 @@ export const streamgraphData = [
 ```
 
 ```ts v1syntax.ts
-import { Frame, StackX, Rect, ConnectX, Ref, v } from "gofish-graphics";
+import { Frame, StackX, rect, ConnectX, ref, v } from "gofish-graphics";
 import _ from "lodash";
 import { streamgraphData } from "./dataset";
 
@@ -103,7 +103,7 @@ Frame([
       StackX(
         { spacing: 0, sharedScale: true },
         items.map((d) =>
-          Rect({
+          rect({
             name: `${c}-${d.x}`,
             x: v(d.x),
             h: v(d.y),
@@ -122,7 +122,7 @@ Frame([
           interpolation: "linear",
           opacity: 0.7,
         },
-        items.map((d) => Ref(`${c}-${d.x}`))
+        items.map((d) => ref(`${c}-${d.x}`))
       )
     )
     .value(),

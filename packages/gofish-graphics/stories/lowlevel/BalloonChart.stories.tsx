@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
 import { seafood, catchLocations } from "../../src/data/catch";
-import { Frame, Ellipse, Rect, wavy } from "../../src/lib";
+import { Frame, ellipse, rect, wavy } from "../../src/lib";
 import { color, color6 } from "../../src/color";
 import { mix } from "spectral.js";
 import _ from "lodash";
@@ -59,21 +59,21 @@ export const Default: StoryObj<Args> = {
           },
         },
         [
-          Ellipse({
+          ellipse({
             cx: 15,
             cy: 15,
             w: 24,
             h: 30,
             fill: (options?.color ?? color.red)[4],
           }),
-          Ellipse({
+          ellipse({
             cx: 12,
             cy: 11,
             w: 7,
             h: 11,
             fill: (options?.color ?? color.red)[3],
           }),
-          Rect({
+          rect({
             cx: 15,
             cy: 32,
             w: 8,
@@ -82,7 +82,7 @@ export const Default: StoryObj<Args> = {
             rx: 3,
             ry: 2,
           }),
-          Rect({
+          rect({
             cx: 15,
             cy: 32,
             w: 5,
@@ -98,11 +98,9 @@ export const Default: StoryObj<Args> = {
       { coord: wavy(), x: 0, y: 0 },
       scatterData.map((data, i) =>
         Frame({ x: data.x }, [
-          Rect({
+          rect({
             x: 0,
             y: 0,
-            // x: data.x,
-            // y: data.y,
             w: 1,
             h: data.y,
             emY: true,
