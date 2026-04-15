@@ -1,6 +1,6 @@
-# scaffold
+# blank
 
-Creates invisible positioning guides. Use scaffold when you need to define positions for other marks (like `line` or `area`) without rendering visible shapes.
+Creates invisible positioning guides. Use blank when you need to define positions for other marks (like `line` or `area`) without rendering visible shapes.
 
 ::: starfish
 
@@ -15,7 +15,7 @@ gf.Layer([
   gf
     .Chart(locations)
     .flow(gf.scatter("lake", { x: "x", y: "y" }))
-    .mark(gf.scaffold().name("points")),
+    .mark(gf.blank().name("points")),
   gf
     .Chart(gf.select("points"))
     .mark(gf.line({ stroke: "steelblue", strokeWidth: 2 })),
@@ -27,7 +27,7 @@ gf.Layer([
 ## Signature
 
 ```ts
-scaffold({ w?, h?, fill?, stroke?, strokeWidth?, rx?, ry?, debug? })
+blank({ w?, h?, fill?, stroke?, strokeWidth?, rx?, ry?, debug? })
 ```
 
 ## Parameters
@@ -47,11 +47,11 @@ scaffold({ w?, h?, fill?, stroke?, strokeWidth?, rx?, ry?, debug? })
 
 ```ts
 // Create invisible anchor points for a line chart
-.mark(scaffold().name("points"))
+.mark(blank().name("points"))
 
-// Scaffold with height encoding for area charts
-.mark(scaffold({ h: "value" }).name("bars"))
+// Blank with height encoding for area charts
+.mark(blank({ h: "value" }).name("bars"))
 
-// Debug mode to see scaffold positions
-.mark(scaffold({ debug: true }).name("guides"))
+// Debug mode to see blank positions
+.mark(blank({ debug: true }).name("guides"))
 ```

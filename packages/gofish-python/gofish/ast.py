@@ -38,6 +38,7 @@ class Mark:
         self.mark_type = mark_type
         self.kwargs = kwargs
         self._name: Optional[str] = None
+        self._label: Optional[dict] = None
 
     def name(self, layer_name: str) -> "Mark":
         """
@@ -51,6 +52,50 @@ class Mark:
         """
         new_mark = Mark(self.mark_type, **self.kwargs)
         new_mark._name = layer_name
+        new_mark._label = self._label
+        return new_mark
+
+    def label(
+        self,
+        accessor: str,
+        position: Optional[str] = None,
+        fontSize: Optional[int] = None,
+        color: Optional[str] = None,
+        offset: Optional[int] = None,
+        minSpace: Optional[int] = None,
+        rotate: Optional[int] = None,
+    ) -> "Mark":
+        """
+        Attach a label to this mark.
+
+        Args:
+            accessor: Field name to use as label text
+            position: Label position (e.g. "center", "outset-top", "inset-bottom-start")
+            fontSize: Font size in pixels
+            color: Label color (auto-contrasted if omitted)
+            offset: Offset from shape edge in pixels
+            minSpace: Minimum space required to show label
+            rotate: Rotation angle in degrees
+
+        Returns:
+            New Mark with label set
+        """
+        new_mark = Mark(self.mark_type, **self.kwargs)
+        new_mark._name = self._name
+        label_spec: Dict[str, Any] = {"accessor": accessor}
+        if position is not None:
+            label_spec["position"] = position
+        if fontSize is not None:
+            label_spec["fontSize"] = fontSize
+        if color is not None:
+            label_spec["color"] = color
+        if offset is not None:
+            label_spec["offset"] = offset
+        if minSpace is not None:
+            label_spec["minSpace"] = minSpace
+        if rotate is not None:
+            label_spec["rotate"] = rotate
+        new_mark._label = label_spec
         return new_mark
 
     def to_dict(self) -> dict:
@@ -58,6 +103,8 @@ class Mark:
         d: dict = {"type": self.mark_type, **self.kwargs}
         if self._name is not None:
             d["name"] = self._name
+        if self._label is not None:
+            d["label"] = self._label
         return d
 
 
@@ -76,6 +123,7 @@ class ChartBuilder:
         data: Any,
         options: Optional[dict] = None,
         operators: Optional[List[Operator]] = None,
+        z_order: Optional[float] = None,
     ):
         """
         Initialize a ChartBuilder.
@@ -89,6 +137,7 @@ class ChartBuilder:
         self.options = options or {}
         self.operators: List[Operator] = operators or []
         self._mark: Optional[Mark] = None
+        self._z_order = z_order
 
     def flow(self, *ops: Operator) -> "ChartBuilder":
         """
@@ -104,6 +153,7 @@ class ChartBuilder:
             self.data,
             self.options,
             operators=[*self.operators, *ops],
+            z_order=self._z_order,
         )
 
     def mark(self, mark: Mark) -> "ChartBuilder":
@@ -116,9 +166,23 @@ class ChartBuilder:
         Returns:
             New ChartBuilder with mark set
         """
-        new_builder = ChartBuilder(self.data, self.options, self.operators)
+        new_builder = ChartBuilder(
+            self.data, self.options, self.operators, z_order=self._z_order
+        )
         new_builder._mark = mark
         return new_builder
+
+    def zOrder(self, value: float) -> "ChartBuilder":
+        """Set z-order for this chart when rendered inside a Layer."""
+        new_builder = ChartBuilder(
+            self.data, self.options, self.operators, z_order=value
+        )
+        new_builder._mark = self._mark
+        return new_builder
+
+    def zIndex(self, value: float) -> "ChartBuilder":
+        """Alias for zOrder()."""
+        return self.zOrder(value)
 
     def facet(self, field: str, **kwargs: Any) -> "ChartBuilder":
         """
@@ -167,6 +231,7 @@ class ChartBuilder:
             "operators": [op.to_dict() for op in self.operators],
             "mark": self._mark.to_dict(),
             "options": self.options,
+            "zOrder": self._z_order,
         }
 
     def render(
@@ -590,19 +655,19 @@ def area(
     return Mark("area", **kwargs)
 
 
-def scaffold(
+def blank(
     w: Optional[Union[int, str]] = None,
     h: Optional[Union[int, str]] = None,
     **kwargs: Any,
 ) -> Mark:
-    """Scaffold mark - invisible guide for positioning."""
-    scaffold_kwargs: Dict[str, Any] = {}
+    """Blank mark - invisible guide for positioning."""
+    blank_kwargs: Dict[str, Any] = {}
     if w is not None:
-        scaffold_kwargs["w"] = w
+        blank_kwargs["w"] = w
     if h is not None:
-        scaffold_kwargs["h"] = h
-    scaffold_kwargs.update(kwargs)
-    return Mark("scaffold", **scaffold_kwargs)
+        blank_kwargs["h"] = h
+    blank_kwargs.update(kwargs)
+    return Mark("blank", **blank_kwargs)
 
 
 def ellipse(

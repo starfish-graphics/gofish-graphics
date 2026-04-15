@@ -30,3 +30,22 @@ Layer(options?, [child1, child2, ...])
 | `h`                 | `number`              | Override height                     |
 | `transform.scale.x` | `number`              | Scale factor for x axis             |
 | `transform.scale.y` | `number`              | Scale factor for y axis             |
+
+## Z-ordering
+
+By default, children are drawn in the order they appear in the array — later children appear on top. You can override this with `.zOrder(n)` on any child. Children are sorted by z-order value before rendering; lower values are drawn first (underneath). Children with the same z-order value keep their original array order.
+
+```ts
+Layer([
+  Chart(data)
+    .flow(scatter("x", { y: "y" }))
+    .mark(line())
+    .zOrder(0),
+  Chart(data)
+    .flow(scatter("x", { y: "y" }))
+    .mark(circle({ r: 5 }))
+    .zOrder(1),
+]);
+```
+
+`.zOrder()` is available on `ChartBuilder` (the object returned by `chart()`) and on `GoFishNode` instances.

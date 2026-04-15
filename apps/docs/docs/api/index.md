@@ -29,7 +29,7 @@ By combining operators and marks, you can create complex and automatic chart lay
 - [ellipse](/api/marks/ellipse) Draws an ellipse for each data item.
 - [line](/api/marks/line) Connects data points with a line.
 - [area](/api/marks/area) Fills the area between data points.
-- [scaffold](/api/marks/scaffold) Creates invisible positioning guides.
+- [blank](/api/marks/blank) Creates invisible positioning guides.
 - [ref](/api/marks/ref) References another node by name.
 
 ## Operators

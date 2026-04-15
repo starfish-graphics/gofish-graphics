@@ -33,6 +33,18 @@ export { bin } from "./ast/transforms";
 // Shapes
 export { ref } from "./ast/shapes/ref";
 
+// Constraints
+export { Constraint } from "./ast/constraints";
+export type {
+  ConstraintRef,
+  ConstraintSpec,
+  AlignConstraint,
+  DistributeConstraint,
+  DistributeOptions,
+  Axis,
+  Alignment,
+} from "./ast/constraints";
+
 // Graphical Operators
 export { stack as Stack } from "./ast/graphicalOperators/stack";
 export { stackX as StackX } from "./ast/graphicalOperators/stackX";
@@ -79,7 +91,7 @@ export {
   circle,
   select,
   line,
-  scaffold,
+  blank,
   area,
   normalize,
   repeat,
@@ -98,3 +110,8 @@ export type {
   GradientScale,
 } from "./ast/colorSchemes";
 export type { NameableMark } from "./ast/withGoFish";
+export type {
+  LabelSpec,
+  LabelOptions,
+  LabelAccessor,
+} from "./ast/labels/labelPlacement";

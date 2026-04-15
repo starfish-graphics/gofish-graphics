@@ -21,6 +21,8 @@ import {
 } from "./channels";
 import { isValue } from "./data";
 import { Mark } from "./types";
+import type { ConstraintSpec, ConstraintRef } from "./constraints";
+import type { LabelAccessor, LabelOptions } from "./labels/labelPlacement";
 
 /**
  * Options for rendering a GoFish node
@@ -76,8 +78,13 @@ export interface PromiseWithRender<T> extends Promise<T> {
     options: RenderOptions
   ): HTMLElement | Promise<HTMLElement>;
   name(name: string): PromiseWithRender<T>;
+  label(accessor: LabelAccessor, options?: LabelOptions): PromiseWithRender<T>;
   setKey(key: string): PromiseWithRender<T>;
   setShared(shared: [boolean, boolean]): PromiseWithRender<T>;
+  constrain(
+    fn: (refs: Record<string, ConstraintRef>) => ConstraintSpec[]
+  ): PromiseWithRender<T>;
+  zOrder(value: number): PromiseWithRender<T>;
 }
 
 /**
@@ -128,6 +135,20 @@ export function addRenderMethod<T>(promise: Promise<T>): PromiseWithRender<T> {
     );
   };
 
+  (promise as any).label = function (
+    accessor: LabelAccessor,
+    options?: LabelOptions
+  ): PromiseWithRender<T> {
+    return addRenderMethod(
+      promise.then((result) => {
+        if (result instanceof GoFishNode) {
+          return result.label(accessor, options) as T;
+        }
+        return result;
+      })
+    );
+  };
+
   (promise as any).setKey = function (key: string): PromiseWithRender<T> {
     return addRenderMethod(
       promise.then((result) => {
@@ -146,6 +167,30 @@ export function addRenderMethod<T>(promise: Promise<T>): PromiseWithRender<T> {
       promise.then((result) => {
         if (result instanceof GoFishNode) {
           return result.setShared(shared) as T;
+        }
+        return result;
+      })
+    );
+  };
+
+  (promise as any).constrain = function (
+    fn: (refs: Record<string, ConstraintRef>) => ConstraintSpec[]
+  ): PromiseWithRender<T> {
+    return addRenderMethod(
+      promise.then((result) => {
+        if (result instanceof GoFishNode) {
+          return result.constrain(fn) as T;
+        }
+        return result;
+      })
+    );
+  };
+
+  (promise as any).zOrder = function (value: number): PromiseWithRender<T> {
+    return addRenderMethod(
+      promise.then((result) => {
+        if (result instanceof GoFishNode) {
+          return result.zOrder(value) as T;
         }
         return result;
       })
@@ -353,9 +398,10 @@ export function createOperatorSequential<T extends Record<string, any>, R>(
   };
 }
 
-/** A mark that can be named for layer selection via .name("layerName"). */
+/** A mark that can be named for layer selection via .name("layerName") and labeled via .label(accessor, options?). */
 export type NameableMark<T> = Mark<T> & {
   name(layerName: string): Mark<T>;
+  label(accessor: LabelAccessor, options?: LabelOptions): Mark<T>;
 };
 
 /**
@@ -451,8 +497,27 @@ export function createMark<
         return node;
       };
     };
+    const labelMethod = (
+      accessor: LabelAccessor,
+      options?: LabelOptions
+    ): Mark<T | T[] | { item: T | T[]; key: number | string }> => {
+      return async (
+        input: T | T[] | { item: T | T[]; key: number | string },
+        keyParam?: string | number,
+        layerContext?: LayerContext
+      ) => {
+        const node = await baseMark(input, keyParam, layerContext);
+        (node as GoFishNode).label(accessor, options);
+        return node;
+      };
+    };
     Object.defineProperty(baseMark, "name", {
       value: nameMethod,
+      writable: true,
+      configurable: true,
+    });
+    Object.defineProperty(baseMark, "label", {
+      value: labelMethod,
       writable: true,
       configurable: true,
     });

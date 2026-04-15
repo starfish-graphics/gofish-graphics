@@ -15,7 +15,7 @@ gf.Layer([
   gf
     .Chart(locations)
     .flow(gf.scatter("lake", { x: "x", y: "y" }))
-    .mark(gf.scaffold().name("points")),
+    .mark(gf.blank().name("points")),
   gf
     .Chart(gf.select("points"))
     .mark(gf.line({ stroke: "steelblue", strokeWidth: 2 })),

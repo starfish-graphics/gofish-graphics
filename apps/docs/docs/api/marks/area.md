@@ -16,7 +16,7 @@ gf.Layer([
   gf
     .Chart(lakeTotals)
     .flow(gf.spread("lake", { dir: "x", spacing: 64 }))
-    .mark(gf.scaffold({ h: "count" }).name("points")),
+    .mark(gf.blank({ h: "count" }).name("points")),
   gf.Chart(gf.select("points")).mark(gf.area({ opacity: 0.6 })),
 ]).render(root, { w: 400, h: 250, axes: true });
 ```

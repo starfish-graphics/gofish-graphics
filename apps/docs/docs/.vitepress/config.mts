@@ -101,7 +101,7 @@ export default defineConfig({
             { text: "ellipse", link: "/api/marks/ellipse" },
             { text: "line", link: "/api/marks/line" },
             { text: "area", link: "/api/marks/area" },
-            { text: "scaffold", link: "/api/marks/scaffold" },
+            { text: "blank", link: "/api/marks/blank" },
             { text: "ref", link: "/api/marks/ref" },
           ],
         },
@@ -116,6 +116,10 @@ export default defineConfig({
             { text: "derive", link: "/api/operators/derive" },
             { text: "log", link: "/api/operators/log" },
           ],
+        },
+        {
+          text: "Constraints",
+          items: [{ text: "constrain", link: "/api/constraints/constrain" }],
         },
         {
           text: "Selection",

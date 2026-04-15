@@ -22,7 +22,7 @@ import {
   rect,
   circle,
   line,
-  scaffold,
+  blank,
   area,
   ellipse,
   petal,
@@ -67,6 +67,7 @@ interface ChartSpec {
   operators?: OperatorSpec[];
   mark: MarkSpec;
   options?: Record<string, any>;
+  zOrder?: number;
 }
 
 interface LayerSpec {
@@ -81,18 +82,29 @@ interface OperatorSpec {
   [key: string]: any;
 }
 
+interface LabelSpec {
+  accessor: string;
+  position?: string;
+  fontSize?: number;
+  color?: string;
+  offset?: number;
+  minSpace?: number;
+  rotate?: number;
+}
+
 interface MarkSpec {
   type:
     | "rect"
     | "circle"
     | "line"
     | "area"
-    | "scaffold"
+    | "blank"
     | "ellipse"
     | "petal"
     | "text"
     | "image";
   name?: string;
+  label?: LabelSpec;
   [key: string]: any;
 }
 
@@ -424,7 +436,7 @@ const MARK_MAP: Record<string, (opts: Record<string, any>) => Mark<any>> = {
   circle: (opts: Record<string, any>) => circle(opts),
   line: (opts: Record<string, any>) => line(opts),
   area: (opts: Record<string, any>) => area(opts),
-  scaffold: (opts: Record<string, any>) => scaffold(opts),
+  blank: (opts: Record<string, any>) => blank(opts),
   ellipse: (opts: Record<string, any>) => ellipse(opts),
   petal: (opts: Record<string, any>) => petal(opts),
   text: (opts: Record<string, any>) => text(opts),
@@ -432,17 +444,24 @@ const MARK_MAP: Record<string, (opts: Record<string, any>) => Mark<any>> = {
 };
 
 /**
- * Maps an IR mark spec to a GoFish mark function, applying .name() if present.
+ * Maps an IR mark spec to a GoFish mark function, applying .name() and .label() if present.
  */
 function mapMark(markSpec: MarkSpec): Mark<any> {
-  const { type, name: layerName, ...opts } = markSpec;
+  const { type, name: layerName, label: labelSpec, ...opts } = markSpec;
   const factory = MARK_MAP[type];
   if (!factory) {
     throw new Error(`Unknown mark type: ${type}`);
   }
-  const mark = factory(opts);
+  let mark = factory(opts);
   if (layerName && typeof (mark as any).name === "function") {
-    return (mark as any).name(layerName);
+    mark = (mark as any).name(layerName);
+  }
+  if (labelSpec && typeof (mark as any).label === "function") {
+    const { accessor, ...labelOpts } = labelSpec;
+    mark = (mark as any).label(
+      accessor,
+      Object.keys(labelOpts).length > 0 ? labelOpts : undefined
+    );
   }
   return mark;
 }
@@ -553,9 +572,13 @@ function buildChart(
     chartData = select(chartSpec.data.layer);
   }
 
-  return chart(chartData, resolvedOptions)
+  let builder = chart(chartData, resolvedOptions)
     .flow(...operators)
     .mark(mark);
+  if (chartSpec.zOrder !== undefined) {
+    builder = builder.zOrder(chartSpec.zOrder);
+  }
+  return builder;
 }
 
 /**
@@ -658,44 +681,11 @@ function renderChart(
     }
   }
 
-  // 2. Map IR operators to GoFish operators
   log("Processing spec:", chartSpec);
-  const operators: Operator<any, any>[] = [];
-
-  for (const opSpec of chartSpec.operators || []) {
-    log(`Mapping operator: ${opSpec.type}`);
-    const op = mapOperator(opSpec, model, experimental);
-    if (op) {
-      operators.push(op);
-    } else {
-      log(`Warning: Unknown operator type: ${opSpec.type}`);
-    }
-  }
-
-  // 3. Map IR mark to GoFish mark (with optional .name())
-  const markSpec = chartSpec.mark || { type: "rect" };
-  log(`Mapping mark: ${markSpec.type}`);
-  const mark = mapMark(markSpec);
-
-  // 4. Resolve options (color, coord, etc.)
-  const resolvedOptions = resolveOptions(chartSpec.options || {});
-
-  // 5. Determine chart data source (Arrow data or select() reference)
-  let chartData: any = data;
-  if (
-    chartSpec.data &&
-    typeof chartSpec.data === "object" &&
-    chartSpec.data.type === "select"
-  ) {
-    log(`Using select("${chartSpec.data.layer}") as data source`);
-    chartData = select(chartSpec.data.layer);
-  }
-
-  // 6. Build and render chart
+  // 2. Build and render chart
   try {
     log("Building chart...");
-    const chartBuilder = chart(chartData, resolvedOptions);
-    let node = chartBuilder.flow(...operators).mark(mark);
+    let node = buildChart(chartSpec, data, model, experimental);
 
     const renderOptions: RenderOptions = {
       w: model.get("width"),
