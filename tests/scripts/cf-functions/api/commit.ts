@@ -26,6 +26,7 @@ interface CommitBody {
   domContents: Record<string, string>; // storyPath → HTML text
   screenshotContents: Record<string, string>; // pngPath → base64
   repo: string;
+  /** The snapshot branch to commit to (e.g. "snapshots/my-feature") */
   branch: string;
 }
 
@@ -136,8 +137,9 @@ async function handleCommit(
 
       // Use tree `content` for DOM files — GitHub creates the blob internally,
       // saving a subrequest compared to creating the blob explicitly.
+      // On the snapshot branch, files live at dom/ and screenshots/ (no __snapshots__/ prefix).
       treeItems.push({
-        path: `__snapshots__/dom/${storyPath}`,
+        path: `dom/${storyPath}`,
         mode: "100644",
         type: "blob",
         content: domContent,
@@ -152,7 +154,7 @@ async function handleCommit(
           screenshotBase64
         );
         treeItems.push({
-          path: `__snapshots__/screenshots/${pngPath}`,
+          path: `screenshots/${pngPath}`,
           mode: "100644",
           type: "blob",
           sha: screenshotBlobSha,
@@ -169,37 +171,46 @@ async function handleCommit(
     return json({ ok: false, accepted: 0, errors });
   }
 
-  // Get current HEAD SHA
-  const refData = await githubJson<{ object: { sha: string } }>(
-    await fetch(`${apiBase}/git/ref/heads/${branch}`, {
-      headers: githubHeaders,
-    }),
-    `get ref heads/${branch}`
-  );
-  const headSha = refData.object.sha;
+  // Get current HEAD SHA of the snapshot branch, or null if it doesn't exist yet.
+  const refRes = await fetch(`${apiBase}/git/ref/heads/${branch}`, {
+    headers: githubHeaders,
+  });
 
-  // Get base tree SHA
-  const commitData = await githubJson<{ tree: { sha: string } }>(
-    await fetch(`${apiBase}/git/commits/${headSha}`, {
-      headers: githubHeaders,
-    }),
-    `get commit ${headSha}`
-  );
+  let headSha: string | null = null;
+  let baseTreeSha: string | null = null;
 
-  // Create tree with all changes
+  if (refRes.ok) {
+    const refData = (await refRes.json()) as { object: { sha: string } };
+    headSha = refData.object.sha;
+
+    // Get base tree SHA from the existing commit.
+    const commitData = await githubJson<{ tree: { sha: string } }>(
+      await fetch(`${apiBase}/git/commits/${headSha}`, {
+        headers: githubHeaders,
+      }),
+      `get commit ${headSha}`
+    );
+    baseTreeSha = commitData.tree.sha;
+  } else if (refRes.status !== 404) {
+    const text = await refRes.text();
+    throw new Error(`GitHub get ref failed (${refRes.status}): ${text}`);
+  }
+  // If 404, headSha/baseTreeSha remain null — we'll create an orphan branch below.
+
+  // Create tree with all changes (base_tree omitted for orphan branch creation).
   const newTree = await githubJson<{ sha: string }>(
     await fetch(`${apiBase}/git/trees`, {
       method: "POST",
       headers: githubHeaders,
       body: JSON.stringify({
-        base_tree: commitData.tree.sha,
+        ...(baseTreeSha ? { base_tree: baseTreeSha } : {}),
         tree: treeItems,
       }),
     }),
     "create tree"
   );
 
-  // Create single commit
+  // Create single commit (no parents if this is a new orphan branch).
   const newCommit = await githubJson<{ sha: string }>(
     await fetch(`${apiBase}/git/commits`, {
       method: "POST",
@@ -207,21 +218,38 @@ async function handleCommit(
       body: JSON.stringify({
         message: `Accept ${accepted} visual diff(s)`,
         tree: newTree.sha,
-        parents: [headSha],
+        parents: headSha ? [headSha] : [],
       }),
     }),
     "create commit"
   );
 
-  // Update branch ref
-  const updateRes = await fetch(`${apiBase}/git/refs/heads/${branch}`, {
-    method: "PATCH",
-    headers: githubHeaders,
-    body: JSON.stringify({ sha: newCommit.sha }),
-  });
-  if (!updateRes.ok) {
-    const text = await updateRes.text();
-    throw new Error(`Failed to update branch ref: ${text}`);
+  // Create or update the snapshot branch ref.
+  if (headSha) {
+    // Branch exists — fast-forward.
+    const updateRes = await fetch(`${apiBase}/git/refs/heads/${branch}`, {
+      method: "PATCH",
+      headers: githubHeaders,
+      body: JSON.stringify({ sha: newCommit.sha }),
+    });
+    if (!updateRes.ok) {
+      const text = await updateRes.text();
+      throw new Error(`Failed to update branch ref: ${text}`);
+    }
+  } else {
+    // Branch doesn't exist — create it.
+    const createRes = await fetch(`${apiBase}/git/refs`, {
+      method: "POST",
+      headers: githubHeaders,
+      body: JSON.stringify({
+        ref: `refs/heads/${branch}`,
+        sha: newCommit.sha,
+      }),
+    });
+    if (!createRes.ok) {
+      const text = await createRes.text();
+      throw new Error(`Failed to create branch ref: ${text}`);
+    }
   }
 
   return json({

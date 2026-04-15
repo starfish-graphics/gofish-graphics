@@ -13,6 +13,7 @@
 import { readFileSync, readdirSync, existsSync } from "fs";
 import { join, relative } from "path";
 import { execSync } from "child_process";
+import { getSnapshotBranchName, pullSnapshots } from "./snapshot-branch.js";
 
 const ROOT = join(import.meta.dirname, "../..");
 const BASELINE_DIR = join(ROOT, "__snapshots__/dom");
@@ -122,6 +123,9 @@ function checkParity(): Failure[] {
 
 function main() {
   console.log("=== Comparing DOM snapshots ===\n");
+
+  // Pull baselines from the snapshot branch if not already present locally.
+  pullSnapshots(getSnapshotBranchName(), join(ROOT, "__snapshots__"));
 
   const regressions = checkRegressions();
   const parityFailures = jsOnly ? [] : checkParity();
