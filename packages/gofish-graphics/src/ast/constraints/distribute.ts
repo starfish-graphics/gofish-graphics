@@ -47,7 +47,7 @@ export function applyDistribute(
         // Already placed: advance pos past it
         pos = target.dims[idx].max! + constraint.spacing;
       } else {
-        target.place({ [constraint.dir]: pos });
+        target.place(constraint.dir, pos);
         pos += (target.dims[idx].size ?? 0) + constraint.spacing;
       }
     }
@@ -57,9 +57,7 @@ export function applyDistribute(
       if (isPlacedOn(target, idx)) {
         pos = target.dims[idx].center! + constraint.spacing;
       } else {
-        target.place({
-          [constraint.dir]: pos - (target.dims[idx].size ?? 0) / 2,
-        });
+        target.place(constraint.dir, pos, "center");
         pos += constraint.spacing;
       }
     }

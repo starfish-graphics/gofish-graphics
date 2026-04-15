@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
-import { Constraint, Layer, Rect, Spread } from "../../src/lib";
+import { Constraint, Layer, rect, Spread } from "../../src/lib";
 
 const meta: Meta = {
   title: "Low Level Syntax/Constraints",
@@ -64,21 +64,21 @@ const renderEquivalentStory = (
 };
 
 const makeYRects = () => [
-  Rect({ w: 80, h: 40, fill: "#e63946" }).name("a"),
-  Rect({ w: 120, h: 40, fill: "#457b9d" }).name("b"),
-  Rect({ w: 60, h: 40, fill: "#2a9d8f" }).name("c"),
+  rect({ w: 80, h: 40, fill: "#e63946" }).name("a"),
+  rect({ w: 120, h: 40, fill: "#457b9d" }).name("b"),
+  rect({ w: 60, h: 40, fill: "#2a9d8f" }).name("c"),
 ];
 
 const makeXRects = () => [
-  Rect({ w: 40, h: 80, fill: "#e63946" }).name("a"),
-  Rect({ w: 40, h: 120, fill: "#457b9d" }).name("b"),
-  Rect({ w: 40, h: 60, fill: "#2a9d8f" }).name("c"),
+  rect({ w: 40, h: 80, fill: "#e63946" }).name("a"),
+  rect({ w: 40, h: 120, fill: "#457b9d" }).name("b"),
+  rect({ w: 40, h: 60, fill: "#2a9d8f" }).name("c"),
 ];
 
 const makeCenterToCenterRects = () => [
-  Rect({ w: 30, h: 80, fill: "#e63946" }).name("a"),
-  Rect({ w: 50, h: 80, fill: "#457b9d" }).name("b"),
-  Rect({ w: 20, h: 80, fill: "#2a9d8f" }).name("c"),
+  rect({ w: 30, h: 80, fill: "#e63946" }).name("a"),
+  rect({ w: 50, h: 80, fill: "#457b9d" }).name("b"),
+  rect({ w: 20, h: 80, fill: "#2a9d8f" }).name("c"),
 ];
 
 // ──────────────────────────────────────────────────────────
@@ -175,14 +175,14 @@ export const SpreadY_AlignMiddle: StoryObj<Args> = {
         Layer([
           // Pin one child to the canvas center so align({ dir: "x", alignment: "middle" })
           // and Spread(... alignment: "middle") share the same baseline.
-          Rect({
+          rect({
             x: storyArgs.w / 2 - 80 / 2,
             w: 80,
             h: 40,
             fill: "#e63946",
           }).name("a"),
-          Rect({ w: 120, h: 40, fill: "#457b9d" }).name("b"),
-          Rect({ w: 60, h: 40, fill: "#2a9d8f" }).name("c"),
+          rect({ w: 120, h: 40, fill: "#457b9d" }).name("b"),
+          rect({ w: 60, h: 40, fill: "#2a9d8f" }).name("c"),
         ])
           .constrain(({ a, b, c }) => [
             Constraint.align({ dir: "x", alignment: "middle" }, [a, b, c]),
@@ -372,9 +372,9 @@ export const AlignOnly: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
     Layer([
-      Rect({ w: 80, h: 40, fill: "#e63946" }).name("a"),
-      Rect({ w: 120, h: 60, fill: "#457b9d" }).name("b"),
-      Rect({ w: 60, h: 30, fill: "#2a9d8f" }).name("c"),
+      rect({ w: 80, h: 40, fill: "#e63946" }).name("a"),
+      rect({ w: 120, h: 60, fill: "#457b9d" }).name("b"),
+      rect({ w: 60, h: 30, fill: "#2a9d8f" }).name("c"),
     ])
       .constrain(({ a, b, c }) => [
         Constraint.align({ dir: "x", alignment: "end" }, [a, b, c]),
@@ -393,9 +393,9 @@ export const AlignOnly_ManualY: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
     Layer([
-      Rect({ w: 80, h: 40, y: 20, fill: "#e63946" }).name("a"),
-      Rect({ w: 120, h: 60, y: 100, fill: "#457b9d" }).name("b"),
-      Rect({ w: 60, h: 30, y: 200, fill: "#2a9d8f" }).name("c"),
+      rect({ w: 80, h: 40, y: 20, fill: "#e63946" }).name("a"),
+      rect({ w: 120, h: 60, y: 100, fill: "#457b9d" }).name("b"),
+      rect({ w: 60, h: 30, y: 200, fill: "#2a9d8f" }).name("c"),
     ])
       .constrain(({ a, b, c }) => [
         Constraint.align({ dir: "x", alignment: "end" }, [a, b, c]),
@@ -414,9 +414,9 @@ export const DistributeOnly: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
     Layer([
-      Rect({ w: 80, h: 40, fill: "#e63946" }).name("a"),
-      Rect({ w: 120, h: 40, fill: "#457b9d" }).name("b"),
-      Rect({ w: 60, h: 40, fill: "#2a9d8f" }).name("c"),
+      rect({ w: 80, h: 40, fill: "#e63946" }).name("a"),
+      rect({ w: 120, h: 40, fill: "#457b9d" }).name("b"),
+      rect({ w: 60, h: 40, fill: "#2a9d8f" }).name("c"),
     ])
       .constrain(({ a, b, c }) => [
         Constraint.distribute({ dir: "y", spacing: 10 }, [a, b, c]),
@@ -443,10 +443,10 @@ export const SubsetSelection: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
     Layer([
-      Rect({ w: 100, h: 50, fill: "#e63946" }).name("a"),
-      Rect({ w: 80, h: 50, fill: "#457b9d" }).name("b"),
-      Rect({ w: 120, h: 50, fill: "#2a9d8f" }).name("c"),
-      Rect({ w: 60, h: 50, fill: "#f4a261" }).name("d"),
+      rect({ w: 100, h: 50, fill: "#e63946" }).name("a"),
+      rect({ w: 80, h: 50, fill: "#457b9d" }).name("b"),
+      rect({ w: 120, h: 50, fill: "#2a9d8f" }).name("c"),
+      rect({ w: 60, h: 50, fill: "#f4a261" }).name("d"),
     ])
       .constrain(({ a, b, c, d }) => [
         Constraint.align({ dir: "x", alignment: "end" }, [a, b, c, d]),
@@ -467,10 +467,10 @@ export const BackgroundNotDistributed: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
     Layer([
-      Rect({ w: 150, h: 200, fill: "#e2ebf6" }).name("bg"),
-      Rect({ w: 100, h: 40, fill: "#e63946" }).name("a"),
-      Rect({ w: 80, h: 40, fill: "#457b9d" }).name("b"),
-      Rect({ w: 120, h: 40, fill: "#2a9d8f" }).name("c"),
+      rect({ w: 150, h: 200, fill: "#e2ebf6" }).name("bg"),
+      rect({ w: 100, h: 40, fill: "#e63946" }).name("a"),
+      rect({ w: 80, h: 40, fill: "#457b9d" }).name("b"),
+      rect({ w: 120, h: 40, fill: "#2a9d8f" }).name("c"),
     ])
       .constrain(({ bg, a, b, c }) => [
         Constraint.align({ dir: "x", alignment: "start" }, [bg, a, b, c]),
@@ -494,10 +494,10 @@ export const AlignCenterDistributeY: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
     Layer([
-      Rect({ w: 80, h: 40, fill: "#e63946" }).name("a"),
-      Rect({ w: 120, h: 60, fill: "#457b9d" }).name("b"),
-      Rect({ w: 40, h: 30, fill: "#2a9d8f" }).name("c"),
-      Rect({ w: 100, h: 50, fill: "#f4a261" }).name("d"),
+      rect({ w: 80, h: 40, fill: "#e63946" }).name("a"),
+      rect({ w: 120, h: 60, fill: "#457b9d" }).name("b"),
+      rect({ w: 40, h: 30, fill: "#2a9d8f" }).name("c"),
+      rect({ w: 100, h: 50, fill: "#f4a261" }).name("d"),
     ])
       .constrain(({ a, b, c, d }) => [
         Constraint.align({ dir: "x", alignment: "middle" }, [a, b, c, d]),

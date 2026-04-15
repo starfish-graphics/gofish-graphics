@@ -167,12 +167,30 @@ export const layer = createOperatorSequential(
 
           const childPlaceables = [];
 
+          // Collect constrained names before layout so we can skip baseline
+          // placement for constrained children. Baseline placement sets
+          // transform.translate, which makes isPlacedOn() return true and
+          // causes constraints to treat every child as already placed.
+          const constrainedNames = new Set<string>();
+          if (node.constraints.length > 0) {
+            for (const constraint of node.constraints) {
+              for (const ref of constraint.children) {
+                constrainedNames.add(ref.name);
+              }
+            }
+          }
+
           for (let i = 0; i < children.length; i++) {
             const child = children[i];
             const childPlaceable = child.layout(size, scaleFactors, posScales);
-
-            childPlaceable.place("x", 0, "baseline");
-            childPlaceable.place("y", 0, "baseline");
+            const childName =
+              "_name" in node.children[i]
+                ? (node.children[i] as GoFishNode)._name
+                : undefined;
+            if (!childName || !constrainedNames.has(childName)) {
+              childPlaceable.place("x", 0, "baseline");
+              childPlaceable.place("y", 0, "baseline");
+            }
             childPlaceables.push(childPlaceable);
           }
 
@@ -183,17 +201,11 @@ export const layer = createOperatorSequential(
               string,
               (typeof childPlaceables)[number]
             >();
-            const constrainedNames = new Set<string>();
             for (let i = 0; i < node.children.length; i++) {
               const childNode = node.children[i];
               if ("_name" in childNode && (childNode as GoFishNode)._name) {
                 const childName = (childNode as GoFishNode)._name!;
                 nameToPlaceable.set(childName, childPlaceables[i]);
-              }
-            }
-            for (const constraint of node.constraints) {
-              for (const ref of constraint.children) {
-                constrainedNames.add(ref.name);
               }
             }
 
@@ -225,18 +237,14 @@ export const layer = createOperatorSequential(
             for (const cp of childPlaceables) {
               const needsX = cp.dims[0].min === undefined;
               const needsY = cp.dims[1].min === undefined;
-              if (needsX && needsY) {
-                cp.place({ x: 0, y: 0 });
-              } else if (needsX) {
-                cp.place({ x: 0 });
-              } else if (needsY) {
-                cp.place({ y: 0 });
-              }
+              if (needsX) cp.place("x", 0);
+              if (needsY) cp.place("y", 0);
             }
           } else {
             // Default layer behavior: place all children at (0, 0)
             for (const cp of childPlaceables) {
-              cp.place({ x: 0, y: 0 });
+              cp.place("x", 0);
+              cp.place("y", 0);
             }
           }
 

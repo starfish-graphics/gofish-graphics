@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
-import { Constraint, For, Layer, Rect, Ref, Spread, Text } from "../../src/lib";
+import { Constraint, For, Layer, rect, ref, Spread, text } from "../../src/lib";
 
 const meta: Meta = {
   title: "Low Level Syntax/Python Tutor",
@@ -27,9 +27,9 @@ export const GlobalFrame: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
     Layer([
-      Rect({ h: 300, w: 200, fill: "#e2ebf6" }).name("frame"),
-      Rect({ h: 300, w: 5, fill: "#a6b3b6" }).name("frameBorder"),
-      Text({
+      rect({ h: 300, w: 200, fill: "#e2ebf6" }).name("frame"),
+      rect({ h: 300, w: 5, fill: "#a6b3b6" }).name("frameBorder"),
+      text({
         fontSize: 24,
         fontFamily: "Andale Mono, monospace",
         fill: "black",
@@ -43,7 +43,7 @@ export const GlobalFrame: StoryObj<Args> = {
             /* TODO: changing this wildly changes other positions... */ spacing: 10,
           },
           For(variables, (variable, i) =>
-            Text({
+            text({
               fontSize: 24,
               fontFamily: "Andale Mono, monospace",
               fill: "black",
@@ -52,7 +52,7 @@ export const GlobalFrame: StoryObj<Args> = {
           )
         ),
         /* TODO: this should really be on top... */
-        Ref("label"),
+        ref("label"),
       ]),
     ])
       .constrain(({ label, frame, frameBorder }) => [

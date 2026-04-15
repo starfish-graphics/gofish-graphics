@@ -1,5 +1,11 @@
 import type { Placeable } from "../_node";
-import { Alignment, Axis, ConstraintRef, axisIndex, isPlacedOn } from "./shared";
+import {
+  Alignment,
+  Axis,
+  ConstraintRef,
+  axisIndex,
+  isPlacedOn,
+} from "./shared";
 
 export interface AlignConstraint {
   type: "align";
@@ -44,24 +50,20 @@ export function applyAlign(
     baseline = placed ? placed.dims[idx].min! : (fallback?.start ?? 0);
     for (const target of targets) {
       if (isPlacedOn(target, idx)) continue;
-      target.place({ [constraint.dir]: baseline });
+      target.place(constraint.dir, baseline);
     }
   } else if (constraint.alignment === "middle") {
     baseline = placed ? placed.dims[idx].center! : (fallback?.middle ?? 0);
     for (const target of targets) {
       if (isPlacedOn(target, idx)) continue;
-      target.place({
-        [constraint.dir]: baseline - (target.dims[idx].size ?? 0) / 2,
-      });
+      target.place(constraint.dir, baseline, "center");
     }
   } else {
     // "end"
     baseline = placed ? placed.dims[idx].max! : (fallback?.end ?? 0);
     for (const target of targets) {
       if (isPlacedOn(target, idx)) continue;
-      target.place({
-        [constraint.dir]: baseline - (target.dims[idx].size ?? 0),
-      });
+      target.place(constraint.dir, baseline, "max");
     }
   }
 }
