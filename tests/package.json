@@ -7,6 +7,8 @@
     "test": "tsx scripts/capture-js-dom.ts && tsx scripts/capture-python-dom.ts && tsx scripts/compare.ts",
     "test:js": "tsx scripts/capture-js-dom.ts && tsx scripts/compare.ts --js-only",
     "update": "tsx scripts/capture-js-dom.ts && tsx scripts/update-baselines.ts",
+    "capture-js": "tsx scripts/capture-js-dom.ts",
+    "update-baselines": "tsx scripts/update-baselines.ts",
     "check-sync": "tsx scripts/check-python-sync.ts",
     "check-python-sync": "tsx scripts/check-python-sync.ts",
     "capture-python": "tsx scripts/capture-python-dom.ts",
