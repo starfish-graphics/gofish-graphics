@@ -37,28 +37,67 @@ export function applyDistribute(
   const ordered =
     constraint.order === "reverse" ? [...targets].reverse() : targets;
 
-  // Find starting position from first already-placed child, or 0
-  const firstPlaced = ordered.find((t) => isPlacedOn(t, idx));
-  let pos = firstPlaced ? firstPlaced.dims[idx].min! : 0;
+  // Find the first already-placed child (the anchor)
+  const anchorIdx = ordered.findIndex((t) => isPlacedOn(t, idx));
 
-  if (constraint.mode === "edge-to-edge") {
+  if (anchorIdx === -1) {
+    // No pre-placed items — start from 0, walk forward
+    let pos = 0;
     for (const target of ordered) {
-      if (isPlacedOn(target, idx)) {
-        // Already placed: advance pos past it
-        pos = target.dims[idx].max! + constraint.spacing;
+      if (constraint.mode === "center-to-center") {
+        target.place(constraint.dir, pos, "center");
+        pos += constraint.spacing;
       } else {
         target.place(constraint.dir, pos);
         pos += (target.dims[idx].size ?? 0) + constraint.spacing;
       }
     }
-  } else {
-    // center-to-center
-    for (const target of ordered) {
-      if (isPlacedOn(target, idx)) {
-        pos = target.dims[idx].center! + constraint.spacing;
+    return;
+  }
+
+  if (constraint.mode === "edge-to-edge") {
+    // Walk forward from anchor (items after it)
+    let pos = ordered[anchorIdx].dims[idx].max! + constraint.spacing;
+    for (let i = anchorIdx + 1; i < ordered.length; i++) {
+      const t = ordered[i];
+      if (isPlacedOn(t, idx)) {
+        pos = t.dims[idx].max! + constraint.spacing;
       } else {
-        target.place(constraint.dir, pos, "center");
+        t.place(constraint.dir, pos);
+        pos += (t.dims[idx].size ?? 0) + constraint.spacing;
+      }
+    }
+    // Walk backward from anchor (items before it), placing via "max" anchor
+    pos = ordered[anchorIdx].dims[idx].min! - constraint.spacing;
+    for (let i = anchorIdx - 1; i >= 0; i--) {
+      const t = ordered[i];
+      if (isPlacedOn(t, idx)) {
+        pos = t.dims[idx].min! - constraint.spacing;
+      } else {
+        t.place(constraint.dir, pos, "max");
+        pos -= (t.dims[idx].size ?? 0) + constraint.spacing;
+      }
+    }
+  } else {
+    // center-to-center: same bidirectional pattern using center anchor
+    let pos = ordered[anchorIdx].dims[idx].center! + constraint.spacing;
+    for (let i = anchorIdx + 1; i < ordered.length; i++) {
+      const t = ordered[i];
+      if (isPlacedOn(t, idx)) {
+        pos = t.dims[idx].center! + constraint.spacing;
+      } else {
+        t.place(constraint.dir, pos, "center");
         pos += constraint.spacing;
+      }
+    }
+    pos = ordered[anchorIdx].dims[idx].center! - constraint.spacing;
+    for (let i = anchorIdx - 1; i >= 0; i--) {
+      const t = ordered[i];
+      if (isPlacedOn(t, idx)) {
+        pos = t.dims[idx].center! - constraint.spacing;
+      } else {
+        t.place(constraint.dir, pos, "center");
+        pos -= constraint.spacing;
       }
     }
   }

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
-import { Constraint, For, Layer, rect, ref, Spread, text } from "../../src/lib";
+import { Constraint, For, Layer, Spread, rect, text } from "../../src/lib";
 
 const meta: Meta = {
   title: "Low Level Syntax/Python Tutor",
@@ -35,27 +35,19 @@ export const GlobalFrame: StoryObj<Args> = {
         fill: "black",
         text: "Global Frame",
       }).name("label"),
-      Spread({ direction: "y", alignment: "end", spacing: 10 }, [
-        Spread(
-          {
-            direction: "y",
-            alignment: "start",
-            /* TODO: changing this wildly changes other positions... */ spacing: 10,
-          },
-          For(variables, (variable, i) =>
-            text({
-              fontSize: 24,
-              fontFamily: "Andale Mono, monospace",
-              fill: "black",
-              text: `${variable.variable}: ${variable.value}`,
-            })
-          )
-        ),
-        /* TODO: this should really be on top... */
-        ref("label"),
-      ]),
+      Spread(
+        { direction: "y", alignment: "start", spacing: 10 },
+        For(variables, (variable) =>
+          text({
+            fontSize: 24,
+            fontFamily: "Andale Mono, monospace",
+            fill: "black",
+            text: `${variable.variable}: ${variable.value}`,
+          })
+        )
+      ).name("variables"),
     ])
-      .constrain(({ label, frame, frameBorder }) => [
+      .constrain(({ label, frame, frameBorder, variables }) => [
         Constraint.align({ dir: "x", alignment: "middle" }, [label, frame]),
         Constraint.align({ dir: "y", alignment: "end" }, [label, frame]),
         Constraint.align({ dir: "x", alignment: "start" }, [
@@ -66,6 +58,11 @@ export const GlobalFrame: StoryObj<Args> = {
           frameBorder,
           frame,
         ]),
+        Constraint.align({ dir: "x", alignment: "end" }, [
+          variables,
+          label,
+        ]),
+        Constraint.distribute({ dir: "y", spacing: 10 }, [variables, label]),
       ])
       .render(container, {
         w: args.w,
