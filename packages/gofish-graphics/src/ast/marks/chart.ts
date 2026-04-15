@@ -620,18 +620,20 @@ export function table<T>(
   };
 }
 
+type ScatterRange<T> = { start: keyof T & string; end: keyof T & string };
+
 export function scatter<T>(
   fieldOrOptions:
     | keyof T
     | {
-        x?: number | (keyof T & string);
-        y?: number | (keyof T & string);
+        x?: number | (keyof T & string) | ScatterRange<T>;
+        y?: number | (keyof T & string) | ScatterRange<T>;
         alignment?: "start" | "middle" | "end" | "baseline";
         debug?: boolean;
       },
   options?: {
-    x?: number | (keyof T & string);
-    y?: number | (keyof T & string);
+    x?: number | (keyof T & string) | ScatterRange<T>;
+    y?: number | (keyof T & string) | ScatterRange<T>;
     alignment?: "start" | "middle" | "end" | "baseline";
     debug?: boolean;
   }
@@ -639,6 +641,14 @@ export function scatter<T>(
   const field: keyof T | undefined =
     typeof fieldOrOptions === "object" ? undefined : fieldOrOptions;
   const opts = (typeof fieldOrOptions === "object" ? fieldOrOptions : options)!;
+  const xRange =
+    typeof opts.x === "object" && "start" in opts.x
+      ? (opts.x as ScatterRange<T>)
+      : undefined;
+  const yRange =
+    typeof opts.y === "object" && "start" in opts.y
+      ? (opts.y as ScatterRange<T>)
+      : undefined;
   if (opts.x === undefined && opts.y === undefined) {
     throw new Error("scatter() requires at least one of x or y");
   }
@@ -657,9 +667,13 @@ export function scatter<T>(
         const resolved = await Promise.all(
           entries.map(async ([groupKey, items]) => {
             const x =
-              opts.x === undefined ? undefined : inferPos(opts.x, items);
+              xRange === undefined && opts.x !== undefined
+                ? inferPos(opts.x as string | number, items)
+                : undefined;
             const y =
-              opts.y === undefined ? undefined : inferPos(opts.y, items);
+              yRange === undefined && opts.y !== undefined
+                ? inferPos(opts.y as string | number, items)
+                : undefined;
             if (opts?.debug) console.log(`Group ${groupKey}: x=${x}, y=${y}`);
             const currentKey =
               key != undefined ? `${key}-${groupKey}` : groupKey;
@@ -676,13 +690,13 @@ export function scatter<T>(
         return Scatter(
           {
             x:
-              opts.x === undefined
-                ? undefined
-                : resolved.map((entry) => entry.x!),
+              xRange === undefined && opts.x !== undefined
+                ? resolved.map((entry) => entry.x!)
+                : undefined,
             y:
-              opts.y === undefined
-                ? undefined
-                : resolved.map((entry) => entry.y!),
+              yRange === undefined && opts.y !== undefined
+                ? resolved.map((entry) => entry.y!)
+                : undefined,
             alignment: opts.alignment,
           },
           resolved.map((entry) => entry.child)
@@ -693,14 +707,30 @@ export function scatter<T>(
         const resolved = await Promise.all(
           d.map(async (item, i) => {
             const x =
-              opts.x === undefined ? undefined : inferPos(opts.x, [item]);
+              xRange === undefined && opts.x !== undefined
+                ? inferPos(opts.x as string | number, [item])
+                : undefined;
             const y =
-              opts.y === undefined ? undefined : inferPos(opts.y, [item]);
+              yRange === undefined && opts.y !== undefined
+                ? inferPos(opts.y as string | number, [item])
+                : undefined;
             if (opts?.debug) console.log(`Item ${i}: x=${x}, y=${y}`);
             const currentKey = key != undefined ? `${key}-${i}` : i;
             return {
               x,
               y,
+              xMin:
+                xRange !== undefined
+                  ? inferPos(xRange.start, [item])
+                  : undefined,
+              xMax:
+                xRange !== undefined ? inferPos(xRange.end, [item]) : undefined,
+              yMin:
+                yRange !== undefined
+                  ? inferPos(yRange.start, [item])
+                  : undefined,
+              yMax:
+                yRange !== undefined ? inferPos(yRange.end, [item]) : undefined,
               child: (await resolveMarkResult(
                 mark([item], currentKey as any, layerContext),
                 layerContext
@@ -711,13 +741,29 @@ export function scatter<T>(
         return Scatter(
           {
             x:
-              opts.x === undefined
-                ? undefined
-                : resolved.map((entry) => entry.x!),
+              xRange === undefined && opts.x !== undefined
+                ? resolved.map((entry) => entry.x!)
+                : undefined,
             y:
-              opts.y === undefined
-                ? undefined
-                : resolved.map((entry) => entry.y!),
+              yRange === undefined && opts.y !== undefined
+                ? resolved.map((entry) => entry.y!)
+                : undefined,
+            xMin:
+              xRange !== undefined
+                ? resolved.map((entry) => entry.xMin!)
+                : undefined,
+            xMax:
+              xRange !== undefined
+                ? resolved.map((entry) => entry.xMax!)
+                : undefined,
+            yMin:
+              yRange !== undefined
+                ? resolved.map((entry) => entry.yMin!)
+                : undefined,
+            yMax:
+              yRange !== undefined
+                ? resolved.map((entry) => entry.yMax!)
+                : undefined,
             alignment: opts.alignment,
           },
           resolved.map((entry) => entry.child)
