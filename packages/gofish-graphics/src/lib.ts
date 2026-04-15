@@ -32,6 +32,18 @@ export { groupBy, sumBy, orderBy, meanBy } from "lodash";
 // Shapes
 export { ref } from "./ast/shapes/ref";
 
+// Constraints
+export { Constraint } from "./ast/constraints";
+export type {
+  ConstraintRef,
+  ConstraintSpec,
+  AlignConstraint,
+  DistributeConstraint,
+  DistributeOptions,
+  Axis,
+  Alignment,
+} from "./ast/constraints";
+
 // Graphical Operators
 export { stack as Stack } from "./ast/graphicalOperators/stack";
 export { stackX as StackX } from "./ast/graphicalOperators/stackX";

@@ -7,7 +7,7 @@ Transforms data before it reaches the next operator or mark. The function receiv
 ```js
 gf.Chart(seafood)
   .flow(
-    gf.derive(d => d.filter(row => row.species === "Salmon")),
+    gf.derive((d) => d.filter((row) => row.species === "Salmon")),
     gf.spread("lake", { dir: "x" })
   )
   .mark(gf.rect({ h: "count", fill: "steelblue" }))
@@ -19,14 +19,14 @@ gf.Chart(seafood)
 ## Signature
 
 ```ts
-derive(fn)
+derive(fn);
 ```
 
 ## Parameters
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `fn` | `(d: T[]) => T[] \| Promise<T[]>` | Function that transforms the data |
+| Parameter | Type                              | Description                       |
+| --------- | --------------------------------- | --------------------------------- |
+| `fn`      | `(d: T[]) => T[] \| Promise<T[]>` | Function that transforms the data |
 
 ## Examples
 
