@@ -201,8 +201,8 @@ export const treemap = createOperator(
 
             const child = childAsts[i];
             const placeable = child.layout([w, h], scaleFactors, posScales);
-            placeable.place(0, x0, "min");
-            placeable.place(1, y0, "min");
+            placeable.place(0, x0 + w / 2, "center");
+            placeable.place(1, y0 + h / 2, "center");
             placed[i] = placeable;
           }
 

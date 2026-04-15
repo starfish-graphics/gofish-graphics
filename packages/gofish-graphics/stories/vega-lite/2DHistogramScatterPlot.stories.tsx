@@ -55,9 +55,10 @@ export const Default: StoryObj<Args> = {
     // Map counts to mark sizes, capped by bin size so marks stay inside bins.
     const movieCounts = counts.map((d, i) => {
       const t = d.count / maxCount; // 0..1
-      const w = Math.max(1, xbinSize * 10 * t) / xs.length;
-      const h = Math.max(1, ybinSize * 10* t) / ys.length;
-      return { ...d, w, h, id: i };
+      const w = Math.max(1, xbinSize * 5 * t) / xs.length;
+      const h = Math.max(1, ybinSize * 5 * t) / ys.length;
+      const size = Math.min(w, h);
+      return { ...d, size, id: i };
     });
     
 
@@ -66,8 +67,8 @@ export const Default: StoryObj<Args> = {
       // Size each cell by bucket count.
       .mark(
         rect({
-          w: "w",
-          h: "h",
+          w: "size",
+          aspectRatio: 1,
           fill: "transparent",
           stroke: "black",
           strokeWidth: 1,

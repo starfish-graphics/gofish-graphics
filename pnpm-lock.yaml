@@ -7,6 +7,10 @@ settings:
 importers:
 
   .:
+    dependencies:
+      seedrandom:
+        specifier: ^3.0.5
+        version: 3.0.5
     devDependencies:
       '@eslint/js':
         specifier: ^9.39.3

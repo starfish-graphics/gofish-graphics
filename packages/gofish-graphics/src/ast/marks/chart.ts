@@ -667,12 +667,14 @@ export function circle<T extends Record<string, any>>({
   stroke,
   strokeWidth,
   debug,
+  label,
 }: {
   r?: number;
   fill?: string | keyof T;
   stroke?: string;
   strokeWidth?: number;
   debug?: boolean;
+  label?: boolean;
 }): Mark<T> & { name(layerName: string): Mark<T> } {
   const base: Mark<T> = async (
     d: T,
@@ -697,6 +699,7 @@ export function circle<T extends Record<string, any>>({
       fill: resolvedFill,
       stroke: resolvedStroke,
       strokeWidth,
+      label,
     }).name(key?.toString() ?? "");
     (node as any).datum = d;
     return node;

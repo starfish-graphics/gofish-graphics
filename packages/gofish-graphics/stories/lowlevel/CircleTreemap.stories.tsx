@@ -6,7 +6,7 @@ import data from "vega-datasets";
 import { groupBy } from "lodash";
 
 const meta: Meta = {
-  title: "Low Level Syntax/Treemap",
+  title: "Low Level Syntax/CircleTreemap",
   argTypes: {
     w: { control: { type: "number", min: 100, max: 1000, step: 10 } },
     h: { control: { type: "number", min: 100, max: 1000, step: 10 } },
@@ -52,13 +52,11 @@ export const Default: StoryObj<Args> = {
         })
         .filter((d) => d.worldwideGross > 0)
         .map((d) =>
-          rect<{ key: string; values: Movie[]; worldwideGross: number }>({
+          circle<{ key: string; values: Movie[]; worldwideGross: number }>({
             // Make fill data-driven by genre so the built-in label shows the genre name.
             fill: v(d.key),
             stroke: gray,
             strokeWidth: 1,
-            rx: 2, 
-            ry: 2,
             label: true,
           })(d, d.key)
         )
