@@ -6,7 +6,11 @@
 
 import { readdirSync, existsSync } from "fs";
 import { join } from "path";
-import { acceptStory, JS_DIR } from "./diff-utils.js";
+import { acceptStory, JS_DIR, ROOT } from "./diff-utils.js";
+import {
+  getSnapshotBranchName,
+  commitAndPushSnapshots,
+} from "./snapshot-branch.js";
 
 /** Recursively list files under a directory. */
 function listFiles(dir: string, prefix = ""): string[] {
@@ -42,6 +46,15 @@ function main() {
   }
 
   console.log(`Updated ${count} story baseline(s).`);
+
+  if (count > 0) {
+    const snapBranch = getSnapshotBranchName();
+    commitAndPushSnapshots(
+      snapBranch,
+      join(ROOT, "__snapshots__"),
+      `Accept ${count} visual diff(s)`
+    );
+  }
 }
 
 main();

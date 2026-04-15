@@ -9,16 +9,29 @@
 
 import { createServer, IncomingMessage, ServerResponse } from "http";
 import { readFileSync, existsSync } from "fs";
+import { join } from "path";
 import { exec } from "child_process";
 import {
   collectDiffs,
   acceptStory,
   formatDomDiff,
+  ROOT,
   type DiffEntry,
 } from "./diff-utils.js";
 import { computePixelDiff, type PixelDiffResult } from "./pixel-diff.js";
+import {
+  getSnapshotBranchName,
+  pullSnapshots,
+  commitAndPushSnapshots,
+} from "./snapshot-branch.js";
 
 const PORT = 3005;
+
+// ---------------------------------------------------------------------------
+// Pull baselines from the snapshot branch before loading diffs
+// ---------------------------------------------------------------------------
+
+pullSnapshots(getSnapshotBranchName(), join(ROOT, "__snapshots__"));
 
 // ---------------------------------------------------------------------------
 // In-memory state
@@ -185,6 +198,29 @@ function handleAcceptAll(res: ServerResponse): void {
   respondJson(res, { ok: errors.length === 0, errors });
 }
 
+function handleCommitToBranch(res: ServerResponse): void {
+  const accepted = diffs.filter((d) => d.status === "accepted");
+  if (accepted.length === 0) {
+    respondJson(res, { ok: false, error: "No accepted stories to commit." });
+    return;
+  }
+  try {
+    const snapBranch = getSnapshotBranchName();
+    commitAndPushSnapshots(
+      snapBranch,
+      join(ROOT, "__snapshots__"),
+      `Accept ${accepted.length} visual diff(s)`
+    );
+    respondJson(res, {
+      ok: true,
+      committed: accepted.length,
+      branch: snapBranch,
+    });
+  } catch (e) {
+    respondError(res, 500, String(e));
+  }
+}
+
 // ---------------------------------------------------------------------------
 // SPA HTML
 // ---------------------------------------------------------------------------
@@ -261,6 +297,11 @@ function serveApp(res: ServerResponse): void {
     .reject-btn:hover { background: #fdf2f2; }
     .accept-all-btn { padding: 8px 24px; border-radius: 6px; border: 1px solid #888; background: transparent; color: #555; font-size: 14px; font-weight: 600; cursor: pointer; margin-left: auto; }
     .accept-all-btn:hover { background: #f0f0f0; }
+    .commit-btn { padding: 8px 24px; border-radius: 6px; border: none; background: #2980b9; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; }
+    .commit-btn:hover:not(:disabled) { background: #2471a3; }
+    .commit-btn:disabled { opacity: 0.5; cursor: default; }
+    #action-status { font-size: 13px; color: #666; }
+    #action-status.error { color: #e74c3c; }
 
     /* Empty state */
     #empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #888; font-size: 15px; gap: 8px; }
@@ -363,7 +404,9 @@ function serveApp(res: ServerResponse): void {
   <div id="action-bar">
     <button class="accept-btn" id="btn-accept">✓ Accept</button>
     <button class="reject-btn" id="btn-reject">✗ Reject</button>
+    <span id="action-status"></span>
     <button class="accept-all-btn" id="btn-accept-all">Accept All Pending</button>
+    <button class="commit-btn" id="btn-commit" disabled>⬆ Commit to Branch</button>
   </div>
 </div>
 
@@ -374,9 +417,20 @@ function serveApp(res: ServerResponse): void {
   let filter = 'all';
   let strobeInterval = null;
   let strobePhase = 'after'; // 'before' | 'after'
+  let hasUncommittedAccepts = false;
 
   // Cached DOM diff HTML per path
   const domDiffCache = {};
+
+  function setActionStatus(msg, isError) {
+    const el = document.getElementById('action-status');
+    el.textContent = msg;
+    el.className = isError ? 'error' : '';
+  }
+
+  function updateCommitBtn() {
+    document.getElementById('btn-commit').disabled = !hasUncommittedAccepts;
+  }
 
   async function fetchDiffs() {
     const res = await fetch('/api/diffs');
@@ -598,7 +652,10 @@ function serveApp(res: ServerResponse): void {
     await fetch('/api/accept/' + encodeURIComponent(currentPath), { method: 'POST' });
     const entry = allDiffs.find(d => d.path === currentPath);
     if (entry) entry.status = 'accepted';
+    hasUncommittedAccepts = true;
+    setActionStatus('Accepted (not yet committed)');
     renderSidebar();
+    updateCommitBtn();
   }
 
   async function rejectCurrent() {
@@ -614,7 +671,30 @@ function serveApp(res: ServerResponse): void {
     for (const d of allDiffs) {
       if (d.status === 'pending') d.status = 'accepted';
     }
+    hasUncommittedAccepts = true;
+    setActionStatus('Accepted all pending (not yet committed)');
     renderSidebar();
+    updateCommitBtn();
+  }
+
+  async function commitToBranch() {
+    document.getElementById('btn-commit').disabled = true;
+    setActionStatus('Committing...');
+    try {
+      const res = await fetch('/api/commit-to-branch', { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        setActionStatus('Error: ' + (data.error || 'Unknown error'), true);
+        updateCommitBtn();
+      } else {
+        hasUncommittedAccepts = false;
+        setActionStatus('Committed ' + data.committed + ' diff(s) to ' + data.branch);
+        updateCommitBtn();
+      }
+    } catch (e) {
+      setActionStatus('Error: ' + String(e), true);
+      updateCommitBtn();
+    }
   }
 
   // View toggle
@@ -642,6 +722,7 @@ function serveApp(res: ServerResponse): void {
   document.getElementById('btn-accept').addEventListener('click', acceptCurrent);
   document.getElementById('btn-reject').addEventListener('click', rejectCurrent);
   document.getElementById('btn-accept-all').addEventListener('click', acceptAll);
+  document.getElementById('btn-commit').addEventListener('click', commitToBranch);
 
   // DOM diff toggle
   document.getElementById('dom-diff-toggle').addEventListener('click', () => {
@@ -725,6 +806,10 @@ function handleRequest(req: IncomingMessage, res: ServerResponse): void {
 
   if (method === "POST" && pathname === "/api/accept-all") {
     return handleAcceptAll(res);
+  }
+
+  if (method === "POST" && pathname === "/api/commit-to-branch") {
+    return handleCommitToBranch(res);
   }
 
   if (method === "POST" && pathname.startsWith("/api/accept/")) {

@@ -10,7 +10,11 @@
 
 import { readFileSync, existsSync } from "fs";
 import { join } from "path";
-import { BASELINE_DOM, PYTHON_DIR, listHtmlFiles } from "./diff-utils.js";
+import { BASELINE_DOM, PYTHON_DIR, ROOT, listHtmlFiles } from "./diff-utils.js";
+import { getSnapshotBranchName, pullSnapshots } from "./snapshot-branch.js";
+
+// Pull baselines from the snapshot branch if not already present locally.
+pullSnapshots(getSnapshotBranchName(), join(ROOT, "__snapshots__"));
 
 console.log("Comparing Python DOM output against JS baselines...");
 

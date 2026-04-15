@@ -8,14 +8,12 @@ on:
       - "packages/gofish-graphics/**"
       - "packages/gofish-python/**"
       - "tests/**"
-      - "__snapshots__/**"
 
   pull_request:
     paths:
       - "packages/gofish-graphics/**"
       - "packages/gofish-python/**"
       - "tests/**"
-      - "__snapshots__/**"
 
 jobs:
   visual-test:
@@ -28,6 +26,32 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Setup Git LFS
+        run: git lfs install
+
+      - name: Fetch snapshot baselines
+        run: |
+          SNAP_BRANCH="snapshots/${GITHUB_HEAD_REF:-${GITHUB_REF_NAME}}"
+          FOUND=""
+          if git ls-remote --exit-code origin "$SNAP_BRANCH" 2>/dev/null; then
+            FOUND="$SNAP_BRANCH"
+          elif git ls-remote --exit-code origin "snapshots/main" 2>/dev/null; then
+            FOUND="snapshots/main"
+          fi
+          if [ -n "$FOUND" ]; then
+            git fetch origin "$FOUND"
+            FETCH_SHA=$(git rev-parse FETCH_HEAD)
+            git worktree add --detach /tmp/snap-baselines "$FETCH_SHA"
+            cd /tmp/snap-baselines && git lfs pull && cd -
+            mkdir -p __snapshots__
+            [ -d /tmp/snap-baselines/dom ] && cp -r /tmp/snap-baselines/dom __snapshots__/dom
+            [ -d /tmp/snap-baselines/screenshots ] && cp -r /tmp/snap-baselines/screenshots __snapshots__/screenshots
+            git worktree remove --force /tmp/snap-baselines
+          else
+            echo "No snapshot branch found; starting with empty baselines."
+            mkdir -p __snapshots__/dom __snapshots__/screenshots
+          fi
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v3
@@ -115,6 +139,32 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Setup Git LFS
+        run: git lfs install
+
+      - name: Fetch snapshot baselines
+        run: |
+          SNAP_BRANCH="snapshots/${GITHUB_HEAD_REF:-${GITHUB_REF_NAME}}"
+          FOUND=""
+          if git ls-remote --exit-code origin "$SNAP_BRANCH" 2>/dev/null; then
+            FOUND="$SNAP_BRANCH"
+          elif git ls-remote --exit-code origin "snapshots/main" 2>/dev/null; then
+            FOUND="snapshots/main"
+          fi
+          if [ -n "$FOUND" ]; then
+            git fetch origin "$FOUND"
+            FETCH_SHA=$(git rev-parse FETCH_HEAD)
+            git worktree add --detach /tmp/snap-baselines "$FETCH_SHA"
+            cd /tmp/snap-baselines && git lfs pull && cd -
+            mkdir -p __snapshots__
+            [ -d /tmp/snap-baselines/dom ] && cp -r /tmp/snap-baselines/dom __snapshots__/dom
+            [ -d /tmp/snap-baselines/screenshots ] && cp -r /tmp/snap-baselines/screenshots __snapshots__/screenshots
+            git worktree remove --force /tmp/snap-baselines
+          else
+            echo "No snapshot branch found; starting with empty baselines."
+            mkdir -p __snapshots__/dom __snapshots__/screenshots
+          fi
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v3
