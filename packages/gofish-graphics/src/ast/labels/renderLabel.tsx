@@ -1,5 +1,6 @@
 import type { JSX } from "solid-js";
 import chroma from "chroma-js";
+import { luv } from "culori";
 import type { GoFishNode } from "../_node";
 import { getValue } from "../data";
 import {
@@ -44,18 +45,21 @@ function autoLabelColor(node: GoFishNode, position: LabelPosition): string {
 
   if (isInside) {
     if (!fill) return "black";
-    try {
-      const luminance = chroma(fill).luminance();
-      const target = luminance < 0.4 ? "white" : "black";
-      return chroma.mix(fill, target, 0.6, "lab").hex();
-    } catch {
-      return "black";
+
+    const luvColor = luv(fill);
+    const lightness = luvColor?.l ?? 0;
+    const [, , hue] = chroma(fill).lch();
+    if (lightness < 60) {
+      return "white";
+    } else {
+      return chroma.lch(8, 18, hue).hex();
     }
   }
 
   if (!fill) return "#333333";
   try {
-    return chroma.mix(fill, "black", 0.5, "lab").hex();
+    const [, chr, hue] = chroma(fill).lch();
+    return chroma.lch(30, chr, hue).hex();
   } catch {
     return "#333333";
   }
@@ -109,6 +113,7 @@ export function renderLabelJSX(node: GoFishNode): JSX.Element | null {
       y={-(cy + offset.y)}
       fill={labelColor}
       font-size={`${node._label.fontSize ?? 11}px`}
+      font-family={"source-sans-pro, sans-serif"}
       text-anchor={textAnchor}
       dominant-baseline="central"
       pointer-events="none"
