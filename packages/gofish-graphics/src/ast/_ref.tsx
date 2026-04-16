@@ -20,7 +20,13 @@ import { Domain } from "./domain";
 import { GoFishNode, ScaleFactorFunction } from "./_node";
 import { GoFishAST } from "./_ast";
 import { MaybeValue } from "./data";
-import { ORDINAL, POSITION, UnderlyingSpace } from "./underlyingSpace";
+import {
+  ORDINAL,
+  POSITION,
+  UnderlyingSpace,
+  UNDEFINED,
+  type SpaceTree,
+} from "./underlyingSpace";
 import type { RenderSession } from "./_node";
 
 /* TODO: resolveMeasures and layout feel pretty similar... */
@@ -109,8 +115,14 @@ export class GoFishRef {
   }
 
   /* TODO: what should the default be? */
-  public resolveUnderlyingSpace(): UnderlyingSpace {
-    return this.selectedNode?.resolveUnderlyingSpace() ?? ORDINAL([]);
+  public resolveUnderlyingSpace(): SpaceTree {
+    return (
+      this.selectedNode?.resolveUnderlyingSpace() ?? {
+        x: ORDINAL([]),
+        y: ORDINAL([]),
+        color: UNDEFINED,
+      }
+    );
   }
 
   /* TODO: I'm not really sure what this should do */
