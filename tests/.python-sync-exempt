@@ -37,10 +37,13 @@ packages/gofish-graphics/stories/forwardsyntax/FacetedChart.stories.tsx
 # (clock is now supported)
 
 # Vega-Lite stories needing external datasets or complex derives
-packages/gofish-graphics/stories/vega-lite/AggregateBarChart.stories.tsx
-packages/gofish-graphics/stories/vega-lite/AggregateBarChartSorted.stories.tsx
-packages/gofish-graphics/stories/vega-lite/GroupedBarChartRepeat.stories.tsx
-packages/gofish-graphics/stories/vega-lite/HorizontalStackedBarChart.stories.tsx
-packages/gofish-graphics/stories/vega-lite/StackedBarChart.stories.tsx
-packages/gofish-graphics/stories/vega-lite/StackedBarChartRounded.stories.tsx
-packages/gofish-graphics/stories/vega-lite/NormalizedStackedBarChart.stories.tsx
+packages/gofish-graphics/stories/vega-lite/Bar/AggregateBarChart.stories.tsx
+packages/gofish-graphics/stories/vega-lite/Bar/AggregateBarChartSorted.stories.tsx
+packages/gofish-graphics/stories/vega-lite/Bar/GroupedBarChartRepeat.stories.tsx
+packages/gofish-graphics/stories/vega-lite/Bar/HorizontalStackedBarChart.stories.tsx
+packages/gofish-graphics/stories/vega-lite/Bar/StackedBarChart.stories.tsx
+packages/gofish-graphics/stories/vega-lite/Bar/StackedBarChartRounded.stories.tsx
+packages/gofish-graphics/stories/vega-lite/Bar/NormalizedStackedBarChart.stories.tsx
+
+# Vega-Lite stories on this branch not yet in Python
+packages/gofish-graphics/stories/vega-lite/Histogram/Histogram.stories.tsx

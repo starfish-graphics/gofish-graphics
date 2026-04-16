@@ -1,10 +1,7 @@
 import type { GoFishAST } from "../_ast";
 import type { GoFishNode, Placeable } from "../_node";
 import { applyAlign, createAlignConstraint } from "./align";
-import {
-  applyDistribute,
-  createDistributeConstraint,
-} from "./distribute";
+import { applyDistribute, createDistributeConstraint } from "./distribute";
 import type { AlignConstraint, AlignOptions } from "./align";
 import type { DistributeConstraint, DistributeOptions } from "./distribute";
 import type { ConstraintRef } from "./shared";
@@ -70,9 +67,7 @@ export function applyConstraints(
 
     if (constraint.type === "align") {
       const axisFallback =
-        constraint.dir === "x"
-          ? fallbackBaselines?.x
-          : fallbackBaselines?.y;
+        constraint.dir === "x" ? fallbackBaselines?.x : fallbackBaselines?.y;
       applyAlign(constraint, targets, axisFallback);
     } else {
       applyDistribute(constraint, targets);
