@@ -132,7 +132,12 @@ export const Rect = ({
         */
 
         let underlyingSpaceX = UNDEFINED;
-        if (!isValue(dims[0].min) && !isValue(dims[0].size)) {
+        if (isValue(dims[0].min) && isValue(dims[0].max)) {
+          // both min and max are values -> POSITION([min, max])
+          underlyingSpaceX = POSITION(
+            interval(getValue(dims[0].min)!, getValue(dims[0].max)!)
+          );
+        } else if (!isValue(dims[0].min) && !isValue(dims[0].size)) {
           // nothing is data-driven
           // keep undefined if no values
         } else if (isAesthetic(dims[0].min) && isValue(dims[0].size)) {
@@ -150,7 +155,12 @@ export const Rect = ({
         }
 
         let underlyingSpaceY = UNDEFINED;
-        if (!isValue(dims[1].min) && !isValue(dims[1].size)) {
+        if (isValue(dims[1].min) && isValue(dims[1].max)) {
+          // both min and max are values -> POSITION([min, max])
+          underlyingSpaceY = POSITION(
+            interval(getValue(dims[1].min)!, getValue(dims[1].max)!)
+          );
+        } else if (!isValue(dims[1].min) && !isValue(dims[1].size)) {
           // nothing is data-driven
           // keep undefined if no values
         } else if (isAesthetic(dims[1].min) && isValue(dims[1].size)) {
@@ -212,11 +222,20 @@ export const Rect = ({
         measurement,
         posScales
       ) => {
-        const x = computeAesthetic(dims[0].min, posScales?.[0]!, undefined);
-        const y = computeAesthetic(dims[1].min, posScales?.[1]!, undefined);
+        let x = computeAesthetic(dims[0].min, posScales?.[0]!, undefined);
+        let y = computeAesthetic(dims[1].min, posScales?.[1]!, undefined);
 
         let w: number | undefined;
-        if (isValue(dims[0].min) && isValue(dims[0].size)) {
+        if (isValue(dims[0].min) && isValue(dims[0].max)) {
+          // Both min and max are values -> width spans [min, max] in data space
+          x = computeAesthetic(dims[0].min, posScales?.[0]!, undefined);
+          const xMax = computeAesthetic(
+            dims[0].max,
+            posScales?.[0]!,
+            undefined
+          );
+          w = (xMax ?? 0) - (x ?? 0);
+        } else if (isValue(dims[0].min) && isValue(dims[0].size)) {
           // If posScales for x exists, scale min and min+size, then subtract
           const min = x;
           const max = computeAesthetic(
@@ -241,7 +260,16 @@ export const Rect = ({
         }
 
         let h: number | undefined;
-        if (isValue(dims[1].min) && isValue(dims[1].size)) {
+        if (isValue(dims[1].min) && isValue(dims[1].max)) {
+          // Both min and max are values -> height spans [min, max] in data space
+          y = computeAesthetic(dims[1].min, posScales?.[1]!, undefined);
+          const yMax = computeAesthetic(
+            dims[1].max,
+            posScales?.[1]!,
+            undefined
+          );
+          h = (yMax ?? 0) - (y ?? 0);
+        } else if (isValue(dims[1].min) && isValue(dims[1].size)) {
           // If posScales for y exists, scale min and min+size, then subtract
           const min = y;
           const max = computeAesthetic(

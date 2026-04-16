@@ -16,16 +16,15 @@ import { GoFishAST } from "../_ast";
 import { createOperator } from "../withGoFish";
 import * as Monotonic from "../../util/monotonic";
 import {
-  DIFFERENCE,
   ORDINAL,
   POSITION,
   UNDEFINED,
-  isDIFFERENCE,
   isPOSITION,
   isSIZE,
 } from "../underlyingSpace";
 import { UnderlyingSpace } from "../underlyingSpace";
 import * as Interval from "../../util/interval";
+import { Alignment, alignChildren, resolveAlignmentSpace } from "./alignment";
 
 // Utility function to unwrap lodash wrapped arrays
 const unwrapLodashArray = function <T>(value: T[] | Collection<T>): T[] {
@@ -53,7 +52,7 @@ export const spread = createOperator(
       key?: string;
       direction: FancyDirection;
       spacing?: number;
-      alignment?: "start" | "middle" | "end" | "baseline";
+      alignment?: Alignment;
       sharedScale?: boolean;
       mode?: "edge-to-edge" | "center-to-center";
       reverse?: boolean;
@@ -93,58 +92,10 @@ export const spread = createOperator(
           childNodes: GoFishAST[]
         ) => {
           /* ALIGNMENT RULES */
-          let alignSpace = UNDEFINED;
-
           const alignSpaces = children.map((child) => child[alignDir]);
-
-          // children are all SIZE
-          if (alignSpaces.every((s) => isSIZE(s))) {
-            alignFromSize = true;
-            const sizeValues = alignSpaces.map(
-              (s) => (s as any).value as number
-            );
-
-            if (
-              alignment === "start" ||
-              alignment === "end" ||
-              alignment === "baseline"
-            ) {
-              // Merge SIZE into POSITION by treating each size as an interval from 0 to size
-              const intervals = sizeValues.map((v) => Interval.interval(0, v));
-              const domain = Interval.unionAll(...intervals);
-              alignSpace = POSITION(domain);
-            } else if (alignment === "middle") {
-              // Middle alignment: treat as DIFFERENCE, using the maximum absolute size
-              const maxWidth = Math.max(...sizeValues.map((v) => Math.abs(v)));
-              alignSpace = DIFFERENCE(maxWidth);
-            } else {
-              alignSpace = UNDEFINED;
-            }
-          }
-          // children are all DIFFERENCE
-          else if (alignSpaces.every((s) => isDIFFERENCE(s))) {
-            alignFromSize = false;
-            const widths = alignSpaces.map((s) => (s as any).width as number);
-            const maxWidth = Math.max(...widths);
-            alignSpace = DIFFERENCE(maxWidth);
-          }
-          // children are all POSITION -> POSITION (union domains, but layout will not realign)
-          // OR DIFFERENCE if alignment is "middle" (for streamgraph-style centering)
-          else if (alignSpaces.every((s) => isPOSITION(s))) {
-            alignFromSize = false;
-            const childDomains = alignSpaces.map((s) => (s as any).domain);
-            const domain = Interval.unionAll(...childDomains);
-            if (alignment === "middle") {
-              // For middle alignment with POSITION children, use DIFFERENCE space
-              const maxWidth = Interval.width(domain);
-              alignSpace = DIFFERENCE(maxWidth);
-            } else {
-              alignSpace = POSITION(domain);
-            }
-          } else {
-            alignFromSize = false;
-            alignSpace = UNDEFINED;
-          }
+          const alignResult = resolveAlignmentSpace(alignSpaces, alignment);
+          const alignSpace = alignResult.space;
+          alignFromSize = alignResult.fromSize;
 
           /* SPACING RULES */
           let stackSpace = UNDEFINED;
@@ -337,64 +288,14 @@ export const spread = createOperator(
           }
 
           /* align */
-          // Skip alignment if children have position scales (they already have data-driven positions),
-          // UNLESS the align space came from SIZE (no inherent position) — alignFromSize handles that —
-          // OR alignment is "middle" (which always requires centering regardless of position scales).
-          // NOTE: "baseline" does NOT force the block to run; when posScales are present and children
-          // are POSITION-based, their positions are already data-driven and no shift should be applied.
-          if (
-            !posScales?.[alignDir] ||
-            alignFromSize ||
-            alignment === "middle"
-          ) {
-            if (alignment === "start") {
-              const baseline =
-                fixedChildren.length > 0
-                  ? getBaseline(alignDir)(fixedChildren[0])
-                  : posScales?.[alignDir]
-                    ? posScales[alignDir](0)
-                    : 0;
-              for (let i = 0; i < childPlaceables.length; i++) {
-                const child = childPlaceables[i];
-                if (isFixed(alignDir)(child)) continue;
-                child.place(alignDir, baseline, "min");
-              }
-            } else if (alignment === "baseline") {
-              const baseline =
-                fixedChildren.length > 0
-                  ? getBaseline(alignDir)(fixedChildren[0])
-                  : posScales?.[alignDir]
-                    ? posScales[alignDir](0)
-                    : 0;
-              for (let i = 0; i < childPlaceables.length; i++) {
-                const child = childPlaceables[i];
-                if (isFixed(alignDir)(child)) continue;
-                child.place(alignDir, baseline, "baseline");
-              }
-            } else if (alignment === "middle") {
-              const baseline =
-                fixedChildren.length > 0
-                  ? getBaseline(alignDir)(fixedChildren[0])
-                  : size[alignDir] / 2;
-              for (let i = 0; i < childPlaceables.length; i++) {
-                const child = childPlaceables[i];
-                if (isFixed(alignDir)(child)) continue;
-                child.place(alignDir, baseline, "center");
-              }
-            } else if (alignment === "end") {
-              const baseline =
-                fixedChildren.length > 0
-                  ? getBaseline(alignDir)(fixedChildren[0])
-                  : posScales?.[alignDir]
-                    ? posScales[alignDir](0)
-                    : 0;
-              for (let i = 0; i < childPlaceables.length; i++) {
-                const child = childPlaceables[i];
-                if (isFixed(alignDir)(child)) continue;
-                child.place(alignDir, baseline, "max");
-              }
-            }
-          }
+          alignChildren(
+            childPlaceables,
+            alignDir,
+            alignment,
+            size[alignDir],
+            posScales?.[alignDir],
+            alignFromSize
+          );
 
           /* distribute */
           const firstFixedIdx = childPlaceables.findIndex(isFixed(stackDir));
