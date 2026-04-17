@@ -295,8 +295,14 @@ export const scatter = createOperator(
             },
           };
         },
-        render: (_props, children) => {
-          return <g>{children}</g>;
+        render: ({ transform }, children) => {
+          return (
+            <g
+              transform={`translate(${transform?.translate?.[0] ?? 0}, ${transform?.translate?.[1] ?? 0})`}
+            >
+              {children}
+            </g>
+          );
         },
       },
       children
