@@ -46,8 +46,8 @@ export const inferSize = <T>(
 
 /**
  * Infer a position value from a field name or literal number.
- * If accessor is a number, passes it through as a constant.
  * If accessor is a string (field name), averages the field across the data array.
+ * If accessor is a number, passes it through as a literal.
  */
 export const inferPos = <T>(
   accessor: string | number | undefined,

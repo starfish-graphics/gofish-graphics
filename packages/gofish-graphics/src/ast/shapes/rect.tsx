@@ -57,6 +57,7 @@ export const Rect = ({
   ry = 0,
   filter,
   label,
+  opacity = 1,
   aspectRatio,
   ...fancyDims
 }: {
@@ -69,6 +70,7 @@ export const Rect = ({
   ry?: number;
   filter?: string;
   label?: boolean;
+  opacity?: number;
   /** w/h ratio to enforce. w = h * aspectRatio. When both dims are data-driven,
    *  the constraining axis (smaller of the two scaled sizes) is used. */
   aspectRatio?: number;
@@ -89,6 +91,7 @@ export const Rect = ({
         ry,
         filter,
         label,
+        opacity,
         dims,
       },
       // Used to seed the unit color scale. Prefer whichever channel is data-driven.
@@ -425,6 +428,7 @@ export const Rect = ({
                 stroke={resolvedStroke}
                 stroke-width={strokeWidth ?? 0}
                 filter={filter}
+                opacity={opacity}
               />
               {labelText && (
                 <text
@@ -492,6 +496,7 @@ export const Rect = ({
                   stroke={resolvedStroke}
                   stroke-width={strokeWidth ?? 0}
                   filter={filter}
+                  opacity={opacity}
                 />
                 {labelText && (
                   <text
@@ -538,6 +543,7 @@ export const Rect = ({
               stroke-width={thickness + 0.5}
               fill="none"
               filter={filter}
+              opacity={opacity}
             />
           );
         }
@@ -574,6 +580,7 @@ export const Rect = ({
                 stroke-width={strokeWidth ?? 0}
                 fill={resolvedFill}
                 filter={filter}
+                opacity={opacity}
               />
               {labelText && (
                 <text
@@ -612,6 +619,7 @@ export const Rect = ({
             stroke={resolvedStroke}
             stroke-width={strokeWidth ?? 0}
             filter={filter}
+            opacity={opacity}
           />
         );
       },

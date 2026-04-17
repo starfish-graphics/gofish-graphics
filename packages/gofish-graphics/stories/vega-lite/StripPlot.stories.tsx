@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
-import { Chart, scatter, rect, log } from "../../src/lib";
+import { Chart, scatter, rect, spread, derive } from "../../src/lib";
 import data from "vega-datasets";
 
 // Mirrors: https://vega.github.io/vega-lite/examples/tick_strip.html
@@ -20,23 +20,33 @@ export default meta;
 type Args = { w: number; h: number };
 
 export const Default: StoryObj<Args> = {
-  args: { w: 300, h: 300 },
+  args: { w: 400, h: 300 },
   loaders: [async () => ({ cars: await data["cars.json"]() })],
   render: (args: Args, context: any) => {
     const container = initializeContainer();
 
-    const cars = (context.loaded.cars as any[]).map(d => ({
-      name: d.Name,
-      horsepower: d.Horsepower,
-      cylinders: Math.round(d.Cylinders),
-    }));
+    const cars = (context.loaded.cars as any[])
+      .filter((d) => d.Horsepower != null && d.Cylinders != null)
+      .map((d) => ({
+        name: d.Name,
+        horsepower: d.Horsepower,
+        cylinders: Math.round(d.Cylinders),
+      }));
 
     Chart(cars)
-      .flow(log("cars before scatter"), scatter("name", { x: "horsepower", y: "cylinders", debug: true }))
-      .mark(rect({ w: 1, h: 10, fill: "rgba(31, 119, 180, 0.4)", // semi‑transparent blue
-        stroke: "#1f77b4",
-        strokeWidth: 1,}))
-
+      .flow(
+        derive((d) => [...d].sort((a, b) => b.cylinders - a.cylinders)),
+        spread("cylinders", { dir: "y" }),
+        scatter({ x: "horsepower" })
+      )
+      .mark(
+        rect({
+          w: 1,
+          h: 10,
+          fill: "rgb(31, 119, 180)",
+          opacity: 0.7,
+        })
+      )
       .render(container, { w: args.w, h: args.h, axes: true } as any);
 
     return container;
