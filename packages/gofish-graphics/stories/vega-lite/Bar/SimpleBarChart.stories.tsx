@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/html";
-import { initializeContainer } from "../helper";
-import { Chart, spread, rect } from "../../src/lib";
+import { initializeContainer } from "../../helper";
+import { Chart, spread, rect } from "../../../src/lib";
 
 // Mirrors: https://vega.github.io/vega-lite/examples/bar.html
 
