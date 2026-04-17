@@ -35,7 +35,7 @@ export const Default: StoryObj<Args> = {
 
     Chart(cars)
       .flow(
-        derive((d) => [...d].sort((a, b) => a.cylinders - b.cylinders)),
+        derive((d) => [...d].sort((a, b) => b.cylinders - a.cylinders)),
         spread("cylinders", { dir: "y" }),
         scatter({ x: "horsepower" })
       )
@@ -43,9 +43,8 @@ export const Default: StoryObj<Args> = {
         rect({
           w: 1,
           h: 10,
-          fill: "rgba(31, 119, 180, 0.4)",
-          stroke: "#1f77b4",
-          strokeWidth: 1,
+          fill: "rgba(31, 119, 180)",
+          opacity: 0.7,
         })
       )
       .render(container, { w: args.w, h: args.h, axes: true } as any);
