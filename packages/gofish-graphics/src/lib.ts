@@ -61,7 +61,6 @@ export { connectY as ConnectY } from "./ast/graphicalOperators/connectY";
 export { enclose as Enclose } from "./ast/graphicalOperators/enclose";
 export { frame as Frame } from "./ast/graphicalOperators/frame";
 export { position as Position } from "./ast/graphicalOperators/position";
-export { scatter as Scatter } from "./ast/graphicalOperators/scatter";
 export { arrow as Arrow } from "./ast/graphicalOperators/arrow";
 export { table as Table } from "./ast/graphicalOperators/table";
 export {
