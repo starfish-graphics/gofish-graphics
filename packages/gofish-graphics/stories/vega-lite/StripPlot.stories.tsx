@@ -43,7 +43,7 @@ export const Default: StoryObj<Args> = {
         rect({
           w: 1,
           h: 10,
-          fill: "rgba(31, 119, 180)",
+          fill: "rgb(31, 119, 180)",
           opacity: 0.7,
         })
       )
