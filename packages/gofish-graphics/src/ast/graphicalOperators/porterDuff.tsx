@@ -8,7 +8,7 @@ import { UnderlyingSpace } from "../underlyingSpace";
 import { createOperator } from "../withGoFish";
 import { unionChildSpaces } from "./alignment";
 
-type BlendMode = "color" | "multiply" | "screen" | "overlay";
+type BlendMode = "color" | "multiply" | "screen" | "overlay" | "luminosity";
 type CompositeOperator = "over" | "in" | "xor" | "out" | "atop";
 
 const requireTwoChildren = <T,>(children: T[]) => {

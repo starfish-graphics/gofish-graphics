@@ -33,7 +33,6 @@ export const Default: StoryObj<Args> = {
 
     Chart(data)
       .flow(spread("category", { dir: "x", spacing: 10 }))
-      // TODO: switch to luminosity?
       .mark(layer(
         [atop({blendMode: "color"}, [image({ href: bottlePng, h: v(100) }), rect({h: "amount", fill: "#00ff00"})]).name("bottle"),
         rect({h: 1, fill: "#666", w: 150, y: "amount"}).name("line"),
