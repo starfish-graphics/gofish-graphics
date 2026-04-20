@@ -1,16 +1,59 @@
 import { Placeable } from "../_node";
 import {
   DIFFERENCE,
+  ORDINAL,
   POSITION,
   UNDEFINED,
   isDIFFERENCE,
+  isORDINAL,
   isPOSITION,
   isSIZE,
   UnderlyingSpace,
 } from "../underlyingSpace";
+import type { Size } from "../dims";
 import * as Interval from "../../util/interval";
 
 export type Alignment = "start" | "middle" | "end" | "baseline";
+
+/**
+ * Union child underlying spaces along one axis for overlay-style operators
+ * (layer, Porter-Duff). Converts DIFFERENCE(w) children to POSITION([0, w])
+ * so data-driven sizes contribute to the parent's domain. ORDINAL children
+ * take precedence: if any child reports ORDINAL, returns ORDINAL(union of keys).
+ */
+export function unionChildSpaces(
+  children: Size<UnderlyingSpace>[],
+  axis: 0 | 1
+): UnderlyingSpace {
+  // ORDINAL with an empty/missing domain is a "no-position" placeholder
+  // (e.g. from image shapes without a data-bound position), not a real axis.
+  // Ignore those so sibling POSITION/DIFFERENCE contributions still count.
+  const ordinals = children
+    .map((c) => c[axis])
+    .filter(isORDINAL)
+    .filter((o) => o.domain && o.domain.length > 0);
+  if (ordinals.length > 0) {
+    const keys = new Set<string>();
+    for (const ord of ordinals) {
+      if (ord.domain) for (const k of ord.domain) keys.add(k);
+    }
+    return ORDINAL(Array.from(keys));
+  }
+
+  const intervals: ReturnType<typeof Interval.interval>[] = [];
+  for (const child of children) {
+    const space = child[axis];
+    if (isPOSITION(space) && space.domain) {
+      intervals.push(space.domain);
+    } else if (isDIFFERENCE(space)) {
+      intervals.push(Interval.interval(0, space.width));
+    } else if (isSIZE(space)) {
+      intervals.push(Interval.interval(0, space.value));
+    }
+  }
+  if (intervals.length === 0) return UNDEFINED;
+  return POSITION(Interval.unionAll(...intervals));
+}
 
 /**
  * Determine the underlying space for an alignment axis given child spaces and alignment mode.

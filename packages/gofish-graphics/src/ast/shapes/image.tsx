@@ -27,7 +27,9 @@ const parseSvgLength = (value: string | undefined): number | undefined => {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
 };
 
-const parseSvgViewBox = (value: string | undefined): ImageDimensions | undefined => {
+const parseSvgViewBox = (
+  value: string | undefined
+): ImageDimensions | undefined => {
   if (!value) return undefined;
   const parts = value
     .trim()
@@ -42,7 +44,9 @@ const parseSvgViewBox = (value: string | undefined): ImageDimensions | undefined
   return { width, height };
 };
 
-const parseSvgDataUriDimensions = (href: string): ImageDimensions | undefined => {
+const parseSvgDataUriDimensions = (
+  href: string
+): ImageDimensions | undefined => {
   if (!href.startsWith("data:image/svg+xml")) return undefined;
 
   const commaIndex = href.indexOf(",");
@@ -76,7 +80,10 @@ const parseSvgDataUriDimensions = (href: string): ImageDimensions | undefined =>
   return parseSvgViewBox(viewBoxMatch?.[1]);
 };
 
-const cacheImageDimensions = (href: string, dimensions: ImageDimensions): void => {
+const cacheImageDimensions = (
+  href: string,
+  dimensions: ImageDimensions
+): void => {
   if (dimensions.width > 0 && dimensions.height > 0) {
     imageDimensionsCache.set(href, dimensions);
   }
@@ -109,7 +116,43 @@ const startImageProbe = (href: string): void => {
   image.src = href;
 };
 
-const resolveIntrinsicDimensions = (href: string): ImageDimensions | undefined => {
+const pendingImagePromises = new Map<string, Promise<void>>();
+
+export const ensureImageDimensions = (href: string): Promise<void> => {
+  if (imageDimensionsCache.has(href)) return Promise.resolve();
+  const svgDims = parseSvgDataUriDimensions(href);
+  if (svgDims) {
+    cacheImageDimensions(href, svgDims);
+    return Promise.resolve();
+  }
+  if (typeof globalThis.Image === "undefined") return Promise.resolve();
+
+  const existing = pendingImagePromises.get(href);
+  if (existing) return existing;
+
+  const promise = new Promise<void>((resolve) => {
+    const img = new globalThis.Image();
+    img.onload = () => {
+      cacheImageDimensions(href, {
+        width: img.naturalWidth,
+        height: img.naturalHeight,
+      });
+      pendingImagePromises.delete(href);
+      resolve();
+    };
+    img.onerror = () => {
+      pendingImagePromises.delete(href);
+      resolve();
+    };
+    img.src = href;
+  });
+  pendingImagePromises.set(href, promise);
+  return promise;
+};
+
+const resolveIntrinsicDimensions = (
+  href: string
+): ImageDimensions | undefined => {
   const cached = imageDimensionsCache.get(href);
   if (cached) return cached;
 
@@ -263,12 +306,20 @@ export const Image = ({
         measurement,
         posScales
       ) => {
-        const requestedWidth = isValue(dims[0].size)
-          ? getValue(dims[0].size)
-          : dims[0].size;
-        const requestedHeight = isValue(dims[1].size)
-          ? getValue(dims[1].size)
-          : dims[1].size;
+        // For data-bound (Value-wrapped) dims, map from data units to pixels via
+        // posScale when available — this keeps image sizing consistent with
+        // rect's data-driven sizing. For literal-number dims, treat as pixels.
+        const pixelSize = (dim: 0 | 1): number | undefined => {
+          const raw = dims[dim].size;
+          if (isValue(raw)) {
+            const dataSize = getValue(raw)!;
+            const scale = posScales?.[dim];
+            return scale ? scale(dataSize) - scale(0) : dataSize;
+          }
+          return raw;
+        };
+        const requestedWidth = pixelSize(0);
+        const requestedHeight = pixelSize(1);
         const intrinsicDimensions = resolveIntrinsicDimensions(href);
         const resolvedDimensions = resolveRenderedDimensions(
           requestedWidth,
@@ -312,8 +363,10 @@ export const Image = ({
         intrinsicDims?: Dimensions;
         transform?: Transform;
       }) => {
-        const x = (transform?.translate?.[0] ?? 0) + (intrinsicDims?.[0]?.min ?? 0);
-        const y = (transform?.translate?.[1] ?? 0) + (intrinsicDims?.[1]?.min ?? 0);
+        const x =
+          (transform?.translate?.[0] ?? 0) + (intrinsicDims?.[0]?.min ?? 0);
+        const y =
+          (transform?.translate?.[1] ?? 0) + (intrinsicDims?.[1]?.min ?? 0);
         const width = intrinsicDims?.[0]?.size ?? 0;
         const height = intrinsicDims?.[1]?.size ?? 0;
 
@@ -336,4 +389,29 @@ export const Image = ({
   );
 };
 
-export const image = createMark(Image, {});
+const rawImage = createMark(Image, {});
+
+/** Wrap an image mark so it awaits intrinsic dimension loading before producing
+ *  a node. Recursively wraps .name/.label so chained calls stay awaiting. */
+const withDimsAwait = (mark: any, href: unknown): any => {
+  const wrapped: any = async (...args: any[]) => {
+    if (typeof href === "string") await ensureImageDimensions(href);
+    return mark(...args);
+  };
+  // Use defineProperty because `.name` on a function is not writable by default.
+  Object.defineProperty(wrapped, "name", {
+    value: (layerName: string) => withDimsAwait(mark.name(layerName), href),
+    writable: true,
+    configurable: true,
+  });
+  Object.defineProperty(wrapped, "label", {
+    value: (accessor: any, options?: any) =>
+      withDimsAwait(mark.label(accessor, options), href),
+    writable: true,
+    configurable: true,
+  });
+  return wrapped;
+};
+
+export const image: typeof rawImage = ((opts: any) =>
+  withDimsAwait(rawImage(opts), opts?.href)) as typeof rawImage;

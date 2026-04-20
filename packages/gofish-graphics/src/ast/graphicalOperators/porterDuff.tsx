@@ -4,8 +4,9 @@ import { GoFishAST } from "../_ast";
 import { GoFishNode } from "../_node";
 import type { Placeable } from "../_node";
 import { Size } from "../dims";
-import { UNDEFINED, UnderlyingSpace } from "../underlyingSpace";
+import { UnderlyingSpace } from "../underlyingSpace";
 import { createOperator } from "../withGoFish";
+import { unionChildSpaces } from "./alignment";
 
 type BlendMode = "color" | "multiply" | "screen" | "overlay";
 type CompositeOperator = "over" | "in" | "xor" | "out" | "atop";
@@ -122,9 +123,9 @@ const createCompositeRelation = (type: string, operator: CompositeOperator) =>
           type,
           shared: [false, false],
           resolveUnderlyingSpace: (
-            _children: Size<UnderlyingSpace>[],
+            children: Size<UnderlyingSpace>[],
             _childNodes: GoFishAST[]
-          ) => [UNDEFINED, UNDEFINED],
+          ) => [unionChildSpaces(children, 0), unionChildSpaces(children, 1)],
           inferSizeDomains: (_shared, layoutChildren) => {
             requireTwoChildren(layoutChildren);
             const childMeasures = layoutChildren.map((child) =>
@@ -211,9 +212,9 @@ export const mask = createOperator(
         type: "mask",
         shared: [false, false],
         resolveUnderlyingSpace: (
-          _children: Size<UnderlyingSpace>[],
+          children: Size<UnderlyingSpace>[],
           _childNodes: GoFishAST[]
-        ) => [UNDEFINED, UNDEFINED],
+        ) => [unionChildSpaces(children, 0), unionChildSpaces(children, 1)],
         inferSizeDomains: (_shared, layoutChildren) => {
           requireTwoChildren(layoutChildren);
           const childMeasures = layoutChildren.map((child) =>

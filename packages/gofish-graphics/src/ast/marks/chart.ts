@@ -27,6 +27,16 @@ import type {
   LabelOptions,
   LabelSpec,
 } from "../labels/labelPlacement";
+import { layer as Layer } from "../graphicalOperators/layer";
+import {
+  over as Over,
+  inside as Inside,
+  xor as Xor,
+  out as Out,
+  atop as Atop,
+  mask as Mask,
+} from "../graphicalOperators/porterDuff";
+import type { ConstraintRef, ConstraintSpec } from "../constraints";
 
 export type { Mark, Operator };
 export { generatedRect as rect };
@@ -943,7 +953,7 @@ export function blank<T extends Record<string, any>>({
   debug?: boolean;
 } = {}): Mark<T | T[] | { item: T | T[]; key: number | string }> {
   // blank is essentially a transparent/zero-size rect
-  return generatedRect({
+  return generatedRect<T>({
     emX,
     emY,
     w,
@@ -956,3 +966,134 @@ export function blank<T extends Record<string, any>>({
     strokeWidth,
   });
 }
+
+/* ---- mark-combinator forms for layer and Porter-Duff operators ---- */
+
+type BlendMode = "color" | "multiply" | "screen" | "overlay";
+type PdOptions = { blendMode?: BlendMode };
+
+/** A mark with .name, .label, and .constrain chainable methods. */
+export type ConstrainableMark<T> = Mark<T> & {
+  name(layerName: string): ConstrainableMark<T>;
+  label(accessor: LabelAccessor, options?: LabelOptions): ConstrainableMark<T>;
+  constrain(
+    fn: (refs: Record<string, ConstraintRef>) => ConstraintSpec[]
+  ): ConstrainableMark<T>;
+};
+
+function makeConstrainableMark<T>(base: Mark<T>): ConstrainableMark<T> {
+  const withName = (layerName: string): ConstrainableMark<T> => {
+    const named: Mark<T> = async (d, key, layerContext) => {
+      const node = await resolveMarkResult(
+        base(d, key, layerContext),
+        layerContext
+      );
+      node.name(layerName);
+      if (layerContext && layerName) {
+        if (!layerContext[layerName]) {
+          layerContext[layerName] = { data: [], nodes: [] };
+        }
+        layerContext[layerName].nodes.push(node);
+        layerContext[layerName].data.push((node as any).datum);
+      }
+      return node;
+    };
+    return makeConstrainableMark(named);
+  };
+  const withLabel = (
+    accessor: LabelAccessor,
+    options?: LabelOptions
+  ): ConstrainableMark<T> => {
+    const labeled: Mark<T> = async (d, key, layerContext) => {
+      const node = await resolveMarkResult(
+        base(d, key, layerContext),
+        layerContext
+      );
+      node.label(accessor, options);
+      return node;
+    };
+    return makeConstrainableMark(labeled);
+  };
+  const withConstrain = (
+    fn: (refs: Record<string, ConstraintRef>) => ConstraintSpec[]
+  ): ConstrainableMark<T> => {
+    const constrained: Mark<T> = async (d, key, layerContext) => {
+      const node = await resolveMarkResult(
+        base(d, key, layerContext),
+        layerContext
+      );
+      node.constrain(fn);
+      return node;
+    };
+    return makeConstrainableMark(constrained);
+  };
+  Object.defineProperty(base, "name", {
+    value: withName,
+    writable: true,
+    configurable: true,
+  });
+  Object.defineProperty(base, "label", {
+    value: withLabel,
+    writable: true,
+    configurable: true,
+  });
+  Object.defineProperty(base, "constrain", {
+    value: withConstrain,
+    writable: true,
+    configurable: true,
+  });
+  return base as ConstrainableMark<T>;
+}
+
+/**
+ * Mark-combinator form of layer. Resolves each child mark against the per-datum
+ * data (so field accessors like `h: "amount"` bind), then wraps all children in
+ * a Layer node. Supports `.name()`, `.label()`, and `.constrain()`.
+ */
+export function layer<T>(marks: Mark<any>[]): ConstrainableMark<T>;
+export function layer<T>(
+  opts: Record<string, any>,
+  marks: Mark<any>[]
+): ConstrainableMark<T>;
+export function layer<T>(
+  marksOrOpts: Mark<any>[] | Record<string, any>,
+  maybeMarks?: Mark<any>[]
+): ConstrainableMark<T> {
+  const opts = Array.isArray(marksOrOpts) ? {} : marksOrOpts;
+  const marks = (Array.isArray(marksOrOpts) ? marksOrOpts : maybeMarks) ?? [];
+  const base: Mark<T> = async (d, key, layerContext) => {
+    const resolved = await Promise.all(
+      marks.map((m) => resolveMarkResult(m(d, key, layerContext), layerContext))
+    );
+    const node = await Layer(opts, resolved);
+    (node as any).datum = d;
+    return node;
+  };
+  return makeConstrainableMark(base);
+}
+
+function makePorterDuffCombinator(lowLevel: (opts: any, children: any) => any) {
+  return function <T>(
+    opts: PdOptions,
+    marks: [Mark<any>, Mark<any>]
+  ): Mark<T> & { name(layerName: string): Mark<T> } {
+    const base: Mark<T> = async (d, key, layerContext) => {
+      const [child0, child1] = await Promise.all(
+        marks.map((m) =>
+          resolveMarkResult(m(d, key, layerContext), layerContext)
+        )
+      );
+      const node = await lowLevel(opts, [child0, child1]);
+      (node as any).datum = d;
+      return node;
+    };
+    return nameableMark(base);
+  };
+}
+
+export const atop = makePorterDuffCombinator(Atop);
+export const over = makePorterDuffCombinator(Over);
+export const inside = makePorterDuffCombinator(Inside);
+export const xor = makePorterDuffCombinator(Xor);
+export const out = makePorterDuffCombinator(Out);
+export const mask = makePorterDuffCombinator(Mask);

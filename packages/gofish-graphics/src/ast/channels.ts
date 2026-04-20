@@ -1,7 +1,7 @@
 import { sumBy, meanBy } from "lodash";
 import { MaybeValue, Value, value } from "./data";
 
-export type ChannelType = "size" | "color";
+export type ChannelType = "size" | "pos" | "color" | "raw";
 
 export type ChannelAnnotations<T> = {
   [K in keyof T]?: ChannelType;
@@ -22,9 +22,18 @@ export type DeriveMarkProps<
   [K in keyof ShapeProps]: K extends keyof Channels
     ? Channels[K] extends "size"
       ? number | (keyof T & string) | Value<number> | undefined
-      : Channels[K] extends "color"
-        ? string | (keyof T & string) | Value<string> | undefined
-        : ShapeProps[K]
+      : Channels[K] extends "pos"
+        ? number | (keyof T & string) | Value<number> | undefined
+        : Channels[K] extends "color"
+          ? string | (keyof T & string) | Value<string> | undefined
+          : Channels[K] extends "raw"
+            ?
+                | string
+                | number
+                | (keyof T & string)
+                | Value<string | number>
+                | undefined
+            : ShapeProps[K]
     : ShapeProps[K];
 } & { debug?: boolean };
 
@@ -70,6 +79,24 @@ export const inferColor = <T extends Record<string, any>>(
   data: T[]
 ): MaybeValue<string> | undefined => {
   if (accessor === undefined) return undefined;
+  if (data.length > 0 && data[0] != null && accessor in data[0]) {
+    return value(data[0][accessor]);
+  }
+  return accessor;
+};
+
+/**
+ * Infer a raw scalar value from a field name or literal string/number.
+ * If the string matches a field in the first data item, wraps it as a Value.
+ * Otherwise passes through as-is (literal string or number).
+ * No aggregation — suitable for text content, labels, unscaled identifiers.
+ */
+export const inferRaw = <T extends Record<string, any>>(
+  accessor: string | number | undefined,
+  data: T[]
+): MaybeValue<string | number> | undefined => {
+  if (accessor === undefined) return undefined;
+  if (typeof accessor === "number") return accessor;
   if (data.length > 0 && data[0] != null && accessor in data[0]) {
     return value(data[0][accessor]);
   }
