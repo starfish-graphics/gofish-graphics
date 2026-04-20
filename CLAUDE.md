@@ -1,6 +1,10 @@
-# CLAUDE.md
+# AGENTS.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Session Setup
+
+**Run `pnpm install` at the start of every session.** This monorepo uses pnpm workspaces and git worktrees do not have `node_modules` pre-installed. Without it, pre-commit hooks (lint-staged, husky) and dev tooling will fail.
 
 ## Project Overview
 

@@ -1,7 +1,7 @@
 name: Weekly GoFish Summary
 on:
   schedule:
-    - cron: "0 14 * * 2" # Tuesdays at 2pm UTC
+    - cron: "0 8 * * 4" # Thursdays at 4am Eastern (8am UTC)
   workflow_dispatch: # Allow manual triggers
     inputs:
       dry_run:
