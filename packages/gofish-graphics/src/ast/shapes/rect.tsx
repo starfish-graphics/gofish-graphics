@@ -173,9 +173,12 @@ export const Rect = ({
           // no position, but has data-driven size -> SIZE
           underlyingSpaceY = SIZE(getValue(dims[1].size)!);
         } else {
-          // has position (and possibly size) -> POSITION
-          const min = getValue(dims[1].min) ?? 0;
-          const size = getValue(dims[1].size) ?? 0;
+          // has position (and possibly size) -> POSITION.
+          // Only extend the domain by size when size is data-driven (a
+          // Value); a literal pixel size represents visual thickness, not
+          // data extent.
+          const min = isValue(dims[1].min) ? getValue(dims[1].min)! : 0;
+          const size = isValue(dims[1].size) ? getValue(dims[1].size)! : 0;
           const domain = interval(min, min + size);
           underlyingSpaceY = POSITION(domain);
         }

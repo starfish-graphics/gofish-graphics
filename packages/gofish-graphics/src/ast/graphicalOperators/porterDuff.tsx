@@ -118,6 +118,11 @@ const createCompositeRelation = (type: string, operator: CompositeOperator) =>
     ) => {
       requireTwoChildren(children);
 
+      // For Porter-Duff "atop" the result is visually clipped to the first
+      // child (the source), so its reported size is the first child's size.
+      // Other operators keep the union-based sizing so unions/xors don't
+      // clip content outside the first child's bounds.
+      const isAtop = operator === "atop";
       return new GoFishNode(
         {
           type,
@@ -131,6 +136,9 @@ const createCompositeRelation = (type: string, operator: CompositeOperator) =>
             const childMeasures = layoutChildren.map((child) =>
               child.inferSizeDomains()
             );
+            if (isAtop) {
+              return { w: childMeasures[0][0], h: childMeasures[0][1] };
+            }
             return {
               w: Monotonic.max(...childMeasures.map((measure) => measure[0])),
               h: Monotonic.max(...childMeasures.map((measure) => measure[1])),
@@ -154,7 +162,14 @@ const createCompositeRelation = (type: string, operator: CompositeOperator) =>
               child.place("y", 0, "baseline");
             });
 
-            const { minX, maxX, minY, maxY } = maxChildBounds(childPlaceables);
+            const { minX, maxX, minY, maxY } = isAtop
+              ? {
+                  minX: childPlaceables[0].dims[0].min ?? 0,
+                  maxX: childPlaceables[0].dims[0].max ?? 0,
+                  minY: childPlaceables[0].dims[1].min ?? 0,
+                  maxY: childPlaceables[0].dims[1].max ?? 0,
+                }
+              : maxChildBounds(childPlaceables);
             return {
               intrinsicDims: [
                 {

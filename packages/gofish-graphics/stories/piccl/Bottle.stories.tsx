@@ -32,14 +32,14 @@ export const Default: StoryObj<Args> = {
     const container = initializeContainer();
 
     Chart(data)
-      .flow(spread("category", { dir: "x", spacing: 10 }))
+      .flow(spread("category", { dir: "x", spacing: 20 }))
       .mark(layer(
         [atop({blendMode: "color"}, [image({ href: bottlePng, h: v(100) }), rect({h: "amount", fill: "#00ff00"})]).name("bottle"),
-        rect({h: 1, fill: "#666", w: 150, y: "amount"}).name("line"),
-        text({fontSize: 35, fill: "#666", text: "amount"}).name("label"),
+        rect({h: 1, fill: "#666", w: 175, y: "amount"}).name("line"),
+        text({fontSize: 35, fill: "#666", text: (d) => `${d.amount}%`}).name("label"),
       ]).constrain(({line, label, bottle}) => [
         Constraint.align({ dir: "x", alignment: "start" }, [bottle, line]),
-        Constraint.distribute({ dir: "y" }, [label, line]),
+        Constraint.distribute({ dir: "y" }, [line, label]),
         Constraint.align({ dir: "x", alignment: "end" }, [label, line]),
       ]))
       .render(container, {
