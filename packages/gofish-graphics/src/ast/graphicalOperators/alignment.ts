@@ -17,9 +17,15 @@ export type Alignment = "start" | "middle" | "end" | "baseline";
 
 /**
  * Union child underlying spaces along one axis for overlay-style operators
- * (layer, Porter-Duff). Converts DIFFERENCE(w) children to POSITION([0, w])
- * so data-driven sizes contribute to the parent's domain. ORDINAL children
- * take precedence: if any child reports ORDINAL, returns ORDINAL(union of keys).
+ * (layer, Porter-Duff). ORDINAL children with a non-empty domain take
+ * precedence: if any such child exists, returns ORDINAL(union of keys).
+ * Otherwise collects intervals from POSITION domains, DIFFERENCE widths (as
+ * [0, w]), and SIZE values (as [0, v]). When at least one child is a true
+ * POSITION, returns POSITION(union) — the overlay has a concrete position.
+ * When intervals came only from DIFFERENCE/SIZE, returns DIFFERENCE(width of
+ * union) — the extent is known but the position is not, preserving the "no
+ * inherent position" semantic so axis rendering uses interval (difference)
+ * ticks rather than absolute positions.
  */
 export function unionChildSpaces(
   children: Size<UnderlyingSpace>[],
@@ -41,9 +47,11 @@ export function unionChildSpaces(
   }
 
   const intervals: ReturnType<typeof Interval.interval>[] = [];
+  let hasPosition = false;
   for (const child of children) {
     const space = child[axis];
     if (isPOSITION(space) && space.domain) {
+      hasPosition = true;
       intervals.push(space.domain);
     } else if (isDIFFERENCE(space)) {
       intervals.push(Interval.interval(0, space.width));
@@ -52,7 +60,9 @@ export function unionChildSpaces(
     }
   }
   if (intervals.length === 0) return UNDEFINED;
-  return POSITION(Interval.unionAll(...intervals));
+  const union = Interval.unionAll(...intervals);
+  if (!hasPosition) return DIFFERENCE(Interval.width(union));
+  return POSITION(union);
 }
 
 /**
