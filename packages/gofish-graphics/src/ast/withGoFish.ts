@@ -299,10 +299,10 @@ export async function reifyChildrenSequentially(
 export function createOperator<T extends Record<string, any>, R>(
   func: (opts: T, children: GoFishAST[]) => R
 ): {
-  (opts?: T, children?: GoFishChildrenInput): PromiseWithRender<R>;
-  (children: GoFishChildrenInput): PromiseWithRender<R>;
+  (opts?: T, children?: GoFishChildrenInput): PromiseWithRender<Awaited<R>>;
+  (children: GoFishChildrenInput): PromiseWithRender<Awaited<R>>;
 } {
-  return function (...args: any[]): PromiseWithRender<R> {
+  return function (...args: any[]): PromiseWithRender<Awaited<R>> {
     const promise = (async () => {
       let opts: T;
       let children: GoFishChildrenInput | undefined;
@@ -344,7 +344,7 @@ export function createOperator<T extends Record<string, any>, R>(
       ) as GoFishAST[];
       return func(opts, flatChildren);
     })();
-    return addRenderMethod(promise);
+    return addRenderMethod(promise) as PromiseWithRender<Awaited<R>>;
   };
 }
 
@@ -360,10 +360,13 @@ export function createOperator<T extends Record<string, any>, R>(
 export function createOperatorSequential<T extends Record<string, any>, R>(
   func: (opts: T, children: GoFishAST[]) => R
 ): {
-  (opts?: T, children?: GoFishChildrenInputWithThunks): PromiseWithRender<R>;
-  (children: GoFishChildrenInputWithThunks): PromiseWithRender<R>;
+  (
+    opts?: T,
+    children?: GoFishChildrenInputWithThunks
+  ): PromiseWithRender<Awaited<R>>;
+  (children: GoFishChildrenInputWithThunks): PromiseWithRender<Awaited<R>>;
 } {
-  return function (...args: any[]): PromiseWithRender<R> {
+  return function (...args: any[]): PromiseWithRender<Awaited<R>> {
     const promise = (async () => {
       let opts: T;
       let children: GoFishChildrenInputWithThunks | undefined;
@@ -396,7 +399,7 @@ export function createOperatorSequential<T extends Record<string, any>, R>(
       );
       return func(opts, resolvedChildren);
     })();
-    return addRenderMethod(promise);
+    return addRenderMethod(promise) as PromiseWithRender<Awaited<R>>;
   };
 }
 

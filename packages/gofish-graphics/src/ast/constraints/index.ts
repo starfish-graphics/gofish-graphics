@@ -66,9 +66,7 @@ export function applyConstraints(
     if (targets.length === 0) continue;
 
     if (constraint.type === "align") {
-      const axisFallback =
-        constraint.dir === "x" ? fallbackBaselines?.x : fallbackBaselines?.y;
-      applyAlign(constraint, targets, axisFallback);
+      applyAlign(constraint, targets, fallbackBaselines);
     } else {
       applyDistribute(constraint, targets);
     }

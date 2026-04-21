@@ -12,8 +12,7 @@ Layer([
   text({ text: "Title", fontSize: 18 }).name("label"),
 ])
   .constrain(({ bg, label }) => [
-    Constraint.align({ dir: "x", alignment: "middle" }, [label, bg]),
-    Constraint.align({ dir: "y", alignment: "end" }, [label, bg]),
+    Constraint.align({ x: "middle", y: "end" }, [label, bg]),
   ])
   .render(container, { w: 300, h: 200 });
 ```
@@ -27,10 +26,8 @@ gf.Layer([
   gf.rect({ w: 60, h: 30, fill: gf.color.red[4] }).name("badge"),
 ])
   .constrain(({ bg, label, badge }) => [
-    gf.Constraint.align({ dir: "x", alignment: "end" }, [label, bg]),
-    gf.Constraint.align({ dir: "y", alignment: "end" }, [label, bg]),
-    gf.Constraint.align({ dir: "x", alignment: "start" }, [badge, bg]),
-    gf.Constraint.align({ dir: "y", alignment: "start" }, [badge, bg]),
+    gf.Constraint.align({ x: "end", y: "end" }, [label, bg]),
+    gf.Constraint.align({ x: "start", y: "start" }, [badge, bg]),
   ])
   .render(root, { w: 300, h: 200 });
 ```
@@ -39,18 +36,18 @@ gf.Layer([
 
 ## Constraint.align
 
-Aligns a set of children to a shared edge or center on one axis.
+Aligns a set of children to a shared edge or center on one or both axes. At least one of `x` or `y` must be specified.
 
 ```ts
-Constraint.align({ dir, alignment }, [ref1, ref2, ...])
+Constraint.align({ x?, y? }, [ref1, ref2, ...])
 ```
 
-| Option      | Type                           | Default   | Description                      |
-| ----------- | ------------------------------ | --------- | -------------------------------- |
-| `dir`       | `"x" \| "y"`                   | —         | Axis to align on                 |
-| `alignment` | `"start" \| "middle" \| "end"` | `"start"` | Which edge or center to align to |
+| Option | Type                           | Default | Description                                                    |
+| ------ | ------------------------------ | ------- | -------------------------------------------------------------- |
+| `x`    | `"start" \| "middle" \| "end"` | —       | Edge/center to align on the x axis (omit to leave x untouched) |
+| `y`    | `"start" \| "middle" \| "end"` | —       | Edge/center to align on the y axis (omit to leave y untouched) |
 
-The first already-placed child in the list acts as the anchor. Unplaced children are moved to match it. If no child is placed yet, the layer's own edge is used as the baseline (`start` = 0, `middle` = midpoint, `end` = full extent).
+The first already-placed child in the list acts as the anchor on each specified axis. Unplaced children are moved to match it. If no child is placed yet, the layer's own edge is used as the baseline (`start` = 0, `middle` = midpoint, `end` = full extent). When both `x` and `y` are given, x is resolved before y.
 
 ::: starfish
 
@@ -61,7 +58,7 @@ gf.Layer([
   gf.rect({ w: 60, h: 40, fill: gf.color.green[3] }).name("c"),
 ])
   .constrain(({ a, b, c }) => [
-    gf.Constraint.align({ dir: "x", alignment: "end" }, [a, b, c]),
+    gf.Constraint.align({ x: "end" }, [a, b, c]),
     gf.Constraint.distribute({ dir: "y" }, [a, b, c]),
   ])
   .render(root, { w: 300, h: 200 });
@@ -95,7 +92,7 @@ gf.Layer([
   gf.rect({ w: 80, h: 30, fill: gf.color.green[3] }).name("c"),
 ])
   .constrain(({ a, b, c }) => [
-    gf.Constraint.align({ dir: "x", alignment: "start" }, [a, b, c]),
+    gf.Constraint.align({ x: "start" }, [a, b, c]),
     gf.Constraint.distribute({ dir: "y", spacing: 8 }, [a, b, c]),
   ])
   .render(root, { w: 300, h: 200 });
@@ -107,12 +104,12 @@ gf.Layer([
 
 Constraints are a lower-level primitive that `Spread` is built on. These pairs are equivalent:
 
-| Spread                                                                     | Constraint equivalent                                                             |
-| -------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| `Spread({ direction: "y", alignment: "start" }, items)`                    | `align({ dir: "x", alignment: "start" })` + `distribute({ dir: "y" })`            |
-| `Spread({ direction: "x", alignment: "end", spacing: 10 }, items)`         | `align({ dir: "y", alignment: "end" })` + `distribute({ dir: "x", spacing: 10 })` |
-| `Spread({ direction: "x", spacing: 60, mode: "center-to-center" }, items)` | `distribute({ dir: "x", spacing: 60, mode: "center-to-center" })`                 |
-| `Spread({ direction: "y", dir: "ttb" }, items)`                            | `distribute({ dir: "y", order: "reverse" })`                                      |
+| Spread                                                                     | Constraint equivalent                                             |
+| -------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `Spread({ direction: "y", alignment: "start" }, items)`                    | `align({ x: "start" })` + `distribute({ dir: "y" })`              |
+| `Spread({ direction: "x", alignment: "end", spacing: 10 }, items)`         | `align({ y: "end" })` + `distribute({ dir: "x", spacing: 10 })`   |
+| `Spread({ direction: "x", spacing: 60, mode: "center-to-center" }, items)` | `distribute({ dir: "x", spacing: 60, mode: "center-to-center" })` |
+| `Spread({ direction: "y", dir: "ttb" }, items)`                            | `distribute({ dir: "y", order: "reverse" })`                      |
 
 ## Partial placement
 
@@ -125,7 +122,7 @@ Layer([
   rect({ w: 60, h: 40 }).name("c"),
 ]).constrain(({ a, b, c }) => [
   // Only constrain x — each element keeps its own y
-  Constraint.align({ dir: "x", alignment: "end" }, [a, b, c]),
+  Constraint.align({ x: "end" }, [a, b, c]),
 ]);
 ```
 
@@ -140,7 +137,7 @@ Layer([
   rect({ w: 120, h: 50 }).name("c"),
   rect({ w: 60, h: 50 }).name("d"),
 ]).constrain(({ a, b, c, d }) => [
-  Constraint.align({ dir: "x", alignment: "end" }, [a, b, c, d]),
+  Constraint.align({ x: "end" }, [a, b, c, d]),
   Constraint.distribute({ dir: "y", spacing: 5 }, [a, b]), // tight grouping
   Constraint.distribute({ dir: "y", spacing: 30 }, [c, d]), // loose grouping
 ]);

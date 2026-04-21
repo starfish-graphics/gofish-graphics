@@ -42,9 +42,9 @@ export const Default: StoryObj<Args> = {
         rect({h: 1, fill: "#666", w: 175, y: "amount"}).name("line"),
         text({fontSize: 35, fill: "#666", text: (d) => `${d.amount}%`}).name("label"),
       ]).constrain(({line, label, bottle}) => [
-        Constraint.align({ dir: "x", alignment: "start" }, [bottle, line]),
+        Constraint.align({ x: "start" }, [bottle, line]),
         Constraint.distribute({ dir: "y" }, [line, label]),
-        Constraint.align({ dir: "x", alignment: "end" }, [label, line]),
+        Constraint.align({ x: "end" }, [label, line]),
       ]))
       .render(container, {
         w: args.w,

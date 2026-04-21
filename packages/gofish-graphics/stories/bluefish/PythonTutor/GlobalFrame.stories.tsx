@@ -1,9 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/html";
-import { initializeContainer } from "../helper";
-import { Constraint, For, Layer, Spread, rect, text } from "../../src/lib";
+import { initializeContainer } from "../../helper";
+import { Constraint, For, Layer, Spread, rect, text } from "../../../src/lib";
+import { stackSlot } from "./stackSlot";
 
 const meta: Meta = {
-  title: "Low Level Syntax/Python Tutor",
+  title: "Bluefish/Python Tutor/Global Frame",
   argTypes: {
     w: {
       control: { type: "number", min: 100, max: 1000, step: 10 },
@@ -36,32 +37,16 @@ export const GlobalFrame: StoryObj<Args> = {
         text: "Global Frame",
       }).name("label"),
       Spread(
-        { direction: "y", alignment: "start", spacing: 10 },
-        For(variables, (variable) =>
-          text({
-            fontSize: 24,
-            fontFamily: "Andale Mono, monospace",
-            fill: "black",
-            text: `${variable.variable}: ${variable.value}`,
-          })
+        { direction: "y", alignment: "end", spacing: 10, reverse: true },
+        For(variables, (v) =>
+          stackSlot({ variable: v.variable, value: String(v.value) })
         )
       ).name("variables"),
     ])
       .constrain(({ label, frame, frameBorder, variables }) => [
-        Constraint.align({ dir: "x", alignment: "middle" }, [label, frame]),
-        Constraint.align({ dir: "y", alignment: "end" }, [label, frame]),
-        Constraint.align({ dir: "x", alignment: "start" }, [
-          frameBorder,
-          frame,
-        ]),
-        Constraint.align({ dir: "y", alignment: "middle" }, [
-          frameBorder,
-          frame,
-        ]),
-        Constraint.align({ dir: "x", alignment: "end" }, [
-          variables,
-          label,
-        ]),
+        Constraint.align({ x: "middle", y: "end" }, [label, frame]),
+        Constraint.align({ x: "start", y: "middle" }, [frameBorder, frame]),
+        Constraint.align({ x: "end" }, [variables, label]),
         Constraint.distribute({ dir: "y", spacing: 10 }, [variables, label]),
       ])
       .render(container, {
