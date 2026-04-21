@@ -9,7 +9,7 @@ export interface ElmTupleProps {
 
 export const elmTuple = ({ tupleIndex, tupleData }: ElmTupleProps) =>
   Layer([
-    rect({ h: 60, w: 70, fill: "#ffffc6", stroke: "grey" }).name("box"),
+    rect({ h: 60, w: 70, fill: "#ffffc6", stroke: "gray", strokeWidth: 1 }).name("box"),
     text({
       fontSize: 16,
       fontFamily,
