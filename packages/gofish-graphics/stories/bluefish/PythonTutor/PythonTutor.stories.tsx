@@ -1,9 +1,15 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../../helper";
-import { Spread } from "../../../src/lib";
+import {
+  Arrow,
+  createName,
+  Layer,
+  ref,
+  Spread,
+} from "../../../src/lib";
 import { globalFrame } from "./globalFrame";
 import { heap } from "./heap";
-import { binding, pointer, tuple } from "./types";
+import { binding, isPointer, pointer, tuple } from "./types";
 
 const meta: Meta = {
   title: "Bluefish/Python Tutor/Python Tutor",
@@ -43,9 +49,86 @@ export const PythonTutor: StoryObj<Args> = {
       ],
     };
 
-    Spread({ direction: "x", alignment: "start", spacing: 100 }, [
-      globalFrame({ stack: data.stack }),
-      heap({ heap: data.heap, heapArrangement: data.heapArrangement }),
+    const globalFrameName = createName("globalFrame");
+    const heapName = createName("heap");
+
+    // Address -> (row, col) in the arrangement grid
+    const addrPos = new Map<number, [number, number]>();
+    data.heapArrangement.forEach((row, r) =>
+      row.forEach((addr, c) => {
+        if (addr !== null) addrPos.set(addr, [r, c]);
+      })
+    );
+
+    const stackArrows = data.stack.flatMap((slot, i) =>
+      isPointer(slot.value)
+        ? [
+            Arrow(
+              {
+                bow: 0,
+                stretch: 0,
+                flip: true,
+                padStart: 0,
+                stroke: "#1A5683",
+                start: true,
+              },
+              [
+                ref([globalFrameName, "variables", i, "value"]),
+                ref([
+                  heapName,
+                  ...addrPos.get(slot.value.value)!,
+                  "elmTuples",
+                  0,
+                ]),
+              ]
+            ),
+          ]
+        : []
+    );
+
+    const heapArrows = data.heap.flatMap((obj, a) =>
+      obj.values.flatMap((v, j) =>
+        isPointer(v)
+          ? [
+              Arrow(
+                {
+                  bow: 0,
+                  padEnd: 25,
+                  padStart: 0,
+                  stroke: "#1A5683",
+                  start: true,
+                },
+                [
+                  ref([
+                    heapName,
+                    ...addrPos.get(a)!,
+                    "elmTuples",
+                    j,
+                    "val",
+                  ]),
+                  ref([
+                    heapName,
+                    ...addrPos.get(v.value)!,
+                    "elmTuples",
+                    0,
+                  ]),
+                ]
+              ),
+            ]
+          : []
+      )
+    );
+
+    Layer([
+      Spread({ direction: "x", alignment: "start", spacing: 100 }, [
+        globalFrame({ stack: data.stack }).name(globalFrameName),
+        heap({
+          heap: data.heap,
+          heapArrangement: data.heapArrangement,
+        }).name(heapName),
+      ]),
+      ...stackArrows,
+      ...heapArrows,
     ]).render(container, { w: args.w, h: args.h });
 
     return container;

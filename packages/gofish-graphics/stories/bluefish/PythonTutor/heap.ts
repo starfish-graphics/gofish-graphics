@@ -1,4 +1,4 @@
-import { rect, Spread } from "../../../src/lib";
+import { createComponent, rect, Spread } from "../../../src/lib";
 import { heapObject } from "./heapObject";
 import { Address, formatValue, HeapObject } from "./types";
 
@@ -7,26 +7,28 @@ export interface HeapProps {
   heapArrangement: (Address | null)[][];
 }
 
-export const heap = ({ heap: heapObjects, heapArrangement }: HeapProps) =>
-  Spread(
-    { direction: "y", alignment: "start", spacing: 75 },
-    heapArrangement.map((row) =>
-      Spread(
-        { direction: "x", alignment: "end", spacing: 75 },
-        row.map((address) =>
-          address === null
-            ? rect({ h: 60, w: 140, fill: "none", stroke: "none" })
-            : heapObject({
-                objectType: heapObjects[address].type,
-                objectValues: heapObjects[address].values.map((value) => ({
-                  type:
-                    typeof value === "string" || typeof value === "number"
-                      ? "string"
-                      : "pointer",
-                  value: formatValue(value),
-                })),
-              })
+export const heap = createComponent(
+  ({ heap: heapObjects, heapArrangement }: HeapProps) =>
+    Spread(
+      { direction: "y", alignment: "start", spacing: 75, reverse: true },
+      heapArrangement.map((row) =>
+        Spread(
+          { direction: "x", alignment: "end", spacing: 75 },
+          row.map((address) =>
+            address === null
+              ? rect({ h: 60, w: 140, fill: "none", stroke: "none" })
+              : heapObject({
+                  objectType: heapObjects[address].type,
+                  objectValues: heapObjects[address].values.map((value) => ({
+                    type:
+                      typeof value === "string" || typeof value === "number"
+                        ? "string"
+                        : "pointer",
+                    value: formatValue(value),
+                  })),
+                })
+          )
         )
       )
     )
-  );
+);

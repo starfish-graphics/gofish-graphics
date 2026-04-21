@@ -1,5 +1,6 @@
 import type { GoFishAST } from "../_ast";
 import type { GoFishNode, Placeable } from "../_node";
+import { isToken } from "../createName";
 import { applyAlign, createAlignConstraint } from "./align";
 import { applyDistribute, createDistributeConstraint } from "./distribute";
 import type { AlignConstraint, AlignOptions } from "./align";
@@ -37,7 +38,8 @@ export function collectConstraintRefs(
   const refs: Record<string, ConstraintRef> = {};
   for (const child of children) {
     if ("_name" in child && (child as GoFishNode)._name) {
-      const name = (child as GoFishNode)._name!;
+      const raw = (child as GoFishNode)._name!;
+      const name = isToken(raw) ? raw.__tag : raw;
       refs[name] = { name };
     }
   }

@@ -304,6 +304,7 @@ export const gofish = (
   const runGofish = async (): Promise<LayoutData> => {
     const session: RenderSession = {
       scopeContext: new Map(),
+      tokenContext: new Map(),
       scaleContext: { unit: { color: new Map(), colorConfig } },
       keyContext: {},
     };

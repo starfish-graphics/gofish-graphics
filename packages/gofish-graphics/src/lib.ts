@@ -23,6 +23,11 @@ export { wavy } from "./ast/coordinateTransforms/wavy";
 export { gofish as GoFish } from "./ast/gofish";
 export { GoFishSolid } from "./ast/GoFishSolid";
 
+// Name / scope primitives
+export { createName } from "./ast/createName";
+export type { Token } from "./ast/createName";
+export { createComponent } from "./ast/withGoFish";
+
 /* API v2 */
 // Data
 export { For } from "./ast/iterators/for";

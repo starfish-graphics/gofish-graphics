@@ -9,6 +9,9 @@ export const pointer = (value: Address): Pointer => ({
 
 export type Value = string | number | Pointer;
 
+export const isPointer = (v: Value): v is Pointer =>
+  typeof v === "object" && v !== null && v.type === "pointer";
+
 export const formatValue = (value: Value): string => {
   if (typeof value === "string" || typeof value === "number") {
     return `${value}`;

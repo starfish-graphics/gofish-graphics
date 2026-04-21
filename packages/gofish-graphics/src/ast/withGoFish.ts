@@ -25,6 +25,7 @@ import { isValue } from "./data";
 import { Mark } from "./types";
 import type { ConstraintSpec, ConstraintRef } from "./constraints";
 import type { LabelAccessor, LabelOptions } from "./labels/labelPlacement";
+import type { Token } from "./createName";
 
 /**
  * Options for rendering a GoFish node
@@ -79,7 +80,7 @@ export interface PromiseWithRender<T> extends Promise<T> {
     container: HTMLElement,
     options: RenderOptions
   ): HTMLElement | Promise<HTMLElement>;
-  name(name: string): PromiseWithRender<T>;
+  name(name: string | Token): PromiseWithRender<T>;
   label(accessor: LabelAccessor, options?: LabelOptions): PromiseWithRender<T>;
   setKey(key: string): PromiseWithRender<T>;
   setShared(shared: [boolean, boolean]): PromiseWithRender<T>;
@@ -87,6 +88,7 @@ export interface PromiseWithRender<T> extends Promise<T> {
     fn: (refs: Record<string, ConstraintRef>) => ConstraintSpec[]
   ): PromiseWithRender<T>;
   zOrder(value: number): PromiseWithRender<T>;
+  scope(): PromiseWithRender<T>;
 }
 
 /**
@@ -126,11 +128,24 @@ export function addRenderMethod<T>(promise: Promise<T>): PromiseWithRender<T> {
   };
 
   // Add chainable methods that return new PromiseWithRender
-  (promise as any).name = function (name: string): PromiseWithRender<T> {
+  (promise as any).name = function (
+    name: string | Token
+  ): PromiseWithRender<T> {
     return addRenderMethod(
       promise.then((result) => {
         if (result instanceof GoFishNode) {
           return result.name(name) as T;
+        }
+        return result;
+      })
+    );
+  };
+
+  (promise as any).scope = function (): PromiseWithRender<T> {
+    return addRenderMethod(
+      promise.then((result) => {
+        if (result instanceof GoFishNode) {
+          return result.scope() as T;
         }
         return result;
       })
@@ -403,9 +418,36 @@ export function createOperatorSequential<T extends Record<string, any>, R>(
   };
 }
 
+/**
+ * Wrap a props-to-node component function so its output node is marked as a
+ * scope root. Inside the component, string `.name("x")` remains layer-local
+ * (for constraints); Token `.name(token)` registers the tag in this scope so
+ * external paths like `ref([componentToken, "x", ...])` resolve.
+ */
+export const createComponent =
+  <P, T>(
+    fn: (props: P) => PromiseWithRender<T> | T
+  ): ((props: P) => PromiseWithRender<T>) =>
+  (props: P) => {
+    const result = fn(props);
+    if (
+      result !== null &&
+      typeof result === "object" &&
+      "scope" in (result as any) &&
+      typeof (result as any).scope === "function"
+    ) {
+      return (result as any).scope() as PromiseWithRender<T>;
+    }
+    if (result instanceof GoFishNode) {
+      result.scope();
+      return addRenderMethod(Promise.resolve(result) as unknown as Promise<T>);
+    }
+    return result as PromiseWithRender<T>;
+  };
+
 /** A mark that can be named for layer selection via .name("layerName") and labeled via .label(accessor, options?). */
 export type NameableMark<T> = Mark<T> & {
-  name(layerName: string): Mark<T>;
+  name(layerName: string | Token): Mark<T>;
   label(accessor: LabelAccessor, options?: LabelOptions): Mark<T>;
 };
 
@@ -486,7 +528,7 @@ export function createMark<
     };
 
     const nameMethod = (
-      layerName: string
+      layerName: string | Token
     ): Mark<T | T[] | { item: T | T[]; key: number | string }> => {
       return async (
         input: T | T[] | { item: T | T[]; key: number | string },
@@ -496,7 +538,9 @@ export function createMark<
         const node = await baseMark(input, keyParam, layerContext);
         // Set the node name for Ref() lookup in low-level context
         (node as GoFishNode).name(layerName);
-        if (layerContext && layerName) {
+        // layerContext is keyed by string name (v3 chart-layer selection);
+        // tokens are hygienic handles and do not participate in that registry.
+        if (layerContext && typeof layerName === "string" && layerName) {
           if (!layerContext[layerName]) {
             layerContext[layerName] = { data: [], nodes: [] };
           }
