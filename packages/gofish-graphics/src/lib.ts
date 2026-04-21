@@ -96,7 +96,15 @@ export {
   normalize,
   repeat,
   log,
+  layer,
+  atop,
+  over,
+  inside,
+  xor,
+  out,
+  mask,
 } from "./ast/marks/chart";
+export type { ConstrainableMark } from "./ast/marks/chart";
 export type {
   Mark,
   Operator,

@@ -17,7 +17,9 @@ import {
   ChannelAnnotations,
   DeriveMarkProps,
   inferSize,
+  inferPos,
   inferColor,
+  inferRaw,
 } from "./channels";
 import { isValue } from "./data";
 import { Mark } from "./types";
@@ -463,8 +465,12 @@ export function createMark<
           shapeProps[propName] = markValue;
         } else if (channelType === "size") {
           shapeProps[propName] = inferSize(markValue, data);
+        } else if (channelType === "pos") {
+          shapeProps[propName] = inferPos(markValue, data);
         } else if (channelType === "color") {
           shapeProps[propName] = inferColor(markValue, data);
+        } else if (channelType === "raw") {
+          shapeProps[propName] = inferRaw(markValue, data);
         } else {
           shapeProps[propName] = markValue;
         }

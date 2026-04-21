@@ -1,16 +1,69 @@
 import { Placeable } from "../_node";
 import {
   DIFFERENCE,
+  ORDINAL,
   POSITION,
   UNDEFINED,
   isDIFFERENCE,
+  isORDINAL,
   isPOSITION,
   isSIZE,
   UnderlyingSpace,
 } from "../underlyingSpace";
+import type { Size } from "../dims";
 import * as Interval from "../../util/interval";
 
 export type Alignment = "start" | "middle" | "end" | "baseline";
+
+/**
+ * Union child underlying spaces along one axis for overlay-style operators
+ * (layer, Porter-Duff). ORDINAL children with a non-empty domain take
+ * precedence: if any such child exists, returns ORDINAL(union of keys).
+ * Otherwise collects intervals from POSITION domains, DIFFERENCE widths (as
+ * [0, w]), and SIZE values (as [0, v]). When at least one child is a true
+ * POSITION, returns POSITION(union) — the overlay has a concrete position.
+ * When intervals came only from DIFFERENCE/SIZE, returns DIFFERENCE(width of
+ * union) — the extent is known but the position is not, preserving the "no
+ * inherent position" semantic so axis rendering uses interval (difference)
+ * ticks rather than absolute positions.
+ */
+export function unionChildSpaces(
+  children: Size<UnderlyingSpace>[],
+  axis: 0 | 1
+): UnderlyingSpace {
+  // ORDINAL with an empty/missing domain is a "no-position" placeholder
+  // (e.g. from image shapes without a data-bound position), not a real axis.
+  // Ignore those so sibling POSITION/DIFFERENCE contributions still count.
+  const ordinals = children
+    .map((c) => c[axis])
+    .filter(isORDINAL)
+    .filter((o) => o.domain && o.domain.length > 0);
+  if (ordinals.length > 0) {
+    const keys = new Set<string>();
+    for (const ord of ordinals) {
+      if (ord.domain) for (const k of ord.domain) keys.add(k);
+    }
+    return ORDINAL(Array.from(keys));
+  }
+
+  const intervals: ReturnType<typeof Interval.interval>[] = [];
+  let hasPosition = false;
+  for (const child of children) {
+    const space = child[axis];
+    if (isPOSITION(space) && space.domain) {
+      hasPosition = true;
+      intervals.push(space.domain);
+    } else if (isDIFFERENCE(space)) {
+      intervals.push(Interval.interval(0, space.width));
+    } else if (isSIZE(space)) {
+      intervals.push(Interval.interval(0, space.value));
+    }
+  }
+  if (intervals.length === 0) return UNDEFINED;
+  const union = Interval.unionAll(...intervals);
+  if (!hasPosition) return DIFFERENCE(Interval.width(union));
+  return POSITION(union);
+}
 
 /**
  * Determine the underlying space for an alignment axis given child spaces and alignment mode.
