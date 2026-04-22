@@ -129,7 +129,7 @@ export const Text = ({
 }: {
   key?: string;
   name?: string;
-  text: MaybeValue<string>;
+  text: MaybeValue<string | number>;
   fill?: MaybeValue<string>;
   stroke?: MaybeValue<string>;
   strokeWidth?: number;
@@ -201,7 +201,7 @@ export const Text = ({
           ? getValue(textContent)
           : textContent;
         const layout = resolveTextLayout(
-          finalText ?? "",
+          finalText == null ? "" : String(finalText),
           fontSize,
           fontFamily,
           textAnchor,
@@ -227,7 +227,7 @@ export const Text = ({
           ? getValue(textContent)
           : textContent;
         const layout = resolveTextLayout(
-          finalText ?? "",
+          finalText == null ? "" : String(finalText),
           fontSize,
           fontFamily,
           textAnchor,
@@ -305,7 +305,7 @@ export const Text = ({
         const layout =
           renderData?.layout ??
           resolveTextLayout(
-            finalText ?? "",
+            finalText == null ? "" : String(finalText),
             fontSize,
             fontFamily,
             textAnchor,
@@ -368,4 +368,5 @@ export const Text = ({
 
 export const text = createMark(Text, {
   fill: "color",
+  text: "raw",
 });

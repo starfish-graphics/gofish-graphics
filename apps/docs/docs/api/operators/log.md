@@ -10,9 +10,9 @@ log(label?)
 
 ## Parameters
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `label` | `string` | Optional label to prefix the log output |
+| Parameter | Type     | Description                             |
+| --------- | -------- | --------------------------------------- |
+| `label`   | `string` | Optional label to prefix the log output |
 
 ## Example
 

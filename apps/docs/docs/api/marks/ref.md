@@ -10,16 +10,16 @@ ref(nodeOrName: string | GoFishNode | { __ref: GoFishNode })
 
 ## Parameters
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
+| Parameter    | Type                                            | Description                                                                          |
+| ------------ | ----------------------------------------------- | ------------------------------------------------------------------------------------ |
 | `nodeOrName` | `string \| GoFishNode \| { __ref: GoFishNode }` | The node to reference — either a string key, a node directly, or a wrapped reference |
 
 ## Examples
 
 ```ts
 // Reference a named node by string key
-ref("myNode")
+ref("myNode");
 
 // Reference a node directly
-ref(someNode)
+ref(someNode);
 ```

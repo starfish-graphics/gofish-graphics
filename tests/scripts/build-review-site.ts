@@ -106,10 +106,13 @@ write(
 // data/meta.json
 // ---------------------------------------------------------------------------
 
+const codeBranch = process.env.REVIEW_BRANCH ?? "unknown";
 const meta = {
   repo: process.env.REVIEW_REPO ?? "unknown/repo",
-  branch: process.env.REVIEW_BRANCH ?? "unknown",
+  branch: codeBranch,
   sha: process.env.REVIEW_SHA ?? "unknown",
+  /** The orphan branch that receives accepted snapshots. */
+  snapshotBranch: `snapshots/${codeBranch}`,
 };
 
 write(join(OUT_DIR, "data/meta.json"), JSON.stringify(meta, null, 2));
@@ -687,7 +690,7 @@ const html = `<!DOCTYPE html>
           domContents,
           screenshotContents,
           repo: meta.repo,
-          branch: meta.branch,
+          branch: meta.snapshotBranch,
         }),
       });
       const ct = res.headers.get('content-type') || '';

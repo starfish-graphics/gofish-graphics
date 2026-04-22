@@ -57,6 +57,7 @@ export const Rect = ({
   ry = 0,
   filter,
   label,
+  opacity = 1,
   aspectRatio,
   ...fancyDims
 }: {
@@ -69,6 +70,7 @@ export const Rect = ({
   ry?: number;
   filter?: string;
   label?: boolean;
+  opacity?: number;
   /** w/h ratio to enforce. w = h * aspectRatio. When both dims are data-driven,
    *  the constraining axis (smaller of the two scaled sizes) is used. */
   aspectRatio?: number;
@@ -89,6 +91,7 @@ export const Rect = ({
         ry,
         filter,
         label,
+        opacity,
         dims,
       },
       // Used to seed the unit color scale. Prefer whichever channel is data-driven.
@@ -132,7 +135,12 @@ export const Rect = ({
         */
 
         let underlyingSpaceX = UNDEFINED;
-        if (!isValue(dims[0].min) && !isValue(dims[0].size)) {
+        if (isValue(dims[0].min) && isValue(dims[0].max)) {
+          // both min and max are values -> POSITION([min, max])
+          underlyingSpaceX = POSITION(
+            interval(getValue(dims[0].min)!, getValue(dims[0].max)!)
+          );
+        } else if (!isValue(dims[0].min) && !isValue(dims[0].size)) {
           // nothing is data-driven
           // keep undefined if no values
         } else if (isAesthetic(dims[0].min) && isValue(dims[0].size)) {
@@ -150,7 +158,12 @@ export const Rect = ({
         }
 
         let underlyingSpaceY = UNDEFINED;
-        if (!isValue(dims[1].min) && !isValue(dims[1].size)) {
+        if (isValue(dims[1].min) && isValue(dims[1].max)) {
+          // both min and max are values -> POSITION([min, max])
+          underlyingSpaceY = POSITION(
+            interval(getValue(dims[1].min)!, getValue(dims[1].max)!)
+          );
+        } else if (!isValue(dims[1].min) && !isValue(dims[1].size)) {
           // nothing is data-driven
           // keep undefined if no values
         } else if (isAesthetic(dims[1].min) && isValue(dims[1].size)) {
@@ -160,9 +173,12 @@ export const Rect = ({
           // no position, but has data-driven size -> SIZE
           underlyingSpaceY = SIZE(getValue(dims[1].size)!);
         } else {
-          // has position (and possibly size) -> POSITION
-          const min = getValue(dims[1].min) ?? 0;
-          const size = getValue(dims[1].size) ?? 0;
+          // has position (and possibly size) -> POSITION.
+          // Only extend the domain by size when size is data-driven (a
+          // Value); a literal pixel size represents visual thickness, not
+          // data extent.
+          const min = isValue(dims[1].min) ? getValue(dims[1].min)! : 0;
+          const size = isValue(dims[1].size) ? getValue(dims[1].size)! : 0;
           const domain = interval(min, min + size);
           underlyingSpaceY = POSITION(domain);
         }
@@ -212,11 +228,20 @@ export const Rect = ({
         measurement,
         posScales
       ) => {
-        const x = computeAesthetic(dims[0].min, posScales?.[0]!, undefined);
-        const y = computeAesthetic(dims[1].min, posScales?.[1]!, undefined);
+        let x = computeAesthetic(dims[0].min, posScales?.[0]!, undefined);
+        let y = computeAesthetic(dims[1].min, posScales?.[1]!, undefined);
 
         let w: number | undefined;
-        if (isValue(dims[0].min) && isValue(dims[0].size)) {
+        if (isValue(dims[0].min) && isValue(dims[0].max)) {
+          // Both min and max are values -> width spans [min, max] in data space
+          x = computeAesthetic(dims[0].min, posScales?.[0]!, undefined);
+          const xMax = computeAesthetic(
+            dims[0].max,
+            posScales?.[0]!,
+            undefined
+          );
+          w = (xMax ?? 0) - (x ?? 0);
+        } else if (isValue(dims[0].min) && isValue(dims[0].size)) {
           // If posScales for x exists, scale min and min+size, then subtract
           const min = x;
           const max = computeAesthetic(
@@ -241,7 +266,16 @@ export const Rect = ({
         }
 
         let h: number | undefined;
-        if (isValue(dims[1].min) && isValue(dims[1].size)) {
+        if (isValue(dims[1].min) && isValue(dims[1].max)) {
+          // Both min and max are values -> height spans [min, max] in data space
+          y = computeAesthetic(dims[1].min, posScales?.[1]!, undefined);
+          const yMax = computeAesthetic(
+            dims[1].max,
+            posScales?.[1]!,
+            undefined
+          );
+          h = (yMax ?? 0) - (y ?? 0);
+        } else if (isValue(dims[1].min) && isValue(dims[1].size)) {
           // If posScales for y exists, scale min and min+size, then subtract
           const min = y;
           const max = computeAesthetic(
@@ -397,6 +431,7 @@ export const Rect = ({
                 stroke={resolvedStroke}
                 stroke-width={strokeWidth ?? 0}
                 filter={filter}
+                opacity={opacity}
               />
               {labelText && (
                 <text
@@ -464,6 +499,7 @@ export const Rect = ({
                   stroke={resolvedStroke}
                   stroke-width={strokeWidth ?? 0}
                   filter={filter}
+                  opacity={opacity}
                 />
                 {labelText && (
                   <text
@@ -510,6 +546,7 @@ export const Rect = ({
               stroke-width={thickness + 0.5}
               fill="none"
               filter={filter}
+              opacity={opacity}
             />
           );
         }
@@ -546,6 +583,7 @@ export const Rect = ({
                 stroke-width={strokeWidth ?? 0}
                 fill={resolvedFill}
                 filter={filter}
+                opacity={opacity}
               />
               {labelText && (
                 <text
@@ -584,6 +622,7 @@ export const Rect = ({
             stroke={resolvedStroke}
             stroke-width={strokeWidth ?? 0}
             filter={filter}
+            opacity={opacity}
           />
         );
       },
@@ -595,6 +634,14 @@ export const Rect = ({
 export const rect = createMark(Rect, {
   w: "size",
   h: "size",
+  x: "pos",
+  y: "pos",
+  l: "pos",
+  r: "pos",
+  t: "pos",
+  b: "pos",
+  cx: "pos",
+  cy: "pos",
   fill: "color",
   stroke: "color",
 });

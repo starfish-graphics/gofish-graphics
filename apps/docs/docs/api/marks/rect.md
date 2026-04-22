@@ -20,16 +20,16 @@ rect({ w?, h?, fill?, stroke?, strokeWidth = 0, rx?, ry?, label? })
 
 ## Parameters
 
-| Option | Type | Description |
-|--------|------|-------------|
-| `w` | `number \| string` | Width — number for fixed, field name to encode data |
-| `h` | `number \| string` | Height — number for fixed, field name to encode data |
-| `fill` | `string` | Fill color or field name for color encoding |
-| `stroke` | `string` | Stroke color (defaults to `fill`) |
-| `strokeWidth` | `number` | Stroke width |
-| `rx` | `number` | Horizontal border radius |
-| `ry` | `number` | Vertical border radius |
-| `label` | `boolean` | Render field value as text label inside rect |
+| Option        | Type               | Description                                          |
+| ------------- | ------------------ | ---------------------------------------------------- |
+| `w`           | `number \| string` | Width — number for fixed, field name to encode data  |
+| `h`           | `number \| string` | Height — number for fixed, field name to encode data |
+| `fill`        | `string`           | Fill color or field name for color encoding          |
+| `stroke`      | `string`           | Stroke color (defaults to `fill`)                    |
+| `strokeWidth` | `number`           | Stroke width                                         |
+| `rx`          | `number`           | Horizontal border radius                             |
+| `ry`          | `number`           | Vertical border radius                               |
+| `label`       | `boolean`          | Render field value as text label inside rect         |
 
 ## Examples
 

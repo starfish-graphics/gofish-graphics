@@ -7,8 +7,10 @@ export type Mark<T> = (
   d: T,
   key?: string | number,
   layerContext?: { [name: string]: { data: any[]; nodes: GoFishNode[] } }
-) => GoFishAST | Promise<GoFishAST>
-    | (() => GoFishAST | Promise<GoFishAST>)
-    | ChartBuilder<any, any>;
+) =>
+  | GoFishAST
+  | Promise<GoFishAST>
+  | (() => GoFishAST | Promise<GoFishAST>)
+  | ChartBuilder<any, any>;
 
 export type Operator<T, U> = (_: Mark<U>) => Promise<Mark<T>>;

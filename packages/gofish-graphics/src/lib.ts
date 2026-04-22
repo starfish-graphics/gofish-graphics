@@ -28,15 +28,29 @@ export { GoFishSolid } from "./ast/GoFishSolid";
 export { For } from "./ast/iterators/for";
 // export { groupBy } from "./ast/iterators/groupBy";
 export { groupBy, sumBy, orderBy, meanBy } from "lodash";
+export { bin } from "./ast/transforms";
 
 // Shapes
 export { ref } from "./ast/shapes/ref";
+
+// Constraints
+export { Constraint } from "./ast/constraints";
+export type {
+  ConstraintRef,
+  ConstraintSpec,
+  AlignConstraint,
+  DistributeConstraint,
+  DistributeOptions,
+  Axis,
+  Alignment,
+} from "./ast/constraints";
 
 // Graphical Operators
 export { stack as Stack } from "./ast/graphicalOperators/stack";
 export { stackX as StackX } from "./ast/graphicalOperators/stackX";
 export { stackY as StackY } from "./ast/graphicalOperators/stackY";
 export { spread as Spread } from "./ast/graphicalOperators/spread";
+export { scatter as Scatter } from "./ast/graphicalOperators/scatter";
 export { spreadX as SpreadX } from "./ast/graphicalOperators/spreadX";
 export { spreadY as SpreadY } from "./ast/graphicalOperators/spreadY";
 export { layer as Layer } from "./ast/graphicalOperators/layer";
@@ -83,7 +97,15 @@ export {
   normalize,
   repeat,
   log,
+  layer,
+  atop,
+  over,
+  inside,
+  xor,
+  out,
+  mask,
 } from "./ast/marks/chart";
+export type { ConstrainableMark } from "./ast/marks/chart";
 export type {
   Mark,
   Operator,
@@ -97,3 +119,8 @@ export type {
   GradientScale,
 } from "./ast/colorSchemes";
 export type { NameableMark } from "./ast/withGoFish";
+export type {
+  LabelSpec,
+  LabelOptions,
+  LabelAccessor,
+} from "./ast/labels/labelPlacement";

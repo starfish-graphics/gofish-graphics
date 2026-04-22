@@ -118,6 +118,10 @@ export default defineConfig({
           ],
         },
         {
+          text: "Constraints",
+          items: [{ text: "constrain", link: "/api/constraints/constrain" }],
+        },
+        {
           text: "Selection",
           items: [{ text: "select", link: "/api/selection/select" }],
         },

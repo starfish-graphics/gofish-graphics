@@ -20,7 +20,7 @@ gf.Chart(seafood, { coord: gf.polar() })
 ## Signature
 
 ```ts
-polar()
+polar();
 ```
 
 ## Parameters
@@ -40,10 +40,10 @@ chart(data, { coord: polar() })
 
 ## Coordinate Mapping
 
-| Cartesian | Polar |
-|-----------|-------|
-| x | angle (theta), 0 to 2π |
-| y | radius from center |
+| Cartesian | Polar                  |
+| --------- | ---------------------- |
+| x         | angle (theta), 0 to 2π |
+| y         | radius from center     |
 
 ## Examples
 
@@ -51,12 +51,12 @@ chart(data, { coord: polar() })
 // Basic polar chart
 chart(data, { coord: polar() })
   .flow(stack("category", { dir: "x" }))
-  .mark(rect({ w: "value" }))
+  .mark(rect({ w: "value" }));
 
 // Polar with spread for radial segments
 chart(data, { coord: polar() })
   .flow(spread("month", { dir: "x" }))
-  .mark(rect({ w: 1, h: "value" }))
+  .mark(rect({ w: 1, h: "value" }));
 ```
 
 ## See Also

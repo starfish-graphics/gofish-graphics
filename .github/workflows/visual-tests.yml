@@ -8,40 +8,65 @@ on:
       - "packages/gofish-graphics/**"
       - "packages/gofish-python/**"
       - "tests/**"
-      - "__snapshots__/**"
 
   pull_request:
     paths:
       - "packages/gofish-graphics/**"
       - "packages/gofish-python/**"
       - "tests/**"
-      - "__snapshots__/**"
 
 jobs:
   visual-test:
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
+      contents: write # needed to push to snapshots/main on main push
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
+      - name: Setup Git LFS
+        run: git lfs install
+
+      - name: Fetch snapshot baselines
+        run: |
+          SNAP_BRANCH="snapshots/${GITHUB_HEAD_REF:-${GITHUB_REF_NAME}}"
+          FOUND=""
+          if git ls-remote --exit-code origin "$SNAP_BRANCH" 2>/dev/null; then
+            FOUND="$SNAP_BRANCH"
+          elif git ls-remote --exit-code origin "snapshots/main" 2>/dev/null; then
+            FOUND="snapshots/main"
+          fi
+          if [ -n "$FOUND" ]; then
+            git fetch origin "$FOUND"
+            FETCH_SHA=$(git rev-parse FETCH_HEAD)
+            git worktree add --detach /tmp/snap-baselines "$FETCH_SHA"
+            cd /tmp/snap-baselines && git lfs pull && cd -
+            mkdir -p __snapshots__
+            [ -d /tmp/snap-baselines/dom ] && cp -r /tmp/snap-baselines/dom __snapshots__/dom
+            [ -d /tmp/snap-baselines/screenshots ] && cp -r /tmp/snap-baselines/screenshots __snapshots__/screenshots
+            git worktree remove --force /tmp/snap-baselines
+          else
+            echo "No snapshot branch found; starting with empty baselines."
+            mkdir -p __snapshots__/dom __snapshots__/screenshots
+          fi
+
       - name: Setup pnpm
-        uses: pnpm/action-setup@v3
+        uses: pnpm/action-setup@v4
         with:
           version: 9
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: pnpm
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 
@@ -57,18 +82,35 @@ jobs:
       - name: Install Playwright browsers
         run: pnpm --filter @gofish/tests exec playwright install --with-deps chromium
 
-      - name: Run visual tests (JS only)
-        run: pnpm test:visual:js
+      - name: Capture JS DOM snapshots
+        run: pnpm --filter @gofish/tests capture-js
+
+      # On PRs: compare against baselines and fail if regressions are detected.
+      - name: Compare snapshots (PR only)
+        if: github.event_name == 'pull_request'
+        run: pnpm --filter @gofish/tests exec tsx scripts/compare.ts --js-only
+
+      # On main push: auto-accept all captures as the new baselines and push
+      # to snapshots/main. This keeps snapshots/main in sync after every merge.
+      - name: Configure git for snapshot commit (main push only)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Auto-update snapshots/main (main push only)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: pnpm --filter @gofish/tests update-baselines
 
       - name: Upload diff report
-        if: failure()
-        uses: actions/upload-artifact@v4
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v5
         with:
           name: visual-diff-report
           path: tests/tmp/diff-report.html
 
       - name: Build review site
-        if: failure()
+        if: failure() && github.event_name == 'pull_request'
         run: pnpm --filter @gofish/tests build:review-site
         env:
           REVIEW_REPO: ${{ github.repository }}
@@ -76,7 +118,7 @@ jobs:
           REVIEW_SHA: ${{ github.sha }}
 
       - name: Deploy review site to Cloudflare Pages
-        if: failure()
+        if: failure() && github.event_name == 'pull_request'
         id: deploy-review
         run: |
           output=$(npx wrangler@latest --cwd tests/tmp/review-site pages deploy . \
@@ -93,7 +135,7 @@ jobs:
 
       - name: Comment PR with review URL
         if: failure() && github.event_name == 'pull_request'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const url = '${{ steps.deploy-review.outputs.deployment-url }}';
@@ -112,23 +154,49 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
+      - name: Setup Git LFS
+        run: git lfs install
+
+      - name: Fetch snapshot baselines
+        run: |
+          SNAP_BRANCH="snapshots/${GITHUB_HEAD_REF:-${GITHUB_REF_NAME}}"
+          FOUND=""
+          if git ls-remote --exit-code origin "$SNAP_BRANCH" 2>/dev/null; then
+            FOUND="$SNAP_BRANCH"
+          elif git ls-remote --exit-code origin "snapshots/main" 2>/dev/null; then
+            FOUND="snapshots/main"
+          fi
+          if [ -n "$FOUND" ]; then
+            git fetch origin "$FOUND"
+            FETCH_SHA=$(git rev-parse FETCH_HEAD)
+            git worktree add --detach /tmp/snap-baselines "$FETCH_SHA"
+            cd /tmp/snap-baselines && git lfs pull && cd -
+            mkdir -p __snapshots__
+            [ -d /tmp/snap-baselines/dom ] && cp -r /tmp/snap-baselines/dom __snapshots__/dom
+            [ -d /tmp/snap-baselines/screenshots ] && cp -r /tmp/snap-baselines/screenshots __snapshots__/screenshots
+            git worktree remove --force /tmp/snap-baselines
+          else
+            echo "No snapshot branch found; starting with empty baselines."
+            mkdir -p __snapshots__/dom __snapshots__/screenshots
+          fi
+
       - name: Setup pnpm
-        uses: pnpm/action-setup@v3
+        uses: pnpm/action-setup@v4
         with:
           version: 9
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: pnpm
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 
@@ -171,7 +239,7 @@ jobs:
 
       - name: Upload parity report artifact
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: parity-review-site
           path: tests/tmp/parity-review-site/
@@ -194,7 +262,7 @@ jobs:
 
       - name: Comment PR with parity review link
         if: failure() && github.event_name == 'pull_request'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const url = '${{ steps.deploy-parity.outputs.deployment-url }}';

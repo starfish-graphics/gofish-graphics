@@ -1,7 +1,7 @@
-import { sumBy } from "lodash";
+import { sumBy, meanBy } from "lodash";
 import { MaybeValue, Value, value } from "./data";
 
-export type ChannelType = "size" | "color";
+export type ChannelType = "size" | "pos" | "color" | "raw";
 
 export type ChannelAnnotations<T> = {
   [K in keyof T]?: ChannelType;
@@ -21,39 +21,111 @@ export type DeriveMarkProps<
 > = {
   [K in keyof ShapeProps]: K extends keyof Channels
     ? Channels[K] extends "size"
-      ? number | (keyof T & string) | Value<number> | undefined
-      : Channels[K] extends "color"
-        ? string | (keyof T & string) | Value<string> | undefined
-        : ShapeProps[K]
+      ?
+          | number
+          | (keyof T & string)
+          | ((d: T) => number)
+          | Value<number>
+          | undefined
+      : Channels[K] extends "pos"
+        ?
+            | number
+            | (keyof T & string)
+            | ((d: T) => number)
+            | Value<number>
+            | undefined
+        : Channels[K] extends "color"
+          ?
+              | string
+              | (keyof T & string)
+              | ((d: T) => string)
+              | Value<string>
+              | undefined
+          : Channels[K] extends "raw"
+            ?
+                | string
+                | number
+                | (keyof T & string)
+                | ((d: T) => string | number)
+                | Value<string | number>
+                | undefined
+            : ShapeProps[K]
     : ShapeProps[K];
 } & { debug?: boolean };
 
 /**
- * Infer a size value from a field name or literal number.
- * If accessor is a string (field name), sums the field across the data array.
- * If accessor is a number, passes it through as a literal.
+ * Infer a size value from a field name, function accessor, or literal number.
+ * - number: passed through as a literal.
+ * - string (field name): sums the field across the data array.
+ * - function: called per-row and summed across the data array.
  */
 export const inferSize = <T>(
-  accessor: string | number | undefined,
+  accessor: string | number | ((d: T) => number) | undefined,
   d: T | T[]
 ): MaybeValue<number> | undefined => {
-  return typeof accessor === "number"
-    ? accessor
-    : accessor !== undefined
-      ? value(sumBy(d as T[], accessor))
-      : undefined;
+  if (accessor === undefined) return undefined;
+  if (typeof accessor === "number") return accessor;
+  const data = Array.isArray(d) ? d : [d];
+  return value(sumBy(data, accessor as any));
 };
 
 /**
- * Infer a color value from a field name or literal string.
- * If the string matches a field in the first data item, wraps it as a Value.
- * Otherwise passes through as a literal color string.
+ * Infer a position value from a field name, function accessor, or literal number.
+ * - number: passed through as a literal.
+ * - string (field name): averages the field across the data array.
+ * - function: called per-row and averaged across the data array.
+ */
+export const inferPos = <T>(
+  accessor: string | number | ((d: T) => number) | undefined,
+  d: T | T[]
+): MaybeValue<number> | undefined => {
+  if (accessor === undefined) return undefined;
+  if (typeof accessor === "number") return accessor;
+  const data = Array.isArray(d) ? d : [d];
+  return value(meanBy(data, accessor as any));
+};
+
+/**
+ * Infer a color value from a field name, function accessor, or literal string.
+ * - string matching a field in data[0]: wraps field value as a Value.
+ * - string not matching a field: passes through as a literal color.
+ * - function: called on data[0] and wraps the result as a Value.
  */
 export const inferColor = <T extends Record<string, any>>(
-  accessor: string | undefined,
+  accessor: string | ((d: T) => string) | undefined,
   data: T[]
 ): MaybeValue<string> | undefined => {
   if (accessor === undefined) return undefined;
+  if (typeof accessor === "function") {
+    return data.length > 0 && data[0] != null
+      ? value(accessor(data[0]))
+      : undefined;
+  }
+  if (data.length > 0 && data[0] != null && accessor in data[0]) {
+    return value(data[0][accessor]);
+  }
+  return accessor;
+};
+
+/**
+ * Infer a raw scalar value from a field name, function accessor, or literal.
+ * - number: passed through as a literal.
+ * - string matching a field in data[0]: wraps field value as a Value.
+ * - string not matching a field: passes through as a literal string.
+ * - function: called on data[0] and wraps the result as a Value.
+ * No aggregation — suitable for text content, labels, unscaled identifiers.
+ */
+export const inferRaw = <T extends Record<string, any>>(
+  accessor: string | number | ((d: T) => string | number) | undefined,
+  data: T[]
+): MaybeValue<string | number> | undefined => {
+  if (accessor === undefined) return undefined;
+  if (typeof accessor === "number") return accessor;
+  if (typeof accessor === "function") {
+    return data.length > 0 && data[0] != null
+      ? value(accessor(data[0]))
+      : undefined;
+  }
   if (data.length > 0 && data[0] != null && accessor in data[0]) {
     return value(data[0][accessor]);
   }

@@ -3,10 +3,10 @@ import {
   Frame,
   Spread,
   Stack,
+  Scatter,
   Table,
   sumBy,
   v,
-  Position,
   meanBy,
   Connect,
   ref,
@@ -17,10 +17,26 @@ import { CoordinateTransform } from "../coordinateTransforms/coord";
 import { type ColorConfig } from "../colorSchemes";
 
 export type { ColorConfig };
-import { inferSize } from "../channels";
+import { inferSize, inferPos } from "../channels";
+import { Rect } from "../shapes/rect";
 import { rect as generatedRect } from "../shapes/rect";
 import { Ellipse } from "../shapes/ellipse";
 import { Mark, Operator } from "../types";
+import type {
+  LabelAccessor,
+  LabelOptions,
+  LabelSpec,
+} from "../labels/labelPlacement";
+import { layer as Layer } from "../graphicalOperators/layer";
+import {
+  over as Over,
+  inside as Inside,
+  xor as Xor,
+  out as Out,
+  atop as Atop,
+  mask as Mask,
+} from "../graphicalOperators/porterDuff";
+import type { ConstraintRef, ConstraintSpec } from "../constraints";
 
 export type { Mark, Operator };
 export { generatedRect as rect };
@@ -40,10 +56,11 @@ async function resolveMarkResult(
   return raw as unknown as GoFishNode;
 }
 
-/** Attach .name(layerName) to a mark so it registers each produced node when used in a chart. */
-function nameableMark<T>(
-  base: Mark<T>
-): Mark<T> & { name(layerName: string): Mark<T> } {
+/** Attach .name(layerName) and .label(accessor, options?) to a mark so it registers/labels each produced node when used in a chart. */
+function nameableMark<T>(base: Mark<T>): Mark<T> & {
+  name(layerName: string): Mark<T>;
+  label(accessor: LabelAccessor, options?: LabelOptions): Mark<T>;
+} {
   const withName = (layerName: string): Mark<T> => {
     return async (d: T, key?: string | number, layerContext?: LayerContext) => {
       const node = await resolveMarkResult(
@@ -62,12 +79,33 @@ function nameableMark<T>(
       return node;
     };
   };
+  const withLabel = (
+    accessor: LabelAccessor,
+    options?: LabelOptions
+  ): Mark<T> => {
+    return async (d: T, key?: string | number, layerContext?: LayerContext) => {
+      const node = await resolveMarkResult(
+        base(d, key, layerContext),
+        layerContext
+      );
+      node.label(accessor, options);
+      return node;
+    };
+  };
   Object.defineProperty(base, "name", {
     value: withName,
     writable: true,
     configurable: true,
   });
-  return base as Mark<T> & { name(layerName: string): Mark<T> };
+  Object.defineProperty(base, "label", {
+    value: withLabel,
+    writable: true,
+    configurable: true,
+  });
+  return base as Mark<T> & {
+    name(layerName: string): Mark<T>;
+    label(accessor: LabelAccessor, options?: LabelOptions): Mark<T>;
+  };
 }
 
 const connectXMode = {
@@ -416,7 +454,7 @@ export function spread<T>(
           resolveMarkResult(mark(d, key, layerContext), layerContext)
         )
       );
-      return Spread(
+      const node = await Spread(
         {
           direction: opts.dir.startsWith("x") ? 0 : 1,
           spacing: opts.spacing ?? 0,
@@ -425,6 +463,10 @@ export function spread<T>(
         },
         resolvedChildren
       );
+      // Stamp datum so a label on this spread renders at group level
+      // (rather than propagating down to individual child marks).
+      (node as any).datum = d;
+      return node;
     };
     return nameableMark(base);
   }
@@ -500,29 +542,12 @@ export function stack<T>(
 /** Operator form: stack(field, opts) → Operator */
 export function stack<T>(
   field: keyof T,
-  options: {
-    dir: "x" | "y";
-    x?: number;
-    y?: number;
-    w?: number | keyof T;
-    h?: number | keyof T;
-    spacing?: number;
-    alignment?: "start" | "middle" | "end" | "baseline";
-  }
+  options: SpreadOptions<T>
 ): Operator<T[], T[]>;
+/** Operator form: stack(opts) → Operator */
 export function stack<T>(
   fieldOrOptions: keyof T | SpreadOptions<T>,
-  optionsOrMarks?:
-    | {
-        dir: "x" | "y";
-        x?: number;
-        y?: number;
-        w?: number | keyof T;
-        h?: number | keyof T;
-        spacing?: number;
-        alignment?: "start" | "middle" | "end" | "baseline";
-      }
-    | Mark<any>[]
+  optionsOrMarks?: SpreadOptions<T> | Mark<any>[]
 ): Operator<T[], T[]> | (Mark<T> & { name(layerName: string): Mark<T> }) {
   // Mark combinator form: stack(opts, marks[])
   if (
@@ -536,8 +561,10 @@ export function stack<T>(
       optionsOrMarks as Mark<any>[]
     );
   }
-  // Operator form
-  return spread(fieldOrOptions as keyof T, {
+  if (typeof fieldOrOptions === "object") {
+    return spread({ ...fieldOrOptions, spacing: 0 });
+  }
+  return spread(fieldOrOptions, {
     ...(optionsOrMarks as SpreadOptions<T>),
     spacing: 0,
   });
@@ -603,38 +630,155 @@ export function table<T>(
   };
 }
 
+type ScatterRange<T> = { start: keyof T & string; end: keyof T & string };
+
 export function scatter<T>(
-  field: keyof T,
-  options: {
-    x: keyof T;
-    y: keyof T;
+  fieldOrOptions:
+    | keyof T
+    | {
+        x?: number | (keyof T & string) | ScatterRange<T>;
+        y?: number | (keyof T & string) | ScatterRange<T>;
+        alignment?: "start" | "middle" | "end" | "baseline";
+        debug?: boolean;
+      },
+  options?: {
+    x?: number | (keyof T & string) | ScatterRange<T>;
+    y?: number | (keyof T & string) | ScatterRange<T>;
+    alignment?: "start" | "middle" | "end" | "baseline";
     debug?: boolean;
   }
 ): Operator<T[], T[]> {
+  const field: keyof T | undefined =
+    typeof fieldOrOptions === "object" ? undefined : fieldOrOptions;
+  const opts = (typeof fieldOrOptions === "object" ? fieldOrOptions : options)!;
+  const xRange =
+    typeof opts.x === "object" && "start" in opts.x
+      ? (opts.x as ScatterRange<T>)
+      : undefined;
+  const yRange =
+    typeof opts.y === "object" && "start" in opts.y
+      ? (opts.y as ScatterRange<T>)
+      : undefined;
+  if (opts.x === undefined && opts.y === undefined) {
+    throw new Error("scatter() requires at least one of x or y");
+  }
+
   return async (mark: Mark<T[]>) => {
     return async (
       d: T[],
       key?: string | number,
       layerContext?: LayerContext
     ) => {
-      // Group by the field
-      const groups = groupBy(d, field as ValueIteratee<T>);
-      if (options?.debug) console.log("scatter groups", groups);
-      return Frame(
-        For(groups, async (items, groupKey) => {
-          // Calculate average x and y values for this group
-          const avgX = meanBy(items, options.x as string);
-          const avgY = meanBy(items, options.y as string);
-          if (options?.debug)
-            console.log(`Group ${groupKey}: avgX=${avgX}, avgY=${avgY}`);
-
-          // Render the group items and wrap in Position operator
-          const currentKey = key != undefined ? `${key}-${groupKey}` : groupKey;
-          return Position({ x: v(avgX), y: v(avgY) }, [
-            mark(items, currentKey, layerContext) as any,
-          ]);
-        })
-      );
+      if (field !== undefined) {
+        // Group by field, position each group at its mean x/y
+        const groups = groupBy(d, field as ValueIteratee<T>);
+        if (opts?.debug) console.log("scatter groups", groups);
+        const entries = Object.entries(groups);
+        const resolved = await Promise.all(
+          entries.map(async ([groupKey, items]) => {
+            const x =
+              xRange === undefined && opts.x !== undefined
+                ? inferPos(opts.x as string | number, items)
+                : undefined;
+            const y =
+              yRange === undefined && opts.y !== undefined
+                ? inferPos(opts.y as string | number, items)
+                : undefined;
+            if (opts?.debug) console.log(`Group ${groupKey}: x=${x}, y=${y}`);
+            const currentKey =
+              key != undefined ? `${key}-${groupKey}` : groupKey;
+            return {
+              x,
+              y,
+              child: (await resolveMarkResult(
+                mark(items, currentKey, layerContext),
+                layerContext
+              )) as any,
+            };
+          })
+        );
+        return Scatter(
+          {
+            x:
+              xRange === undefined && opts.x !== undefined
+                ? resolved.map((entry) => entry.x!)
+                : undefined,
+            y:
+              yRange === undefined && opts.y !== undefined
+                ? resolved.map((entry) => entry.y!)
+                : undefined,
+            alignment: opts.alignment,
+          },
+          resolved.map((entry) => entry.child)
+        );
+      } else {
+        // No grouping — position each item at its own x/y
+        if (opts?.debug) console.log("scatter items", d);
+        const resolved = await Promise.all(
+          d.map(async (item, i) => {
+            const x =
+              xRange === undefined && opts.x !== undefined
+                ? inferPos(opts.x as string | number, [item])
+                : undefined;
+            const y =
+              yRange === undefined && opts.y !== undefined
+                ? inferPos(opts.y as string | number, [item])
+                : undefined;
+            if (opts?.debug) console.log(`Item ${i}: x=${x}, y=${y}`);
+            const currentKey = key != undefined ? `${key}-${i}` : i;
+            return {
+              x,
+              y,
+              xMin:
+                xRange !== undefined
+                  ? inferPos(xRange.start, [item])
+                  : undefined,
+              xMax:
+                xRange !== undefined ? inferPos(xRange.end, [item]) : undefined,
+              yMin:
+                yRange !== undefined
+                  ? inferPos(yRange.start, [item])
+                  : undefined,
+              yMax:
+                yRange !== undefined ? inferPos(yRange.end, [item]) : undefined,
+              child: (await resolveMarkResult(
+                mark([item], currentKey as any, layerContext),
+                layerContext
+              )) as any,
+            };
+          })
+        );
+        return Scatter(
+          {
+            x:
+              xRange === undefined && opts.x !== undefined
+                ? resolved.map((entry) => entry.x!)
+                : undefined,
+            y:
+              yRange === undefined && opts.y !== undefined
+                ? resolved.map((entry) => entry.y!)
+                : undefined,
+            xMin:
+              xRange !== undefined
+                ? resolved.map((entry) => entry.xMin!)
+                : undefined,
+            xMax:
+              xRange !== undefined
+                ? resolved.map((entry) => entry.xMax!)
+                : undefined,
+            yMin:
+              yRange !== undefined
+                ? resolved.map((entry) => entry.yMin!)
+                : undefined,
+            yMax:
+              yRange !== undefined
+                ? resolved.map((entry) => entry.yMax!)
+                : undefined,
+            alignment: opts.alignment,
+          },
+          resolved.map((entry) => entry.child)
+        );
+      }
     };
   };
 }
@@ -674,8 +818,10 @@ export function circle<T extends Record<string, any>>({
   stroke?: string;
   strokeWidth?: number;
   debug?: boolean;
-  label?: boolean;
-}): Mark<T> & { name(layerName: string): Mark<T> } {
+}): Mark<T> & {
+  name(layerName: string): Mark<T>;
+  label(accessor: LabelAccessor, options?: LabelOptions): Mark<T>;
+} {
   const base: Mark<T> = async (
     d: T,
     key?: string | number,
@@ -809,7 +955,7 @@ export function blank<T extends Record<string, any>>({
   debug?: boolean;
 } = {}): Mark<T | T[] | { item: T | T[]; key: number | string }> {
   // blank is essentially a transparent/zero-size rect
-  return generatedRect({
+  return generatedRect<T>({
     emX,
     emY,
     w,
@@ -822,3 +968,134 @@ export function blank<T extends Record<string, any>>({
     strokeWidth,
   });
 }
+
+/* ---- mark-combinator forms for layer and Porter-Duff operators ---- */
+
+type BlendMode = "color" | "multiply" | "screen" | "overlay";
+type PdOptions = { blendMode?: BlendMode };
+
+/** A mark with .name, .label, and .constrain chainable methods. */
+export type ConstrainableMark<T> = Mark<T> & {
+  name(layerName: string): ConstrainableMark<T>;
+  label(accessor: LabelAccessor, options?: LabelOptions): ConstrainableMark<T>;
+  constrain(
+    fn: (refs: Record<string, ConstraintRef>) => ConstraintSpec[]
+  ): ConstrainableMark<T>;
+};
+
+function makeConstrainableMark<T>(base: Mark<T>): ConstrainableMark<T> {
+  const withName = (layerName: string): ConstrainableMark<T> => {
+    const named: Mark<T> = async (d, key, layerContext) => {
+      const node = await resolveMarkResult(
+        base(d, key, layerContext),
+        layerContext
+      );
+      node.name(layerName);
+      if (layerContext && layerName) {
+        if (!layerContext[layerName]) {
+          layerContext[layerName] = { data: [], nodes: [] };
+        }
+        layerContext[layerName].nodes.push(node);
+        layerContext[layerName].data.push((node as any).datum);
+      }
+      return node;
+    };
+    return makeConstrainableMark(named);
+  };
+  const withLabel = (
+    accessor: LabelAccessor,
+    options?: LabelOptions
+  ): ConstrainableMark<T> => {
+    const labeled: Mark<T> = async (d, key, layerContext) => {
+      const node = await resolveMarkResult(
+        base(d, key, layerContext),
+        layerContext
+      );
+      node.label(accessor, options);
+      return node;
+    };
+    return makeConstrainableMark(labeled);
+  };
+  const withConstrain = (
+    fn: (refs: Record<string, ConstraintRef>) => ConstraintSpec[]
+  ): ConstrainableMark<T> => {
+    const constrained: Mark<T> = async (d, key, layerContext) => {
+      const node = await resolveMarkResult(
+        base(d, key, layerContext),
+        layerContext
+      );
+      node.constrain(fn);
+      return node;
+    };
+    return makeConstrainableMark(constrained);
+  };
+  Object.defineProperty(base, "name", {
+    value: withName,
+    writable: true,
+    configurable: true,
+  });
+  Object.defineProperty(base, "label", {
+    value: withLabel,
+    writable: true,
+    configurable: true,
+  });
+  Object.defineProperty(base, "constrain", {
+    value: withConstrain,
+    writable: true,
+    configurable: true,
+  });
+  return base as ConstrainableMark<T>;
+}
+
+/**
+ * Mark-combinator form of layer. Resolves each child mark against the per-datum
+ * data (so field accessors like `h: "amount"` bind), then wraps all children in
+ * a Layer node. Supports `.name()`, `.label()`, and `.constrain()`.
+ */
+export function layer<T>(marks: Mark<any>[]): ConstrainableMark<T>;
+export function layer<T>(
+  opts: Record<string, any>,
+  marks: Mark<any>[]
+): ConstrainableMark<T>;
+export function layer<T>(
+  marksOrOpts: Mark<any>[] | Record<string, any>,
+  maybeMarks?: Mark<any>[]
+): ConstrainableMark<T> {
+  const opts = Array.isArray(marksOrOpts) ? {} : marksOrOpts;
+  const marks = (Array.isArray(marksOrOpts) ? marksOrOpts : maybeMarks) ?? [];
+  const base: Mark<T> = async (d, key, layerContext) => {
+    const resolved = await Promise.all(
+      marks.map((m) => resolveMarkResult(m(d, key, layerContext), layerContext))
+    );
+    const node = await Layer(opts, resolved);
+    (node as any).datum = d;
+    return node;
+  };
+  return makeConstrainableMark(base);
+}
+
+function makePorterDuffCombinator(lowLevel: (opts: any, children: any) => any) {
+  return function <T>(
+    opts: PdOptions,
+    marks: [Mark<any>, Mark<any>]
+  ): Mark<T> & { name(layerName: string): Mark<T> } {
+    const base: Mark<T> = async (d, key, layerContext) => {
+      const [child0, child1] = await Promise.all(
+        marks.map((m) =>
+          resolveMarkResult(m(d, key, layerContext), layerContext)
+        )
+      );
+      const node = await lowLevel(opts, [child0, child1]);
+      (node as any).datum = d;
+      return node;
+    };
+    return nameableMark(base);
+  };
+}
+
+export const atop = makePorterDuffCombinator(Atop);
+export const over = makePorterDuffCombinator(Over);
+export const inside = makePorterDuffCombinator(Inside);
+export const xor = makePorterDuffCombinator(Xor);
+export const out = makePorterDuffCombinator(Out);
+export const mask = makePorterDuffCombinator(Mask);
