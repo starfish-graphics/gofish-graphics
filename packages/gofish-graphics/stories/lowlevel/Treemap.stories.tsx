@@ -23,12 +23,6 @@ type Movie = {
   "Worldwide Gross": number | null;
 };
 
-// const data: Item[] = Array.from({ length: 40 }, (_, i) => {
-//   const group = ["A", "B", "C", "D"][i % 4];
-//   const value = ((i * 7) % 23) + 1;
-//   return { name: `Item ${i + 1}`, group, value };
-// });
-
 export const Default: StoryObj<Args> = {
   args: { w: 700, h: 420, paddingInner: 2 },
   loaders: [async () => ({ movies: await data["movies.json"]() })],
@@ -70,6 +64,7 @@ export const Default: StoryObj<Args> = {
         paddingInner: args.paddingInner,
         paddingOuter: args.paddingInner,
         round: true,
+        tile: "squarify",
       },
       nodes as any
     ).render(container, { w: args.w, h: args.h });

@@ -16,7 +16,7 @@ import * as Monotonic from "../../util/monotonic";
 import { POSITION, UnderlyingSpace } from "../underlyingSpace";
 import { interval } from "../../util/interval";
 
-type TreemapTile = "squarify" | "slice" | "dice";
+type TreemapTile = "squarify" | "slice" | "dice" | "binary" | "resquarify";
 type TreemapSort = "asc" | "desc" | "none";
 
 type TreemapProps = {
@@ -46,7 +46,7 @@ function resolveWeightFromChild(
     return Number.isFinite(v) && v > 0 ? v : 0;
   }
   if (opts.valueField) {
-    const d: any = (child as any).datum;
+    const d = (child as GoFishNode & { datum?: unknown }).datum;
     if (Array.isArray(d)) {
       const total = d.reduce((acc, row) => {
         const vv = Number(row?.[opts.valueField!]);
@@ -187,6 +187,16 @@ export const treemap = createOperator(
 
           const rectRoot = treemapLayout(root) as HierarchyRectangularNode<any>;
           const leaves = rectRoot.leaves();
+
+          if (childAsts.length === 0) {
+            return {
+              intrinsicDims: {
+                0: { min: 0, size: 0, center: 0, max: 0 },
+                1: { min: 0, size: 0, center: 0, max: 0 },
+              },
+              transform: { translate: { 0: undefined, 1: undefined } },
+            };
+          }
 
           const placed: Placeable[] = new Array(childAsts.length);
           for (const leaf of leaves) {
