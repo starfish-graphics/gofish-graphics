@@ -66,6 +66,7 @@
     "chroma-js": "^3.1.2",
     "culori": "^4.0.2",
     "d3-array": "^3.2.4",
+    "d3-hierarchy": "^3.1.2",
     "lodash": "^4.17.21",
     "perfect-arrows": "^0.3.7",
     "rybitten": "^0.22.0",

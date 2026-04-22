@@ -63,6 +63,7 @@ export { frame as Frame } from "./ast/graphicalOperators/frame";
 export { position as Position } from "./ast/graphicalOperators/position";
 export { arrow as Arrow } from "./ast/graphicalOperators/arrow";
 export { table as Table } from "./ast/graphicalOperators/table";
+export { treemap as Treemap } from "./ast/graphicalOperators/treemap";
 export {
   over as Over,
   inside as In,
