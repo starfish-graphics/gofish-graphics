@@ -114,6 +114,7 @@ export async function layout(
     debug = false,
     defs,
     axes = false,
+    isoScale = false,
   }: {
     w: number;
     h: number;
@@ -123,6 +124,9 @@ export async function layout(
     debug?: boolean;
     defs?: JSX.Element[];
     axes?: AxesOptions;
+    /** When true, both position axes share the same pixels-per-data-unit,
+     *  equal to min(w/xRange, h/yRange). Excess space is left empty. */
+    isoScale?: boolean;
   },
   child: GoFishNode | Promise<GoFishNode>,
   contexts?: {
@@ -229,6 +233,26 @@ export async function layout(
       : undefined,
   ];
 
+  if (
+    isoScale &&
+    isPOSITION(niceUnderlyingSpaceX) &&
+    niceUnderlyingSpaceX.domain &&
+    isPOSITION(niceUnderlyingSpaceY) &&
+    niceUnderlyingSpaceY.domain
+  ) {
+    const xRange =
+      niceUnderlyingSpaceX.domain.max - niceUnderlyingSpaceX.domain.min;
+    const yRange =
+      niceUnderlyingSpaceY.domain.max - niceUnderlyingSpaceY.domain.min;
+    if (xRange > 0 && yRange > 0) {
+      const sharedPxPerUnit = Math.min(w / xRange, h / yRange);
+      const xMin = niceUnderlyingSpaceX.domain.min;
+      const yMin = niceUnderlyingSpaceY.domain.min;
+      posScales[0] = (pos: number) => (pos - xMin) * sharedPxPerUnit;
+      posScales[1] = (pos: number) => (pos - yMin) * sharedPxPerUnit;
+    }
+  }
+
   if (debug) {
     console.log("width and height constraints:", w, h);
   }
@@ -274,6 +298,7 @@ export const gofish = (
     defs,
     axes = false,
     colorConfig,
+    isoScale = false,
   }: {
     w: number;
     h: number;
@@ -284,6 +309,8 @@ export const gofish = (
     defs?: JSX.Element[];
     axes?: boolean;
     colorConfig?: ColorConfig;
+    /** When true, both position axes share the same pixels-per-data-unit. */
+    isoScale?: boolean;
   },
   child: GoFishNode | Promise<GoFishNode>
 ) => {
@@ -313,7 +340,7 @@ export const gofish = (
       };
 
       const layoutResult = await layout(
-        { w, h, x, y, transform, debug, defs, axes },
+        { w, h, x, y, transform, debug, defs, axes, isoScale },
         child,
         contexts
       );
