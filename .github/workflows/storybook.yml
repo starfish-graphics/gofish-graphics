@@ -15,8 +15,6 @@ on:
 jobs:
   chromatic:
     runs-on: ubuntu-latest
-    # Require approval for fork PRs to access secrets
-    environment: ${{ github.event.pull_request.head.repo.full_name != github.repository && 'chromatic-fork' || null }}
 
     steps:
       - name: Checkout code
@@ -44,7 +42,7 @@ jobs:
       - name: Run Chromatic
         uses: chromaui/action@latest
         with:
-          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+          projectToken: chpt_b7e06495d0d4585
           workingDir: packages/gofish-graphics
           buildScriptName: build-storybook
           onlyChanged: true # Only test stories that changed
