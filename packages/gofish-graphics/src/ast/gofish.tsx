@@ -29,21 +29,34 @@ export type ScaleContext = {
 };
 
 export type KeyContext = { [key: string]: GoFishNode };
-export type AxesOptions = boolean | { x: boolean; y: boolean };
+export type AxesOptions = boolean | { x?: AxisOptions; y?: AxisOptions };
+export type AxisOptions = boolean | { title?: string | false };
 
-function resolveAxesVisibility(axes: AxesOptions | undefined): {
+function resolveAxisTitle(
+  axisOpt: AxisOptions | undefined
+): string | false | undefined {
+  if (!axisOpt || axisOpt === true) return undefined;
+  return axisOpt.title;
+}
+
+function resolveAxes(axes: AxesOptions | undefined): {
   x: boolean;
   y: boolean;
+  xTitle: string | false | undefined;
+  yTitle: string | false | undefined;
 } {
   if (axes === true) {
-    return { x: true, y: true };
+    return { x: true, y: true, xTitle: undefined, yTitle: undefined };
   }
-  if (axes && typeof axes === "object") {
-    const x = axes.x === true;
-    const y = axes.y === true;
-    return { x, y };
+  if (!axes) {
+    return { x: false, y: false, xTitle: undefined, yTitle: undefined };
   }
-  return { x: false, y: false };
+  return {
+    x: !!axes.x,
+    y: !!axes.y,
+    xTitle: resolveAxisTitle(axes.x),
+    yTitle: resolveAxisTitle(axes.y),
+  };
 }
 
 type OrdinalScale = (key: string) => number | undefined;
@@ -462,7 +475,8 @@ export const render = (
 ): JSX.Element => {
   const scaleContext = scaleContextParam;
   const keyContext = keyContextParam;
-  const axisVisibility = resolveAxesVisibility(axes);
+  const { x: axisX, y: axisY, xTitle, yTitle } = resolveAxes(axes);
+  const axisVisibility = { x: axisX, y: axisY };
   const hasAnyVisibleAxis = axisVisibility.x || axisVisibility.y;
   const axisPaddingX = axisVisibility.y ? 100 : 0;
   const axisPaddingY = axisVisibility.x ? 100 : 0;
@@ -1106,6 +1120,32 @@ export const render = (
                         </g>
                       );
                     })()}
+                  </Show>
+                  {/* x axis title */}
+                  <Show when={axisVisibility.x && xTitle !== false}>
+                    <text
+                      transform="scale(1, -1)"
+                      x={width / 2}
+                      y={PADDING * 3.5}
+                      text-anchor="middle"
+                      dominant-baseline="hanging"
+                      font-size="11px"
+                      fill="gray"
+                    >
+                      {xTitle}
+                    </text>
+                  </Show>
+                  {/* y axis title */}
+                  <Show when={axisVisibility.y && yTitle !== false}>
+                    <text
+                      transform={`translate(${-PADDING * 3.5}, ${height / 2}) scale(1, -1) rotate(-90)`}
+                      text-anchor="middle"
+                      dominant-baseline="middle"
+                      font-size="11px"
+                      fill="gray"
+                    >
+                      {yTitle}
+                    </text>
                   </Show>
                 </g>
                 {/* legend (discrete color for now) */}
