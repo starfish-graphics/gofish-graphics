@@ -6,7 +6,7 @@ import { MaybeValue } from "../data";
 type StackProps = {
   name?: string;
   key?: string;
-  direction: "x" | "y";
+  dir: "x" | "y";
   alignment?: "start" | "middle" | "end";
   sharedScale?: boolean;
   reverse?: boolean;
@@ -20,7 +20,7 @@ export const stack = (
     {
       ...props,
       spacing: 0,
-      mode: "edge-to-edge",
+      mode: "edge",
     },
     children
   );

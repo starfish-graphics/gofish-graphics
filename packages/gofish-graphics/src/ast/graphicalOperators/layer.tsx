@@ -12,11 +12,11 @@ import * as Interval from "../../util/interval";
 import { computeSize } from "../../util";
 import { CoordinateTransform } from "../coordinateTransforms/coord";
 import { coord } from "../coordinateTransforms/coord";
-import { createOperatorSequential } from "../withGoFish";
+import { createNodeOperatorSequential } from "../withGoFish";
 import { GoFishAST } from "../_ast";
 import { applyConstraints } from "../constraints";
 
-export const layer = createOperatorSequential(
+export const layer = createNodeOperatorSequential(
   async (
     childrenOrOptions:
       | ({

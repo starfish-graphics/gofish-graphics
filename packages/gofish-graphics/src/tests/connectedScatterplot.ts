@@ -61,7 +61,7 @@ export const testConnectedScatterplot = () =>
         interpolation: "linear",
         stroke: "black",
         strokeWidth: 2,
-        mode: "center-to-center",
+        mode: "center",
       },
       For(drivingShifts, (d) => ref(`${d.year}`))
     ),

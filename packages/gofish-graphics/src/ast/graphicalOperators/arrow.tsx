@@ -4,7 +4,7 @@ import { GoFishNode } from "../_node";
 import { Size } from "../dims";
 import * as Monotonic from "../../util/monotonic";
 import { UNDEFINED, UnderlyingSpace } from "../underlyingSpace";
-import { createOperator } from "../withGoFish";
+import { createNodeOperator } from "../withGoFish";
 import { type ArrowOptions, getBoxToBoxArrow } from "perfect-arrows";
 import { bbox, union } from "../../util/bbox";
 
@@ -43,7 +43,7 @@ const defaultArrowOpts: Required<
   start: false,
 };
 
-export const arrow = createOperator(
+export const arrow = createNodeOperator(
   (opts: ArrowOpts, children: GoFishAST[]) => {
     const props = { ...defaultArrowOpts, ...opts };
 

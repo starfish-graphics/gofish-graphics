@@ -16,7 +16,7 @@ export const testBumpChart = () =>
     ),
     For(groupBy(newCarColors, "Color"), (d) =>
       ConnectY(
-        { strokeWidth: 1, mode: "center-to-center" },
+        { strokeWidth: 1, mode: "center" },
         For(d, (d) => ref(`${d.Color}-${d.Year}`))
       )
     ),

@@ -2,30 +2,33 @@ import { For } from "solid-js";
 import { GoFishNode, Placeable } from "../_node";
 import { Size } from "../dims";
 import { GoFishAST } from "../_ast";
-import { createOperator } from "../withGoFish";
+import { createNodeOperator } from "../withGoFish";
 import * as Monotonic from "../../util/monotonic";
 import { ORDINAL, UNDEFINED } from "../underlyingSpace";
 import { UnderlyingSpace } from "../underlyingSpace";
 
-export const table = createOperator(
+export const table = createNodeOperator(
   (
     {
       name,
       key,
-      numCols,
+      numCols: numColsOpt,
       spacing = 0,
       colKeys,
       rowKeys,
     }: {
       name?: string;
       key?: string;
-      numCols: number;
+      numCols?: number;
       spacing?: number | [number, number];
       colKeys?: string[];
       rowKeys?: string[];
     },
     children: GoFishAST[]
   ) => {
+    // Prefer explicit numCols; fall back to colKeys.length; finally to a
+    // single-row layout if neither is available.
+    const numCols = numColsOpt ?? colKeys?.length ?? children.length;
     const xSpacing = Array.isArray(spacing) ? spacing[0] : spacing;
     const ySpacing = Array.isArray(spacing) ? spacing[1] : spacing;
 

@@ -2,9 +2,9 @@ import { FancyDims } from "../dims";
 import { CoordinateTransform } from "../coordinateTransforms/coord";
 import { coord } from "../coordinateTransforms/coord";
 import { layer } from "./layer";
-import { createOperator } from "../withGoFish";
+import { createNodeOperator } from "../withGoFish";
 import { GoFishAST } from "../_ast";
-export const frame = createOperator(
+export const frame = createNodeOperator(
   (
     options: {
       key?: string;

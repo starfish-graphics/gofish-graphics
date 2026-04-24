@@ -204,7 +204,7 @@ export const testFishPolarRibbonChartTextured = (
           spacing: (2 * Math.PI) / 6,
           alignment: "start",
           sharedScale: true,
-          mode: "center-to-center",
+          mode: "center",
         },
         Object.entries(_.groupBy(seafood, "lake")).map(([lake, items]) =>
           stackY(

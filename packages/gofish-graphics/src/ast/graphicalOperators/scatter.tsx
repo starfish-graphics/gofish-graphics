@@ -1,7 +1,7 @@
 import { GoFishNode, Placeable } from "../_node";
 import { getValue, isValue, MaybeValue } from "../data";
 import { Dimensions, elaborateDims, FancyDims, Size } from "../dims";
-import { createOperator } from "../withGoFish";
+import { createNodeOperator } from "../withGoFish";
 import { GoFishAST } from "../_ast";
 import { Collection } from "lodash";
 import * as Monotonic from "../../util/monotonic";
@@ -16,7 +16,7 @@ const unwrapLodashArray = function <T>(value: T[] | Collection<T>): T[] {
   return value as T[];
 };
 
-type ScatterProps = {
+export type ScatterProps = {
   name?: string;
   key?: string;
   x?: MaybeValue<number>[];
@@ -75,7 +75,7 @@ function resolvePositionSpace(
   );
 }
 
-export const scatter = createOperator(
+export const scatter = createNodeOperator(
   (options: ScatterProps, children: GoFishAST[] | Collection<GoFishAST>) => {
     const {
       name,

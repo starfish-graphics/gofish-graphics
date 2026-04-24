@@ -9,9 +9,9 @@ import { getValue, isValue, MaybeValue } from "../data";
 import { Domain } from "../domain";
 import * as Monotonic from "../../util/monotonic";
 import { UNDEFINED, UnderlyingSpace } from "../underlyingSpace";
-import { createOperator } from "../withGoFish";
+import { createNodeOperator } from "../withGoFish";
 
-export const connect = createOperator(
+export const connect = createNodeOperator(
   (
     {
       direction,
@@ -20,7 +20,7 @@ export const connect = createOperator(
       stroke,
       strokeWidth,
       opacity,
-      mode = "edge-to-edge",
+      mode = "edge",
       mixBlendMode,
     }: {
       direction: FancyDirection;
@@ -29,7 +29,7 @@ export const connect = createOperator(
       stroke?: string;
       strokeWidth?: number;
       opacity?: number;
-      mode?: "edge-to-edge" | "center-to-center";
+      mode?: "edge" | "center";
       mixBlendMode?: "multiply" | "normal";
     },
     children: GoFishAST[]
@@ -59,7 +59,7 @@ export const connect = createOperator(
 
           const paths: Path[] = [];
 
-          if (mode === "edge-to-edge") {
+          if (mode === "edge") {
             for (const child of children) {
               // toggle embedding on the direction axis
               (child as GoFishAST).embed(direction);
@@ -80,7 +80,7 @@ export const connect = createOperator(
           let bboxMaxY = -Infinity;
 
           for (const [b0, b1] of bboxPairs) {
-            if (mode === "center-to-center") {
+            if (mode === "center") {
               const cx0 = (b0[0].min! + b0[0].max!) / 2;
               const cy0 = (b0[1].min! + b0[1].max!) / 2;
               const cx1 = (b1[0].min! + b1[0].max!) / 2;
@@ -99,7 +99,7 @@ export const connect = createOperator(
 
           if (dir === 0) {
             if (interpolation === "linear") {
-              if (mode === "center-to-center") {
+              if (mode === "center") {
                 for (const [b0, b1] of bboxPairs) {
                   const midX = (b0[0].max! + b1[0].min!) / 2;
                   const midY = (b0[1].max! + b1[1].min!) / 2;
@@ -190,7 +190,7 @@ export const connect = createOperator(
             }
           } else {
             if (interpolation === "linear") {
-              if (mode === "center-to-center") {
+              if (mode === "center") {
                 for (const [b0, b1] of bboxPairs) {
                   paths.push([
                     {
@@ -243,7 +243,7 @@ export const connect = createOperator(
                 }
               }
             } else if (interpolation === "bezier") {
-              if (mode === "center-to-center") {
+              if (mode === "center") {
                 for (const [b0, b1] of bboxPairs) {
                   paths.push([
                     {
@@ -352,7 +352,7 @@ export const connect = createOperator(
                       // filter="url(#crumpled-paper)"
                       style={{
                         "mix-blend-mode":
-                          (mixBlendMode ?? mode === "center-to-center")
+                          (mixBlendMode ?? mode === "center")
                             ? "normal"
                             : "multiply",
                       }}

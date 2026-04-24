@@ -62,7 +62,7 @@ export const testPolarCenterRibbonFishEdition = (size: { width: number; height: 
             spacing: (2 * Math.PI) / 6,
             alignment: "start",
             sharedScale: true,
-            mode: "center-to-center",
+            mode: "center",
           },
           Object.entries(_.groupBy(fishData, "Lake")).map(([Lake, items]) =>
             stack(

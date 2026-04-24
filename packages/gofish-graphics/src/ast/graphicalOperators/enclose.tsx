@@ -6,9 +6,9 @@ import { black, gray, tailwindColors } from "../../color";
 import { Domain } from "../domain";
 import * as Monotonic from "../../util/monotonic";
 import { UNDEFINED, UnderlyingSpace } from "../underlyingSpace";
-import { createOperator } from "../withGoFish";
+import { createNodeOperator } from "../withGoFish";
 
-export const enclose = createOperator(
+export const enclose = createNodeOperator(
   (
     {
       padding = 2,

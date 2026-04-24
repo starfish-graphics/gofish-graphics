@@ -3,10 +3,10 @@ import { Size, elaborateDims, FancyDims } from "../dims";
 import { getMeasure, getValue, isValue, MaybeValue } from "../data";
 import { POSITION, UNDEFINED, UnderlyingSpace } from "../underlyingSpace";
 import { interval } from "../../util/interval";
-import { createOperator } from "../withGoFish";
+import { createNodeOperator } from "../withGoFish";
 import { GoFishAST } from "../_ast";
 
-export const position = createOperator(
+export const position = createNodeOperator(
   (
     childrenOrOptions:
       | { key?: string; x?: MaybeValue<number>; y?: MaybeValue<number> }

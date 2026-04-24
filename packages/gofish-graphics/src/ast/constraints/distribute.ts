@@ -4,7 +4,7 @@ import { Axis, ConstraintRef, axisIndex, isPlacedOn } from "./shared";
 export interface DistributeOptions {
   dir: Axis;
   spacing?: number;
-  mode?: "edge-to-edge" | "center-to-center";
+  mode?: "edge" | "center";
   order?: "forward" | "reverse";
 }
 
@@ -12,7 +12,7 @@ export interface DistributeConstraint {
   type: "distribute";
   dir: Axis;
   spacing: number;
-  mode: "edge-to-edge" | "center-to-center";
+  mode: "edge" | "center";
   order: "forward" | "reverse";
   children: ConstraintRef[];
 }
@@ -24,7 +24,7 @@ export const createDistributeConstraint = (
   type: "distribute",
   dir: options.dir,
   spacing: options.spacing ?? 0,
-  mode: options.mode ?? "edge-to-edge",
+  mode: options.mode ?? "edge",
   order: options.order ?? "forward",
   children,
 });
@@ -44,7 +44,7 @@ export function applyDistribute(
     // No pre-placed items — start from 0, walk forward
     let pos = 0;
     for (const target of ordered) {
-      if (constraint.mode === "center-to-center") {
+      if (constraint.mode === "center") {
         target.place(constraint.dir, pos, "center");
         pos += constraint.spacing;
       } else {
@@ -55,7 +55,7 @@ export function applyDistribute(
     return;
   }
 
-  if (constraint.mode === "edge-to-edge") {
+  if (constraint.mode === "edge") {
     // Walk forward from anchor (items after it)
     let pos = ordered[anchorIdx].dims[idx].max! + constraint.spacing;
     for (let i = anchorIdx + 1; i < ordered.length; i++) {

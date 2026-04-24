@@ -32,7 +32,7 @@ const boxAndWhisker = ({
   return Frame({}, [
     rect({ w: 8, h: 1, y: v(min), fill: "gray" }).name(minName),
     rect({ w: 8, h: 1, y: v(max), fill: "gray" }).name(maxName),
-    ConnectY({ mode: "center-to-center", strokeWidth: 1 }, [
+    ConnectY({ mode: "center", strokeWidth: 1 }, [
       ref(minName),
       ref(maxName),
     ]),
