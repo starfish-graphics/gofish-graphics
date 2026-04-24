@@ -286,6 +286,7 @@ export const gofish = (
     debug = false,
     defs,
     axes = false,
+    axisFields,
     colorConfig,
   }: {
     w: number;
@@ -295,7 +296,8 @@ export const gofish = (
     transform?: { x?: number; y?: number };
     debug?: boolean;
     defs?: JSX.Element[];
-    axes?: boolean;
+    axes?: AxesOptions;
+    axisFields?: { x?: string; y?: string };
     colorConfig?: ColorConfig;
   },
   child: GoFishNode | Promise<GoFishNode>
@@ -362,6 +364,7 @@ export const gofish = (
               height: h,
               defs,
               axes,
+              axisFields,
               scaleContext: data.scaleContext,
               keyContext: data.keyContext,
               sizeDomains: data.sizeDomains,
@@ -447,6 +450,7 @@ export const render = (
     transform,
     defs,
     axes,
+    axisFields,
     scaleContext: scaleContextParam,
     keyContext: keyContextParam,
     sizeDomains,
@@ -460,6 +464,7 @@ export const render = (
     transform?: string;
     defs?: JSX.Element[];
     axes?: AxesOptions;
+    axisFields?: { x?: string; y?: string };
     scaleContext: ScaleContext | null;
     keyContext: KeyContext | null;
     sizeDomains?: [any, any];
@@ -477,6 +482,10 @@ export const render = (
   const keyContext = keyContextParam;
   const { x: axisX, y: axisY, xTitle, yTitle } = resolveAxes(axes);
   const axisVisibility = { x: axisX, y: axisY };
+  const resolvedXTitle =
+    xTitle === false ? undefined : (xTitle ?? axisFields?.x);
+  const resolvedYTitle =
+    yTitle === false ? undefined : (yTitle ?? axisFields?.y);
   const hasAnyVisibleAxis = axisVisibility.x || axisVisibility.y;
   const axisPaddingX = axisVisibility.y ? 100 : 0;
   const axisPaddingY = axisVisibility.x ? 100 : 0;
@@ -1122,7 +1131,7 @@ export const render = (
                     })()}
                   </Show>
                   {/* x axis title */}
-                  <Show when={axisVisibility.x && xTitle !== false}>
+                  <Show when={axisVisibility.x && resolvedXTitle}>
                     <text
                       transform="scale(1, -1)"
                       x={width / 2}
@@ -1132,11 +1141,11 @@ export const render = (
                       font-size="11px"
                       fill="gray"
                     >
-                      {xTitle}
+                      {resolvedXTitle}
                     </text>
                   </Show>
                   {/* y axis title */}
-                  <Show when={axisVisibility.y && yTitle !== false}>
+                  <Show when={axisVisibility.y && resolvedYTitle}>
                     <text
                       transform={`translate(${-PADDING * 3.5}, ${height / 2}) scale(1, -1) rotate(-90)`}
                       text-anchor="middle"
@@ -1144,7 +1153,7 @@ export const render = (
                       font-size="11px"
                       fill="gray"
                     >
-                      {yTitle}
+                      {resolvedYTitle}
                     </text>
                   </Show>
                 </g>

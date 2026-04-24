@@ -390,10 +390,25 @@ export class ChartBuilder<TInput, TOutput = TInput> {
     container: Parameters<GoFishNode["render"]>[0],
     options: Parameters<GoFishNode["render"]>[1]
   ): Promise<ReturnType<GoFishNode["render"]>> {
+    const inferredFields: { x?: string; y?: string } = {};
+    for (const op of this.operators) {
+      const meta = (op as any).__axisFields as
+        | { x?: string; y?: string }
+        | undefined;
+      if (meta?.x) inferredFields.x ??= meta.x;
+      if (meta?.y) inferredFields.y ??= meta.y;
+    }
+    const markMeta = (this.finalMark as any)?.__axisFields as
+      | { x?: string; y?: string }
+      | undefined;
+    if (markMeta?.x) inferredFields.x ??= markMeta.x;
+    if (markMeta?.y) inferredFields.y ??= markMeta.y;
+
     const node = await this.resolve();
     return node.render(container, {
       ...options,
       colorConfig: this.options?.color,
+      axisFields: inferredFields,
     });
   }
 }
@@ -486,7 +501,8 @@ export function spread<T>(
     alignment: opts?.alignment ?? "baseline",
   };
 
-  return async (mark: Mark<T[]>) => {
+  const spatialDir = (finalOptions.dir ?? "x").startsWith("x") ? "x" : "y";
+  const op = async (mark: Mark<T[]>) => {
     return async (
       d: T[],
       key?: string | number,
@@ -498,8 +514,6 @@ export function spread<T>(
           ? Map.groupBy(d, (row) => (row as any)[field])
           : Map.groupBy(d, field as any)
         : d;
-
-      const spatialDir = (finalOptions.dir ?? "x").startsWith("x") ? "x" : "y";
 
       return Spread(
         {
@@ -532,6 +546,11 @@ export function spread<T>(
       );
     };
   };
+  if (field !== undefined) {
+    (op as any).__axisFields =
+      spatialDir === "x" ? { x: String(field) } : { y: String(field) };
+  }
+  return op;
 }
 
 /** Mark combinator form: stack(opts, marks[]) → NameableMark */

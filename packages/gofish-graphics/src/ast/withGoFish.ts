@@ -482,6 +482,17 @@ export function createMark<
       return node;
     };
 
+    // Infer axis field names from string-valued size/pos channels
+    const axisFields: { x?: string; y?: string } = {};
+    const o = markOpts as any;
+    if (typeof o.w === "string") axisFields.x = o.w;
+    else if (typeof o.x === "string") axisFields.x = o.x;
+    if (typeof o.h === "string") axisFields.y = o.h;
+    else if (typeof o.y === "string") axisFields.y = o.y;
+    if (axisFields.x || axisFields.y) {
+      (baseMark as any).__axisFields = axisFields;
+    }
+
     const nameMethod = (
       layerName: string
     ): Mark<T | T[] | { item: T | T[]; key: number | string }> => {
@@ -503,6 +514,13 @@ export function createMark<
         return node;
       };
     };
+    const nameMethodWithFields = (layerName: string) => {
+      const fn = nameMethod(layerName);
+      if ((baseMark as any).__axisFields) {
+        (fn as any).__axisFields = (baseMark as any).__axisFields;
+      }
+      return fn;
+    };
     const labelMethod = (
       accessor: LabelAccessor,
       options?: LabelOptions
@@ -518,7 +536,7 @@ export function createMark<
       };
     };
     Object.defineProperty(baseMark, "name", {
-      value: nameMethod,
+      value: nameMethodWithFields,
       writable: true,
       configurable: true,
     });
