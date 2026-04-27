@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
 import { titanic } from "../../src/data/titanic";
-import { Frame, SpreadX, SpreadY, StackY, rect, For, ConnectX, ref } from "../../src/lib";
+import { frame, spreadX, spreadY, stackY, rect, For, connectX, ref } from "../../src/lib";
 import { color6, gray, neutral } from "../../src/color";
 import { groupBy } from "lodash";
 import _ from "lodash";
@@ -34,9 +34,9 @@ export const Default: StoryObj<Args> = {
     const container = initializeContainer();
     const layerSpacing = 64;
     const internalSpacing = 2;
-    Frame([
-      SpreadX({ spacing: layerSpacing, alignment: "middle" }, [
-        StackY(
+    frame([
+      spreadX({ spacing: layerSpacing, alignment: "middle" }, [
+        stackY(
           { spacing: 0, alignment: "middle" },
           For(groupBy(titanic, "class"), (items, cls) =>
             rect({
@@ -46,11 +46,11 @@ export const Default: StoryObj<Args> = {
             }).name(`${cls}-src`)
           )
         ),
-        SpreadY(
+        spreadY(
           { spacing: internalSpacing, alignment: "middle" },
           For(groupBy(titanic, "class"), (items, cls) =>
-            SpreadX({ spacing: layerSpacing, alignment: "middle" }, [
-              StackY(
+            spreadX({ spacing: layerSpacing, alignment: "middle" }, [
+              stackY(
                 { spacing: 0, alignment: "middle" },
                 For(groupBy(items, "sex"), (items, sex) =>
                   rect({
@@ -60,15 +60,15 @@ export const Default: StoryObj<Args> = {
                   }).name(`${cls}-${sex}-src`)
                 )
               ).name(`${cls}-tgt`),
-              SpreadY(
+              spreadY(
                 {
                   h: _(items).sumBy("count") / 10,
                   spacing: internalSpacing * 2,
                   alignment: "middle",
                 },
                 For(groupBy(items, "sex"), (items, sex) =>
-                  SpreadX({ spacing: layerSpacing, alignment: "middle" }, [
-                    StackY(
+                  spreadX({ spacing: layerSpacing, alignment: "middle" }, [
+                    stackY(
                       {
                         spacing: 0,
                         alignment: "middle",
@@ -81,7 +81,7 @@ export const Default: StoryObj<Args> = {
                         }).name(`${cls}-${sex}-${survived}-src`)
                       )
                     ).name(`${cls}-${sex}-tgt`),
-                    SpreadY(
+                    spreadY(
                       {
                         w: 40,
                         spacing: internalSpacing * 4,
@@ -109,7 +109,7 @@ export const Default: StoryObj<Args> = {
         ),
       ]),
       For(groupBy(titanic, "class"), (items, cls) => [
-        ConnectX(
+        connectX(
           {
             fill: classColor[cls],
             interpolation: "bezier",
@@ -118,7 +118,7 @@ export const Default: StoryObj<Args> = {
           [ref(`${cls}-src`), ref(`${cls}-tgt`)]
         ),
         For(groupBy(items, "sex"), (sexItems, sex) => [
-          ConnectX(
+          connectX(
             {
               fill: sex === "Female" ? color6[4] : color6[5],
               interpolation: "bezier",
@@ -127,7 +127,7 @@ export const Default: StoryObj<Args> = {
             [ref(`${cls}-${sex}-src`), ref(`${cls}-${sex}-tgt`)]
           ),
           For(groupBy(sexItems, "survived"), (survivedItems, survived) =>
-            ConnectX(
+            connectX(
               {
                 fill:
                   sex === "Female"

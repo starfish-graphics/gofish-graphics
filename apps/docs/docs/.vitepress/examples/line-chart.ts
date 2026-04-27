@@ -2,7 +2,7 @@ const catchLocationsArray = Object.entries(lakeLocations).map(
   ([lake, { x, y }]) => ({ lake, x, y })
 );
 
-gf.Layer([
+gf.layer([
   gf
     .Chart(catchLocationsArray)
     .flow(gf.scatter({ by: "lake", x: "x", y: "y" }))

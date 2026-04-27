@@ -1,22 +1,22 @@
 import _ from "lodash";
 import { caltrain, caltrainStopOrder } from "../data/caltrain";
 import {
-  ConnectY,
+  connectY,
   ellipse,
   For,
-  Frame,
+  frame,
   groupBy,
   rect,
   ref,
-  StackY,
+  stackY,
   v,
 } from "../lib";
 
 const caltrainProcessed = caltrain.filter((d) => d.Type !== "Bullet");
 
 export const testStringLine = () =>
-  Frame({}, [
-    StackY(
+  frame({}, [
+    stackY(
       {
         spacing: 8,
         alignment: "start",
@@ -31,7 +31,7 @@ export const testStringLine = () =>
           "Station"
         ),
         (d, key) =>
-          Frame({ key }, [
+          frame({ key }, [
             rect({ w: 0, h: 0 }),
             For(d, (d) =>
               ellipse({ x: d.Time / 3, w: 4, h: 4, fill: v(d.Direction) }).name(
@@ -42,7 +42,7 @@ export const testStringLine = () =>
       )
     ),
     For(groupBy(caltrainProcessed, "Train"), (d) =>
-      ConnectY(
+      connectY(
         { strokeWidth: 1, mode: "center" },
         For(d, (d) => ref(`${d.Train}-${d.Station}-${d.Time}`))
       )

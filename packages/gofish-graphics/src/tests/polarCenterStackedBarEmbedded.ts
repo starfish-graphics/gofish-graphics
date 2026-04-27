@@ -31,16 +31,14 @@ export const testPolarCenterStackedBarEmbedded = () =>
     stack(
       {
         x: 2,
-        direction: 1,
+        dir: 1,
         spacing: (2 * Math.PI) / 3,
         alignment: "start",
         sharedScale: true,
         mode: "center",
       },
       Object.entries(_.groupBy(data, "category")).map(([category, items]) =>
-        stack(
-          {
-            direction: 0,
+        stack({ dir: 0,
             spacing: 0,
             alignment: "middle",
           },

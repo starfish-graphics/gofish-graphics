@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
-import { Chart, Layer, scatter, circle } from "../../src/lib";
+import { Chart, layer, scatter, circle } from "../../src/lib";
 import data from "vega-datasets";
 
 const meta: Meta = {
-  title: "Vega-Lite/Colored Scatter Plot",
+  title: "Vega-Lite/Colored scatter Plot",
   argTypes: {
     w: { control: { type: "number", min: 100, max: 1000, step: 10 } },
     h: {
@@ -38,7 +38,7 @@ export const Default: StoryObj<Args> = {
       const speciesList = Array.from(new Set(penguins.map((d) => d["Species"])));
       const bySpecies = (species: string) => penguins.filter((d) => d["Species"] === species);
 
-    Layer(
+    layer(
       speciesList.map((species) => () =>
         Chart(bySpecies(species))
           .flow(

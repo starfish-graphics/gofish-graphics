@@ -1,7 +1,7 @@
 const caltrainProcessed = caltrain.filter((d) => d.Type !== "Bullet");
 
-gf.Frame({}, [
-  gf.StackY(
+gf.frame({}, [
+  gf.stackY(
     {
       spacing: 8,
       alignment: "start",
@@ -16,7 +16,7 @@ gf.Frame({}, [
         "Station"
       ),
       (d, key) =>
-        gf.Frame({ key }, [
+        gf.frame({ key }, [
           gf.rect({ w: 0, h: 0 }),
           gf.For(d, (d) =>
             gf
@@ -27,7 +27,7 @@ gf.Frame({}, [
     )
   ),
   gf.For(_.groupBy(caltrainProcessed, "Train"), (d) =>
-    gf.ConnectY(
+    gf.connectY(
       { strokeWidth: 1, mode: "center-to-center" },
       gf.For(d, (d) => gf.ref(`${d.Train}-${d.Station}-${d.Time}`))
     )

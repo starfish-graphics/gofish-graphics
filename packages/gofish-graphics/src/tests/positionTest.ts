@@ -1,7 +1,7 @@
-import { Layer, Position, rect } from "../lib";
+import { layer, position, rect } from "../lib";
 
 export const testPosition = () => {
-  return Position(
+  return position(
     { x: 200, y: 150 },
     [
       rect({
@@ -14,14 +14,14 @@ export const testPosition = () => {
 };
 
 export const testMultiplePositions = () => {
-  return Layer([
-    Position({ x: 100, y: 100 }, [
+  return layer([
+    position({ x: 100, y: 100 }, [
       rect({ w: 40, h: 40, fill: "red" })
     ]),
-    Position({ x: 200, y: 150 }, [
+    position({ x: 200, y: 150 }, [
       rect({ w: 40, h: 40, fill: "blue" })
     ]),
-    Position({ x: 300, y: 200 }, [
+    position({ x: 300, y: 200 }, [
       rect({ w: 40, h: 40, fill: "green" })
     ]),
   ]);

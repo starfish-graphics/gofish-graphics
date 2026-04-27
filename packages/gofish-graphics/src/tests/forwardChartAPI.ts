@@ -1,14 +1,14 @@
 import { mix } from "spectral.js";
 import { Chart } from "../ast/marks/chart";
 import { seafood } from "../data/catch";
-import { color6_old, For, groupBy, rect, SpreadX, StackX, StackY, v } from "../lib";
+import { color6_old, For, groupBy, rect, spreadX, stackX, stackY, v } from "../lib";
 import _ from "lodash";
 
 // export const testIcicleForwardChartAPI = () => {
 //   ForwardChart(titanic)
 //     .stackX({ spacing: 0, alignment: "middle"}, [
 //       rect({ w: 40, h: _(titanic).sumBy("count") / 10, fill: "gray" }),
-//       StackY("class", { spacing: 0, alignment: "middle"})
+//       stackY("class", { spacing: 0, alignment: "middle"})
 //         .stackX()
 //     ])
 // }
@@ -20,42 +20,42 @@ rect({ h: 10, fill: "red" }).stackY("survived", {
 });
 
 pipe(
-  StackY("sex", { spacing: 0, alignment: "middle" }),
-  StackX({ spacing: 0, alignment: "middle" }, [
+  stackY("sex", { spacing: 0, alignment: "middle" }),
+  stackX({ spacing: 0, alignment: "middle" }, [
     rect({
       w: 40,
       h: _(items).sumBy("count") / 10,
       fill: sex === "Female" ? color6_old[2] : color6_old[3],
     }),
     pipe(
-      StackY("survived", { w: 40, spacing: 0, alignment: "middle" }),
+      stackY("survived", { w: 40, spacing: 0, alignment: "middle" }),
       rect({ h: 10, fill: "red" })
     ),
   ])
 );
 
 /* export const testIcicleAPIv2 = () =>
-  StackX({ spacing: 0, alignment: "middle" }, [
+  stackX({ spacing: 0, alignment: "middle" }, [
     rect({
       w: 40,
       h: _(titanic).sumBy("count") / 10,
       fill: "gray",
     }),
-    StackY(
+    stackY(
       { spacing: 0, alignment: "middle" },
       For(groupBy(titanic, "class"), (items, cls) =>
-        StackX({ h: _(items).sumBy("count") / 10, spacing: 0, alignment: "start" }, [
+        stackX({ h: _(items).sumBy("count") / 10, spacing: 0, alignment: "start" }, [
           rect({ w: 40, fill: classColor[cls as keyof typeof classColor] }),
-          StackY(
+          stackY(
             { spacing: 0, alignment: "middle" },
             For(groupBy(items, "sex"), (items, sex) =>
-              StackX({ spacing: 0, alignment: "middle" }, [
+              stackX({ spacing: 0, alignment: "middle" }, [
                 rect({
                   w: 40,
                   h: _(items).sumBy("count") / 10,
                   fill: sex === "Female" ? color6_old[2] : color6_old[3],
                 }),
-                StackY(
+                stackY(
                   {
                     w: 40,
                     spacing: 0,
@@ -88,7 +88,7 @@ pipe(
   ]); */
 
 export const chartRectBF = () =>
-  SpreadX(
+  spreadX(
     { spacing: 2, sharedScale: true },
     For(groupBy(seafood, "species"), (d) =>
       rect({ w: 32, h: v(_.sumBy(d, "count")), fill: v(d[0].species) })

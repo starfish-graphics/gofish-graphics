@@ -6,7 +6,7 @@ import data from "vega-datasets";
 // Mirrors: https://vega.github.io/vega-lite/examples/point_2d.html
 
 const meta: Meta = {
-  title: "Vega-Lite/Simple Scatter Plot",
+  title: "Vega-Lite/Simple scatter Plot",
   argTypes: {
     w: { control: { type: "number", min: 100, max: 1000, step: 10 } },
     h: {

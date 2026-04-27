@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
 import bottlePng from "../assets/wilsonblanco.png";
-import { Atop, image, In, Mask as MaskOp, Out, Over, rect, Xor } from "../../src/lib";
+import { atop, image, In, mask as MaskOp, out, over, rect, xor } from "../../src/lib";
 
 const meta: Meta = {
   title: "Low Level Syntax/Porter-Duff Relations",
@@ -68,7 +68,7 @@ const renderMask = (args: Args) => {
 export const Union: StoryObj<Args> = {
   name: "Union (over)",
   args: DEFAULT_ARGS,
-  render: (args: Args) => renderComposite(args, Over),
+  render: (args: Args) => renderComposite(args, over),
 };
 
 export const Intersect: StoryObj<Args> = {
@@ -80,23 +80,23 @@ export const Intersect: StoryObj<Args> = {
 export const Exclude: StoryObj<Args> = {
   name: "Exclude (xor)",
   args: DEFAULT_ARGS,
-  render: (args: Args) => renderComposite(args, Xor),
+  render: (args: Args) => renderComposite(args, xor),
 };
 
 export const Subtract: StoryObj<Args> = {
   name: "Subtract (out)",
   args: DEFAULT_ARGS,
-  render: (args: Args) => renderComposite(args, Out),
+  render: (args: Args) => renderComposite(args, out),
 };
 
 export const Paint: StoryObj<Args> = {
   name: "Paint (atop)",
   args: DEFAULT_ARGS,
-  render: (args: Args) => renderComposite(args, Atop),
+  render: (args: Args) => renderComposite(args, atop),
 };
 
-export const Mask: StoryObj<Args> = {
-  name: "Mask (none)",
+export const mask: StoryObj<Args> = {
+  name: "mask (none)",
   args: DEFAULT_ARGS,
   render: (args: Args) => renderMask(args),
 };

@@ -1,4 +1,4 @@
-gf.Layer([
+gf.layer([
   gf
     .Chart(streamgraphData)
     .flow(gf.spread({ by: "x", dir: "x", spacing: 50 }))

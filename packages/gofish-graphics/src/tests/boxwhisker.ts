@@ -1,12 +1,12 @@
 import _ from "lodash";
 import {
-  ConnectY,
+  connectY,
   For,
-  Frame,
+  frame,
   groupBy,
   rect,
   ref,
-  SpreadX,
+  spreadX,
   v,
 } from "../lib";
 import { genderPayGap, payGrade } from "../data/genderPayGap";
@@ -29,10 +29,10 @@ const boxAndWhisker = ({
 }) => {
   const minName = `min-${Math.random().toString(36).substring(2, 9)}`;
   const maxName = `max-${Math.random().toString(36).substring(2, 9)}`;
-  return Frame({}, [
+  return frame({}, [
     rect({ w: 8, h: 1, y: v(min), fill: "gray" }).name(minName),
     rect({ w: 8, h: 1, y: v(max), fill: "gray" }).name(maxName),
-    ConnectY({ mode: "center", strokeWidth: 1 }, [
+    connectY({ mode: "center", strokeWidth: 1 }, [
       ref(minName),
       ref(maxName),
     ]),
@@ -58,7 +58,7 @@ export const testPairBoxWhisker = () => {
   const male = payGradeFive.find((d) => d.Gender === "Male")!;
   const female = payGradeFive.find((d) => d.Gender === "Female")!;
 
-  return SpreadX(
+  return spreadX(
     {
       spacing: 8,
       sharedScale: true,
@@ -85,7 +85,7 @@ export const testPairBoxWhisker = () => {
 };
 
 export const testBoxWhiskerPlot = () =>
-  SpreadX(
+  spreadX(
     {
       spacing: 8,
       sharedScale: true,
@@ -96,7 +96,7 @@ export const testBoxWhiskerPlot = () =>
         "Pay Grade"
       ),
       (d, key) =>
-        SpreadX(
+        spreadX(
           {
             key,
             spacing: 8,

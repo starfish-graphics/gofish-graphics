@@ -6,7 +6,7 @@ const lakeTotals = Object.entries(_.groupBy(seafood, "lake")).map(
   })
 );
 
-gf.Layer([
+gf.layer([
   gf
     .Chart(lakeTotals)
     .flow(gf.spread({ by: "lake", dir: "x", spacing: 64 }))

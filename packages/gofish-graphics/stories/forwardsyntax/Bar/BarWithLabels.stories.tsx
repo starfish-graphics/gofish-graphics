@@ -5,11 +5,11 @@ import {
   Chart,
   spread,
   rect,
-  Layer,
+  layer,
   select,
   text,
   ref,
-  Spread,
+  spread,
   sumBy,
 } from "../../../src/lib";
 import { group } from "../../../src/ast/marks/chart";
@@ -34,15 +34,14 @@ export const Default: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    Layer([
+    layer([
       Chart(seafood)
         .flow(spread({ by: "lake",  dir: "x" }))
         .mark(rect({ h: "count" }).name("bars")),
       Chart(select("bars") as any)
         .flow(group({ by: "lake" }) as any)
         .mark(((d: any[]) => {
-          return Spread(
-            { direction: "y", alignment: "middle", spacing: 10 },
+          return spread({ dir: "y", alignment: "middle", spacing: 10 },
             [
               ref(d[0] as any),
               text({ text: String(sumBy(d, "count")) }),

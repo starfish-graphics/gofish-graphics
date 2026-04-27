@@ -34,7 +34,7 @@ type Args = { w: number; h: number };
 // Infers the best position based on shape geometry.
 
 export const Default: StoryObj<Args> = {
-  name: "Position: default",
+  name: "position: default",
   args: { w: 400, h: 300 },
   render: (args) => {
     const container = initializeContainer();
@@ -50,7 +50,7 @@ export const Default: StoryObj<Args> = {
 // Centred within the shape. Auto-contrasts against the fill.
 
 export const Center: StoryObj<Args> = {
-  name: "Position: center",
+  name: "position: center",
   args: { w: 400, h: 300 },
   render: (args) => {
     const container = initializeContainer();
@@ -74,7 +74,7 @@ export const Center: StoryObj<Args> = {
 // Sits above the top edge of the shape.
 
 export const Above: StoryObj<Args> = {
-  name: "Position: outset (top)",
+  name: "position: outset (top)",
   args: { w: 400, h: 300 },
   render: (args) => {
     const container = initializeContainer();
@@ -90,7 +90,7 @@ export const Above: StoryObj<Args> = {
 // Sits below the bottom edge of each segment.
 
 export const Below: StoryObj<Args> = {
-  name: "Position: outset-bottom",
+  name: "position: outset-bottom",
   args: { w: 400, h: 300 },
   render: (args) => {
     const container = initializeContainer();
@@ -114,7 +114,7 @@ export const Below: StoryObj<Args> = {
 // Sits to the left of each segment.
 
 export const Left: StoryObj<Args> = {
-  name: "Position: outset-left",
+  name: "position: outset-left",
   args: { w: 400, h: 300 },
   render: (args) => {
     const container = initializeContainer();
@@ -139,7 +139,7 @@ export const Left: StoryObj<Args> = {
 // Sits to the right of the shape. Natural for horizontal bars.
 
 export const Right: StoryObj<Args> = {
-  name: "Position: outset-right",
+  name: "position: outset-right",
   args: { w: 400, h: 300 },
   render: (args) => {
     const container = initializeContainer();
@@ -155,7 +155,7 @@ export const Right: StoryObj<Args> = {
 // Above the bar, label anchored at the left edge (start). Good for x-stacked bars.
 
 export const AboveStart: StoryObj<Args> = {
-  name: "Position: outset-top-start",
+  name: "position: outset-top-start",
   args: { w: 500, h: 300 },
   render: (args) => {
     const container = initializeContainer();
@@ -179,7 +179,7 @@ export const AboveStart: StoryObj<Args> = {
 // Above the bar, label anchored at the right edge (end). Good for x-stacked bars.
 
 export const AboveEnd: StoryObj<Args> = {
-  name: "Position: outset-top-end",
+  name: "position: outset-top-end",
   args: { w: 500, h: 300 },
   render: (args) => {
     const container = initializeContainer();
@@ -414,7 +414,7 @@ export const NormalizedStackedBarWithLabels: StoryObj<Args> = {
   },
 };
 
-// ─── Position showcase ────────────────────────────────────────────────────────
+// ─── position showcase ────────────────────────────────────────────────────────
 // A single large rectangle with every position string rendered at its computed
 // location. Blue = inset positions, amber = outset positions.
 
@@ -447,7 +447,7 @@ const SHOWCASE_POSITIONS: LabelPosition[] = [
 ];
 
 export const PositionShowcase: StoryObj = {
-  name: "Position showcase – all positions on one rect",
+  name: "position showcase – all positions on one rect",
   render: () => {
     const svgW = 700;
     const svgH = 460;

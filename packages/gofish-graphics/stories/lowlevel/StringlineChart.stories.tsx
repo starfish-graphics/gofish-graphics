@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
 import { caltrain, caltrainStopOrder } from "../../src/data/caltrain";
-import { Frame, SpreadY, For, rect, ellipse, ConnectY, ref, v } from "../../src/lib";
+import { frame, spreadY, For, rect, ellipse, connectY, ref, v } from "../../src/lib";
 import { groupBy, orderBy } from "lodash";
 import _ from "lodash";
 
@@ -26,8 +26,8 @@ export const Default: StoryObj<Args> = {
     const container = initializeContainer();
     const caltrainProcessed = caltrain.filter((d) => d.Type !== "Bullet");
 
-    Frame({}, [
-      SpreadY(
+    frame({}, [
+      spreadY(
         {
           dir: "ttb",
           spacing: 8,
@@ -43,7 +43,7 @@ export const Default: StoryObj<Args> = {
             "Station"
           ),
           (d, key) =>
-            Frame({ key }, [
+            frame({ key }, [
               rect({ w: 0, h: 0 }),
               For(d, (d) =>
                 ellipse({ x: d.Time / 3, w: 4, h: 4, fill: v(d.Direction) }).name(
@@ -54,7 +54,7 @@ export const Default: StoryObj<Args> = {
         )
       ),
       For(groupBy(caltrainProcessed, "Train"), (d) =>
-        ConnectY(
+        connectY(
           { strokeWidth: 1, mode: "center-to-center" },
           For(d, (d) => ref(`${d.Train}-${d.Station}-${d.Time}`))
         )

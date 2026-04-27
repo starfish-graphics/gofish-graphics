@@ -1,4 +1,4 @@
-gf.Layer([
+gf.layer([
   gf
     .Chart(seafood)
     .flow(

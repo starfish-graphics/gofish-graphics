@@ -1,4 +1,4 @@
-gf.Layer([
+gf.layer([
   gf
     .Chart(drivingShifts)
     .flow(gf.scatter({ by: "year", x: "miles", y: "gas" }))

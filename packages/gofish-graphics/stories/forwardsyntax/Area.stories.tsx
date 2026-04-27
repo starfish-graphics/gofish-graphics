@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
 import { seafood } from "../../src/data/catch";
 import { streamgraphData } from "../../src/data/streamgraphData";
-import { Chart, spread, blank, stack, Layer, select } from "../../src/lib";
+import { Chart, spread, blank, stack, layer, select } from "../../src/lib";
 import { area, group, log } from "../../src/ast/marks/chart";
 
 const meta: Meta = {
@@ -25,7 +25,7 @@ export const Basic: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    Layer([
+    layer([
       Chart(seafood)
         .flow(spread({ by: "lake",  dir: "x", spacing: 64 }))
         .mark(blank({ h: "count" }).name("points")),
@@ -46,7 +46,7 @@ export const Stacked: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    Layer([
+    layer([
       Chart(seafood)
         .flow(
           spread({ by: "lake",  dir: "x", spacing: 64 }),
@@ -70,7 +70,7 @@ export const Layered: StoryObj<Args> = {
   args: { w: 500, h: 300 },
   render: (args: Args) => {
     const container = initializeContainer();
-    Layer([
+    layer([
       Chart(streamgraphData)
         .flow(group({ by: "c" }), spread({ by: "x",  dir: "x", spacing: 50 }))
         .mark(blank({ h: "y", fill: "c" }).name("points")),

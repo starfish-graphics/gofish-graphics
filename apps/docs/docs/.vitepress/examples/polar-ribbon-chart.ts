@@ -1,4 +1,4 @@
-gf.Layer({ coord: gf.clock() }, [
+gf.layer({ coord: gf.clock() }, [
   gf
     .Chart(seafood)
     .flow(

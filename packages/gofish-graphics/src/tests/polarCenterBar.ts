@@ -30,7 +30,7 @@ export const testPolarCenterBar = (size: { width: number; height: number }) =>
       stack(
         {
           x: 20,
-          direction: 1,
+          dir: 1,
           spacing: (2 * Math.PI) / 6,
           alignment: "start",
           sharedScale: true,

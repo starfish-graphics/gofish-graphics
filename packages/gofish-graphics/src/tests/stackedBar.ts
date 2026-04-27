@@ -20,12 +20,10 @@ const data = [
 export const testStackedBar = (size: { width: number; height: number }) =>
   gofish(
     { width: size.width, height: size.height },
-    stack(
-      { direction: 0, spacing: 8, alignment: "end", sharedScale: true },
+    stack({ dir: 0, spacing: 8, alignment: "end", sharedScale: true },
       // TODO: I could probably make the width be uniform flexible basically
       Object.entries(_.groupBy(data, "category")).map(([category, items]) =>
-        stack(
-          { direction: 1, spacing: 0, alignment: "middle" },
+        stack({ dir: 1, spacing: 0, alignment: "middle" },
           items.toReversed().map((d) =>
             rect({
               w: 30,

@@ -1,11 +1,11 @@
 import _ from "lodash";
 import { NewCarColor, newCarColors } from "../data/newCarColors";
-import { ConnectY, ellipse, For, Frame, groupBy, ref, StackY, v } from "../lib";
+import { connectY, ellipse, For, frame, groupBy, ref, stackY, v } from "../lib";
 
 export const testBumpChart = () =>
-  Frame({}, [
+  frame({}, [
     For(groupBy(newCarColors, "Year"), (d, key) =>
-      StackY(
+      stackY(
         {
           x: ((key as number) - 2000) * 10,
           spacing: 8,
@@ -15,7 +15,7 @@ export const testBumpChart = () =>
       )
     ),
     For(groupBy(newCarColors, "Color"), (d) =>
-      ConnectY(
+      connectY(
         { strokeWidth: 1, mode: "center" },
         For(d, (d) => ref(`${d.Color}-${d.Year}`))
       )
