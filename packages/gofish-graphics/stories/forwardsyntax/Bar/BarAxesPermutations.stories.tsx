@@ -81,7 +81,7 @@ export const AxesYOnlyUndefinedX: StoryObj<Args> = {
 export const AxesCustomXTitle: StoryObj<Args> = {
   args: { w: 400, h: 400 },
   render: (args: Args) =>
-    renderBar(args, { x: { title: "Lake" }, y: true }),
+    renderBar(args, { x: { title: "Sampling Location" }, y: true }),
 };
 
 // title: false suppresses the inferred title
