@@ -281,14 +281,14 @@ function stripFactoryKeys<Options extends Record<string, any>>(
 }
 
 /** Build the low-level opts passed to `layout`. */
-function buildLayoutOpts<Datum, Options>(
+function buildLayoutOpts<Datum, Options extends Record<string, any>>(
   channels: ChannelAnnotations<Options> | undefined,
   opts: Options,
   d: Datum | Datum[],
   entries: Map<string | number, Datum[]> | undefined,
   keys: Record<string, string[]> | undefined
 ): Options {
-  const withChannels = applyChannels(opts as any, channels, d, entries);
+  const withChannels = applyChannels(opts, channels, d, entries);
   const stripped = stripFactoryKeys(withChannels);
   // Merge split's axis keys (e.g. colKeys, rowKeys for table) into opts.
   return keys !== undefined ? ({ ...stripped, ...keys } as Options) : stripped;
@@ -302,7 +302,7 @@ function buildLayoutOpts<Datum, Options>(
  * Signature mirrors `createMark(shapeFn, channels)` — low-level builder
  * first, config second.
  */
-export function createOperator<Datum, Options>(
+export function createOperator<Datum, Options extends Record<string, any>>(
   layout: LayoutFn<Options>,
   cfg: OperatorConfig<Datum, Options>
 ): DualModeOperator<Datum, Options> {
@@ -323,7 +323,7 @@ export function createOperator<Datum, Options>(
           marks.map(async (mark, i) => {
             const currentKey = key != undefined ? `${key}-${i}` : i;
             return resolveMarkResult(
-              mark(d as any, currentKey, layerContext),
+              mark(d, currentKey, layerContext),
               layerContext
             );
           })

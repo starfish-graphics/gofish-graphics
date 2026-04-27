@@ -310,7 +310,7 @@ export const Scatter = createNodeOperator(
   }
 );
 
-import { createOperator, LayoutFn } from "../marks/createOperator";
+import { createOperator } from "../marks/createOperator";
 
 /**
  * Scatter options. Each position field (`x`/`y`/`xMin`/etc.) accepts either:
@@ -333,23 +333,15 @@ export type ScatterOptions = {
   debug?: boolean;
 };
 
-export const scatter = createOperator<any, ScatterOptions>(
-  // Channels resolve ScatterOptions' string/scalar forms to ScatterProps'
-  // MaybeValue<number>[] at runtime, so we cast to bridge the types.
-  // See DeriveOperatorOptions for the channel-aware type-derivation pattern.
-  Scatter as unknown as LayoutFn<ScatterOptions>,
-  {
-    split: ({ by }, d) =>
-      by
-        ? Map.groupBy(d, (r: any) => r[by])
-        : new Map(d.map((r, i) => [i, [r]])),
-    channels: {
-      x: { type: "pos", entry: true },
-      y: { type: "pos", entry: true },
-      xMin: { type: "pos", entry: true },
-      xMax: { type: "pos", entry: true },
-      yMin: { type: "pos", entry: true },
-      yMax: { type: "pos", entry: true },
-    },
-  }
-);
+export const scatter = createOperator<any, ScatterOptions>(Scatter, {
+  split: ({ by }, d) =>
+    by ? Map.groupBy(d, (r: any) => r[by]) : new Map(d.map((r, i) => [i, [r]])),
+  channels: {
+    x: { type: "pos", entry: true },
+    y: { type: "pos", entry: true },
+    xMin: { type: "pos", entry: true },
+    xMax: { type: "pos", entry: true },
+    yMin: { type: "pos", entry: true },
+    yMax: { type: "pos", entry: true },
+  },
+});

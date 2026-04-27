@@ -39,8 +39,7 @@ export type GroupOptions = {
 };
 
 export const group = createOperator<any, GroupOptions>(
-  async (_opts, children) =>
-    (await Frame({}, children)) as unknown as GoFishAST,
+  (_opts, children) => Frame({}, children),
   {
     split: ({ by }, d) => {
       if (!by) throw new Error("group requires opts.by = fieldName");

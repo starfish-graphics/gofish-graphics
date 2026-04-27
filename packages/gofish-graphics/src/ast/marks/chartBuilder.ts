@@ -132,14 +132,14 @@ export class ChartBuilder<TInput, TOutput = TInput> {
   }
 
   // facet is an alias for .flow(spread(opts))
-  facet(opts: SpreadOptions): ChartBuilder<TInput, any> {
-    return this.flow(spread(opts) as any);
+  facet(opts: SpreadOptions): ChartBuilder<TInput, TInput> {
+    return this.flow(spread(opts) as unknown as Operator<TInput, TInput>);
   }
 
   // stack is an alias for .flow(stack(opts))
   // Note: 'stack' below refers to the module-level stack function, not this method
-  stack(opts: StackOptions): ChartBuilder<TInput, any> {
-    return this.flow(stack(opts) as any);
+  stack(opts: StackOptions): ChartBuilder<TInput, TInput> {
+    return this.flow(stack(opts) as unknown as Operator<TInput, TInput>);
   }
 
   // mark stores the mark and returns a new builder for chaining

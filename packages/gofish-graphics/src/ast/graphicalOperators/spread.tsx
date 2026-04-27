@@ -411,7 +411,7 @@ export const Spread = createNodeOperator(
   }
 );
 
-import { createOperator, LayoutFn } from "../marks/createOperator";
+import { createOperator } from "../marks/createOperator";
 import { Mark, Operator } from "../types";
 
 export type SpreadOptions<T = any> = {
@@ -427,16 +427,11 @@ export type SpreadOptions<T = any> = {
   debug?: boolean;
 };
 
-export const spread = createOperator<any, SpreadOptions>(
-  Spread as unknown as LayoutFn<SpreadOptions>,
-  {
-    split: ({ by }, d) =>
-      by
-        ? Map.groupBy(d, (r: any) => r[by])
-        : new Map(d.map((r, i) => [i, [r]])),
-    channels: { w: "size", h: "size" },
-  }
-);
+export const spread = createOperator<any, SpreadOptions>(Spread, {
+  split: ({ by }, d) =>
+    by ? Map.groupBy(d, (r: any) => r[by]) : new Map(d.map((r, i) => [i, [r]])),
+  channels: { w: "size", h: "size" },
+});
 
 /** Stack has no `spacing` option — children always touch (spacing: 0). */
 export type StackOptions<T = any> = Omit<SpreadOptions<T>, "spacing">;
@@ -446,9 +441,10 @@ export function stack(
   marks: Mark<any>[]
 ): ReturnType<typeof spread>;
 export function stack(opts: StackOptions): Operator<any[], any[]>;
-export function stack(opts: StackOptions, marks?: Mark<any>[]): any {
-  const stackOpts = { ...opts, spacing: 0 } as SpreadOptions;
-  return marks !== undefined
-    ? (spread as any)(stackOpts, marks)
-    : (spread as any)(stackOpts);
+export function stack(
+  opts: StackOptions,
+  marks?: Mark<any>[]
+): ReturnType<typeof spread> | Operator<any[], any[]> {
+  const stackOpts: SpreadOptions = { ...opts, spacing: 0 };
+  return marks !== undefined ? spread(stackOpts, marks) : spread(stackOpts);
 }

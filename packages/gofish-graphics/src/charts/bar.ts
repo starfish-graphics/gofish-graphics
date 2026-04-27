@@ -34,19 +34,19 @@ class BarChartBuilder<TInput, TOutput = TInput>
     return this.builder.render(...args);
   }
 
-  stack<K extends keyof TOutput>(
+  stack<K extends keyof TOutput & string>(
     field: K,
     options?: {
       x?: number;
       y?: number;
-      w?: number | keyof TOutput;
-      h?: number | keyof TOutput;
+      w?: number | (keyof TOutput & string);
+      h?: number | (keyof TOutput & string);
       alignment?: "start" | "middle" | "end";
     }
   ): BarChartBuilder<TInput, TOutput> {
     const stackOp = stack({
-      by: field as string,
-      ...(options as any),
+      by: field,
+      ...options,
       dir: this.barOrientation,
     });
     return new BarChartBuilder(
@@ -59,14 +59,14 @@ class BarChartBuilder<TInput, TOutput = TInput>
 export const barChart = <T extends Record<string, any>>(
   data: T[],
   options: {
-    x: keyof T;
-    y: keyof T;
+    x: keyof T & string;
+    y: keyof T & string;
     orientation?: "x" | "y";
-    fill?: keyof T | string;
+    fill?: (keyof T & string) | string;
     mark?: (options: {
-      h?: string | number | keyof T;
-      w?: string | number | keyof T;
-      fill?: string | keyof T;
+      h?: string | number | (keyof T & string);
+      w?: string | number | (keyof T & string);
+      fill?: string | (keyof T & string);
       [key: string]: any;
     }) => Mark<T | T[] | { item: T | T[]; key: number | string }>;
   }
@@ -82,11 +82,11 @@ export const barChart = <T extends Record<string, any>>(
   // Vertical bar chart (orientation: "y"): spread along x-axis using x field, height from y field
   if (orientation === "y") {
     const builder = Chart(data)
-      .flow(spread({ by: options.x as string, dir: "x" }))
+      .flow(spread({ by: options.x, dir: "x" }))
       .mark(
         markFn({
-          h: options.y as string | number,
-          fill: options.fill as string | undefined,
+          h: options.y,
+          fill: options.fill,
         })
       );
     return new BarChartBuilder(builder as ChartBuilder<T[], T[]>, orientation);
@@ -95,11 +95,11 @@ export const barChart = <T extends Record<string, any>>(
   // Horizontal bar chart (orientation: "x"): spread along y-axis using y field, width from x field
   if (orientation === "x") {
     const builder = Chart(data)
-      .flow(spread({ by: options.y as string, dir: "y" }))
+      .flow(spread({ by: options.y, dir: "y" }))
       .mark(
         markFn({
-          w: options.x as string | number,
-          fill: options.fill as string | undefined,
+          w: options.x,
+          fill: options.fill,
         })
       );
     return new BarChartBuilder(builder as ChartBuilder<T[], T[]>, orientation);
