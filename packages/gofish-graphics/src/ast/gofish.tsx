@@ -32,11 +32,13 @@ export type KeyContext = { [key: string]: GoFishNode };
 export type AxesOptions = boolean | { x?: AxisOptions; y?: AxisOptions };
 export type AxisOptions = boolean | { title?: string | false };
 
+// string: custom title, false: no title, undefined: infer from encoding
 function resolveAxisTitle(
   axisOpt: AxisOptions | undefined
 ): string | false | undefined {
-  if (!axisOpt || axisOpt === true) return undefined;
-  return axisOpt.title;
+  if (!axisOpt) return false; // axis hidden, title irrelevant
+  if (axisOpt === true) return undefined; // axis shown, infer title from encoding
+  return axisOpt.title; // string: custom title, false: no title, undefined: infer title
 }
 
 function resolveAxes(axes: AxesOptions | undefined): {
@@ -49,7 +51,7 @@ function resolveAxes(axes: AxesOptions | undefined): {
     return { x: true, y: true, xTitle: undefined, yTitle: undefined };
   }
   if (!axes) {
-    return { x: false, y: false, xTitle: undefined, yTitle: undefined };
+    return { x: false, y: false, xTitle: false, yTitle: false };
   }
   return {
     x: !!axes.x,
@@ -489,6 +491,7 @@ export const render = (
   const hasAnyVisibleAxis = axisVisibility.x || axisVisibility.y;
   const axisPaddingX = axisVisibility.y ? 100 : 0;
   const axisPaddingY = axisVisibility.x ? 100 : 0;
+  const leftMargin = resolvedYTitle ? PADDING * 7 : PADDING * 4;
 
   let yTicks: number[] = [];
   let xTicks: number[] = [];
@@ -518,7 +521,7 @@ export const render = (
 
   const result = (
     <svg
-      width={width + PADDING * 6 + axisPaddingX}
+      width={width + leftMargin + PADDING * 2 + axisPaddingX}
       height={height + PADDING * 6 + axisPaddingY}
       xmlns="http://www.w3.org/2000/svg"
     >
@@ -526,7 +529,7 @@ export const render = (
         <defs>{defs}</defs>
       </Show>
       <g
-        transform={`scale(1, -1) translate(${PADDING * 4}, ${-height - PADDING * 4})`}
+        transform={`scale(1, -1) translate(${leftMargin}, ${-height - PADDING * 4})`}
       >
         <Show when={transform} keyed fallback={child.INTERNAL_render()}>
           <g transform={transform ?? ""}>{child.INTERNAL_render()}</g>
@@ -1130,33 +1133,33 @@ export const render = (
                       );
                     })()}
                   </Show>
-                  {/* x axis title */}
-                  <Show when={axisVisibility.x && resolvedXTitle}>
-                    <text
-                      transform="scale(1, -1)"
-                      x={width / 2}
-                      y={PADDING * 3.5}
-                      text-anchor="middle"
-                      dominant-baseline="hanging"
-                      font-size="11px"
-                      fill="gray"
-                    >
-                      {resolvedXTitle}
-                    </text>
-                  </Show>
-                  {/* y axis title */}
-                  <Show when={axisVisibility.y && resolvedYTitle}>
-                    <text
-                      transform={`translate(${-PADDING * 3.5}, ${height / 2}) scale(1, -1) rotate(-90)`}
-                      text-anchor="middle"
-                      dominant-baseline="middle"
-                      font-size="11px"
-                      fill="gray"
-                    >
-                      {resolvedYTitle}
-                    </text>
-                  </Show>
                 </g>
+                {/* x axis title */}
+                <Show when={axisVisibility.x && resolvedXTitle}>
+                  <text
+                    transform="scale(1, -1)"
+                    x={width / 2}
+                    y={PADDING * 3.5}
+                    text-anchor="middle"
+                    dominant-baseline="hanging"
+                    font-size="11px"
+                    fill="gray"
+                  >
+                    {resolvedXTitle}
+                  </text>
+                </Show>
+                {/* y axis title */}
+                <Show when={axisVisibility.y && resolvedYTitle}>
+                  <text
+                    transform={`translate(${-PADDING * 3.5}, ${height / 2}) scale(1, -1) rotate(-90)`}
+                    text-anchor="middle"
+                    dominant-baseline="middle"
+                    font-size="11px"
+                    fill="gray"
+                  >
+                    {resolvedYTitle}
+                  </text>
+                </Show>
                 {/* legend (discrete color for now) */}
                 <g>
                   <For

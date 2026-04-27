@@ -77,12 +77,6 @@ export const AxesYOnlyUndefinedX: StoryObj<Args> = {
   render: (args: Args) => renderBar(args, { y: true }),
 };
 
-// inferred titles from field encodings
-export const AxesInferredTitles: StoryObj<Args> = {
-  args: { w: 400, h: 400 },
-  render: (args: Args) => renderBar(args, true),
-};
-
 // explicit title override on x, inferred on y
 export const AxesCustomXTitle: StoryObj<Args> = {
   args: { w: 400, h: 400 },
