@@ -28,7 +28,7 @@
 import { GoFishAST } from "../_ast";
 import { GoFishNode } from "../_node";
 import { Mark, Operator } from "../types";
-import { ChartBuilder } from "./chart";
+import { ChartBuilder } from "./chartBuilder";
 import { inferSize, inferPos, inferColor } from "../channels";
 import type { MaybeValue, Value } from "../data";
 import type { LabelAccessor, LabelOptions } from "../labels/labelPlacement";
@@ -108,18 +108,19 @@ export function nameableMark<T>(base: Mark<T>): NameableMark<T> {
 }
 
 /**
- * A split returns an ordered Map of (key → subdata) entries + optional axis
- * keys. Insertion order is preserved (ES Map spec), which matters for layout
- * ordering.
+ * What a split returns. Insertion order is preserved (ES Map spec), which
+ * matters for layout ordering.
  *
- * `keys` carries ordered per-axis labels (e.g. `{colKeys, rowKeys}` for table)
- * that flow through to the low-level layout function's opts. Spread/stack/
- * group don't need it; only grid-shaped operators do.
+ * The common case is a bare `Map<key, subdata>`. If the operator also needs
+ * to feed axis labels (e.g. `{colKeys, rowKeys}` for table) into the layout
+ * function's opts, return the wrapped `{entries, keys}` form instead.
  */
-export type SplitResult<Datum> = {
-  entries: Map<string | number, Datum[]>;
-  keys?: Record<string, string[]>;
-};
+export type SplitResult<Datum> =
+  | Map<string | number, Datum[]>
+  | {
+      entries: Map<string | number, Datum[]>;
+      keys?: Record<string, string[]>;
+    };
 
 /** Data-encoded opts (same shape as createMark's channel annotations). */
 export type ChannelType = "size" | "pos" | "color";
@@ -190,29 +191,28 @@ export type LayoutFn<Options> = (
 /**
  * Config for createOperator (second positional arg).
  *
- * - `split` (required): partition data into (key, subdata) entries for the
- *   operator form. Can also return `meta` — computed values that merge into
- *   opts before `layout` is called (e.g. per-group positions for scatter,
- *   grid dimensions for table).
+ * - `split` (required): split the data into an ordered Map of (key, subdata)
+ *   entries. Can also return `keys` — axis labels (colKeys/rowKeys for table)
+ *   that merge into opts before `layout` is called.
  * - `channels` (optional): per-opt data-aware encodings, applied to the opts
  *   before they reach `layout`. Mirrors createMark's channel annotations.
- * - `enumerateMarks` (optional): flatten a combinator-form marks shape into
- *   ordered (key, mark) pairs. Defaults to `(marks: Mark[]) => [(i, m), ...]`.
+ *
+ * Combinator form is mechanical: the factory enumerates the marks array with
+ * integer keys and applies each mark to the shared data. No user hook.
  *
  * Note: the high-level `Options` type should match the low-level `layout`
  * function's opts shape. If you find yourself wanting a translation layer,
  * change one side's naming to match the other rather than threading an
  * adapter through the factory.
  */
-export type OperatorConfig<Datum, Options, MarkCollection = Mark<Datum>[]> = {
+export type OperatorConfig<Datum, Options> = {
   split: (opts: Options, d: Datum[]) => SplitResult<Datum>;
   channels?: ChannelAnnotations<Options>;
-  enumerateMarks?: (shape: MarkCollection) => Map<string | number, Mark<Datum>>;
 };
 
-export type DualModeOperator<Datum, Options, MarkCollection> = {
+export type DualModeOperator<Datum, Options> = {
   (opts: Options): Operator<Datum[], Datum[]>;
-  (opts: Options, marks: MarkCollection): NameableMark<Datum>;
+  (opts: Options, marks: Mark<Datum>[]): NameableMark<Datum>;
 };
 
 /** Run a single channel inference over a data slice. */
@@ -294,34 +294,23 @@ function buildLayoutOpts<Datum, Options>(
   return keys !== undefined ? ({ ...stripped, ...keys } as Options) : stripped;
 }
 
-/** Default enumerateMarks: treat the shape as `Mark[]`. */
-const defaultEnumerateMarks = <Datum>(
-  marks: Mark<Datum>[]
-): Map<string | number, Mark<Datum>> => new Map(marks.map((m, i) => [i, m]));
-
 /**
- * Factory that turns a low-level `layout` function plus `{split, channels,
- * enumerateMarks}` config into a layout operator with both combinator and
- * operator (traversal) forms.
+ * Factory that turns a low-level `layout` function plus `{split, channels}`
+ * config into a layout operator with both combinator and operator (traversal)
+ * forms.
  *
  * Signature mirrors `createMark(shapeFn, channels)` — low-level builder
  * first, config second.
  */
-export function createOperator<Datum, Options, MarkCollection = Mark<Datum>[]>(
+export function createOperator<Datum, Options>(
   layout: LayoutFn<Options>,
-  cfg: OperatorConfig<Datum, Options, MarkCollection>
-): DualModeOperator<Datum, Options, MarkCollection> {
-  const enumerateMarks =
-    cfg.enumerateMarks ??
-    (defaultEnumerateMarks as (
-      shape: MarkCollection
-    ) => Map<string | number, Mark<Datum>>);
-
+  cfg: OperatorConfig<Datum, Options>
+): DualModeOperator<Datum, Options> {
   function dual(opts: Options): Operator<Datum[], Datum[]>;
-  function dual(opts: Options, marks: MarkCollection): NameableMark<Datum>;
+  function dual(opts: Options, marks: Mark<Datum>[]): NameableMark<Datum>;
   function dual(
     opts: Options,
-    marks?: MarkCollection
+    marks?: Mark<Datum>[]
   ): Operator<Datum[], Datum[]> | NameableMark<Datum> {
     if (marks !== undefined) {
       // Combinator form: apply each mark to the same data d, then layout.
@@ -330,9 +319,8 @@ export function createOperator<Datum, Options, MarkCollection = Mark<Datum>[]>(
         key?: string | number,
         layerContext?: LayerContext
       ) => {
-        const markEntries = enumerateMarks(marks);
         const nodes = await Promise.all(
-          [...markEntries.entries()].map(async ([i, mark]) => {
+          marks.map(async (mark, i) => {
             const currentKey = key != undefined ? `${key}-${i}` : i;
             return resolveMarkResult(
               mark(d as any, currentKey, layerContext),
@@ -360,7 +348,10 @@ export function createOperator<Datum, Options, MarkCollection = Mark<Datum>[]>(
         key?: string | number,
         layerContext?: LayerContext
       ) => {
-        const { entries, keys } = cfg.split(opts, d);
+        const splitResult = cfg.split(opts, d);
+        const entries =
+          splitResult instanceof Map ? splitResult : splitResult.entries;
+        const keys = splitResult instanceof Map ? undefined : splitResult.keys;
         const nodes = await Promise.all(
           [...entries.entries()].map(async ([i, leaf]) => {
             const currentKey = key != undefined ? `${key}-${i}` : i;
@@ -378,5 +369,5 @@ export function createOperator<Datum, Options, MarkCollection = Mark<Datum>[]>(
     };
     return operator;
   }
-  return dual as DualModeOperator<Datum, Options, MarkCollection>;
+  return dual as DualModeOperator<Datum, Options>;
 }

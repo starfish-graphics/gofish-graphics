@@ -7,7 +7,7 @@ import * as Monotonic from "../../util/monotonic";
 import { ORDINAL, UNDEFINED } from "../underlyingSpace";
 import { UnderlyingSpace } from "../underlyingSpace";
 
-export const table = createNodeOperator(
+export const Table = createNodeOperator(
   (
     {
       name,
@@ -216,3 +216,32 @@ export const table = createNodeOperator(
     );
   }
 );
+
+import { createOperator } from "../marks/createOperator";
+
+export type TableOptions = {
+  by?: { x: string; y: string };
+  spacing?: number | [number, number];
+  numCols?: number;
+};
+
+export const table = createOperator<any, TableOptions>(Table, {
+  split: ({ by }, d) => {
+    if (!by?.x || !by?.y)
+      throw new Error(
+        "table operator form requires opts.by = { x: fieldName, y: fieldName }"
+      );
+    const colKeys = [...new Map(d.map((r) => [String(r[by.x]), true])).keys()];
+    const rowKeys = [...new Map(d.map((r) => [String(r[by.y]), true])).keys()];
+    const entries = new Map<string | number, any[]>();
+    for (const rowKey of rowKeys)
+      for (const colKey of colKeys)
+        entries.set(
+          `${colKey}-${rowKey}`,
+          d.filter(
+            (r) => String(r[by.x]) === colKey && String(r[by.y]) === rowKey
+          )
+        );
+    return { entries, keys: { colKeys, rowKeys } };
+  },
+});

@@ -1,11 +1,11 @@
-import { spread } from "./spread";
+import { Spread } from "./spread";
 import { GoFishAST } from "../_ast";
 import { Collection } from "lodash";
 
-export const spreadX = (...args: any[]): ReturnType<typeof spread> => {
+export const spreadX = (...args: any[]): ReturnType<typeof Spread> => {
   if (args.length === 2) {
     const [props, children] = args;
-    return spread(
+    return Spread(
       {
         ...props,
         dir: "x",
@@ -14,14 +14,14 @@ export const spreadX = (...args: any[]): ReturnType<typeof spread> => {
     );
   } else if (args.length === 1) {
     const [children] = args;
-    return spread(
+    return Spread(
       {
         dir: "x",
       },
       children
     );
   } else {
-    return spread({
+    return Spread({
       dir: "x",
     });
   }

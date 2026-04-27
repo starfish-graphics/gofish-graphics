@@ -75,7 +75,7 @@ function resolvePositionSpace(
   );
 }
 
-export const scatter = createNodeOperator(
+export const Scatter = createNodeOperator(
   (options: ScatterProps, children: GoFishAST[] | Collection<GoFishAST>) => {
     const {
       name,
@@ -307,5 +307,49 @@ export const scatter = createNodeOperator(
       },
       children
     );
+  }
+);
+
+import { createOperator, LayoutFn } from "../marks/createOperator";
+
+/**
+ * Scatter options. Each position field (`x`/`y`/`xMin`/etc.) accepts either:
+ *   - a field-name accessor string (operator form; inferred per entry)
+ *   - a pre-built positions array (combinator form; used as-is)
+ *   - a scalar (applied to all children)
+ * Per-entry channel inference handles the polymorphism.
+ *
+ * `by` is a groupBy field — omit for per-item scatter.
+ */
+export type ScatterOptions = {
+  by?: string;
+  x?: string | number | MaybeValue<number>[];
+  y?: string | number | MaybeValue<number>[];
+  xMin?: string | MaybeValue<number>[];
+  xMax?: string | MaybeValue<number>[];
+  yMin?: string | MaybeValue<number>[];
+  yMax?: string | MaybeValue<number>[];
+  alignment?: "start" | "middle" | "end" | "baseline";
+  debug?: boolean;
+};
+
+export const scatter = createOperator<any, ScatterOptions>(
+  // Channels resolve ScatterOptions' string/scalar forms to ScatterProps'
+  // MaybeValue<number>[] at runtime, so we cast to bridge the types.
+  // See DeriveOperatorOptions for the channel-aware type-derivation pattern.
+  Scatter as unknown as LayoutFn<ScatterOptions>,
+  {
+    split: ({ by }, d) =>
+      by
+        ? Map.groupBy(d, (r: any) => r[by])
+        : new Map(d.map((r, i) => [i, [r]])),
+    channels: {
+      x: { type: "pos", entry: true },
+      y: { type: "pos", entry: true },
+      xMin: { type: "pos", entry: true },
+      xMax: { type: "pos", entry: true },
+      yMin: { type: "pos", entry: true },
+      yMax: { type: "pos", entry: true },
+    },
   }
 );
