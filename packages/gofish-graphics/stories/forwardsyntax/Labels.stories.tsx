@@ -39,7 +39,7 @@ export const Default: StoryObj<Args> = {
   render: (args) => {
     const container = initializeContainer();
     Chart(seafood)
-      .flow(spread("lake", { dir: "x" }))
+      .flow(spread({ by: "lake",  dir: "x" }))
       .mark(rect({ h: "count" }).label("count"))
       .render(container, { w: args.w, h: args.h, axes: true });
     return container;
@@ -56,8 +56,8 @@ export const Center: StoryObj<Args> = {
     const container = initializeContainer();
     Chart(seafood)
       .flow(
-        spread("lake", { dir: "x" }),
-        stack("species", { dir: "y" })
+        spread({ by: "lake",  dir: "x" }),
+        stack({ by: "species",  dir: "y" })
       )
       .mark(
         rect({ h: "count", fill: "species" }).label("count", {
@@ -79,7 +79,7 @@ export const Above: StoryObj<Args> = {
   render: (args) => {
     const container = initializeContainer();
     Chart(seafood)
-      .flow(spread("lake", { dir: "x" }))
+      .flow(spread({ by: "lake",  dir: "x" }))
       .mark(rect({ h: "count" }).label("count", { position: "outset" }))
       .render(container, { w: args.w, h: args.h, axes: true });
     return container;
@@ -96,8 +96,8 @@ export const Below: StoryObj<Args> = {
     const container = initializeContainer();
     Chart(seafood)
       .flow(
-        spread("lake", { dir: "y", spacing: 30 }),
-        stack("species", { dir: "x" })
+        spread({ by: "lake",  dir: "y", spacing: 30 }),
+        stack({ by: "species",  dir: "x" })
       )
       .mark(
         rect({ w: "count", fill: "species" }).label("count", {
@@ -120,8 +120,8 @@ export const Left: StoryObj<Args> = {
     const container = initializeContainer();
     Chart(seafood)
       .flow(
-        spread("lake", { dir: "y" }),
-        spread("species", { dir: "x", spacing: 25 })
+        spread({ by: "lake",  dir: "y" }),
+        spread({ by: "species",  dir: "x", spacing: 25 })
       )
       .mark(
         rect({ w: "count", fill: "species" }).label("count", {
@@ -144,7 +144,7 @@ export const Right: StoryObj<Args> = {
   render: (args) => {
     const container = initializeContainer();
     Chart(seafood)
-      .flow(spread("lake", { dir: "y" }))
+      .flow(spread({ by: "lake",  dir: "y" }))
       .mark(rect({ w: "count" }).label("count", { position: "outset-right", offset: 15 }))
       .render(container, { w: args.w, h: args.h, axes: true });
     return container;
@@ -161,8 +161,8 @@ export const AboveStart: StoryObj<Args> = {
     const container = initializeContainer();
     Chart(seafood)
       .flow(
-        spread("lake", { dir: "x" }),
-        stack("species", { dir: "x" })
+        spread({ by: "lake",  dir: "x" }),
+        stack({ by: "species",  dir: "x" })
       )
       .mark(
         rect({ h: "count", fill: "species" }).label("count", {
@@ -185,8 +185,8 @@ export const AboveEnd: StoryObj<Args> = {
     const container = initializeContainer();
     Chart(seafood)
       .flow(
-        spread("lake", { dir: "x" }),
-        stack("species", { dir: "x" })
+        spread({ by: "lake",  dir: "x" }),
+        stack({ by: "species",  dir: "x" })
       )
       .mark(
         rect({ h: "count", fill: "species" }).label("count", {
@@ -249,7 +249,7 @@ export const AllPositions: StoryObj<{ w: number; h: number }> = {
       outer.appendChild(row);
 
       Chart(seafood)
-        .flow(spread("lake", { dir: "x" }))
+        .flow(spread({ by: "lake",  dir: "x" }))
         .mark(rect({ h: "count" }).label("count", { position: pos, fontSize: 9 }))
         .render(container, { w: args.w, h: args.h, axes: false });
     }
@@ -270,10 +270,10 @@ export const LabelOnSpread: StoryObj<Args> = {
   render: (args) => {
     const container = initializeContainer();
     Chart(seafood)
-      .flow(spread("lake", { dir: "x", spacing: 50 }))
+      .flow(spread({ by: "lake",  dir: "x", spacing: 50 }))
       .mark(async (d: any) => {
         const node = await Chart(d)
-          .flow(stack("species", { dir: "x" }))
+          .flow(stack({ by: "species",  dir: "x" }))
           .mark(rect({ h: "count" as any, fill: "species" as any }))
           .resolve();
         // Stamp datum so resolveLabels keeps the label at group level
@@ -305,7 +305,7 @@ export const HeatmapWithLabels: StoryObj<Args> = {
   render: (args) => {
     const container = initializeContainer();
     Chart(heatData, { color: gradient(["#e0f3ff", "#08519c"]) })
-      .flow(table("hour", "day", { spacing: 4 }))
+      .flow(table({ by: { x: "hour", y: "day" },  spacing: 4 }))
       .mark(
         rect({ fill: "value" }).label("value", { position: "center", fontSize: 11 })
       )
@@ -353,7 +353,7 @@ export const Rotated: StoryObj<Args> = {
       outer.appendChild(row);
 
       Chart(seafood)
-        .flow(spread("lake", { dir: "x" }))
+        .flow(spread({ by: "lake",  dir: "x" }))
         .mark(
           rect({ h: "count" }).label("count", { position: "outset-top", rotate })
         )
@@ -387,7 +387,7 @@ export const NormalizedStackedBarWithLabels: StoryObj<Args> = {
           d.map((row) => ({ ...row, sex: row.sex === 1 ? "Male" : "Female" }))
         ),
         // One row per age group, stacked horizontally
-        spread("age", { dir: "y", reverse: true, spacing: 2 }),
+        spread({ by: "age",  dir: "y", reverse: true, spacing: 2 }),
         // Normalize within each age group so bars span 0→1
         derive((d: any[]) =>
           d.map((row) => ({
@@ -397,7 +397,7 @@ export const NormalizedStackedBarWithLabels: StoryObj<Args> = {
         ),
         // Female left, Male right
         derive((d: any[]) => orderBy(d, "sex", "asc")),
-        stack("sex", { dir: "x" })
+        stack({ by: "sex",  dir: "x" })
       )
       .mark(
         rect({ w: "proportion", fill: "sex" }).label(

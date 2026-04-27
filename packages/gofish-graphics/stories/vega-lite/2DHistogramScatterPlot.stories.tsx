@@ -50,7 +50,7 @@ export const Default: StoryObj<Args> = {
     
 
     Chart(movieCounts) 
-      .flow(log("scatter locations"), scatter("id", { x: "x", y: "y", debug: true}))
+      .flow(log("scatter locations"), scatter({ by: "id",  x: "x", y: "y", debug: true}))
       // Draw a heatmap-like cell per bin (fill encodes count).
       .mark(rect({ w: "count", h: "count", fill: "black", stroke: "black", strokeWidth: 1 } as any))
       .render(container, { w: args.w, h: args.h, axes: true });

@@ -37,9 +37,9 @@ export const Default: StoryObj<Args> = {
 
     Chart(data)
       .flow(
-        spread("origin", { dir: "x" }),
+        spread({ by: "origin",  dir: "x" }),
         derive((d) => normalize(d, "count")),
-        stack("cylinders", { dir: "y" })
+        stack({ by: "cylinders",  dir: "y" })
       )
       .mark(
         rect({ h: "count", fill: "origin", stroke: "white", strokeWidth: 2 })

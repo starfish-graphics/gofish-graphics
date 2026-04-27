@@ -36,10 +36,10 @@ export const Default: StoryObj<Args> = {
 
     Layer([
       Chart(seafood)
-        .flow(spread("lake", { dir: "x" }))
+        .flow(spread({ by: "lake",  dir: "x" }))
         .mark(rect({ h: "count" }).name("bars")),
       Chart(select("bars") as any)
-        .flow(group("lake") as any)
+        .flow(group({ by: "lake" }) as any)
         .mark(((d: any[]) => {
           return Spread(
             { direction: "y", alignment: "middle", spacing: 10 },

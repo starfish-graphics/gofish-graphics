@@ -5,7 +5,7 @@ const catchLocationsArray = Object.entries(lakeLocations).map(
 gf.Layer([
   gf
     .Chart(catchLocationsArray)
-    .flow(gf.scatter("lake", { x: "x", y: "y" }))
+    .flow(gf.scatter({ by: "lake", x: "x", y: "y" }))
     .mark(gf.blank().name("points")),
   gf.Chart(gf.select("points")).mark(gf.line()),
 ]).render(root, {

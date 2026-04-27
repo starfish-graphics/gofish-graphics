@@ -42,7 +42,7 @@ export const Default: StoryObj<Args> = {
       speciesList.map((species) => () =>
         Chart(bySpecies(species))
           .flow(
-            scatter("id", {
+            scatter({ by: "id", 
               x: "Flipper Length (mm)",
               y: "Body Mass (g)",
             })

@@ -44,12 +44,11 @@ class BarChartBuilder<TInput, TOutput = TInput>
       alignment?: "start" | "middle" | "end";
     }
   ): BarChartBuilder<TInput, TOutput> {
-    const stackOptions = {
-      ...options,
+    const stackOp = stack({
+      by: field as string,
+      ...(options as any),
       dir: this.barOrientation,
-    };
-
-    const stackOp = stack(field, stackOptions);
+    });
     return new BarChartBuilder(
       this.builder.flow(stackOp as unknown as Operator<TInput, TOutput>),
       this.barOrientation
@@ -83,7 +82,7 @@ export const barChart = <T extends Record<string, any>>(
   // Vertical bar chart (orientation: "y"): spread along x-axis using x field, height from y field
   if (orientation === "y") {
     const builder = Chart(data)
-      .flow(spread(options.x, { dir: "x" }))
+      .flow(spread({ by: options.x as string, dir: "x" }))
       .mark(
         markFn({
           h: options.y as string | number,
@@ -96,7 +95,7 @@ export const barChart = <T extends Record<string, any>>(
   // Horizontal bar chart (orientation: "x"): spread along y-axis using y field, width from x field
   if (orientation === "x") {
     const builder = Chart(data)
-      .flow(spread(options.y, { dir: "y" }))
+      .flow(spread({ by: options.y as string, dir: "y" }))
       .mark(
         markFn({
           w: options.x as string | number,

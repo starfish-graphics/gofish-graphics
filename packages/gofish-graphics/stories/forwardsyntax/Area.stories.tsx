@@ -27,7 +27,7 @@ export const Basic: StoryObj<Args> = {
 
     Layer([
       Chart(seafood)
-        .flow(spread("lake", { dir: "x", spacing: 64 }))
+        .flow(spread({ by: "lake",  dir: "x", spacing: 64 }))
         .mark(blank({ h: "count" }).name("points")),
       Chart(select("points")).flow(log("points")).mark(area({ opacity: 0.8 })
     ),
@@ -49,12 +49,12 @@ export const Stacked: StoryObj<Args> = {
     Layer([
       Chart(seafood)
         .flow(
-          spread("lake", { dir: "x", spacing: 64 }),
-          stack("species", { dir: "y" })
+          spread({ by: "lake",  dir: "x", spacing: 64 }),
+          stack({ by: "species",  dir: "y" })
         )
         .mark(blank({ h: "count", fill: "species" }).name("bars")),
       Chart(select("bars"))
-        .flow(group("species"))
+        .flow(group({ by: "species" }))
         .mark(area({ opacity: 0.8 })),
     ]).render(container, {
       w: args.w,
@@ -72,10 +72,10 @@ export const Layered: StoryObj<Args> = {
     const container = initializeContainer();
     Layer([
       Chart(streamgraphData)
-        .flow(group("c"), spread("x", { dir: "x", spacing: 50 }))
+        .flow(group({ by: "c" }), spread({ by: "x",  dir: "x", spacing: 50 }))
         .mark(blank({ h: "y", fill: "c" }).name("points")),
       Chart(select("points"))
-        .flow(group("c"))
+        .flow(group({ by: "c" }))
         .mark(area({ opacity: 0.7 })),
     ]).render(container, {
       w: 500,

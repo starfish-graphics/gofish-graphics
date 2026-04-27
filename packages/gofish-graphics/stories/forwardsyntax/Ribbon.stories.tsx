@@ -29,13 +29,13 @@ export const Basic: StoryObj<Args> = {
     Layer([
       Chart(seafood)
         .flow(
-          spread("lake", { dir: "x", spacing: 64 }),
+          spread({ by: "lake",  dir: "x", spacing: 64 }),
           derive((d) => orderBy(d, "count", "asc")),
-          stack("species", { dir: "y" })
+          stack({ by: "species",  dir: "y" })
         )
         .mark(rect({ h: "count", fill: "species" }).name("bars")),
       Chart(select("bars"))
-        .flow(group("species"))
+        .flow(group({ by: "species" }))
         .mark(area({ opacity: 0.8 })),
     ]).render(container, {
       w: args.w,
@@ -55,7 +55,7 @@ export const Polar: StoryObj<Args> = {
     Layer({ coord: clock() }, [
       Chart(seafood)
         .flow(
-          spread("lake", {
+          spread({ by: "lake", 
             dir: "x",
             spacing: (2 * Math.PI) / 6,
             mode: "center",
@@ -63,11 +63,11 @@ export const Polar: StoryObj<Args> = {
             label: false,
           }),
           derive((d) => orderBy(d, "count", "asc")),
-          stack("species", { dir: "y", label: false })
+          stack({ by: "species",  dir: "y", label: false })
         )
         .mark(rect({ w: 0.1, h: "count", fill: "species" }).name("bars")),
       Chart(select("bars"))
-        .flow(group("species"))
+        .flow(group({ by: "species" }))
         .mark(area({ opacity: 0.8 })),
     ]).render(container, {
       w: args.w,

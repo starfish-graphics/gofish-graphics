@@ -46,24 +46,39 @@ export type {
 } from "./ast/constraints";
 
 // Graphical Operators
-export { stack as Stack } from "./ast/graphicalOperators/stack";
-export { stackX as StackX } from "./ast/graphicalOperators/stackX";
-export { stackY as StackY } from "./ast/graphicalOperators/stackY";
+export { stackX, stackX as StackX } from "./ast/graphicalOperators/stackX";
+export { stackY, stackY as StackY } from "./ast/graphicalOperators/stackY";
 export { Spread, spread, stack } from "./ast/graphicalOperators/spread";
+export { stack as Stack } from "./ast/graphicalOperators/stack";
 export { Scatter, scatter } from "./ast/graphicalOperators/scatter";
-export { spreadX as SpreadX } from "./ast/graphicalOperators/spreadX";
-export { spreadY as SpreadY } from "./ast/graphicalOperators/spreadY";
-export { layer as Layer } from "./ast/graphicalOperators/layer";
-export { wrap as Wrap } from "./ast/graphicalOperators/wrap";
-export { connect as Connect } from "./ast/graphicalOperators/connect";
-export { connectX as ConnectX } from "./ast/graphicalOperators/connectX";
-export { connectY as ConnectY } from "./ast/graphicalOperators/connectY";
-export { enclose as Enclose } from "./ast/graphicalOperators/enclose";
-export { Frame, group } from "./ast/graphicalOperators/frame";
-export { position as Position } from "./ast/graphicalOperators/position";
-export { arrow as Arrow } from "./ast/graphicalOperators/arrow";
+export { spreadX, spreadX as SpreadX } from "./ast/graphicalOperators/spreadX";
+export { spreadY, spreadY as SpreadY } from "./ast/graphicalOperators/spreadY";
+export { layer, layer as Layer } from "./ast/graphicalOperators/layer";
+export { wrap, wrap as Wrap } from "./ast/graphicalOperators/wrap";
+export { connect, connect as Connect } from "./ast/graphicalOperators/connect";
+export {
+  connectX,
+  connectX as ConnectX,
+} from "./ast/graphicalOperators/connectX";
+export {
+  connectY,
+  connectY as ConnectY,
+} from "./ast/graphicalOperators/connectY";
+export { enclose, enclose as Enclose } from "./ast/graphicalOperators/enclose";
+export { Frame, Frame as frame, group } from "./ast/graphicalOperators/frame";
+export {
+  position,
+  position as Position,
+} from "./ast/graphicalOperators/position";
+export { arrow, arrow as Arrow } from "./ast/graphicalOperators/arrow";
 export { Table, table } from "./ast/graphicalOperators/table";
 export {
+  over,
+  inside,
+  xor,
+  out,
+  atop,
+  mask,
   over as Over,
   inside as In,
   xor as Xor,

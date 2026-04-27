@@ -36,7 +36,7 @@ export const Default: StoryObj<Args> = {
     Chart(cars)
       .flow(
         derive((d) => [...d].sort((a, b) => b.cylinders - a.cylinders)),
-        spread("cylinders", { dir: "y" }),
+        spread({ by: "cylinders",  dir: "y" }),
         scatter({ x: "horsepower" })
       )
       .mark(
