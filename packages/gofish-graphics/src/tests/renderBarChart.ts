@@ -1,4 +1,4 @@
-import { rect } from "../ast/marks/chart";
+import { rect } from "../lib";
 import { seafood } from "../data/catch";
 
 export const renderBarChart = () => {

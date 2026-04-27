@@ -1,4 +1,4 @@
-import { spread } from "./spread";
+import { Spread } from "./spread";
 import { FancyDims } from "../dims";
 import { MaybeValue } from "../data";
 
@@ -6,7 +6,7 @@ import { MaybeValue } from "../data";
 type StackProps = {
   name?: string;
   key?: string;
-  direction: "x" | "y";
+  dir: "x" | "y";
   alignment?: "start" | "middle" | "end";
   sharedScale?: boolean;
   reverse?: boolean;
@@ -15,12 +15,12 @@ type StackProps = {
 export const stack = (
   props: StackProps,
   children: any // GoFishChildrenInput type from ../withGoFish is not exported, using any
-): ReturnType<typeof spread> => {
-  return spread(
+): ReturnType<typeof Spread> => {
+  return Spread(
     {
       ...props,
       spacing: 0,
-      mode: "edge-to-edge",
+      mode: "edge",
     },
     children
   );

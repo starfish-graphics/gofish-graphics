@@ -24,7 +24,7 @@ export const Default: StoryObj<Args> = {
     const container = initializeContainer();
 
     Chart(context.loaded.movies as any[])
-      .flow(spread("Major Genre", { dir: "x" }))
+      .flow(spread({ by: "Major Genre",  dir: "x" }))
       .mark(
         spread({ dir: "x" }, [
           rect({ h: "Worldwide Gross", fill: v("Worldwide Gross") }),

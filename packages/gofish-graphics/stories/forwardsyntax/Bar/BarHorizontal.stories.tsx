@@ -24,7 +24,7 @@ export const Default: StoryObj<Args> = {
     const container = initializeContainer();
 
     Chart(seafood)
-      .flow(spread("lake", { dir: "y" }))
+      .flow(spread({ by: "lake",  dir: "y" }))
       .mark(rect({ w: "count" }))
       .render(container, {
         w: args.w,

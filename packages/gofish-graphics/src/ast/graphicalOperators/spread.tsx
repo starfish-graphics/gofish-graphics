@@ -13,7 +13,7 @@ import {
 import _, { Collection, size } from "lodash";
 import { computeAesthetic, computeSize, findTargetMonotonic } from "../../util";
 import { GoFishAST } from "../_ast";
-import { createOperator } from "../withGoFish";
+import { createNodeOperator } from "../withGoFish";
 import * as Monotonic from "../../util/monotonic";
 import {
   ORDINAL,
@@ -34,36 +34,34 @@ const unwrapLodashArray = function <T>(value: T[] | Collection<T>): T[] {
   return value as T[];
 };
 
-export const spread = createOperator(
+export const Spread = createNodeOperator(
   (
     {
       name,
       key,
-      direction,
-      spacing = 0,
+      dir,
+      spacing = 8,
       alignment = "baseline",
       sharedScale = false,
-      mode = "edge-to-edge",
+      mode = "edge",
       reverse = false,
-      dir = "btt",
       ...fancyDims
     }: {
       name?: string;
       key?: string;
-      direction: FancyDirection;
+      dir: FancyDirection;
       spacing?: number;
       alignment?: Alignment;
       sharedScale?: boolean;
-      mode?: "edge-to-edge" | "center-to-center";
+      mode?: "edge" | "center";
       reverse?: boolean;
-      dir?: "ttb" | "btt";
     } & FancyDims<MaybeValue<number>>,
     children: GoFishAST[] | Collection<GoFishAST>
   ) => {
     // Unwrap lodash wrapped children if needed
     children = unwrapLodashArray(children);
 
-    const stackDir = elaborateDirection(direction);
+    const stackDir = elaborateDirection(dir);
     const alignDir = (1 - stackDir) as Direction;
     // track whether align axis came from SIZE so we still perform baseline alignment even with posScales
     let alignFromSize = false;
@@ -75,14 +73,13 @@ export const spread = createOperator(
         args: {
           key,
           name,
-          direction,
+          dir,
           spacing,
           alignment,
           sharedScale,
           mode,
           reverse,
           dims,
-          dir,
         },
         key,
         name,
@@ -159,7 +156,7 @@ export const spread = createOperator(
 
           return {
             [stackDir]:
-              mode === "edge-to-edge"
+              mode === "edge"
                 ? isValue(dims[stackDir].size)
                   ? Monotonic.linear(getValue(dims[stackDir].size!), 0)
                   : Monotonic.adds(
@@ -190,7 +187,7 @@ export const spread = createOperator(
           posScales,
           node
         ) => {
-          if (dir === "ttb" || reverse) {
+          if (reverse) {
             children = children.reverse();
           }
           const stackPos = computeAesthetic(
@@ -307,7 +304,7 @@ export const spread = createOperator(
             const firstFixedMin = firstFixed.dims[stackDir].min as number;
             const firstFixedMax = firstFixed.dims[stackDir].max as number;
             const firstFixedCenter = (firstFixedMin + firstFixedMax) / 2;
-            if (mode === "edge-to-edge") {
+            if (mode === "edge") {
               pos =
                 firstFixedMin -
                 firstFixedIdx * spacing -
@@ -319,7 +316,7 @@ export const spread = createOperator(
             }
           }
 
-          if (mode === "edge-to-edge") {
+          if (mode === "edge") {
             for (const child of childPlaceables) {
               if (isFixed(stackDir)(child)) {
                 const childMin = child.dims[stackDir].min as number;
@@ -337,7 +334,7 @@ export const spread = createOperator(
                 pos += sz + spacing;
               }
             }
-          } else if (mode === "center-to-center") {
+          } else if (mode === "center") {
             for (const child of childPlaceables) {
               if (isFixed(stackDir)(child)) {
                 const childMin = child.dims[stackDir].min as number;
@@ -413,3 +410,44 @@ export const spread = createOperator(
     );
   }
 );
+
+import { createOperator } from "../marks/createOperator";
+import { Mark, Operator } from "../types";
+
+export type SpreadOptions<T = any> = {
+  by?: keyof T & string;
+  dir: "x" | "y";
+  spacing?: number;
+  alignment?: "start" | "middle" | "end" | "baseline";
+  sharedScale?: boolean;
+  mode?: "edge" | "center";
+  reverse?: boolean;
+  w?: number | (keyof T & string);
+  h?: number | (keyof T & string);
+  debug?: boolean;
+};
+
+export const spread = createOperator<any, SpreadOptions>(Spread, {
+  // When no `by` is given, pass each item through as-is. Items may already be
+  // arrays (e.g. after `_.chunk(...)`) or scalars; the downstream mark
+  // normalizes either form internally.
+  split: ({ by }, d) =>
+    by ? Map.groupBy(d, (r: any) => r[by]) : new Map(d.map((r, i) => [i, r])),
+  channels: { w: "size", h: "size" },
+});
+
+/** Stack has no `spacing` option — children always touch (spacing: 0). */
+export type StackOptions<T = any> = Omit<SpreadOptions<T>, "spacing">;
+
+export function stack(
+  opts: StackOptions,
+  marks: Mark<any>[]
+): ReturnType<typeof spread>;
+export function stack(opts: StackOptions): Operator<any[], any[]>;
+export function stack(
+  opts: StackOptions,
+  marks?: Mark<any>[]
+): ReturnType<typeof spread> | Operator<any[], any[]> {
+  const stackOpts: SpreadOptions = { ...opts, spacing: 0 };
+  return marks !== undefined ? spread(stackOpts, marks) : spread(stackOpts);
+}

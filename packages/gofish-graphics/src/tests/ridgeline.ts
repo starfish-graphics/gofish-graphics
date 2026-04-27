@@ -1,22 +1,22 @@
 import { streamgraphData } from "../data/streamgraphData";
 import {
-  SpreadY,
+  spreadY,
   For,
   groupBy,
-  SpreadX,
+  spreadX,
   rect,
   v,
-  Frame,
-  ConnectX,
+  frame,
+  connectX,
   ref,
 } from "../lib";
 
 export const testRidgeline = () =>
-  SpreadY(
+  spreadY(
     { spacing: -30, sharedScale: true },
     For(groupBy(streamgraphData, "c"), (items, c) =>
-      Frame([
-        SpreadX(
+      frame([
+        spreadX(
           { spacing: 20 /* , sharedScale: true */ },
           For(items, (d) =>
             rect({
@@ -28,7 +28,7 @@ export const testRidgeline = () =>
             }).name(`${d.c}-${d.x}`)
           )
         ),
-        ConnectX(
+        connectX(
           {
             // interpolation: "linear",
             // opacity: 0.7,

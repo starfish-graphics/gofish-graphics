@@ -16,6 +16,6 @@ _data = [
 def default(w=400, h=400):
     return (
         chart(_data)
-        .flow(spread("category", dir="x"))
+        .flow(spread(by="category", dir="x"))
         .mark(rect(h="value"))
     )

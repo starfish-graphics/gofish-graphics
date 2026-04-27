@@ -23,7 +23,7 @@ def default(data=None, w=300, h=300):
         chart(data)
         .flow(
             log("cars before scatter"),
-            scatter("Name", x="Horsepower", y="Miles_per_Gallon"),
+            scatter(by="Name", x="Horsepower", y="Miles_per_Gallon"),
         )
         .mark(circle(r=4, fill="rgba(31, 119, 180, 0.4)", stroke="#1f77b4", strokeWidth=1))
     )

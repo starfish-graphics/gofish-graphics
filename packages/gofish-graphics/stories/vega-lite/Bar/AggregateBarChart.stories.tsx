@@ -28,7 +28,7 @@ export const Default: StoryObj<Args> = {
     );
 
     Chart(year2000)
-      .flow(spread("age", { dir: "y", reverse: true }))
+      .flow(spread({ by: "age",  dir: "y", reverse: true }))
       .mark(rect({ w: "people" }))
       .render(container, { w: args.w, h: args.h, axes: true });
 

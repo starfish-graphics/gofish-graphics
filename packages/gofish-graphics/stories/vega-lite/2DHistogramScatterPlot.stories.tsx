@@ -63,7 +63,7 @@ export const Default: StoryObj<Args> = {
     
 
     Chart(movieCounts) 
-      .flow(log("scatter locations"), scatter("id", { x: "x", y: "y", debug: true}))
+      .flow(log("scatter locations"), scatter({ by: "id", x: "x", y: "y", debug: true }))
       // Size each cell by bucket count.
       .mark(
         rect({

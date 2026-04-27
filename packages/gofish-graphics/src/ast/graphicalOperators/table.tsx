@@ -2,30 +2,33 @@ import { For } from "solid-js";
 import { GoFishNode, Placeable } from "../_node";
 import { Size } from "../dims";
 import { GoFishAST } from "../_ast";
-import { createOperator } from "../withGoFish";
+import { createNodeOperator } from "../withGoFish";
 import * as Monotonic from "../../util/monotonic";
 import { ORDINAL, UNDEFINED } from "../underlyingSpace";
 import { UnderlyingSpace } from "../underlyingSpace";
 
-export const table = createOperator(
+export const Table = createNodeOperator(
   (
     {
       name,
       key,
-      numCols,
+      numCols: numColsOpt,
       spacing = 0,
       colKeys,
       rowKeys,
     }: {
       name?: string;
       key?: string;
-      numCols: number;
+      numCols?: number;
       spacing?: number | [number, number];
       colKeys?: string[];
       rowKeys?: string[];
     },
     children: GoFishAST[]
   ) => {
+    // Prefer explicit numCols; fall back to colKeys.length; finally to a
+    // single-row layout if neither is available.
+    const numCols = numColsOpt ?? colKeys?.length ?? children.length;
     const xSpacing = Array.isArray(spacing) ? spacing[0] : spacing;
     const ySpacing = Array.isArray(spacing) ? spacing[1] : spacing;
 
@@ -213,3 +216,32 @@ export const table = createOperator(
     );
   }
 );
+
+import { createOperator } from "../marks/createOperator";
+
+export type TableOptions = {
+  by?: { x: string; y: string };
+  spacing?: number | [number, number];
+  numCols?: number;
+};
+
+export const table = createOperator<any, TableOptions>(Table, {
+  split: ({ by }, d) => {
+    if (!by?.x || !by?.y)
+      throw new Error(
+        "table operator form requires opts.by = { x: fieldName, y: fieldName }"
+      );
+    const colKeys = [...new Map(d.map((r) => [String(r[by.x]), true])).keys()];
+    const rowKeys = [...new Map(d.map((r) => [String(r[by.y]), true])).keys()];
+    const entries = new Map<string | number, any[]>();
+    for (const rowKey of rowKeys)
+      for (const colKey of colKeys)
+        entries.set(
+          `${colKey}-${rowKey}`,
+          d.filter(
+            (r) => String(r[by.x]) === colKey && String(r[by.y]) === rowKey
+          )
+        );
+    return { entries, keys: { colKeys, rowKeys } };
+  },
+});

@@ -30,11 +30,11 @@ export const testPolarCenterBar = (size: { width: number; height: number }) =>
       stack(
         {
           x: 20,
-          direction: 1,
+          dir: 1,
           spacing: (2 * Math.PI) / 6,
           alignment: "start",
           sharedScale: true,
-          mode: "center-to-center",
+          mode: "center",
         },
         data.map((d, i) => rect({ h: Math.random() * 15 + 5, w: value(d.b, "value"), fill: color6[i % 6] }))
       ),

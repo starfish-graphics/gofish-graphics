@@ -55,7 +55,7 @@ export const Default: StoryObj<Args> = {
             ...row,
           }))
         ),
-        spread("month", { dir: "x" }),
+        spread({ by: "month",  dir: "x" }),
         derive((d: any[]) => {
           // Enforce specific weather order for stacking
           const WEATHER_ORDER = ["sun", "fog", "drizzle", "rain", "snow"];
@@ -69,10 +69,10 @@ export const Default: StoryObj<Args> = {
           }
           return d;
         }),
-        stack("weather", { dir: "y" }),
+        stack({ by: "weather",  dir: "y" }),
         log("spread data"),
         // log("spread data"),
-        // stack("date", { dir: "y" })
+        // stack({ by: "date",  dir: "y" })
         derive((d) => ({ count: d.length, weather: d[0].weather }))
       )
       .mark(rect({ h: "count", fill: "weather" }))

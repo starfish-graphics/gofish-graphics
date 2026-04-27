@@ -23,8 +23,7 @@ const data = [
 export const testCenterBar = (size: { width: number; height: number }) =>
   gofish(
     { width: size.width, height: size.height },
-    stack(
-      { direction: 0, spacing: 20, alignment: "end", sharedScale: true, mode: "center-to-center" },
+    stack({ dir: 0, spacing: 20, alignment: "end", sharedScale: true, mode: "center" },
       data.map((d) => rect({ w: Math.random() * 15 + 5, h: value(d.b, "value"), fill: color6[0] }))
     )
   );

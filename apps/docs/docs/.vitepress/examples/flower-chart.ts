@@ -11,20 +11,20 @@ const scatterData = _(seafood)
   }))
   .value();
 
-gf.Frame(
+gf.frame(
   gf.For(scatterData, (sample) =>
-    gf.Frame({ x: sample.x, y: sample.y }, [
+    gf.frame({ x: sample.x, y: sample.y }, [
       gf.rect({
         w: 2,
         h: 300 - sample.y,
         fill: gf.color.green[5],
       }),
-      gf.Frame(
+      gf.frame(
         {
           coord: gf.polar(),
         },
         [
-          gf.StackX(
+          gf.stackX(
             {
               h: _(sample.collection).sumBy("count") / 7,
               spacing: 0,

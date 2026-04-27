@@ -1,6 +1,6 @@
 gf.Chart(seafood)
   .flow(
-    gf.spread("lake", { spacing: 8, dir: "x" }),
+    gf.spread({ by: "lake", spacing: 8, dir: "x" }),
     gf.derive((d) => d.flatMap((d) => gf.repeat(d, "count"))),
     gf.derive((d) => _.chunk(d, 5)),
     gf.spread({ spacing: 2, dir: "y" }),

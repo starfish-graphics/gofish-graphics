@@ -1,13 +1,13 @@
 // import { density1d } from "fast-kde";
 
-gf.StackX(
+gf.stackX(
   { spacing: 64, sharedScale: true },
   gf.For(_.groupBy(penguins, "Species"), (d, species) => {
     const density = Array.from(
       density1d(d.map((p) => p["Body Mass (g)"]).filter((w) => w !== null))
     );
-    return gf.Frame({}, [
-      gf.StackY(
+    return gf.frame({}, [
+      gf.stackY(
         { spacing: 0, alignment: "middle" },
         gf.For(density, (d) =>
           gf
@@ -15,7 +15,7 @@ gf.StackX(
             .name(`${species}-${d.x}`)
         )
       ),
-      gf.ConnectY(
+      gf.connectY(
         { opacity: 1, mixBlendMode: "normal" },
         gf.For(density, (d) => gf.ref(`${species}-${d.x}`))
       ),

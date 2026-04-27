@@ -24,7 +24,7 @@ export const testPieChart = (size: { width: number; height: number }) =>
     { width: size.width, height: size.height, transform: { x: 100, y: 150 } },
     coord({ transform: polar_DEPRECATED() }, [
       stack(
-        { x: 20, direction: 1, spacing: 0, alignment: "start" },
+        { x: 20, dir: 1, spacing: 0, alignment: "start" },
         data.map((d, i) =>
           rect({
             w: 20 + Math.random() * 50,

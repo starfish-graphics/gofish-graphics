@@ -14,6 +14,6 @@ def basic(w=400, h=400):
     """Basic scatter plot: lake catch locations as circles."""
     return (
         chart(catch_locations_array)
-        .flow(scatter("lake", x="x", y="y"))
+        .flow(scatter(by="lake", x="x", y="y"))
         .mark(circle(r=5))
     )

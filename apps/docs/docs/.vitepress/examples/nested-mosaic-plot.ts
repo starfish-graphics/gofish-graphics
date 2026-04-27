@@ -5,13 +5,13 @@ const classColor = {
   Crew: gf.color6[3],
 };
 
-gf.StackY(
+gf.stackY(
   { spacing: 4, alignment: "middle" },
   gf.For(_.groupBy(titanic, "class"), (items, cls) =>
-    gf.StackX(
+    gf.stackX(
       { h: _(items).sumBy("count") / 10, spacing: 2, alignment: "middle" },
       gf.For(_.groupBy(items, "sex"), (sItems, sex) =>
-        gf.StackY(
+        gf.stackY(
           {
             w: (_(sItems).sumBy("count") / _(items).sumBy("count")) * 100,
             spacing: 0,

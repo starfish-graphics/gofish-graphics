@@ -1,5 +1,5 @@
 gf.Chart(seafood)
-  .flow(gf.spread("lake", { dir: "y" }))
+  .flow(gf.spread({ by: "lake", dir: "y" }))
   .mark(gf.rect({ w: "count" }))
   .render(root, {
     w: 400,

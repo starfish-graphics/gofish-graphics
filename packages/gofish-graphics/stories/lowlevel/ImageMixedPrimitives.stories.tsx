@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
-import { SpreadX, SpreadY, Stack, rect, text, image, Spread } from "../../src/lib";
+import { spreadX, spreadY, stack, rect, text, image, spread } from "../../src/lib";
 import bottleJpg from "../assets/bottle.jpg";
 import bottlePhotoPng from "../assets/maja7777-glass-bottle-free-2451180_1280.png";
 import flowerPng from "../assets/schwarzenarzisse-isolated-2437759_1280.png";
@@ -25,8 +25,7 @@ const inlineBadgeSvg = `data:image/svg+xml;utf8,${encodeURIComponent(
 )}`;
 
 const imageCard = (title: string, subtitle: string, imageNode: any) =>
-  Spread(
-    { direction: "y", spacing: 6, alignment: "start" },
+  spread({ dir: "y", spacing: 6, alignment: "start" },
     [
       text({ text: title, fontSize: 14, fill: "#0f172a" }),
       rect({ w: 180, h: 2, fill: "#cbd5e1" }),
@@ -41,7 +40,7 @@ export const CardsRow: StoryObj<Args> = {
     const container = initializeContainer();
 
     container.innerHTML = "";
-    SpreadX({ spacing: 28, alignment: "start" }, [
+    spreadX({ spacing: 28, alignment: "start" }, [
       imageCard("Bottle Icon", "fixed 120x120", image({ href: bottleJpg, w: 120, h: 120 })),
       imageCard("Bottle Photo", "fixed 170x110", image({ href: bottlePhotoPng, w: 170, h: 110 })),
       imageCard("Flower", "fixed 120x150", image({ href: flowerPng, w: 120, h: 150 })),
@@ -60,18 +59,18 @@ export const LabeledRows: StoryObj<Args> = {
     const container = initializeContainer();
 
     container.innerHTML = "";
-    SpreadY({ spacing: 16, alignment: "start" }, [
-      Spread({ direction: "x", spacing: 12, alignment: "middle" }, [
+    spreadY({ spacing: 16, alignment: "start" }, [
+      spread({ dir: "x", spacing: 12, alignment: "middle" }, [
         rect({ w: 12, h: 60, fill: "#7dd3fc", rx: 3, ry: 3 }),
         image({ href: bottleJpg, w: 60, h: 60 }),
         text({ text: "Square thumbnail with color marker", fontSize: 14, fill: "#0f172a" }),
       ]),
-      Spread({ direction: "x", spacing: 12, alignment: "middle" }, [
+      spread({ dir: "x", spacing: 12, alignment: "middle" }, [
         rect({ w: 12, h: 60, fill: "#86efac", rx: 3, ry: 3 }),
         image({ href: bottlePhotoPng, w: 92, h: 60 }),
         text({ text: "Wide thumbnail mixed with text", fontSize: 14, fill: "#0f172a" }),
       ]),
-      Spread({ direction: "x", spacing: 12, alignment: "middle" }, [
+      spread({ dir: "x", spacing: 12, alignment: "middle" }, [
         rect({ w: 12, h: 60, fill: "#fda4af", rx: 3, ry: 3 }),
         image({ href: flowerPng, w: 44, h: 60 }),
         text({ text: "Tall thumbnail with matching row layout", fontSize: 14, fill: "#0f172a" }),
@@ -91,7 +90,7 @@ export const DataUriWithAssets: StoryObj<Args> = {
     const container = initializeContainer();
 
     container.innerHTML = "";
-    SpreadX({ spacing: 24, alignment: "start" }, [
+    spreadX({ spacing: 24, alignment: "start" }, [
       imageCard(
         "Inline SVG",
         "w only (w=120, h inferred)",

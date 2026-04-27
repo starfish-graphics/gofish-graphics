@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
 import { seafood } from "../../src/data/catch";
-import { Chart, spread, blank, stack, Layer, select } from "../../src/lib";
-import { area, group } from "../../src/ast/marks/chart";
+import { Chart, spread, blank, stack, layer, select } from "../../src/lib";
+import { area, group } from "../../src/lib";
 
 const meta: Meta = {
   title: "Forward Syntax V3/Streamgraph",
@@ -24,15 +24,15 @@ export const Default: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    Layer([
+    layer([
       Chart(seafood)
         .flow(
-          spread("lake", { dir: "x", spacing: 64, alignment: "middle" }),
-          stack("species", { dir: "y" })
+          spread({ by: "lake",  dir: "x", spacing: 64, alignment: "middle" }),
+          stack({ by: "species",  dir: "y" })
         )
         .mark(blank({ h: "count", fill: "species" }).name("bars")),
       Chart(select("bars"))
-        .flow(group("species"))
+        .flow(group({ by: "species" }))
         .mark(area({ opacity: 0.8 })),
     ]).render(container, {
       w: args.w,

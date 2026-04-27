@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
-import { Constraint, Layer, rect, Spread } from "../../src/lib";
+import { Constraint, layer, rect, spread } from "../../src/lib";
 
 const meta: Meta = {
   title: "Low Level Syntax/Constraints",
@@ -57,7 +57,7 @@ const renderEquivalentStory = (
   spreadRenderer(spreadMount, args);
   constraintRenderer(constraintMount, args);
 
-  grid.appendChild(renderPanel("Spread", spreadMount));
+  grid.appendChild(renderPanel("spread", spreadMount));
   grid.appendChild(renderPanel("Constraints", constraintMount));
 
   return host;
@@ -82,11 +82,11 @@ const makeCenterToCenterRects = () => [
 ];
 
 // ──────────────────────────────────────────────────────────
-// Equivalence: Spread = align + distribute
+// Equivalence: spread = align + distribute
 // ──────────────────────────────────────────────────────────
 
 /**
- * Spread({ direction: "y", alignment: "start" })
+ * spread({ dir: "y", alignment: "start" })
  *   ≡ align({ dir: "x", alignment: "start" }) + distribute({ dir: "y" })
  *
  * Three rects of different widths, stacked vertically, left-aligned.
@@ -97,7 +97,7 @@ export const SpreadY_AlignStart: StoryObj<Args> = {
     renderEquivalentStory(
       args,
       (container, storyArgs) => {
-        Spread({ direction: "y", alignment: "start" }, makeYRects()).render(
+        spread({ dir: "y", alignment: "start" }, makeYRects()).render(
           container,
           {
             w: storyArgs.w,
@@ -106,7 +106,7 @@ export const SpreadY_AlignStart: StoryObj<Args> = {
         );
       },
       (container, storyArgs) => {
-        Layer(makeYRects())
+        layer(makeYRects())
           .constrain(({ a, b, c }) => [
             Constraint.align({ dir: "x", alignment: "start" }, [a, b, c]),
             Constraint.distribute({ dir: "y" }, [a, b, c]),
@@ -117,7 +117,7 @@ export const SpreadY_AlignStart: StoryObj<Args> = {
 };
 
 /**
- * Spread({ direction: "y", alignment: "end" })
+ * spread({ dir: "y", alignment: "end" })
  *   ≡ align({ dir: "x", alignment: "end" }) + distribute({ dir: "y" })
  *
  * Three rects of different widths, stacked vertically, right-aligned.
@@ -128,7 +128,7 @@ export const SpreadY_AlignEnd: StoryObj<Args> = {
     renderEquivalentStory(
       args,
       (container, storyArgs) => {
-        Spread({ direction: "y", alignment: "end" }, makeYRects()).render(
+        spread({ dir: "y", alignment: "end" }, makeYRects()).render(
           container,
           {
             w: storyArgs.w,
@@ -137,7 +137,7 @@ export const SpreadY_AlignEnd: StoryObj<Args> = {
         );
       },
       (container, storyArgs) => {
-        Layer(makeYRects())
+        layer(makeYRects())
           .constrain(({ a, b, c }) => [
             Constraint.align({ dir: "x", alignment: "end" }, [a, b, c]),
             Constraint.distribute({ dir: "y" }, [a, b, c]),
@@ -148,7 +148,7 @@ export const SpreadY_AlignEnd: StoryObj<Args> = {
 };
 
 /**
- * Spread({ direction: "y", alignment: "middle" })
+ * spread({ dir: "y", alignment: "middle" })
  *   ≡ align({ dir: "x", alignment: "middle" }) + distribute({ dir: "y" })
  *
  * Three rects of different widths, stacked vertically, center-aligned.
@@ -163,7 +163,7 @@ export const SpreadY_AlignMiddle: StoryObj<Args> = {
     renderEquivalentStory(
       args,
       (container, storyArgs) => {
-        Spread({ direction: "y", alignment: "middle" }, makeYRects()).render(
+        spread({ dir: "y", alignment: "middle" }, makeYRects()).render(
           container,
           {
             w: storyArgs.w,
@@ -172,9 +172,9 @@ export const SpreadY_AlignMiddle: StoryObj<Args> = {
         );
       },
       (container, storyArgs) => {
-        Layer([
+        layer([
           // Pin one child to the canvas center so align({ dir: "x", alignment: "middle" })
-          // and Spread(... alignment: "middle") share the same baseline.
+          // and spread(... alignment: "middle") share the same baseline.
           rect({
             x: storyArgs.w / 2 - 80 / 2,
             w: 80,
@@ -194,7 +194,7 @@ export const SpreadY_AlignMiddle: StoryObj<Args> = {
 };
 
 /**
- * Spread({ direction: "x", alignment: "start" })
+ * spread({ dir: "x", alignment: "start" })
  *   ≡ align({ dir: "y", alignment: "start" }) + distribute({ dir: "x" })
  *
  * Three rects of different heights, spread horizontally, bottom-aligned.
@@ -205,7 +205,7 @@ export const SpreadX_AlignStart: StoryObj<Args> = {
     renderEquivalentStory(
       args,
       (container, storyArgs) => {
-        Spread({ direction: "x", alignment: "start" }, makeXRects()).render(
+        spread({ dir: "x", alignment: "start" }, makeXRects()).render(
           container,
           {
             w: storyArgs.w,
@@ -214,7 +214,7 @@ export const SpreadX_AlignStart: StoryObj<Args> = {
         );
       },
       (container, storyArgs) => {
-        Layer(makeXRects())
+        layer(makeXRects())
           .constrain(({ a, b, c }) => [
             Constraint.align({ dir: "y", alignment: "start" }, [a, b, c]),
             Constraint.distribute({ dir: "x" }, [a, b, c]),
@@ -229,7 +229,7 @@ export const SpreadX_AlignStart: StoryObj<Args> = {
 // ──────────────────────────────────────────────────────────
 
 /**
- * Spread({ direction: "y", alignment: "start", spacing: 20 })
+ * spread({ dir: "y", alignment: "start", spacing: 20 })
  *   ≡ align({ dir: "x", alignment: "start" }) + distribute({ dir: "y", spacing: 20 })
  */
 export const SpreadY_Spacing: StoryObj<Args> = {
@@ -238,8 +238,7 @@ export const SpreadY_Spacing: StoryObj<Args> = {
     renderEquivalentStory(
       args,
       (container, storyArgs) => {
-        Spread(
-          { direction: "y", alignment: "start", spacing: 20 },
+        spread({ dir: "y", alignment: "start", spacing: 20 },
           makeYRects()
         ).render(container, {
           w: storyArgs.w,
@@ -247,7 +246,7 @@ export const SpreadY_Spacing: StoryObj<Args> = {
         });
       },
       (container, storyArgs) => {
-        Layer(makeYRects())
+        layer(makeYRects())
           .constrain(({ a, b, c }) => [
             Constraint.align({ dir: "x", alignment: "start" }, [a, b, c]),
             Constraint.distribute({ dir: "y", spacing: 20 }, [a, b, c]),
@@ -258,7 +257,7 @@ export const SpreadY_Spacing: StoryObj<Args> = {
 };
 
 /**
- * Spread({ direction: "x", alignment: "end", spacing: 15 })
+ * spread({ dir: "x", alignment: "end", spacing: 15 })
  *   ≡ align({ dir: "y", alignment: "end" }) + distribute({ dir: "x", spacing: 15 })
  */
 export const SpreadX_Spacing_AlignEnd: StoryObj<Args> = {
@@ -267,8 +266,7 @@ export const SpreadX_Spacing_AlignEnd: StoryObj<Args> = {
     renderEquivalentStory(
       args,
       (container, storyArgs) => {
-        Spread(
-          { direction: "x", alignment: "end", spacing: 15 },
+        spread({ dir: "x", alignment: "end", spacing: 15 },
           makeXRects()
         ).render(container, {
           w: storyArgs.w,
@@ -276,7 +274,7 @@ export const SpreadX_Spacing_AlignEnd: StoryObj<Args> = {
         });
       },
       (container, storyArgs) => {
-        Layer(makeXRects())
+        layer(makeXRects())
           .constrain(({ a, b, c }) => [
             Constraint.align({ dir: "y", alignment: "end" }, [a, b, c]),
             Constraint.distribute({ dir: "x", spacing: 15 }, [a, b, c]),
@@ -291,7 +289,7 @@ export const SpreadX_Spacing_AlignEnd: StoryObj<Args> = {
 // ──────────────────────────────────────────────────────────
 
 /**
- * Spread({ direction: "x", alignment: "start", spacing: 60, mode: "center-to-center" })
+ * spread({ dir: "x", alignment: "start", spacing: 60, mode: "center-to-center" })
  *   ≡ align({ dir: "y", alignment: "start" }) + distribute({ dir: "x", spacing: 60, mode: "center-to-center" })
  */
 export const SpreadX_CenterToCenter: StoryObj<Args> = {
@@ -300,9 +298,7 @@ export const SpreadX_CenterToCenter: StoryObj<Args> = {
     renderEquivalentStory(
       args,
       (container, storyArgs) => {
-        Spread(
-          {
-            direction: "x",
+        spread({ dir: "x",
             alignment: "start",
             spacing: 60,
             mode: "center-to-center",
@@ -311,7 +307,7 @@ export const SpreadX_CenterToCenter: StoryObj<Args> = {
         ).render(container, { w: storyArgs.w, h: storyArgs.h });
       },
       (container, storyArgs) => {
-        Layer(makeCenterToCenterRects())
+        layer(makeCenterToCenterRects())
           .constrain(({ a, b, c }) => [
             Constraint.align({ dir: "y", alignment: "start" }, [a, b, c]),
             Constraint.distribute(
@@ -329,7 +325,7 @@ export const SpreadX_CenterToCenter: StoryObj<Args> = {
 // ──────────────────────────────────────────────────────────
 
 /**
- * Spread({ direction: "y", alignment: "start", dir: "ttb" })
+ * spread({ dir: "y", alignment: "start", dir: "ttb" })
  *   ≡ align({ dir: "x", alignment: "start" }) + distribute({ dir: "y", order: "reverse" })
  *
  * dir: "ttb" reverses the children array in spread; order: "reverse" does the same.
@@ -340,8 +336,7 @@ export const SpreadY_Reversed: StoryObj<Args> = {
     renderEquivalentStory(
       args,
       (container, storyArgs) => {
-        Spread(
-          { direction: "y", alignment: "start", dir: "ttb" },
+        spread({ dir: "y", alignment: "start", dir: "ttb" },
           makeYRects()
         ).render(container, {
           w: storyArgs.w,
@@ -349,7 +344,7 @@ export const SpreadY_Reversed: StoryObj<Args> = {
         });
       },
       (container, storyArgs) => {
-        Layer(makeYRects())
+        layer(makeYRects())
           .constrain(({ a, b, c }) => [
             Constraint.align({ dir: "x", alignment: "start" }, [a, b, c]),
             Constraint.distribute({ dir: "y", order: "reverse" }, [a, b, c]),
@@ -371,7 +366,7 @@ export const AlignOnly: StoryObj<Args> = {
   args: { w: 300, h: 300 },
   render: (args: Args) => {
     const container = initializeContainer();
-    Layer([
+    layer([
       rect({ w: 80, h: 40, fill: "#e63946" }).name("a"),
       rect({ w: 120, h: 60, fill: "#457b9d" }).name("b"),
       rect({ w: 60, h: 30, fill: "#2a9d8f" }).name("c"),
@@ -392,7 +387,7 @@ export const AlignOnly_ManualY: StoryObj<Args> = {
   args: { w: 300, h: 300 },
   render: (args: Args) => {
     const container = initializeContainer();
-    Layer([
+    layer([
       rect({ w: 80, h: 40, y: 20, fill: "#e63946" }).name("a"),
       rect({ w: 120, h: 60, y: 100, fill: "#457b9d" }).name("b"),
       rect({ w: 60, h: 30, y: 200, fill: "#2a9d8f" }).name("c"),
@@ -413,7 +408,7 @@ export const DistributeOnly: StoryObj<Args> = {
   args: { w: 300, h: 300 },
   render: (args: Args) => {
     const container = initializeContainer();
-    Layer([
+    layer([
       rect({ w: 80, h: 40, fill: "#e63946" }).name("a"),
       rect({ w: 120, h: 40, fill: "#457b9d" }).name("b"),
       rect({ w: 60, h: 40, fill: "#2a9d8f" }).name("c"),
@@ -436,13 +431,13 @@ export const DistributeOnly: StoryObj<Args> = {
  * - "c" and "d" are distributed vertically with different spacing
  * - All four are aligned on the right edge
  *
- * This is impossible with a single Spread — it would require nesting.
+ * This is impossible with a single spread — it would require nesting.
  */
 export const SubsetSelection: StoryObj<Args> = {
   args: { w: 400, h: 400 },
   render: (args: Args) => {
     const container = initializeContainer();
-    Layer([
+    layer([
       rect({ w: 100, h: 50, fill: "#e63946" }).name("a"),
       rect({ w: 80, h: 50, fill: "#457b9d" }).name("b"),
       rect({ w: 120, h: 50, fill: "#2a9d8f" }).name("c"),
@@ -466,7 +461,7 @@ export const BackgroundNotDistributed: StoryObj<Args> = {
   args: { w: 400, h: 400 },
   render: (args: Args) => {
     const container = initializeContainer();
-    Layer([
+    layer([
       rect({ w: 150, h: 200, fill: "#e2ebf6" }).name("bg"),
       rect({ w: 100, h: 40, fill: "#e63946" }).name("a"),
       rect({ w: 80, h: 40, fill: "#457b9d" }).name("b"),
@@ -493,7 +488,7 @@ export const AlignCenterDistributeY: StoryObj<Args> = {
   args: { w: 300, h: 400 },
   render: (args: Args) => {
     const container = initializeContainer();
-    Layer([
+    layer([
       rect({ w: 80, h: 40, fill: "#e63946" }).name("a"),
       rect({ w: 120, h: 60, fill: "#457b9d" }).name("b"),
       rect({ w: 40, h: 30, fill: "#2a9d8f" }).name("c"),

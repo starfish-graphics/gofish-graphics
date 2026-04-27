@@ -3,7 +3,7 @@ import { gofish } from "../ast/gofish";
 import { value } from "../ast/data";
 import { stack } from "../ast/graphicalOperators/stack";
 import { color } from "../color";
-import { rect, StackX, StackY, v } from "../lib";
+import { rect, stackX, stackY, v } from "../lib";
 
 const data = [
   { origin: "Europe", cylinders: "4", count: 66 },
@@ -18,11 +18,11 @@ const data = [
 ];
 
 export const testMosaic = () =>
-  StackX(
+  stackX(
     { spacing: 4, alignment: "start", sharedScale: true },
     // TODO: I could probably make the width be uniform flexible basically
     Object.entries(_.groupBy(data, "origin")).map(([origin, items]) =>
-      StackY(
+      stackY(
         {
           // w: _(items).sumBy("count") / 2,
           w: v(_(items).sumBy("count")),

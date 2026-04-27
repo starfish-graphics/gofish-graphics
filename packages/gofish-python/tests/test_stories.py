@@ -226,7 +226,7 @@ class TestIRDetails:
         assert ir["mark"]["h"] == "count"
         assert len(ir["operators"]) == 1
         assert ir["operators"][0]["type"] == "spread"
-        assert ir["operators"][0]["field"] == "lake"
+        assert ir["operators"][0]["by"] == "lake"
         assert ir["operators"][0]["dir"] == "x"
 
     def test_bar_stacked_fluent_ir(self):

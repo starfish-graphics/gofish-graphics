@@ -8,9 +8,9 @@ const classColor = {
   Crew: gf.color6[3],
 };
 
-gf.Frame([
-  gf.StackX({ spacing: layerSpacing, alignment: "middle" }, [
-    gf.StackY(
+gf.frame([
+  gf.stackX({ spacing: layerSpacing, alignment: "middle" }, [
+    gf.stackY(
       { spacing: 0, alignment: "middle" },
       gf.For(_.groupBy(titanic, "class"), (items, cls) =>
         gf
@@ -22,12 +22,12 @@ gf.Frame([
           .name(`${cls}-src`)
       )
     ),
-    gf.StackY(
+    gf.stackY(
       { spacing: internalSpacing, alignment: "middle" },
       gf.For(_.groupBy(titanic, "class"), (items, cls) =>
-        gf.StackX({ spacing: layerSpacing, alignment: "middle" }, [
+        gf.stackX({ spacing: layerSpacing, alignment: "middle" }, [
           gf
-            .StackY(
+            .stackY(
               { spacing: 0, alignment: "middle" },
               gf.For(_.groupBy(items, "sex"), (items, sex) =>
                 gf
@@ -40,16 +40,16 @@ gf.Frame([
               )
             )
             .name(`${cls}-tgt`),
-          gf.StackY(
+          gf.stackY(
             {
               h: _(items).sumBy("count") / 10,
               spacing: internalSpacing * 2,
               alignment: "middle",
             },
             gf.For(_.groupBy(items, "sex"), (items, sex) =>
-              gf.StackX({ spacing: layerSpacing, alignment: "middle" }, [
+              gf.stackX({ spacing: layerSpacing, alignment: "middle" }, [
                 gf
-                  .StackY(
+                  .stackY(
                     {
                       spacing: 0,
                       alignment: "middle",
@@ -68,7 +68,7 @@ gf.Frame([
                     )
                   )
                   .name(`${cls}-${sex}-tgt`),
-                gf.StackY(
+                gf.stackY(
                   {
                     w: 40,
                     spacing: internalSpacing * 4,
@@ -101,7 +101,7 @@ gf.Frame([
     ),
   ]),
   gf.For(_.groupBy(titanic, "class"), (items, cls) => [
-    gf.ConnectX(
+    gf.connectX(
       {
         fill: classColor[cls],
         interpolation: "bezier",
@@ -110,7 +110,7 @@ gf.Frame([
       [gf.ref(`${cls}-src`), gf.ref(`${cls}-tgt`)]
     ),
     gf.For(_.groupBy(items, "sex"), (sexItems, sex) => [
-      gf.ConnectX(
+      gf.connectX(
         {
           fill: sex === "Female" ? gf.color6[4] : gf.color6[5],
           interpolation: "bezier",
@@ -119,7 +119,7 @@ gf.Frame([
         [gf.ref(`${cls}-${sex}-src`), gf.ref(`${cls}-${sex}-tgt`)]
       ),
       gf.For(_.groupBy(sexItems, "survived"), (survivedItems, survived) =>
-        gf.ConnectX(
+        gf.connectX(
           {
             fill:
               sex === "Female"

@@ -1,7 +1,7 @@
 gf.Chart(nightingale, { coord: gf.clock() })
   .flow(
-    gf.stack("Month", { dir: "x" }),
-    gf.stack("Type", { dir: "y" }),
+    gf.stack({ by: "Month", dir: "x" }),
+    gf.stack({ by: "Type", dir: "y" }),
     gf.derive((d) => d.map((d) => ({ ...d, Death: Math.sqrt(d.Death) })))
   )
   .mark(gf.rect({ w: (Math.PI * 2) / 12, emX: true, h: "Death", fill: "Type" }))

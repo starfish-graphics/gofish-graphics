@@ -1,12 +1,7 @@
-gf.Frame({}, [
+gf.frame({}, [
   gf.For(_.groupBy(newCarColors, "Year"), (d, key) =>
-    gf.Spread(
-      {
-        direction: "y",
-        x: (key - 2000) * 30,
-        spacing: 16,
-        alignment: "start",
-      },
+    gf.spread(
+      { dir: "y", x: (key - 2000) * 30, spacing: 16, alignment: "start" },
       gf.For(_.sortBy(d, "Rank"), (d) =>
         gf
           .ellipse({ w: 8, h: 8, fill: gf.v(d.Color) })
@@ -15,7 +10,7 @@ gf.Frame({}, [
     )
   ),
   gf.For(_.groupBy(newCarColors, "Color"), (d) =>
-    gf.ConnectY(
+    gf.connectY(
       { strokeWidth: 2, mode: "center-to-center" },
       gf.For(d, (d) => gf.ref(`${d.Color}-${d.Year}`))
     )

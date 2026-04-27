@@ -296,7 +296,7 @@ export async function reifyChildrenSequentially(
 - Allows opts to be optional
 - Supports arrays where individual elements can be promises
 */
-export function createOperator<T extends Record<string, any>, R>(
+export function createNodeOperator<T extends Record<string, any>, R>(
   func: (opts: T, children: GoFishAST[]) => R
 ): {
   (opts?: T, children?: GoFishChildrenInput): PromiseWithRender<R>;
@@ -317,7 +317,7 @@ export function createOperator<T extends Record<string, any>, R>(
         children = undefined;
       } else {
         throw new Error(
-          `createOperator: Expected 0, 1, or 2 arguments, got ${args.length}`
+          `createNodeOperator: Expected 0, 1, or 2 arguments, got ${args.length}`
         );
       }
       // Flatten nested structures and await all promises
@@ -357,7 +357,7 @@ export function createOperator<T extends Record<string, any>, R>(
  * - Supports arrays where individual elements can be promises or thunks
  * - Processes thunks sequentially to ensure proper execution order
  */
-export function createOperatorSequential<T extends Record<string, any>, R>(
+export function createNodeOperatorSequential<T extends Record<string, any>, R>(
   func: (opts: T, children: GoFishAST[]) => R
 ): {
   (opts?: T, children?: GoFishChildrenInputWithThunks): PromiseWithRender<R>;
@@ -378,7 +378,7 @@ export function createOperatorSequential<T extends Record<string, any>, R>(
         children = undefined;
       } else {
         throw new Error(
-          `createOperatorSequential: Expected 0, 1, or 2 arguments, got ${args.length}`
+          `createNodeOperatorSequential: Expected 0, 1, or 2 arguments, got ${args.length}`
         );
       }
       // First phase: flatten nested structures and await promises, preserving thunks, marks, and ChartBuilder instances

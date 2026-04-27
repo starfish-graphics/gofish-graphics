@@ -24,8 +24,8 @@ def default(w=400, h=300):
     return (
         chart(_data, {"color": palette("tableau10")})
         .flow(
-            spread("category", dir="x", spacing=24),
-            spread("group", dir="x", spacing=0),
+            spread(by="category", dir="x", spacing=24),
+            spread(by="group", dir="x", spacing=0),
         )
         .mark(rect(h="value", fill="group"))
     )

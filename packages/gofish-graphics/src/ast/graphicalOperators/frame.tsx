@@ -2,9 +2,9 @@ import { FancyDims } from "../dims";
 import { CoordinateTransform } from "../coordinateTransforms/coord";
 import { coord } from "../coordinateTransforms/coord";
 import { layer } from "./layer";
-import { createOperator } from "../withGoFish";
+import { createNodeOperator } from "../withGoFish";
 import { GoFishAST } from "../_ast";
-export const frame = createOperator(
+export const Frame = createNodeOperator(
   (
     options: {
       key?: string;
@@ -29,5 +29,21 @@ export const frame = createOperator(
     } else {
       return layer(options, children);
     }
+  }
+);
+
+import { createOperator } from "../marks/createOperator";
+
+export type GroupOptions = {
+  by?: string;
+};
+
+export const group = createOperator<any, GroupOptions>(
+  (_opts, children) => Frame({}, children),
+  {
+    split: ({ by }, d) => {
+      if (!by) throw new Error("group requires opts.by = fieldName");
+      return Map.groupBy(d, (r: any) => r[by]);
+    },
   }
 );

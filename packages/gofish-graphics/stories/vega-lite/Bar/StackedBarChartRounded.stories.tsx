@@ -65,8 +65,8 @@ export const Default: StoryObj<Args> = {
           }
           return result;
         }),
-        spread("month", { dir: "x" }),
-        stack("weather", { dir: "y" })
+        spread({ by: "month",  dir: "x" }),
+        stack({ by: "weather",  dir: "y" })
       )
       .mark(rect({ h: "count", fill: "weather", rx: 3, ry: 3 }))
       .render(container, { w: args.w, h: args.h, axes: true });

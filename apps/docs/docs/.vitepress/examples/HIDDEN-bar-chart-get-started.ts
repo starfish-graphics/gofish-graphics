@@ -11,7 +11,7 @@ const alphabet = [
 ];
 
 gf.Chart(alphabet)
-  .flow(gf.spread("letter", { dir: "x" }))
+  .flow(gf.spread({ by: "letter", dir: "x" }))
   .mark(gf.rect({ h: "frequency" }))
   .render(root, {
     w: 500,

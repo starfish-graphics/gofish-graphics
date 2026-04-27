@@ -28,7 +28,7 @@ export const Default: StoryObj<Args> = {
     );
 
     // We'll pre-aggregate (sum people by age) and then sort age groups by that sum in descending order.
-    // This ordering will apply to spread("age", { dir: "y" }) for sorted bars.
+    // This ordering will apply to spread({ by: "age",  dir: "y" }) for sorted bars.
     // Derive returns a new array [{ age, people }], sorted descending by people.
     Chart(year2000)
       .flow(
@@ -41,7 +41,7 @@ export const Default: StoryObj<Args> = {
           );
           return orderBy(aggregated, ["people"], ["desc"]);
         }),
-        spread("age", { dir: "y", reverse: true })
+        spread({ by: "age",  dir: "y", reverse: true })
       )
       .mark(rect({ w: "people" }))
       .render(container, { w: args.w, h: args.h, axes: true });

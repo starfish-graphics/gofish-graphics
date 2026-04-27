@@ -3,7 +3,7 @@ import {
   tailwindColorsMuted,
   tailwindColorsVivid,
 } from "../color";
-import { rect, SpreadX, SpreadY, StackX, StackY } from "../lib";
+import { rect, spreadX, spreadY, stackX, stackY } from "../lib";
 
 export const tailwindColorGrid = () => {
   const colorNames = Object.keys(tailwindColors);
@@ -26,8 +26,8 @@ export const tailwindColorGrid = () => {
       });
     });
 
-    // Stack the shade squares horizontally with the color name
-    // return Frame([
+    // stack the shade squares horizontally with the color name
+    // return frame([
     //   // Color name label
     //   rect({
     //     w: 80,
@@ -38,14 +38,14 @@ export const tailwindColorGrid = () => {
     //   }),
     //   // TODO: Add text label when text support is available
 
-    //   // Stack the color squares
-    return SpreadX({ spacing: 2 }, shadeSquares);
+    //   // stack the color squares
+    return spreadX({ spacing: 2 }, shadeSquares);
     //   // .translate(85, 0),
     // ]);
   });
 
-  // Stack all rows vertically
-  return SpreadY({ spacing: 2 }, colorRows);
+  // stack all rows vertically
+  return spreadY({ spacing: 2 }, colorRows);
   // .translate(20, 20);
 };
 
@@ -68,10 +68,10 @@ export const tailwindColorGridCompact = () => {
       });
     });
 
-    return StackX(shadeSquares);
+    return stackX(shadeSquares);
   });
 
-  return StackY(colorRows);
+  return stackY(colorRows);
   // .translate(20, 20);
 };
 
@@ -92,10 +92,10 @@ const createColorGrid = (palette: typeof tailwindColors, spacing = 2) => {
       });
     });
 
-    return SpreadX({ spacing }, shadeSquares);
+    return spreadX({ spacing }, shadeSquares);
   });
 
-  return SpreadY({ spacing }, colorRows);
+  return spreadY({ spacing }, colorRows);
 };
 
 const createColorGridCompact = (
@@ -119,10 +119,10 @@ const createColorGridCompact = (
       });
     });
 
-    return StackX(shadeSquares);
+    return stackX(shadeSquares);
   });
 
-  return StackY(colorRows);
+  return stackY(colorRows);
 };
 
 // Muted variant grids
@@ -139,16 +139,16 @@ export const tailwindColorGridVividCompact = () =>
 
 // Comparison grid showing all three variants side by side
 export const tailwindColorComparison = () => {
-  return SpreadX({ spacing: 40 }, [
-    SpreadY({ spacing: 10 }, [
+  return spreadX({ spacing: 40 }, [
+    spreadY({ spacing: 10 }, [
       // Text would go here: "Original"
       createColorGrid(tailwindColors),
     ]),
-    SpreadY({ spacing: 10 }, [
+    spreadY({ spacing: 10 }, [
       // Text would go here: "Muted"
       createColorGrid(tailwindColorsMuted),
     ]),
-    SpreadY({ spacing: 10 }, [
+    spreadY({ spacing: 10 }, [
       // Text would go here: "Vivid"
       createColorGrid(tailwindColors),
     ]),
@@ -156,7 +156,7 @@ export const tailwindColorComparison = () => {
 };
 
 export const tailwindColorComparisonCompact = () => {
-  return SpreadX({ spacing: 30 }, [
+  return spreadX({ spacing: 30 }, [
     createColorGridCompact(tailwindColors),
     createColorGridCompact(tailwindColorsMuted),
     createColorGridCompact(tailwindColorsVivid),
