@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
 import { seafood } from "../../src/data/catch";
 import { Chart, spread, blank, stack, layer, select } from "../../src/lib";
-import { area, group } from "../../src/ast/marks/chart";
+import { area, group } from "../../src/lib";
 
 const meta: Meta = {
   title: "Forward Syntax V3/Streamgraph",

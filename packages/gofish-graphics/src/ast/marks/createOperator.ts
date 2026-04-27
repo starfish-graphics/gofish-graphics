@@ -41,10 +41,18 @@ export type LayerContext = {
   };
 };
 
-/** A mark that supports .name(layerName) and .label(accessor, options?). */
+/**
+ * A mark that supports .name() and .label(), plus a top-level .render() so
+ * combinator-form callsites (e.g. `spread({...}, [m1, m2]).render(container)`)
+ * can render directly without going through `chart()`.
+ */
 export type NameableMark<T> = Mark<T> & {
-  name(layerName: string): Mark<T>;
-  label(accessor: LabelAccessor, options?: LabelOptions): Mark<T>;
+  name(layerName: string): NameableMark<T>;
+  label(accessor: LabelAccessor, options?: LabelOptions): NameableMark<T>;
+  render(
+    container: Parameters<GoFishNode["render"]>[0],
+    options: Parameters<GoFishNode["render"]>[1]
+  ): Promise<ReturnType<GoFishNode["render"]>>;
 };
 
 /** Resolves whatever a Mark returns into a GoFishNode. */
@@ -62,10 +70,18 @@ export async function resolveMarkResult(
   return raw as unknown as GoFishNode;
 }
 
-/** Attach .name(layerName) and .label(accessor, options?) to a mark. */
+/**
+ * Attach .name(), .label(), and .render() to a mark. The .render() lets
+ * combinator-form callsites render at top level without `chart()` — the mark
+ * is invoked with undefined data, resolved to a node, and rendered.
+ */
 export function nameableMark<T>(base: Mark<T>): NameableMark<T> {
-  const withName = (layerName: string): Mark<T> => {
-    return async (d: T, key?: string | number, layerContext?: LayerContext) => {
+  const withName = (layerName: string): NameableMark<T> => {
+    const wrapped: Mark<T> = async (
+      d: T,
+      key?: string | number,
+      layerContext?: LayerContext
+    ) => {
       const node = await resolveMarkResult(
         base(d, key, layerContext),
         layerContext
@@ -80,12 +96,17 @@ export function nameableMark<T>(base: Mark<T>): NameableMark<T> {
       }
       return node;
     };
+    return nameableMark(wrapped);
   };
   const withLabel = (
     accessor: LabelAccessor,
     options?: LabelOptions
-  ): Mark<T> => {
-    return async (d: T, key?: string | number, layerContext?: LayerContext) => {
+  ): NameableMark<T> => {
+    const wrapped: Mark<T> = async (
+      d: T,
+      key?: string | number,
+      layerContext?: LayerContext
+    ) => {
       const node = await resolveMarkResult(
         base(d, key, layerContext),
         layerContext
@@ -93,6 +114,14 @@ export function nameableMark<T>(base: Mark<T>): NameableMark<T> {
       node.label(accessor, options);
       return node;
     };
+    return nameableMark(wrapped);
+  };
+  const render = async (
+    container: Parameters<GoFishNode["render"]>[0],
+    options: Parameters<GoFishNode["render"]>[1]
+  ) => {
+    const node = await resolveMarkResult(base(undefined as any));
+    return node.render(container, options);
   };
   Object.defineProperty(base, "name", {
     value: withName,
@@ -101,6 +130,11 @@ export function nameableMark<T>(base: Mark<T>): NameableMark<T> {
   });
   Object.defineProperty(base, "label", {
     value: withLabel,
+    writable: true,
+    configurable: true,
+  });
+  Object.defineProperty(base, "render", {
+    value: render,
     writable: true,
     configurable: true,
   });
@@ -212,7 +246,10 @@ export type OperatorConfig<Datum, Options> = {
 
 export type DualModeOperator<Datum, Options> = {
   (opts: Options): Operator<Datum[], Datum[]>;
-  (opts: Options, marks: Mark<Datum>[]): NameableMark<Datum>;
+  (
+    opts: Options,
+    marks: Mark<Datum>[] | Promise<Mark<Datum>[]>
+  ): NameableMark<Datum>;
 };
 
 /** Run a single channel inference over a data slice. */
@@ -307,10 +344,13 @@ export function createOperator<Datum, Options extends Record<string, any>>(
   cfg: OperatorConfig<Datum, Options>
 ): DualModeOperator<Datum, Options> {
   function dual(opts: Options): Operator<Datum[], Datum[]>;
-  function dual(opts: Options, marks: Mark<Datum>[]): NameableMark<Datum>;
   function dual(
     opts: Options,
-    marks?: Mark<Datum>[]
+    marks: Mark<Datum>[] | Promise<Mark<Datum>[]>
+  ): NameableMark<Datum>;
+  function dual(
+    opts: Options,
+    marks?: Mark<Datum>[] | Promise<Mark<Datum>[]>
   ): Operator<Datum[], Datum[]> | NameableMark<Datum> {
     if (marks !== undefined) {
       // Combinator form: apply each mark to the same data d, then layout.
@@ -319,13 +359,19 @@ export function createOperator<Datum, Options extends Record<string, any>>(
         key?: string | number,
         layerContext?: LayerContext
       ) => {
+        // Marks may be a Promise<Mark[]> when produced by helpers like
+        // `For(...)` — await before mapping. Entries may also be already
+        // resolved nodes (e.g. `ref(...)`) rather than mark functions, so
+        // pass non-functions through as-is.
+        const resolvedMarks = await Promise.resolve(marks);
         const nodes = await Promise.all(
-          marks.map(async (mark, i) => {
+          resolvedMarks.map(async (mark, i) => {
             const currentKey = key != undefined ? `${key}-${i}` : i;
-            return resolveMarkResult(
-              mark(d, currentKey, layerContext),
-              layerContext
-            );
+            const result =
+              typeof mark === "function"
+                ? mark(d, currentKey, layerContext)
+                : mark;
+            return resolveMarkResult(result, layerContext);
           })
         );
         const lowOpts = buildLayoutOpts(

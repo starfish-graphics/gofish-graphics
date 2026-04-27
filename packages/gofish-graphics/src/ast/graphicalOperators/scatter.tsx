@@ -334,8 +334,10 @@ export type ScatterOptions = {
 };
 
 export const scatter = createOperator<any, ScatterOptions>(Scatter, {
+  // When no `by` is given, pass each item through as-is. Items may already be
+  // arrays or scalars; downstream marks/channels handle either form.
   split: ({ by }, d) =>
-    by ? Map.groupBy(d, (r: any) => r[by]) : new Map(d.map((r, i) => [i, [r]])),
+    by ? Map.groupBy(d, (r: any) => r[by]) : new Map(d.map((r, i) => [i, r])),
   channels: {
     x: { type: "pos", entry: true },
     y: { type: "pos", entry: true },

@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
 import { seafood } from "../../src/data/catch";
 import { Chart, spread, rect, derive } from "../../src/lib";
-import { repeat } from "../../src/ast/marks/chart";
+import { repeat } from "../../src/lib";
 import _ from "lodash";
 
 const meta: Meta = {

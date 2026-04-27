@@ -66,7 +66,7 @@ const renderMask = (args: Args) => {
 };
 
 export const Union: StoryObj<Args> = {
-  name: "Union (over)",
+  name: "Union (Over)",
   args: DEFAULT_ARGS,
   render: (args: Args) => renderComposite(args, over),
 };
@@ -78,7 +78,7 @@ export const Intersect: StoryObj<Args> = {
 };
 
 export const Exclude: StoryObj<Args> = {
-  name: "Exclude (xor)",
+  name: "Exclude (Xor)",
   args: DEFAULT_ARGS,
   render: (args: Args) => renderComposite(args, xor),
 };
@@ -90,13 +90,13 @@ export const Subtract: StoryObj<Args> = {
 };
 
 export const Paint: StoryObj<Args> = {
-  name: "Paint (atop)",
+  name: "Paint (Atop)",
   args: DEFAULT_ARGS,
   render: (args: Args) => renderComposite(args, atop),
 };
 
 export const mask: StoryObj<Args> = {
-  name: "mask (none)",
+  name: "Mask (none)",
   args: DEFAULT_ARGS,
   render: (args: Args) => renderMask(args),
 };

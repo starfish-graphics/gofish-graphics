@@ -1,5 +1,5 @@
 import { mix } from "spectral.js";
-import { Chart } from "../ast/marks/chart";
+import { Chart } from "../lib";
 import { seafood } from "../data/catch";
 import { color6_old, For, groupBy, rect, spreadX, stackX, stackY, v } from "../lib";
 import _ from "lodash";

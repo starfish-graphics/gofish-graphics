@@ -3,12 +3,12 @@ import { initializeContainer } from "../helper";
 import { catchLocationsArray, seafood, catchLocations } from "../../src/data/catch";
 import { drivingShifts } from "../../src/data/drivingShifts";
 import { Chart, layer, select, line, rect, stack } from "../../src/lib";
-import { circle, scatter } from "../../src/ast/marks/chart";
+import { circle, scatter } from "../../src/lib";
 import { clock } from "../../src/ast/coordinateTransforms/clock";
 import _ from "lodash";
 
 const meta: Meta = {
-  title: "Forward Syntax V3/scatter",
+  title: "Forward Syntax V3/Scatter",
   argTypes: {
     w: {
       control: { type: "number", min: 100, max: 1000, step: 10 },

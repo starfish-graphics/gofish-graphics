@@ -3,7 +3,7 @@ import { initializeContainer } from "../helper";
 import { seafood } from "../../src/data/catch";
 import { streamgraphData } from "../../src/data/streamgraphData";
 import { Chart, spread, blank, stack, layer, select } from "../../src/lib";
-import { area, group, log } from "../../src/ast/marks/chart";
+import { area, group, log } from "../../src/lib";
 
 const meta: Meta = {
   title: "Forward Syntax V3/Area",

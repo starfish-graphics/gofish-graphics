@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
 import { catchLocationsArray } from "../../src/data/catch";
 import { Chart, layer, select, line, blank } from "../../src/lib";
-import { scatter } from "../../src/ast/marks/chart";
+import { scatter } from "../../src/lib";
 
 const meta: Meta = {
   title: "Forward Syntax V3/Line Chart",

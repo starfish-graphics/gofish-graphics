@@ -5,7 +5,7 @@ import data from "vega-datasets";
 import { uniq } from "lodash";
 
 const meta: Meta = {
-  title: "Vega-Lite/2D Histogram scatter Plot",
+  title: "Vega-Lite/2D Histogram Scatter Plot",
   argTypes: {
     w: { control: { type: "number", min: 100, max: 1000, step: 10 } },
     h: { control: { type: "number", min: 100, max: 1000, step: 10 } },

@@ -428,8 +428,11 @@ export type SpreadOptions<T = any> = {
 };
 
 export const spread = createOperator<any, SpreadOptions>(Spread, {
+  // When no `by` is given, pass each item through as-is. Items may already be
+  // arrays (e.g. after `_.chunk(...)`) or scalars; the downstream mark
+  // normalizes either form internally.
   split: ({ by }, d) =>
-    by ? Map.groupBy(d, (r: any) => r[by]) : new Map(d.map((r, i) => [i, [r]])),
+    by ? Map.groupBy(d, (r: any) => r[by]) : new Map(d.map((r, i) => [i, r])),
   channels: { w: "size", h: "size" },
 });
 

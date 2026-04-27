@@ -4,7 +4,7 @@ import { Chart, layer, scatter, circle } from "../../src/lib";
 import data from "vega-datasets";
 
 const meta: Meta = {
-  title: "Vega-Lite/Colored scatter Plot",
+  title: "Vega-Lite/Colored Scatter Plot",
   argTypes: {
     w: { control: { type: "number", min: 100, max: 1000, step: 10 } },
     h: {

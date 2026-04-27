@@ -1,6 +1,6 @@
 import { penguins } from "../data/penguins";
 import { frame, For, groupBy, spreadX, v, spreadY, connectY, ref, stackY } from "../lib";
-import { rect } from "../ast/marks/chart";
+import { rect } from "../lib";
 import _ from "lodash";
 import { density1d } from "fast-kde";
 

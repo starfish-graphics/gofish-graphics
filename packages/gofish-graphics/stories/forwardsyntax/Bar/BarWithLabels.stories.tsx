@@ -9,10 +9,9 @@ import {
   select,
   text,
   ref,
-  spread,
   sumBy,
+  group,
 } from "../../../src/lib";
-import { group } from "../../../src/ast/marks/chart";
 
 const meta: Meta = {
   title: "Forward Syntax V3/Bar/With Labels",

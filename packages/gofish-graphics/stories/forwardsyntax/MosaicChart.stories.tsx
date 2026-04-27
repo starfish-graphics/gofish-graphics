@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
 import { Chart, spread, rect, stack, derive } from "../../src/lib";
-import { normalize } from "../../src/ast/marks/chart";
+import { normalize } from "../../src/lib";
 
 const meta: Meta = {
   title: "Forward Syntax V3/Mosaic Chart",
