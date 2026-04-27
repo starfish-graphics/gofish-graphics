@@ -1,0 +1,145 @@
+name: Release
+
+# Unified publish workflow.
+#   - Scheduled (4am UTC daily): publishes a nightly-tagged prerelease if
+#     there are commits from the last 24h.
+#   - workflow_dispatch: lets you pick a release mode:
+#       nightly        -> same as scheduled behavior (no commit bump)
+#       patch/minor/major -> bumps version, publishes `latest`, commits
+#                         the bump back to main, tags, and drafts notes.
+
+on:
+  schedule:
+    - cron: "0 4 * * *"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Publish mode"
+        type: choice
+        required: true
+        default: nightly
+        options:
+          - nightly
+          - patch
+          - minor
+          - major
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      id-token: write # OIDC for npm trusted publisher
+      contents: write # push version-bump commit + tag (release mode only)
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Plan publish
+        id: plan
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            MODE="nightly"
+          else
+            MODE="${{ inputs.mode }}"
+          fi
+
+          SKIP="false"
+          if [ "$MODE" = "nightly" ]; then
+            ONE_DAY_AGO=$(date -u -d '24 hours ago' +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -v-24H +%Y-%m-%dT%H:%M:%SZ)
+            RECENT=$(git log --since="$ONE_DAY_AGO" --oneline | wc -l | tr -d ' ')
+            if [ "$RECENT" -eq 0 ]; then
+              SKIP="true"
+              echo "No commits in last 24h — skipping nightly publish"
+            fi
+          fi
+
+          echo "mode=$MODE" >> "$GITHUB_OUTPUT"
+          echo "skip=$SKIP" >> "$GITHUB_OUTPUT"
+          echo "Plan: mode=$MODE skip=$SKIP"
+
+      - name: Setup pnpm
+        if: steps.plan.outputs.skip == 'false'
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        if: steps.plan.outputs.skip == 'false'
+        uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+          cache: pnpm
+
+      - name: Install dependencies
+        if: steps.plan.outputs.skip == 'false'
+        run: pnpm install --frozen-lockfile
+
+      - name: Compute version
+        if: steps.plan.outputs.skip == 'false'
+        id: version
+        working-directory: packages/gofish-graphics
+        run: |
+          MODE="${{ steps.plan.outputs.mode }}"
+          if [ "$MODE" = "nightly" ]; then
+            BASE=$(node -p "require('./package.json').version")
+            DATE=$(date +'%Y%m%d')
+            NEW="${BASE}-nightly.${DATE}"
+            npm version --no-git-tag-version "$NEW"
+            echo "version=$NEW" >> "$GITHUB_OUTPUT"
+            echo "npm_tag=nightly" >> "$GITHUB_OUTPUT"
+            echo "git_tag=" >> "$GITHUB_OUTPUT"
+          else
+            RAW=$(npm version --no-git-tag-version "$MODE")
+            V="${RAW#v}"
+            echo "version=$V" >> "$GITHUB_OUTPUT"
+            echo "npm_tag=latest" >> "$GITHUB_OUTPUT"
+            echo "git_tag=v$V" >> "$GITHUB_OUTPUT"
+          fi
+          echo "Publishing version: $(node -p "require('./package.json').version")"
+
+      - name: Build gofish-graphics
+        if: steps.plan.outputs.skip == 'false'
+        run: pnpm --filter gofish-graphics build
+
+      - name: Generate TypeScript declarations
+        if: steps.plan.outputs.skip == 'false'
+        run: pnpm exec tsc --project packages/gofish-graphics/tsconfig.build.json || true
+
+      - name: Publish to npm
+        if: steps.plan.outputs.skip == 'false'
+        working-directory: packages/gofish-graphics
+        run: npm publish --tag "${{ steps.version.outputs.npm_tag }}" --access public
+
+      - name: Commit, tag, and push (release only)
+        if: steps.plan.outputs.skip == 'false' && steps.plan.outputs.mode != 'nightly'
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          TAG: ${{ steps.version.outputs.git_tag }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add packages/gofish-graphics/package.json
+          git commit -m "chore(release): v${VERSION}"
+          git tag "${TAG}"
+          git push origin HEAD:main
+          git push origin "${TAG}"
+
+      - name: Create GitHub release (release only)
+        if: steps.plan.outputs.skip == 'false' && steps.plan.outputs.mode != 'nightly'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.version.outputs.git_tag }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          gh release create "${TAG}" \
+            --title "v${VERSION}" \
+            --generate-notes

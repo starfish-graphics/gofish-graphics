@@ -6,31 +6,29 @@ on:
     branches:
       - main
     paths:
-      - 'packages/gofish-graphics/**'
+      - "packages/gofish-graphics/**"
 
   pull_request:
     paths:
-      - 'packages/gofish-graphics/**'
+      - "packages/gofish-graphics/**"
 
 jobs:
   chromatic:
     runs-on: ubuntu-latest
-    # Require approval for fork PRs to access secrets
-    environment: ${{ github.event.pull_request.head.repo.full_name != github.repository && 'chromatic-fork' || null }}
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0 # Required for Chromatic to track git history
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v3
+        uses: pnpm/action-setup@v4
         with:
           version: 9
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: pnpm
@@ -44,7 +42,7 @@ jobs:
       - name: Run Chromatic
         uses: chromaui/action@latest
         with:
-          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+          projectToken: chpt_b7e06495d0d4585
           workingDir: packages/gofish-graphics
           buildScriptName: build-storybook
           onlyChanged: true # Only test stories that changed

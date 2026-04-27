@@ -5,7 +5,9 @@
     "emitDeclarationOnly": true,
     "declaration": true,
     "declarationMap": true,
-    "outDir": "dist"
+    "outDir": "dist",
+    "rootDir": "./src",
+    "ignoreDeprecations": "6.0"
   },
   "include": ["src/lib.ts", "src/color.ts", "src/path.ts", "src/util.ts"],
   "exclude": [

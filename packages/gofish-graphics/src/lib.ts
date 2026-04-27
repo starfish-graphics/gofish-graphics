@@ -53,9 +53,10 @@ export { stack as Stack } from "./ast/graphicalOperators/stack";
 export { Scatter, scatter } from "./ast/graphicalOperators/scatter";
 export { spreadX, spreadX as SpreadX } from "./ast/graphicalOperators/spreadX";
 export { spreadY, spreadY as SpreadY } from "./ast/graphicalOperators/spreadY";
-export { layer, layer as Layer } from "./ast/graphicalOperators/layer";
+export { layer as Layer } from "./ast/graphicalOperators/layer";
 export { wrap, wrap as Wrap } from "./ast/graphicalOperators/wrap";
 export { connect, connect as Connect } from "./ast/graphicalOperators/connect";
+export { treemap, treemap as Treemap } from "./ast/graphicalOperators/treemap";
 export {
   connectX,
   connectX as ConnectX,
@@ -73,12 +74,6 @@ export {
 export { arrow, arrow as Arrow } from "./ast/graphicalOperators/arrow";
 export { Table, table } from "./ast/graphicalOperators/table";
 export {
-  over,
-  inside,
-  xor,
-  out,
-  atop,
-  mask,
   over as Over,
   inside as In,
   xor as Xor,
@@ -106,7 +101,15 @@ export {
   normalize,
   repeat,
   log,
+  layer,
+  atop,
+  over,
+  inside,
+  xor,
+  out,
+  mask,
 } from "./ast/marks/chart";
+export type { ConstrainableMark } from "./ast/marks/chart";
 export type {
   Mark,
   Operator,

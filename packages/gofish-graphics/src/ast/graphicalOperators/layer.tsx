@@ -1,13 +1,7 @@
 import * as Monotonic from "../../util/monotonic";
 import { GoFishNode } from "../_node";
 import { Size, elaborateDims, FancyDims } from "../dims";
-import {
-  UNDEFINED,
-  POSITION,
-  UnderlyingSpace,
-  ORDINAL,
-  isORDINAL,
-} from "../underlyingSpace";
+import { UnderlyingSpace } from "../underlyingSpace";
 import * as Interval from "../../util/interval";
 import { computeSize } from "../../util";
 import { CoordinateTransform } from "../coordinateTransforms/coord";
@@ -15,6 +9,7 @@ import { coord } from "../coordinateTransforms/coord";
 import { createNodeOperatorSequential } from "../withGoFish";
 import { GoFishAST } from "../_ast";
 import { applyConstraints } from "../constraints";
+import { unionChildSpaces } from "./alignment";
 
 export const layer = createNodeOperatorSequential(
   async (
@@ -62,75 +57,7 @@ export const layer = createNodeOperatorSequential(
         resolveUnderlyingSpace: (
           children: Size<UnderlyingSpace>[],
           _childNodes: GoFishAST[]
-        ) => {
-          let xSpace = UNDEFINED;
-          const xChildrenPositionSpaces = children.filter(
-            (
-              child
-            ): child is [
-              (typeof child)[0] & { kind: "position" },
-              (typeof child)[1],
-            ] => child[0].kind === "position"
-          );
-          const xChildrenOrdinalSpaces = children.filter(
-            (child) => child[0].kind === "ordinal"
-          );
-
-          if (
-            xChildrenPositionSpaces.length > 0 &&
-            xChildrenOrdinalSpaces.length === 0
-          ) {
-            const domain = Interval.unionAll(
-              ...xChildrenPositionSpaces.map((child) => child[0].domain)
-            );
-            xSpace = POSITION(domain);
-          } else if (xChildrenOrdinalSpaces.length > 0) {
-            // Collect and merge domains from all child ordinal spaces
-            const allKeys = new Set<string>();
-            xChildrenOrdinalSpaces.forEach((child) => {
-              const ordinalSpace = child[0];
-              if (isORDINAL(ordinalSpace) && ordinalSpace.domain) {
-                ordinalSpace.domain.forEach((key) => allKeys.add(key));
-              }
-            });
-            xSpace = ORDINAL(Array.from(allKeys));
-          }
-
-          let ySpace = UNDEFINED;
-          const yChildrenPositionSpaces = children.filter(
-            (
-              child
-            ): child is [
-              (typeof child)[0],
-              (typeof child)[1] & { kind: "position" },
-            ] => child[1].kind === "position"
-          );
-          const yChildrenOrdinalSpaces = children.filter(
-            (child) => child[1].kind === "ordinal"
-          );
-
-          if (
-            yChildrenPositionSpaces.length > 0 &&
-            yChildrenOrdinalSpaces.length === 0
-          ) {
-            const domain = Interval.unionAll(
-              ...yChildrenPositionSpaces.map((child) => child[1].domain)
-            );
-            ySpace = POSITION(domain);
-          } else if (yChildrenOrdinalSpaces.length > 0) {
-            // Collect and merge domains from all child ordinal spaces
-            const allKeys = new Set<string>();
-            yChildrenOrdinalSpaces.forEach((child) => {
-              const ordinalSpace = child[1];
-              if (isORDINAL(ordinalSpace) && ordinalSpace.domain) {
-                ordinalSpace.domain.forEach((key) => allKeys.add(key));
-              }
-            });
-            ySpace = ORDINAL(Array.from(allKeys));
-          }
-
-          return [xSpace, ySpace];
-        },
+        ) => [unionChildSpaces(children, 0), unionChildSpaces(children, 1)],
         inferSizeDomains: (shared, children) => {
           const childMeasures = children.map((child) =>
             child.inferSizeDomains()

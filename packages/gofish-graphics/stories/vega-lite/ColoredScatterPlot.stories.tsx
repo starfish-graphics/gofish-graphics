@@ -2,7 +2,6 @@ import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
 import { Chart, layer, scatter, circle } from "../../src/lib";
 import data from "vega-datasets";
-
 const meta: Meta = {
   title: "Vega-Lite/Colored Scatter Plot",
   argTypes: {
