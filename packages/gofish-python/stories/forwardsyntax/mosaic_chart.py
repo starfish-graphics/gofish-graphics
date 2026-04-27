@@ -25,9 +25,9 @@ def default(w=400, h=400):
     return (
         chart(_data)
         .flow(
-            spread("origin", dir="x"),
+            spread(by="origin", dir="x"),
             derive(lambda d: normalize(d, "count")),
-            stack("cylinders", dir="y"),
+            stack(by="cylinders", dir="y"),
         )
         .mark(rect(h="count", fill="origin", stroke="white", strokeWidth=2))
     )

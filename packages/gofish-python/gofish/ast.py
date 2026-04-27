@@ -184,31 +184,31 @@ class ChartBuilder:
         """Alias for zOrder()."""
         return self.zOrder(value)
 
-    def facet(self, field: str, **kwargs: Any) -> "ChartBuilder":
+    def facet(self, *, by: str, **kwargs: Any) -> "ChartBuilder":
         """
-        Convenience method: spread data by field (shortcut for .flow(spread(field, ...))).
+        Convenience method: spread data by `by` (shortcut for .flow(spread(by=..., ...))).
 
         Args:
-            field: Field name to facet by
+            by: Field name to facet by
             **kwargs: Options passed to spread() (must include dir)
 
         Returns:
             New ChartBuilder with spread operator added
         """
-        return self.flow(spread(field, **kwargs))
+        return self.flow(spread(by=by, **kwargs))
 
-    def stack(self, field: str, **kwargs: Any) -> "ChartBuilder":
+    def stack(self, *, by: str, **kwargs: Any) -> "ChartBuilder":
         """
-        Convenience method: stack data by field (shortcut for .flow(stack(field, ...))).
+        Convenience method: stack data by `by` (shortcut for .flow(stack(by=..., ...))).
 
         Args:
-            field: Field name to stack by
+            by: Field name to stack by
             **kwargs: Options passed to stack() (must include dir)
 
         Returns:
             New ChartBuilder with stack operator added
         """
-        return self.flow(_stack(field, **kwargs))
+        return self.flow(stack(by=by, **kwargs))
 
     def to_ir(self) -> dict:
         """
@@ -323,60 +323,48 @@ class ChartBuilder:
 
 
 def spread(
-    field_or_options: Union[str, Dict[str, Any]],
+    *,
+    by: Optional[str] = None,
     **options: Any,
 ) -> Operator:
     """
-    Spread operator - groups data and spaces them apart.
+    Spread operator — partitions data by `by` (or iterates per-item when
+    omitted) and lays out children with spacing along an axis.
 
     Args:
-        field_or_options: Field name (str) or options dict
-        **options: Options including dir, spacing, alignment, etc.
+        by: Field name to partition by. Omit for per-item spread.
+        **options: dir ("x"|"y"), spacing, alignment, sharedScale, mode, etc.
 
     Returns:
         Operator object
     """
-    if isinstance(field_or_options, str):
-        opts = {"field": field_or_options, **options}
-    else:
-        opts = {**field_or_options, **options}
-
-    if "dir" not in opts:
-        raise ValueError("spread() requires 'dir' option ('x' or 'y')")
-
-    return Operator("spread", **opts)
-
-
-def _stack(
-    field: str,
-    dir: Optional[str] = None,
-    **options: Any,
-) -> Operator:
-    """Internal stack operator used by ChartBuilder.stack() convenience method."""
-    if dir is not None:
-        options["dir"] = dir
+    if by is not None:
+        options["by"] = by
     if "dir" not in options:
-        raise ValueError("stack() requires 'dir' option ('x' or 'y')")
-    return Operator("stack", field=field, **options)
+        raise ValueError("spread() requires 'dir' option ('x' or 'y')")
+    return Operator("spread", **options)
 
 
 def stack(
-    field: str,
-    dir: Optional[str] = None,
+    *,
+    by: Optional[str] = None,
     **options: Any,
 ) -> Operator:
     """
-    Stack operator - stacks data elements.
+    Stack operator — like spread with no spacing between children.
 
     Args:
-        field: Field name to stack by
-        dir: Direction "x" or "y"
-        **options: Additional options
+        by: Field name to partition by. Omit for per-item stack.
+        **options: dir ("x"|"y"), alignment, sharedScale, mode, etc.
 
     Returns:
         Operator object
     """
-    return _stack(field, dir, **options)
+    if by is not None:
+        options["by"] = by
+    if "dir" not in options:
+        raise ValueError("stack() requires 'dir' option ('x' or 'y')")
+    return Operator("stack", **options)
 
 
 def derive(fn: Callable) -> DeriveOperator:
@@ -392,38 +380,69 @@ def derive(fn: Callable) -> DeriveOperator:
     return DeriveOperator(fn)
 
 
-def group(field: str) -> Operator:
+def group(*, by: Optional[str] = None, **options: Any) -> Operator:
     """
-    Group operator - group data by a field.
+    Group operator — partition data by `by`, wrap each group in a frame.
 
     Args:
-        field: Field name to group by
+        by: Field name to group by.
 
     Returns:
         Operator object
     """
-    return Operator("group", field=field)
+    if by is not None:
+        options["by"] = by
+    if "by" not in options:
+        raise ValueError("group() requires 'by' option (field name)")
+    return Operator("group", **options)
 
 
 def scatter(
-    field: str,
-    x: str,
-    y: str,
+    *,
+    by: Optional[str] = None,
     **options: Any,
 ) -> Operator:
     """
-    Scatter operator - position groups by average x and y values.
+    Scatter operator — position children at per-group means (when `by` is
+    given) or per-item (when omitted).
 
     Args:
-        field: Field name to group by
-        x: Field name for x coordinate
-        y: Field name for y coordinate
-        **options: Additional options
+        by: Field name to group by. Omit for per-item scatter.
+        **options:
+            x, y: Field-name accessors (str) for position; or arrays for
+                  combinator form. Required: at least one of x, y, xMin/xMax,
+                  yMin/yMax.
+            xMin, xMax, yMin, yMax: Range-form accessors (str) — children span
+                                    [xMin[i], xMax[i]] in data space.
+            alignment: "start" | "middle" | "end" | "baseline".
 
     Returns:
         Operator object
     """
-    return Operator("scatter", field=field, x=x, y=y, **options)
+    if by is not None:
+        options["by"] = by
+    return Operator("scatter", **options)
+
+
+def table(
+    *,
+    by: Optional[Dict[str, str]] = None,
+    **options: Any,
+) -> Operator:
+    """
+    Table operator — cross-product over two fields, lay out as a 2D grid.
+
+    Args:
+        by: Dict with `x` and `y` keys naming the two fields, e.g.
+            ``table(by={"x": "model", "y": "year"})``.
+        **options: spacing (number or [x_sp, y_sp] tuple), numCols.
+
+    Returns:
+        Operator object
+    """
+    if by is not None:
+        options["by"] = by
+    return Operator("table", **options)
 
 
 def log(label: Optional[str] = None) -> Operator:

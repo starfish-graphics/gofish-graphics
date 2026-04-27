@@ -9,13 +9,13 @@ TITLE = "Forward Syntax V3/Scatter (Connected)"
 def connected(w=400, h=400):
     points = (
         chart(driving_shifts)
-        .flow(scatter("year", x="miles", y="gas"))
+        .flow(scatter(by="year", x="miles", y="gas"))
         .mark(circle(r=4, fill="white", stroke="black", strokeWidth=2).name("points"))
     )
     lines = chart(select("points")).mark(line(stroke="black", strokeWidth=2))
     dots = (
         chart(driving_shifts)
-        .flow(scatter("year", x="miles", y="gas"))
+        .flow(scatter(by="year", x="miles", y="gas"))
         .mark(circle(r=4, fill="white", stroke="black", strokeWidth=2))
     )
     return Layer([points, lines, dots])

@@ -54,8 +54,8 @@ def default(data=None, w=600, h=300):
         chart(data, {"color": _COLOR})
         .flow(
             derive(_aggregate_by_month_weather),
-            spread("month", dir="x"),
-            stack("weather", dir="y"),
+            spread(by="month", dir="x"),
+            stack(by="weather", dir="y"),
         )
         .mark(rect(h="count", fill="weather", rx=3, ry=3))
     )
