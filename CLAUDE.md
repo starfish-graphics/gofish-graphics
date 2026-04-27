@@ -1,4 +1,4 @@
-# AGENTS.md
+# CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
@@ -135,6 +135,7 @@ Key coordinate systems available:
 
 ## Development Notes
 
+- **Update docs on user-facing API changes**: When you change a public API surface (signatures, option shapes, exported names, default behaviors) in `packages/gofish-graphics/src/`, update the corresponding page in `apps/docs/docs/` in the same change — signature, examples, and any equivalences tables. Do not defer this to a follow-up.
 - **Monorepo Management**: Uses pnpm workspaces
 - **Visual Development**: Use Storybook (`pnpm storybook`) for interactive development and testing
 - **Documentation**: VitePress site in `apps/docs/` with live chart examples

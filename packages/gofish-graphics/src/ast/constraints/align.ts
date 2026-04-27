@@ -9,25 +9,27 @@ import {
 
 export interface AlignConstraint {
   type: "align";
-  dir: Axis;
-  alignment: Alignment;
+  x?: Alignment;
+  y?: Alignment;
   children: ConstraintRef[];
 }
 
 export interface AlignOptions {
-  dir: Axis;
-  alignment?: Alignment;
+  x?: Alignment;
+  y?: Alignment;
 }
 
 export const createAlignConstraint = (
-  { dir, alignment = "start" }: AlignOptions,
+  { x, y }: AlignOptions,
   children: ConstraintRef[]
-): AlignConstraint => ({
-  type: "align",
-  dir,
-  alignment,
-  children,
-});
+): AlignConstraint => {
+  if (x === undefined && y === undefined) {
+    throw new Error(
+      "Constraint.align: at least one of `x` or `y` must be specified"
+    );
+  }
+  return { type: "align", x, y, children };
+};
 
 export interface AlignFallbackBaseline {
   start?: number;
@@ -35,35 +37,49 @@ export interface AlignFallbackBaseline {
   end?: number;
 }
 
-export function applyAlign(
-  constraint: AlignConstraint,
+function applyAlignAxis(
+  axis: Axis,
+  alignment: Alignment,
   targets: Placeable[],
   fallback?: AlignFallbackBaseline
 ): void {
-  const idx = axisIndex(constraint.dir);
+  const idx = axisIndex(axis);
 
   // Find baseline from first already-placed child, or default to 0
   let baseline: number;
   const placed = targets.find((t) => isPlacedOn(t, idx));
 
-  if (constraint.alignment === "start") {
+  if (alignment === "start") {
     baseline = placed ? placed.dims[idx].min! : (fallback?.start ?? 0);
     for (const target of targets) {
       if (isPlacedOn(target, idx)) continue;
-      target.place(constraint.dir, baseline);
+      target.place(axis, baseline);
     }
-  } else if (constraint.alignment === "middle") {
+  } else if (alignment === "middle") {
     baseline = placed ? placed.dims[idx].center! : (fallback?.middle ?? 0);
     for (const target of targets) {
       if (isPlacedOn(target, idx)) continue;
-      target.place(constraint.dir, baseline, "center");
+      target.place(axis, baseline, "center");
     }
   } else {
     // "end"
     baseline = placed ? placed.dims[idx].max! : (fallback?.end ?? 0);
     for (const target of targets) {
       if (isPlacedOn(target, idx)) continue;
-      target.place(constraint.dir, baseline, "max");
+      target.place(axis, baseline, "max");
     }
+  }
+}
+
+export function applyAlign(
+  constraint: AlignConstraint,
+  targets: Placeable[],
+  fallback?: { x?: AlignFallbackBaseline; y?: AlignFallbackBaseline }
+): void {
+  if (constraint.x !== undefined) {
+    applyAlignAxis("x", constraint.x, targets, fallback?.x);
+  }
+  if (constraint.y !== undefined) {
+    applyAlignAxis("y", constraint.y, targets, fallback?.y);
   }
 }

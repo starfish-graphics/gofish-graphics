@@ -1,5 +1,6 @@
 import * as Monotonic from "../../util/monotonic";
 import { GoFishNode } from "../_node";
+import { isToken } from "../createName";
 import { Size, elaborateDims, FancyDims } from "../dims";
 import { UnderlyingSpace } from "../underlyingSpace";
 import * as Interval from "../../util/interval";
@@ -10,6 +11,16 @@ import { createOperatorSequential } from "../withGoFish";
 import { GoFishAST } from "../_ast";
 import { applyConstraints } from "../constraints";
 import { unionChildSpaces } from "./alignment";
+
+/** Normalize a node's _name (string or Token) to the string used as a key in
+ * the Layer's nameToPlaceable and constraint refs. Tokens contribute their
+ * `__tag`. */
+const childNameKey = (node: GoFishAST): string | undefined => {
+  if (!("_name" in node)) return undefined;
+  const n = (node as GoFishNode)._name;
+  if (n === undefined) return undefined;
+  return isToken(n) ? n.__tag : n;
+};
 
 export const layer = createOperatorSequential(
   async (
@@ -110,10 +121,7 @@ export const layer = createOperatorSequential(
           for (let i = 0; i < children.length; i++) {
             const child = children[i];
             const childPlaceable = child.layout(size, scaleFactors, posScales);
-            const childName =
-              "_name" in node.children[i]
-                ? (node.children[i] as GoFishNode)._name
-                : undefined;
+            const childName = childNameKey(node.children[i]);
             if (!childName || !constrainedNames.has(childName)) {
               childPlaceable.place("x", 0, "baseline");
               childPlaceable.place("y", 0, "baseline");
@@ -129,9 +137,8 @@ export const layer = createOperatorSequential(
               (typeof childPlaceables)[number]
             >();
             for (let i = 0; i < node.children.length; i++) {
-              const childNode = node.children[i];
-              if ("_name" in childNode && (childNode as GoFishNode)._name) {
-                const childName = (childNode as GoFishNode)._name!;
+              const childName = childNameKey(node.children[i]);
+              if (childName !== undefined) {
                 nameToPlaceable.set(childName, childPlaceables[i]);
               }
             }
@@ -147,11 +154,7 @@ export const layer = createOperatorSequential(
             // final constrained sibling positions. Constrained children are
             // intentionally left untouched to preserve "placed once" semantics.
             for (let i = 0; i < children.length; i++) {
-              const childNode = node.children[i];
-              const childName =
-                "_name" in childNode
-                  ? (childNode as GoFishNode)._name
-                  : undefined;
+              const childName = childNameKey(node.children[i]);
               if (childName && constrainedNames.has(childName)) continue;
               childPlaceables[i] = children[i].layout(
                 size,
