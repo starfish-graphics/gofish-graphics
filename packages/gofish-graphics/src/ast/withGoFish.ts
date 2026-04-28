@@ -400,10 +400,10 @@ export function createNodeOperatorSequential<T extends Record<string, any>, R>(
   };
 }
 
-/** A mark that can be named for layer selection via .name("layerName") and labeled via .label(accessor, options?). */
+/** A mark that can be named for layer selection via .name("layerName") and labeled via .label(accessor, options?). Both methods are chainable. */
 export type NameableMark<T> = Mark<T> & {
-  name(layerName: string): Mark<T>;
-  label(accessor: LabelAccessor, options?: LabelOptions): Mark<T>;
+  name(layerName: string): NameableMark<T>;
+  label(accessor: LabelAccessor, options?: LabelOptions): NameableMark<T>;
 };
 
 /**

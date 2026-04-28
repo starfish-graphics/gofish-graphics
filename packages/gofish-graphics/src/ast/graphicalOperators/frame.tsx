@@ -32,18 +32,3 @@ export const Frame = createNodeOperator(
   }
 );
 
-import { createOperator } from "../marks/createOperator";
-
-export type GroupOptions = {
-  by?: string;
-};
-
-export const group = createOperator<any, GroupOptions>(
-  (_opts, children) => Frame({}, children),
-  {
-    split: ({ by }, d) => {
-      if (!by) throw new Error("group requires opts.by = fieldName");
-      return Map.groupBy(d, (r: any) => r[by]);
-    },
-  }
-);

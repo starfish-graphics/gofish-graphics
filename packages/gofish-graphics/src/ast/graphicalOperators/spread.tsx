@@ -25,6 +25,8 @@ import {
 import { UnderlyingSpace } from "../underlyingSpace";
 import * as Interval from "../../util/interval";
 import { Alignment, alignChildren, resolveAlignmentSpace } from "./alignment";
+import { createOperator } from "../marks/createOperator";
+import { Mark, Operator } from "../types";
 
 // Utility function to unwrap lodash wrapped arrays
 const unwrapLodashArray = function <T>(value: T[] | Collection<T>): T[] {
@@ -410,9 +412,6 @@ export const Spread = createNodeOperator(
     );
   }
 );
-
-import { createOperator } from "../marks/createOperator";
-import { Mark, Operator } from "../types";
 
 export type SpreadOptions<T = any> = {
   by?: keyof T & string;

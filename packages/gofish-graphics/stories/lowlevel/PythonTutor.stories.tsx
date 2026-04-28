@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
-import { Constraint, For, layer, spread, rect, text } from "../../src/lib";
+import { Constraint, For, Layer, spread, rect, text } from "../../src/lib";
 
 const meta: Meta = {
   title: "Low Level Syntax/Python Tutor",
@@ -26,7 +26,7 @@ export const GlobalFrame: StoryObj<Args> = {
   args: { w: 320, h: 400 },
   render: (args: Args) => {
     const container = initializeContainer();
-    layer([
+    Layer([
       rect({ h: 300, w: 200, fill: "#e2ebf6" }).name("frame"),
       rect({ h: 300, w: 5, fill: "#a6b3b6" }).name("frameBorder"),
       text({

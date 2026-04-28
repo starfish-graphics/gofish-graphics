@@ -14,11 +14,6 @@ to add a new operator. It assumes you've read
 [`docs/createMark.md`](./createMark.md) — this is the same idea applied to
 layout containers instead of leaf shapes.
 
-If you want the categorical derivation behind it (functor, traversal,
-hylomorphism, profunctor optics — and the original research these come from),
-see [`notes/operator-typeclass.md`](../notes/operator-typeclass.md). The
-present doc only uses those words once, in §6, with explanations.
-
 ## 1. The two call shapes every operator has
 
 Every v3 layout operator is a single function that you can call in two ways:
@@ -33,21 +28,21 @@ chart(data)
   .mark(rect({ h: "value" }));
 ```
 
-The two are duals of each other:
+| form           | what varies     | what's shared                  | meaning                                               |
+| -------------- | --------------- | ------------------------------ | ----------------------------------------------------- |
+| **combinator** | n marks         | one datum                      | "arrange these n marks horizontally"                  |
+| **operator**   | n data slices   | one `mark`, one outer datum    | "for each group of data, build a mark; arrange those" |
 
-| form           | data            | marks        | meaning                                               |
-| -------------- | --------------- | ------------ | ----------------------------------------------------- |
-| **combinator** | one (shared)    | n            | "arrange these n marks horizontally"                  |
-| **operator**   | one (split → n) | one (`mark`) | "for each group of data, build a mark; arrange those" |
+In combinator form, the user provides the array (of marks). In operator form,
+`split` produces the array (of data slices) from `by`. Either way, the
+factory ends up with N children to hand to the same low-level layout. The two
+forms aren't strictly category-theoretic duals — they're two ways of getting
+to the same N-children-then-layout shape, with different sources of the
+multiplicity.
 
-In combinator form, you supply the marks; in operator form, you supply a
-single mark and a `by` field, and the operator splits the data into one
-sub-array per `by`-value, applies the mark to each sub-array, and lays out
-the resulting nodes.
-
-`createOperator` is the factory that produces _both_ forms from one config.
-Disambiguation is by arg shape: a second positional argument means
-combinator form; no second arg means operator form.
+`createOperator` produces both forms from one config. Disambiguation is by
+arg shape: a second positional argument means combinator form; no second
+arg means operator form.
 
 ## 2. The split → fmap → combine shape
 
@@ -72,9 +67,9 @@ data ──split──▶ [piece₀, piece₁, …, pieceₙ]
                  GoFishNode (the arranged children)
 ```
 
-The combinator form does the same thing but inverted: data is shared, marks
-are the array. The factory handles both with the same machinery — only the
-"who is the array" question changes.
+The combinator form skips `split` entirely — the user already supplied the
+array of marks. The factory loops over them, applies each to the shared
+datum, and hands the resulting nodes to the same `combine` step.
 
 ## 3. Anatomy of a `createOperator` call
 
@@ -159,37 +154,7 @@ channels: {
 field name like `x: "miles"` becomes a per-group mean position
 ([`packages/gofish-graphics/src/ast/graphicalOperators/scatter.tsx:336`](../packages/gofish-graphics/src/ast/graphicalOperators/scatter.tsx)).
 
-## 6. Why two forms — and the words for it
-
-The two call shapes are not arbitrary. They correspond to two ways of
-applying a function to a structure:
-
-- **Combinator form** is **applicative-zip**. You have a structure of
-  marks (an array) and a single value (the data). You apply each mark to
-  the value and zip the results back into the structure. In Haskell terms,
-  this is `(<*>)` for a fixed-shape container.
-- **Operator form** is a **traversal**. You have a structure of values
-  (the data, which `split` carves into a Map) and a single function (the
-  mark). You apply the function to each value and reassemble the same
-  structure. The factorisation `traverse = combine ∘ fmap ∘ split` is
-  Gibbons & Oliveira's "essence of the iterator pattern."
-
-The split → fmap → combine triple is also called a **hylomorphism** —
-"unfold a structure, then fold it back with computation in between." The
-unfold is `split`, the fold is `combine`, and `fmap` is the in-between
-work. Hylos come from Meijer/Fokkinga/Paterson's _Bananas, Lenses,
-Envelopes and Barbed Wire_ paper.
-
-If you study profunctor optics, you'll see `Mark<T> = T → Node` is a
-profunctor (contravariant in `T`, covariant in `Node`), and the operator
-form is a profunctor traversal. Pickering/Gibbons/Wu's _Profunctor Optics_
-is the formal setting. None of this is required to use or extend the
-factory — it just means the design isn't ad-hoc.
-
-These are all references for the curious; the factory's actual code is the
-~80 lines at the bottom of `createOperator.ts`.
-
-## 7. Adding a new operator: a worked example
+## 6. Adding a new operator: a worked example
 
 Suppose you want a `wrap` operator that lays children out left-to-right
 with line wrapping at a max width. (This isn't a real GoFish operator
@@ -232,7 +197,7 @@ instead of a bare Map — see
 [`table.tsx:228`](../packages/gofish-graphics/src/ast/graphicalOperators/table.tsx)
 for an example.
 
-## 8. The relationship with `createMark`
+## 7. The relationship with `createMark`
 
 The two factories are siblings:
 
@@ -241,11 +206,8 @@ The two factories are siblings:
 | `createMark`     | a leaf shape (`Rect`, `Ellipse`, …) | a `Mark<T>` (one node from one datum)     |
 | `createOperator` | a layout (`Spread`, `Scatter`, …)   | a dual-mode operator (one node from many) |
 
-Both use channel annotations to encode opts; both produce `NameableMark`s
-that support `.name(...)` and `.label(...)` chaining. `createOperator`'s
-`NameableMark` also has a top-level `.render(container, opts)` method so
-combinator-form callsites can render directly without going through
-`chart()`.
+Both use channel annotations to encode opts; both produce mark types
+supporting `.name(...)` and `.label(...)` chaining.
 
 Naming-wise: `createOperator` is the v3 factory; the low-level helper that
 produces `Spread`, `Scatter`, etc. is `createNodeOperator`
@@ -253,7 +215,7 @@ produces `Spread`, `Scatter`, etc. is `createNodeOperator`
 The "node" prefix reflects that it returns a function whose output is a
 single `GoFishNode`, not the v3 dual-mode shape.
 
-## 9. Pointers
+## 8. Pointers
 
 - The factory: [`packages/gofish-graphics/src/ast/marks/createOperator.ts`](../packages/gofish-graphics/src/ast/marks/createOperator.ts).
 - Existing operators (each colocated with their low-level layout):
@@ -262,13 +224,3 @@ single `GoFishNode`, not the v3 dual-mode shape.
   - `table` — `graphicalOperators/table.tsx:228`.
   - `group` — `graphicalOperators/frame.tsx:41`.
 - The companion mark factory: [`docs/createMark.md`](./createMark.md).
-- Categorical derivation and design history:
-  [`notes/operator-typeclass.md`](../notes/operator-typeclass.md).
-- Research references mentioned in §6:
-  - Meijer, Fokkinga, Paterson (1991), _Functional Programming with
-    Bananas, Lenses, Envelopes and Barbed Wire_.
-  - Gibbons & Oliveira (2009), _The Essence of the Iterator Pattern_.
-  - Pickering, Gibbons, Wu (2017), _Profunctor Optics: Modular Data
-    Accessors_.
-  - Abbott, Altenkirch, Ghani (2005), _Containers: Constructing Strictly
-    Positive Types_.

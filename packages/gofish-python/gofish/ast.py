@@ -380,7 +380,7 @@ def derive(fn: Callable) -> DeriveOperator:
     return DeriveOperator(fn)
 
 
-def group(*, by: Optional[str] = None, **options: Any) -> Operator:
+def group(*, by: str, **options: Any) -> Operator:
     """
     Group operator — partition data by `by`, wrap each group in a frame.
 
@@ -390,10 +390,7 @@ def group(*, by: Optional[str] = None, **options: Any) -> Operator:
     Returns:
         Operator object
     """
-    if by is not None:
-        options["by"] = by
-    if "by" not in options:
-        raise ValueError("group() requires 'by' option (field name)")
+    options["by"] = by
     return Operator("group", **options)
 
 

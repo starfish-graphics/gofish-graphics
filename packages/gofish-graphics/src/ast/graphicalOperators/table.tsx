@@ -6,6 +6,7 @@ import { createNodeOperator } from "../withGoFish";
 import * as Monotonic from "../../util/monotonic";
 import { ORDINAL, UNDEFINED } from "../underlyingSpace";
 import { UnderlyingSpace } from "../underlyingSpace";
+import { createOperator } from "../marks/createOperator";
 
 export const Table = createNodeOperator(
   (
@@ -216,8 +217,6 @@ export const Table = createNodeOperator(
     );
   }
 );
-
-import { createOperator } from "../marks/createOperator";
 
 export type TableOptions = {
   by?: { x: string; y: string };

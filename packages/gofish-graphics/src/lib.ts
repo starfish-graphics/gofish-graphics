@@ -66,7 +66,8 @@ export {
   connectY as ConnectY,
 } from "./ast/graphicalOperators/connectY";
 export { enclose, enclose as Enclose } from "./ast/graphicalOperators/enclose";
-export { Frame, Frame as frame, group } from "./ast/graphicalOperators/frame";
+export { Frame, Frame as frame } from "./ast/graphicalOperators/frame";
+export { group } from "./ast/graphicalOperators/group";
 export {
   position,
   position as Position,

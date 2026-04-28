@@ -3,16 +3,33 @@ import { CoordinateTransform } from "../coordinateTransforms/coord";
 import { type ColorConfig } from "../colorSchemes";
 import { Mark, Operator } from "../types";
 import { Frame } from "../graphicalOperators/frame";
-import {
-  spread,
-  stack,
-  type SpreadOptions,
-  type StackOptions,
-} from "../graphicalOperators/spread";
-import { LayerContext, resolveMarkResult } from "./createOperator";
 
 /** Per-chart registry of named layers for select() lookup. */
-export type { LayerContext };
+export type LayerContext = {
+  [name: string]: {
+    data: any[];
+    nodes: GoFishNode[];
+  };
+};
+
+/**
+ * Resolves whatever a Mark returns into a GoFishNode. Lives here (not in
+ * createOperator.ts) so the dependency between the two files runs one-way:
+ * createOperator imports from chartBuilder, never the other direction.
+ */
+export async function resolveMarkResult(
+  raw: ReturnType<Mark<any>>,
+  layerContext?: LayerContext
+): Promise<GoFishNode> {
+  if (raw instanceof ChartBuilder)
+    return raw.withLayerContext(layerContext ?? {}).resolve();
+  if (typeof raw === "function")
+    return resolveMarkResult(
+      (raw as () => ReturnType<Mark<any>>)(),
+      layerContext
+    );
+  return raw as unknown as GoFishNode;
+}
 
 export type ChartOptions = {
   w?: number;
@@ -129,17 +146,6 @@ export class ChartBuilder<TInput, TOutput = TInput> {
       this.layerContext,
       this.nodeZOrder
     );
-  }
-
-  // facet is an alias for .flow(spread(opts))
-  facet(opts: SpreadOptions): ChartBuilder<TInput, TInput> {
-    return this.flow(spread(opts) as unknown as Operator<TInput, TInput>);
-  }
-
-  // stack is an alias for .flow(stack(opts))
-  // Note: 'stack' below refers to the module-level stack function, not this method
-  stack(opts: StackOptions): ChartBuilder<TInput, TInput> {
-    return this.flow(stack(opts) as unknown as Operator<TInput, TInput>);
   }
 
   // mark stores the mark and returns a new builder for chaining

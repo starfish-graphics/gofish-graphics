@@ -21,59 +21,28 @@
  *   operator form (inside .flow()):   createOp(opts)                -> Operator
  *   combinator form (inside a mark):  createOp(opts, marksShape)    -> Mark
  *
- * See docs/createOperator.md for a full walk-through, and
- * notes/operator-typeclass.md for the categorical derivation.
+ * See docs/createOperator.md for a full walk-through.
  */
 
 import { GoFishAST } from "../_ast";
 import { GoFishNode } from "../_node";
 import { Mark, Operator } from "../types";
-import { ChartBuilder } from "./chartBuilder";
+import { LayerContext, resolveMarkResult } from "./chartBuilder";
 import { inferSize, inferPos, inferColor } from "../channels";
 import type { MaybeValue, Value } from "../data";
 import type { LabelAccessor, LabelOptions } from "../labels/labelPlacement";
+import type { NameableMark } from "../withGoFish";
 
-/** Per-chart registry of named layers for select() lookup. */
-export type LayerContext = {
-  [name: string]: {
-    data: any[];
-    nodes: GoFishNode[];
-  };
-};
+// Re-exports for callers that previously got these from createOperator.
+export type { LayerContext } from "./chartBuilder";
+export { resolveMarkResult } from "./chartBuilder";
 
-/**
- * A mark that supports .name() and .label(), plus a top-level .render() so
- * combinator-form callsites (e.g. `spread({...}, [m1, m2]).render(container)`)
- * can render directly without going through `chart()`.
- */
-export type NameableMark<T> = Mark<T> & {
-  name(layerName: string): NameableMark<T>;
-  label(accessor: LabelAccessor, options?: LabelOptions): NameableMark<T>;
-  render(
-    container: Parameters<GoFishNode["render"]>[0],
-    options: Parameters<GoFishNode["render"]>[1]
-  ): Promise<ReturnType<GoFishNode["render"]>>;
-};
-
-/** Resolves whatever a Mark returns into a GoFishNode. */
-export async function resolveMarkResult(
-  raw: ReturnType<Mark<any>>,
-  layerContext?: LayerContext
-): Promise<GoFishNode> {
-  if (raw instanceof ChartBuilder)
-    return raw.withLayerContext(layerContext ?? {}).resolve();
-  if (typeof raw === "function")
-    return resolveMarkResult(
-      (raw as () => ReturnType<Mark<any>>)(),
-      layerContext
-    );
-  return raw as unknown as GoFishNode;
-}
+// NameableMark is the same type used by createMark — see withGoFish.ts.
+export type { NameableMark } from "../withGoFish";
 
 /**
- * Attach .name(), .label(), and .render() to a mark. The .render() lets
- * combinator-form callsites render at top level without `chart()` — the mark
- * is invoked with undefined data, resolved to a node, and rendered.
+ * Attach chainable .name() and .label() to a mark, registering it into the
+ * layer context when named so that select(...) can find it back.
  */
 export function nameableMark<T>(base: Mark<T>): NameableMark<T> {
   const withName = (layerName: string): NameableMark<T> => {
@@ -116,13 +85,6 @@ export function nameableMark<T>(base: Mark<T>): NameableMark<T> {
     };
     return nameableMark(wrapped);
   };
-  const render = async (
-    container: Parameters<GoFishNode["render"]>[0],
-    options: Parameters<GoFishNode["render"]>[1]
-  ) => {
-    const node = await resolveMarkResult(base(undefined as any));
-    return node.render(container, options);
-  };
   Object.defineProperty(base, "name", {
     value: withName,
     writable: true,
@@ -133,11 +95,6 @@ export function nameableMark<T>(base: Mark<T>): NameableMark<T> {
     writable: true,
     configurable: true,
   });
-  Object.defineProperty(base, "render", {
-    value: render,
-    writable: true,
-    configurable: true,
-  });
   return base as NameableMark<T>;
 }
 
@@ -145,14 +102,19 @@ export function nameableMark<T>(base: Mark<T>): NameableMark<T> {
  * What a split returns. Insertion order is preserved (ES Map spec), which
  * matters for layout ordering.
  *
- * The common case is a bare `Map<key, subdata>`. If the operator also needs
- * to feed axis labels (e.g. `{colKeys, rowKeys}` for table) into the layout
- * function's opts, return the wrapped `{entries, keys}` form instead.
+ * Each bucket may be either a `Datum[]` (the typical groupBy case) or a
+ * single `Datum` (the no-`by` per-item case). The downstream mark and
+ * `inferSize`/`inferPos`/`inferColor` all normalise via
+ * `Array.isArray(d) ? d : [d]`, so both forms work uniformly.
+ *
+ * If the operator also needs to feed axis labels (e.g. `{colKeys, rowKeys}`
+ * for table) into the layout function's opts, return the wrapped
+ * `{entries, keys}` form instead of a bare Map.
  */
 export type SplitResult<Datum> =
-  | Map<string | number, Datum[]>
+  | Map<string | number, Datum | Datum[]>
   | {
-      entries: Map<string | number, Datum[]>;
+      entries: Map<string | number, Datum | Datum[]>;
       keys?: Record<string, string[]>;
     };
 
@@ -275,7 +237,7 @@ function applyChannels<Options extends Record<string, any>>(
   opts: Options,
   channels: ChannelAnnotations<Options> | undefined,
   d: any,
-  entries: Map<string | number, any[]> | undefined
+  entries: Map<string | number, any> | undefined
 ): Options {
   if (!channels) return opts;
   const wholeData = Array.isArray(d) ? d : [d];
@@ -284,7 +246,10 @@ function applyChannels<Options extends Record<string, any>>(
     const spec = channels[key];
     const val = out[key];
     if (val === undefined || spec === undefined) continue;
-    // User already supplied the final-form array — leave it alone.
+    // User already supplied the final-form array — leave it alone. This is
+    // also the path for combinator-form callsites that pre-built per-child
+    // arrays (e.g. `scatter({x: [0, 1, 2]}, [...marks])`), and for entry-
+    // flagged channels where the user passed an explicit array.
     if (Array.isArray(val)) continue;
     const type: ChannelType = typeof spec === "string" ? spec : spec.type;
     const perEntry = typeof spec === "object" && spec.entry === true;
@@ -322,7 +287,7 @@ function buildLayoutOpts<Datum, Options extends Record<string, any>>(
   channels: ChannelAnnotations<Options> | undefined,
   opts: Options,
   d: Datum | Datum[],
-  entries: Map<string | number, Datum[]> | undefined,
+  entries: Map<string | number, Datum | Datum[]> | undefined,
   keys: Record<string, string[]> | undefined
 ): Options {
   const withChannels = applyChannels(opts, channels, d, entries);

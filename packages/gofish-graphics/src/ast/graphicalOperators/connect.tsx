@@ -70,7 +70,7 @@ export const connect = createNodeOperator(
             child.layout(size, scaleFactors, [undefined, undefined])
           );
           const bboxPairs = pairs(childPlaceables.map((child) => child.dims));
-          // If in center-to-center mode, adjust bounding boxes to have zero width/height
+          // If in center mode, adjust bounding boxes to have zero width/height
           // with min and max equal to the center point
 
           // Compute bounding box from connected elements

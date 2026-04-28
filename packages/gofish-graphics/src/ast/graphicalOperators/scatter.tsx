@@ -8,6 +8,7 @@ import * as Monotonic from "../../util/monotonic";
 import { POSITION, UNDEFINED, UnderlyingSpace } from "../underlyingSpace";
 import * as Interval from "../../util/interval";
 import { Alignment, alignChildren, resolveAlignmentSpace } from "./alignment";
+import { createOperator } from "../marks/createOperator";
 
 const unwrapLodashArray = function <T>(value: T[] | Collection<T>): T[] {
   if (typeof value === "object" && value !== null && "value" in value) {
@@ -309,8 +310,6 @@ export const Scatter = createNodeOperator(
     );
   }
 );
-
-import { createOperator } from "../marks/createOperator";
 
 /**
  * Scatter options. Each position field (`x`/`y`/`xMin`/etc.) accepts either:
