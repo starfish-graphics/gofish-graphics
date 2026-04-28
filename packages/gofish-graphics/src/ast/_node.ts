@@ -462,6 +462,7 @@ export class GoFishNode {
       debug = false,
       defs,
       axes = false,
+      axisFields,
       colorConfig,
     }: {
       w: number;
@@ -471,13 +472,14 @@ export class GoFishNode {
       transform?: { x?: number; y?: number };
       debug?: boolean;
       defs?: JSX.Element[];
-      axes?: boolean;
+      axes?: AxesOptions;
+      axisFields?: { x?: string; y?: string };
       colorConfig?: ColorConfig;
     }
   ) {
     return gofish(
       container,
-      { w, h, x, y, transform, debug, defs, axes, colorConfig },
+      { w, h, x, y, transform, debug, defs, axes, axisFields, colorConfig },
       this
     );
   }
