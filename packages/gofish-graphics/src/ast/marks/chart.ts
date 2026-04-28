@@ -255,13 +255,25 @@ export function blank<T extends Record<string, any>>({
 type BlendMode = "color" | "multiply" | "screen" | "overlay";
 type PdOptions = { blendMode?: BlendMode };
 
-/** A mark with .name, .label, and .constrain chainable methods. */
+/**
+ * A mark with chainable .name, .label, .constrain, and a top-level .render()
+ * for combinator-form callsites whose children carry their own data
+ * (e.g. `layer([Chart(...).flow(...).mark(...), ...]).render(container, opts)`).
+ *
+ * Mark children that read field accessors will be called with `undefined` data
+ * if you call `.render()` directly — for those, wrap in a Chart instead:
+ *   `chart(data).mark(layer([rect({h: "v"}), ...])).render(container, opts)`.
+ */
 export type ConstrainableMark<T> = Mark<T> & {
   name(layerName: string): ConstrainableMark<T>;
   label(accessor: LabelAccessor, options?: LabelOptions): ConstrainableMark<T>;
   constrain(
     fn: (refs: Record<string, ConstraintRef>) => ConstraintSpec[]
   ): ConstrainableMark<T>;
+  render(
+    container: Parameters<GoFishNode["render"]>[0],
+    options: Parameters<GoFishNode["render"]>[1]
+  ): Promise<ReturnType<GoFishNode["render"]>>;
 };
 
 function makeConstrainableMark<T>(base: Mark<T>): ConstrainableMark<T> {
@@ -310,6 +322,13 @@ function makeConstrainableMark<T>(base: Mark<T>): ConstrainableMark<T> {
     };
     return makeConstrainableMark(constrained);
   };
+  const render = async (
+    container: Parameters<GoFishNode["render"]>[0],
+    options: Parameters<GoFishNode["render"]>[1]
+  ) => {
+    const node = await resolveMarkResult(base(undefined as any));
+    return node.render(container, options);
+  };
   Object.defineProperty(base, "name", {
     value: withName,
     writable: true,
@@ -325,13 +344,21 @@ function makeConstrainableMark<T>(base: Mark<T>): ConstrainableMark<T> {
     writable: true,
     configurable: true,
   });
+  Object.defineProperty(base, "render", {
+    value: render,
+    writable: true,
+    configurable: true,
+  });
   return base as ConstrainableMark<T>;
 }
 
 /**
- * Mark-combinator form of layer. Resolves each child mark against the per-datum
- * data (so field accessors like `h: "amount"` bind), then wraps all children in
- * a Layer node. Supports `.name()`, `.label()`, and `.constrain()`.
+ * Mark-combinator form of layer. Resolves each child against the per-datum
+ * data and wraps the resulting nodes in a Layer. Children may be:
+ *   - Mark functions (called with the parent's data),
+ *   - ChartBuilders (resolved via their own bound data),
+ *   - already-resolved GoFishNodes (e.g. ref(...)).
+ * Supports `.name()`, `.label()`, `.constrain()`, and a top-level `.render()`.
  */
 export function layer<T>(marks: Mark<any>[]): ConstrainableMark<T>;
 export function layer<T>(
@@ -346,7 +373,12 @@ export function layer<T>(
   const marks = (Array.isArray(marksOrOpts) ? marksOrOpts : maybeMarks) ?? [];
   const base: Mark<T> = async (d, key, layerContext) => {
     const resolved = await Promise.all(
-      marks.map((m) => resolveMarkResult(m(d, key, layerContext), layerContext))
+      marks.map((m) =>
+        resolveMarkResult(
+          typeof m === "function" ? m(d, key, layerContext) : m,
+          layerContext
+        )
+      )
     );
     const node = await Layer(opts, resolved);
     (node as any).datum = d;

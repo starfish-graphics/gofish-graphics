@@ -117,6 +117,8 @@ export type {
   ChartOptions,
   ChartBuilder,
 } from "./ast/marks/chart";
+// Side-effect import: attaches .facet() / .stack() to ChartBuilder.
+import "./ast/marks/builderMixins";
 export { palette, gradient, assignGradientColor } from "./ast/colorSchemes";
 export type {
   ColorConfig,

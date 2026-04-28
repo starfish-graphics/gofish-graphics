@@ -5,7 +5,7 @@ import {
   Chart,
   spread,
   rect,
-  Layer,
+  layer,
   select,
   text,
   ref,
@@ -33,7 +33,7 @@ export const Default: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    Layer([
+    layer([
       Chart(seafood)
         .flow(spread({ by: "lake",  dir: "x" }))
         .mark(rect({ h: "count" }).name("bars")),

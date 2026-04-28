@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
 import { catchLocationsArray, seafood, catchLocations } from "../../src/data/catch";
 import { drivingShifts } from "../../src/data/drivingShifts";
-import { Chart, Layer, select, line, rect, stack } from "../../src/lib";
+import { Chart, layer, select, line, rect, stack } from "../../src/lib";
 import { circle, scatter } from "../../src/lib";
 import { clock } from "../../src/ast/coordinateTransforms/clock";
 import _ from "lodash";
@@ -45,7 +45,7 @@ export const Connected: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    Layer([
+    layer([
       Chart(drivingShifts)
         .flow(scatter({ by: "year",  x: "miles", y: "gas" }))
         .mark(circle({ r: 4, fill: "white", stroke: "black", strokeWidth: 2 }).name("points")),
