@@ -250,8 +250,10 @@ export function commitAndPushSnapshots(
     syncDir(join(sourceDir, "dom"), join(wtPath, "dom"));
     syncDir(join(sourceDir, "screenshots"), join(wtPath, "screenshots"));
 
-    // Stage all changes. LFS hooks auto-handle PNGs via .gitattributes.
-    git("git add -A", { cwd: wtPath });
+    // Stage only the data dirs. Avoid `git add -A` so husky/lfs-installed
+    // hook files in .husky/_/ (created during pnpm install) don't get
+    // committed to the data-only snapshot branch.
+    git("git add -A dom screenshots", { cwd: wtPath });
 
     // Check if there's anything to commit.
     const status = git("git status --porcelain", { cwd: wtPath });
