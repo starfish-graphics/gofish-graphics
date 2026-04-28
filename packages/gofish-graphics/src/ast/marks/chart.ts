@@ -391,6 +391,13 @@ export class ChartBuilder<TInput, TOutput = TInput> {
     options: Parameters<GoFishNode["render"]>[1]
   ): Promise<ReturnType<GoFishNode["render"]>> {
     const inferredFields: { x?: string; y?: string } = {};
+    // Mark fields take priority: they encode measured values (e.g. w: "proportion").
+    // Operator fields fill remaining gaps: they encode grouping/layout (e.g. stack("sex")).
+    const markMeta = (this.finalMark as any)?.__axisFields as
+      | { x?: string; y?: string }
+      | undefined;
+    if (markMeta?.x) inferredFields.x ??= markMeta.x;
+    if (markMeta?.y) inferredFields.y ??= markMeta.y;
     for (const op of this.operators) {
       const meta = (op as any).__axisFields as
         | { x?: string; y?: string }
@@ -398,11 +405,6 @@ export class ChartBuilder<TInput, TOutput = TInput> {
       if (meta?.x) inferredFields.x ??= meta.x;
       if (meta?.y) inferredFields.y ??= meta.y;
     }
-    const markMeta = (this.finalMark as any)?.__axisFields as
-      | { x?: string; y?: string }
-      | undefined;
-    if (markMeta?.x) inferredFields.x ??= markMeta.x;
-    if (markMeta?.y) inferredFields.y ??= markMeta.y;
 
     const node = await this.resolve();
     return node.render(container, {

@@ -36,7 +36,7 @@ export type AxisOptions = boolean | { title?: string | false };
 function resolveAxisTitle(
   axisOpt: AxisOptions | undefined
 ): string | false | undefined {
-  if (!axisOpt) return false; // axis hidden, title irrelevant
+  if (axisOpt === undefined || axisOpt === false) return false; // axis hidden, title irrelevant
   if (axisOpt === true) return undefined; // axis shown, infer title from encoding
   return axisOpt.title; // string: custom title, false: no title, undefined: infer title
 }
