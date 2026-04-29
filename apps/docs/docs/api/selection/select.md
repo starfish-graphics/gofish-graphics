@@ -16,7 +16,7 @@ gf.Layer([
   // Step 1: name the mark
   gf
     .Chart(lakeTotals)
-    .flow(gf.spread("lake", { dir: "x" }))
+    .flow(gf.spread({ by: "lake", dir: "x" }))
     .mark(gf.rect({ h: "count" }).name("bars")),
 
   // Step 2: select those nodes as data for a new chart

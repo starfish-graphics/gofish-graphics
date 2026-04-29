@@ -6,7 +6,7 @@ Creates a `ChartBuilder`. This is the entry point for every GoFish chart.
 
 ```js
 gf.Chart(seafood)
-  .flow(gf.spread("lake", { dir: "x" }))
+  .flow(gf.spread({ by: "lake", dir: "x" }))
   .mark(gf.rect({ h: "count" }))
   .render(root, { w: 400, h: 250, axes: true });
 ```
@@ -35,7 +35,7 @@ Returns a `ChartBuilder<T>` with [`.flow()`](/api/core/flow), [`.mark()`](/api/c
 
 ```ts
 chart(data)
-  .flow(spread("category", { dir: "x" }))
+  .flow(spread({ by: "category", dir: "x" }))
   .mark(rect({ h: "value" }))
   .render(container, { w: 500, h: 300, axes: true });
 ```
@@ -53,11 +53,11 @@ Children with the same z-order keep their original array order. The default z-or
 ```ts
 Layer([
   chart(data)
-    .flow(scatter("x", { y: "y" }))
+    .flow(scatter({ by: "x", y: "y" }))
     .mark(line())
     .zOrder(0),
   chart(data)
-    .flow(scatter("x", { y: "y" }))
+    .flow(scatter({ by: "x", y: "y" }))
     .mark(circle({ r: 5 }))
     .zOrder(1),
 ]);

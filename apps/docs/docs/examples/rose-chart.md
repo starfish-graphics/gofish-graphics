@@ -15,8 +15,8 @@ const container = document.getElementById("app");
 
 Chart(nightingale, { coord: clock() })
   .flow(
-    stack("Month", { dir: "x" }),
-    stack("Type", { dir: "y" }),
+    stack({ by: "Month", dir: "x" }),
+    stack({ by: "Type", dir: "y" }),
     derive((d) => d.map((d) => ({ ...d, Death: Math.sqrt(d.Death) })))
   )
   .mark(rect({ w: (Math.PI * 2) / 12, emX: true, h: "Death", fill: "Type" }))

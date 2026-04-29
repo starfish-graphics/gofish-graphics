@@ -15,7 +15,7 @@ const container = document.getElementById("app");
 
 Chart(seafood)
   .flow(
-    spread("lake", { spacing: 8, dir: "x" }),
+    spread({ by: "lake", spacing: 8, dir: "x" }),
     derive((d) => d.flatMap((d) => repeat(d, "count"))),
     derive((d) => _.chunk(d, 5)),
     spread({ spacing: 2, dir: "y" }),

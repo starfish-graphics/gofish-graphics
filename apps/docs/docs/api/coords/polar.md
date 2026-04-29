@@ -6,7 +6,7 @@ Transforms Cartesian coordinates into a polar coordinate system. The x-axis maps
 
 ```js
 gf.Chart(seafood, { coord: gf.polar() })
-  .flow(gf.stack("species", { dir: "x" }))
+  .flow(gf.stack({ by: "species", dir: "x" }))
   .mark(gf.rect({ w: "count", fill: "species" }))
   .render(root, {
     w: 400,
@@ -50,12 +50,12 @@ chart(data, { coord: polar() })
 ```ts
 // Basic polar chart
 chart(data, { coord: polar() })
-  .flow(stack("category", { dir: "x" }))
+  .flow(stack({ by: "category", dir: "x" }))
   .mark(rect({ w: "value" }));
 
 // Polar with spread for radial segments
 chart(data, { coord: polar() })
-  .flow(spread("month", { dir: "x" }))
+  .flow(spread({ by: "month", dir: "x" }))
   .mark(rect({ w: 1, h: "value" }));
 ```
 

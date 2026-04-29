@@ -27,7 +27,8 @@ const container = document.getElementById("app");
 Layer({ coord: clock() }, [
   Chart(seafood)
     .flow(
-      spread("lake", {
+      spread({
+        by: "lake",
         dir: "x",
         spacing: (2 * Math.PI) / 6,
         mode: "center",
@@ -35,11 +36,11 @@ Layer({ coord: clock() }, [
         label: false,
       }),
       derive((d) => orderBy(d, "count")),
-      stack("species", { dir: "y", label: false })
+      stack({ by: "species", dir: "y", label: false })
     )
     .mark(rect({ h: "count", fill: "species" }).name("bars")),
   Chart(select("bars"))
-    .flow(group("species"))
+    .flow(group({ by: "species" }))
     .mark(area({ opacity: 0.8 })),
 ]).render(container, {
   w: 500,

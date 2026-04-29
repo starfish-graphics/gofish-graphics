@@ -29,7 +29,7 @@ const alphabet = [
 const root = document.createElement("div");
 
 Chart(seafood)
-  .flow(spread("letter", { dir: "x" }))
+  .flow(spread({ by: "letter", dir: "x" }))
   .mark(rect({ h: "frequency" }))
   .render(root, {
     w: 500,
@@ -62,7 +62,7 @@ The `flow` method is where you specify _graphical operators_. Graphical operator
 dataset (usually by applying a `groupBy`) and specify layout.
 
 ```ts
-.flow(spread("letter", { dir: "x" }))
+.flow(spread({ by: "letter",  dir: "x" }))
 ```
 
 Here we're using the `spread` operator to create one group per `letter` and we arrange them
@@ -132,7 +132,7 @@ const root = document.getElementById("app");
 // - Try changing `dir` to `y` and use `rect`'s `w` channel instead of `h`.
 // - What happens when you map both `w` and `h` to "frequency"?
 Chart(alphabet)
-  .flow(spread("letter", { dir: "x" }))
+  .flow(spread({ by: "letter", dir: "x" }))
   .mark(rect({ h: "frequency" }))
   .render(root, {
     w: 500,

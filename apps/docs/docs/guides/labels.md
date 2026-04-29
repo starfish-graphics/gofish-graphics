@@ -10,7 +10,7 @@ Call `.label(field)` on any mark to display a data field as text.
 
 ```js
 gf.Chart(seafood)
-  .flow(gf.spread("lake", { dir: "x" }))
+  .flow(gf.spread({ by: "lake", dir: "x" }))
   .mark(gf.rect({ h: "count" }).label("count"))
   .render(root, { w: 400, h: 250, axes: true });
 ```
@@ -25,7 +25,10 @@ Labels use a `side-edge-align` position system.
 
 ```js
 gf.Chart(seafood)
-  .flow(gf.spread("lake", { dir: "x" }), gf.stack("species", { dir: "y" }))
+  .flow(
+    gf.spread({ by: "lake", dir: "x" }),
+    gf.stack({ by: "species", dir: "y" })
+  )
   .mark(
     gf
       .rect({ h: "count", fill: "species" })
@@ -109,7 +112,7 @@ Use the `rotate` option for angled labels. Positive values rotate clockwise.
 
 ```js
 gf.Chart(seafood)
-  .flow(gf.spread("lake", { dir: "x" }))
+  .flow(gf.spread({ by: "lake", dir: "x" }))
   .mark(
     gf
       .rect({ h: "count" })

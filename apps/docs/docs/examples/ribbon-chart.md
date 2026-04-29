@@ -27,13 +27,13 @@ const container = document.getElementById("app");
 Layer([
   Chart(seafood)
     .flow(
-      spread("lake", { dir: "x", spacing: 64 }),
+      spread({ by: "lake", dir: "x", spacing: 64 }),
       derive((d) => orderBy(d, "count")),
-      stack("species", { dir: "y", label: false })
+      stack({ by: "species", dir: "y", label: false })
     )
     .mark(rect({ h: "count", fill: "species" }).name("bars")),
   Chart(select("bars"))
-    .flow(group("species"))
+    .flow(group({ by: "species" }))
     .mark(area({ opacity: 0.8 })),
 ]).render(container, {
   w: 400,

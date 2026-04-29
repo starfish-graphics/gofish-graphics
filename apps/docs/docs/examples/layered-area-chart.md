@@ -22,10 +22,10 @@ const container = document.getElementById("app");
 
 Layer([
   Chart(streamgraphData)
-    .flow(spread("x", { dir: "x", spacing: 50 }))
+    .flow(spread({ by: "x", dir: "x", spacing: 50 }))
     .mark(blank({ h: "y", fill: "c" }).name("points")),
   Chart(select("points"))
-    .flow(group("c"))
+    .flow(group({ by: "c" }))
     .mark(area({ opacity: 0.7 })),
 ]).render(container, {
   w: 500,

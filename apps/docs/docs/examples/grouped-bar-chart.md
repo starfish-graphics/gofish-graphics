@@ -14,8 +14,8 @@ const container = document.getElementById("app");
 
 Chart(seafood)
   .flow(
-    spread("lake", { dir: "x" }), //
-    stack("species", { dir: "x", label: false })
+    spread({ by: "lake", dir: "x" }), //
+    stack({ by: "species", dir: "x", label: false })
   )
   .mark(rect({ h: "count", fill: "species" }))
   .render(container, {

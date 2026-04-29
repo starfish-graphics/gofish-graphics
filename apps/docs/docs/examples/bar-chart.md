@@ -13,7 +13,7 @@ import { seafood } from "./dataset";
 const container = document.getElementById("app");
 
 Chart(seafood)
-  .flow(spread("lake", { dir: "x" }))
+  .flow(spread({ by: "lake", dir: "x" }))
   .mark(rect({ h: "count" }))
   .render(container, {
     w: 400,

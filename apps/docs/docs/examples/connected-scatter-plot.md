@@ -14,7 +14,7 @@ const container = document.getElementById("app");
 
 Layer([
   Chart(drivingShifts)
-    .flow(scatter("year", { x: "miles", y: "gas" }))
+    .flow(scatter({ by: "year", x: "miles", y: "gas" }))
     .mark(
       circle({ r: 4, fill: "white", stroke: "black", strokeWidth: 2 }).name(
         "points"

@@ -112,6 +112,7 @@ export default defineConfig({
             { text: "stack", link: "/api/operators/stack" },
             { text: "table", link: "/api/operators/table" },
             { text: "scatter", link: "/api/operators/scatter" },
+            { text: "group", link: "/api/operators/group" },
             { text: "layer", link: "/api/operators/layer" },
             { text: "derive", link: "/api/operators/derive" },
             { text: "log", link: "/api/operators/log" },

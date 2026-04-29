@@ -6,7 +6,7 @@ A polar coordinate system oriented like a clock face. 0° is at 12 o'clock (top)
 
 ```js
 gf.Chart(seafood, { coord: gf.clock() })
-  .flow(gf.stack("species", { dir: "x" }))
+  .flow(gf.stack({ by: "species", dir: "x" }))
   .mark(gf.rect({ w: "count", fill: "species" }))
   .render(root, {
     w: 400,
@@ -50,17 +50,17 @@ chart(data, { coord: clock() })
 ```ts
 // Pie chart
 chart(data, { coord: clock() })
-  .flow(stack("category", { dir: "x" }))
+  .flow(stack({ by: "category", dir: "x" }))
   .mark(rect({ w: "value", fill: "category" }));
 
 // Donut chart (with inner radius)
 chart(data, { coord: clock() })
-  .flow(stack("category", { dir: "x", y: 50, h: 50 }))
+  .flow(stack({ by: "category", dir: "x", y: 50, h: 50 }))
   .mark(rect({ w: "value", fill: "category" }));
 
 // Rose chart (radial bar chart)
 chart(data, { coord: clock() })
-  .flow(stack("month", { dir: "x" }))
+  .flow(stack({ by: "month", dir: "x" }))
   .mark(rect({ w: (Math.PI * 2) / 12, emX: true, h: "value" }));
 ```
 

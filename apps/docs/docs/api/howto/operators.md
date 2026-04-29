@@ -44,7 +44,7 @@ const segments = [
 ];
 
 gf.Chart(segments)
-  .flow(gf.spread("category", { dir: "y", spacing: 1 }))
+  .flow(gf.spread({ by: "category", dir: "y", spacing: 1 }))
   .mark(gf.rect({ h: "value", fill: "category" }))
   .render(root, { w: 100, h: 200, axes: true });
 ```
@@ -65,7 +65,7 @@ const segments = [
 ];
 
 gf.Chart(segments)
-  .flow(gf.stack("category", { dir: "y" }))
+  .flow(gf.stack({ by: "category", dir: "y" }))
   .mark(gf.rect({ h: "value", fill: "category" }))
   .render(root, { w: 100, h: 200, axes: true });
 ```
@@ -79,7 +79,7 @@ Now the rectangles stack on top of each other: A starts at 0, B starts at 30, C 
 Divides space into separate regions for each group, with optional gaps between them.
 
 ```ts
-.flow(spread("category", { dir: "x", spacing: 8 }))
+.flow(spread({ by: "category",  dir: "x", spacing: 8 }))
 ```
 
 Use `spread` when groups are independent and shouldn't share a scale. The `spacing` parameter controls the gap size (default is 8).
@@ -89,8 +89,8 @@ Use `spread` when groups are independent and shouldn't share a scale. The `spaci
 ```ts
 chart(data)
   .flow(
-    spread("category", { dir: "x", spacing: 24 }),
-    spread("group", { dir: "x", spacing: 0 })
+    spread({ by: "category", dir: "x", spacing: 24 }),
+    spread({ by: "group", dir: "x", spacing: 0 })
   )
   .mark(rect({ h: "value", fill: "group" }));
 ```
@@ -100,7 +100,7 @@ chart(data)
 Arranges items along a continuous shared scale, with each item starting where the previous one ended.
 
 ```ts
-.flow(stack("weather", { dir: "y" }))
+.flow(stack({ by: "weather",  dir: "y" }))
 ```
 
 Use `stack` when building part-to-whole visualizations where values should add up.
@@ -109,7 +109,7 @@ Use `stack` when building part-to-whole visualizations where values should add u
 
 ```ts
 chart(data)
-  .flow(spread("month", { dir: "x" }), stack("category", { dir: "y" }))
+  .flow(spread({ by: "month", dir: "x" }), stack({ by: "category", dir: "y" }))
   .mark(rect({ fill: "category" }));
 ```
 
@@ -118,7 +118,7 @@ chart(data)
 Groups data by a field and positions each group at the mean x/y coordinates of its members.
 
 ```ts
-.flow(scatter("species", { x: "bill_length", y: "flipper_length" }))
+.flow(scatter({ by: "species",  x: "bill_length", y: "flipper_length" }))
 ```
 
 Use `scatter` when your data has numeric x and y fields and you want marks positioned by those values.
@@ -127,7 +127,7 @@ Use `scatter` when your data has numeric x and y fields and you want marks posit
 
 ```ts
 chart(penguins)
-  .flow(scatter("species", { x: "bill_length", y: "flipper_length" }))
+  .flow(scatter({ by: "species", x: "bill_length", y: "flipper_length" }))
   .mark(circle({ r: 4, fill: "species" }));
 ```
 
@@ -138,8 +138,8 @@ You can chain multiple operators in `.flow()` to create nested layouts:
 ```ts
 // First spread by category (with gaps), then stack within each category
 .flow(
-  spread("category", { dir: "x", spacing: 16 }),
-  stack("subcategory", { dir: "y" })
+  spread({ by: "category",  dir: "x", spacing: 16 }),
+  stack({ by: "subcategory",  dir: "y" })
 )
 ```
 

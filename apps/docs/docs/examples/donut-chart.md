@@ -14,7 +14,7 @@ import { seafood } from "./dataset";
 const container = document.getElementById("app");
 
 Chart(seafood, { coord: clock() })
-  .flow(stack("species", { dir: "x", y: 50, h: 50 }))
+  .flow(stack({ by: "species", dir: "x", y: 50, h: 50 }))
   .mark(rect({ w: "count", fill: "species" }))
   .render(container, {
     w: 400,

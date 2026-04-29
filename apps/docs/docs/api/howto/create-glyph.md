@@ -52,7 +52,7 @@ const Badge = ({ w = 50, h = 30, fill = "steelblue" }) =>
     gf.ellipse({ cx: -w / 2 + 10, cy: 0, w: 10, h: 10, fill: "white" }),
   ]);
 
-gf.Spread({ direction: "x", spacing: 20 }, [
+gf.Spread({ dir: "x", spacing: 20 }, [
   Badge({ w: 40, h: 24, fill: "steelblue" }),
   Badge({ w: 60, h: 36, fill: "coral" }),
   Badge({ w: 50, h: 30, fill: "seagreen" }),
@@ -82,7 +82,7 @@ const locations = [
 ];
 
 gf.Chart(locations)
-  .flow(gf.scatter("id", { x: "x", y: "y" }))
+  .flow(gf.scatter({ by: "id", x: "x", y: "y" }))
   .mark((d) => Pin({ fill: d[0].color }))
   .render(root, { w: 350, h: 200 });
 ```
@@ -99,7 +99,7 @@ You can combine any shapes: rectangles, ellipses, text, and more. Here's a label
 
 ```js
 const DataPoint = ({ value, fill = "steelblue" }) =>
-  gf.Spread({ direction: "y", spacing: 4, alignment: "middle" }, [
+  gf.Spread({ dir: "y", spacing: 4, alignment: "middle" }, [
     gf.ellipse({ cx: 0, cy: 0, w: 12, h: 12, fill }),
     gf.text({ text: String(value), fontSize: 10 }),
   ]);
@@ -111,7 +111,7 @@ const points = [
 ];
 
 gf.Chart(points)
-  .flow(gf.scatter("id", { x: "x", y: "y" }))
+  .flow(gf.scatter({ by: "id", x: "x", y: "y" }))
   .mark((d) => DataPoint({ value: d[0].value }))
   .render(root, { w: 350, h: 200 });
 ```

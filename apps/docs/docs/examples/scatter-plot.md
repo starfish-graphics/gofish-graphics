@@ -13,7 +13,7 @@ import { catchLocationsArray } from "./dataset";
 const container = document.getElementById("app");
 
 Chart(catchLocationsArray)
-  .flow(scatter("lake", { x: "x", y: "y" }))
+  .flow(scatter({ by: "lake", x: "x", y: "y" }))
   .mark(circle({ r: 5 }))
   .render(container, {
     w: 500,

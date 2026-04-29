@@ -11,7 +11,7 @@ Selection lets you connect marks across charts—for example, adding labels to b
 Layer([
   // Chart 1: create marks and name them
   Chart(data)
-    .flow(spread("category", { dir: "x" }))
+    .flow(spread({ by: "category", dir: "x" }))
     .mark(rect({ h: "value" }).name("bars")),
 
   // Chart 2: select those marks as data
@@ -31,13 +31,13 @@ Add text labels above each bar by selecting the bar nodes and rendering text at 
 gf.Layer([
   gf
     .Chart(seafood)
-    .flow(gf.spread("lake", { dir: "x" }))
+    .flow(gf.spread({ by: "lake", dir: "x" }))
     .mark(gf.rect({ h: "count" }).name("bars")),
   gf
     .Chart(gf.select("bars"))
-    .flow(gf.group("lake"))
+    .flow(gf.group({ by: "lake" }))
     .mark((d) =>
-      gf.Spread({ direction: "y", alignment: "middle", spacing: 10 }, [
+      gf.Spread({ dir: "y", alignment: "middle", spacing: 10 }, [
         gf.ref(d[0]),
         gf.text({ text: d[0].count }),
       ])
@@ -59,7 +59,7 @@ Draw a line connecting scatterplot points:
 gf.Layer([
   gf
     .Chart(drivingShifts)
-    .flow(gf.scatter("year", { x: "miles", y: "gas" }))
+    .flow(gf.scatter({ by: "year", x: "miles", y: "gas" }))
     .mark(
       gf
         .circle({ r: 4, fill: "white", stroke: "black", strokeWidth: 2 })
@@ -91,7 +91,7 @@ const locations = Object.entries(lakeLocations).map(([lake, { x, y }]) => ({
 gf.Layer([
   gf
     .Chart(locations)
-    .flow(gf.scatter("lake", { x: "x", y: "y" }))
+    .flow(gf.scatter({ by: "lake", x: "x", y: "y" }))
     .mark(gf.blank().name("points")),
   gf
     .Chart(gf.select("points"))
