@@ -147,15 +147,43 @@ jobs:
         uses: actions/github-script@v8
         with:
           script: |
+            const fs = require('fs');
             const url = '${{ steps.deploy-review.outputs.deployment-url }}';
             if (!url) return;
+
+            // Build a description from the diff summary, omitting zero-count
+            // categories. Falls back to a generic message if the summary is
+            // missing.
+            const summaryPath = 'tests/tmp/diff-summary.json';
+            let description = 'Click Details to review and accept diffs';
+            try {
+              const summary = JSON.parse(fs.readFileSync(summaryPath, 'utf8'));
+              const parts = [];
+              const plural = (n, singular, pluralForm) =>
+                `${n} ${n === 1 ? singular : pluralForm}`;
+              if (summary.regressions > 0) {
+                parts.push(plural(summary.regressions, 'regression', 'regressions'));
+              }
+              if (summary.newStories > 0) {
+                parts.push(plural(summary.newStories, 'new story', 'new stories'));
+              }
+              if (parts.length > 0) {
+                description = parts.join(', ') + ' — click Details to review';
+              }
+            } catch (e) {
+              // keep fallback description
+            }
+
+            // GitHub's max description length is 140 chars.
+            if (description.length > 140) description = description.slice(0, 140);
+
             await github.rest.repos.createCommitStatus({
               owner: context.repo.owner,
               repo: context.repo.repo,
               sha: context.payload.pull_request.head.sha,
               state: 'pending',
               target_url: url,
-              description: 'Click Details to review and accept diffs',
+              description,
               context: 'Visual Diff Review',
             });
 
@@ -280,14 +308,38 @@ jobs:
         uses: actions/github-script@v8
         with:
           script: |
+            const fs = require('fs');
             const url = '${{ steps.deploy-parity.outputs.deployment-url }}';
             if (!url) return;
+
+            const summaryPath = 'tests/tmp/parity-summary.json';
+            let description = 'Click Details to view JS/Python parity diffs';
+            try {
+              const summary = JSON.parse(fs.readFileSync(summaryPath, 'utf8'));
+              const parts = [];
+              const plural = (n, singular, pluralForm) =>
+                `${n} ${n === 1 ? singular : pluralForm}`;
+              if (summary.parityMismatches > 0) {
+                parts.push(plural(summary.parityMismatches, 'parity mismatch', 'parity mismatches'));
+              }
+              if (summary.missingBaselines > 0) {
+                parts.push(plural(summary.missingBaselines, 'missing baseline', 'missing baselines'));
+              }
+              if (parts.length > 0) {
+                description = parts.join(', ') + ' — click Details to review';
+              }
+            } catch (e) {
+              // keep fallback description
+            }
+
+            if (description.length > 140) description = description.slice(0, 140);
+
             await github.rest.repos.createCommitStatus({
               owner: context.repo.owner,
               repo: context.repo.repo,
               sha: context.payload.pull_request.head.sha,
               state: 'pending',
               target_url: url,
-              description: 'Click Details to view JS/Python parity diffs',
+              description,
               context: 'Python Parity Review',
             });
