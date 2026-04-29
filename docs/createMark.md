@@ -7,6 +7,14 @@
 It lives at
 [`packages/gofish-graphics/src/ast/withGoFish.ts:419`](../packages/gofish-graphics/src/ast/withGoFish.ts).
 
+The design is inspired by Krist Wongsuphasawat's **Encodable** ("Encodable:
+Configurable Grammar for Visualization Components", IEEE VIS 2020 —
+[arxiv:2009.00722](https://arxiv.org/abs/2009.00722)), which factors a
+visualization component's grammar into per-component channel declarations
+plus a parser that turns user-supplied encoding specs into rendering
+parameters. `createMark` is the same idea adapted to GoFish's shape +
+node-tree model (see "Prior art" at the bottom of this doc).
+
 This file explains what `createMark` does, why it exists, and how to add a new
 mark by calling it.
 
@@ -157,6 +165,29 @@ Today's channels are `"size"` and `"color"`. To add (say) `"angle"`:
 ([see docs/createOperator.md](./createOperator.md)) and would need the same
 treatment if the new channel should be available in operator opts as well.
 
+## Prior art
+
+`createMark` is most directly inspired by **Encodable** (Wongsuphasawat,
+IEEE VIS 2020 — [paper](https://arxiv.org/abs/2009.00722),
+[code](https://github.com/kristw/encodable)). Encodable's
+`createEncoderFactory({ channelTypes, defaultEncoding })` produces an
+`Encoder` that the component author uses internally; users of the
+component supply encoding specs (field, scale, format) that the encoder
+resolves into rendering parameters. The shape map is one-to-one:
+
+| Encodable                                  | `createMark`                                        |
+| ------------------------------------------ | --------------------------------------------------- |
+| `createEncoderFactory({ channelTypes })`   | `createMark(shapeFn, channels)`                     |
+| `channelTypes: { x: "X", color: "Color" }` | `channels: { w: "size", fill: "color" }`            |
+| `Encoder` returned to component author     | `Mark<T>` returned, called per datum                |
+| `ChannelEncoder` parses field/literal      | `inferSize`/`inferPos`/`inferColor` parse the value |
+
+GoFish's twist is that a mark also produces a node in a layout AST rather
+than a render directly, and the channel set is smaller (`size`, `pos`,
+`color`) — Encodable's vega-lite-flavored channel taxonomy is richer.
+[`docs/createOperator.md`](./createOperator.md) extends the same pattern
+to layout operators (split + per-partition application).
+
 ## Pointers
 
 - The factory: [`packages/gofish-graphics/src/ast/withGoFish.ts:419`](../packages/gofish-graphics/src/ast/withGoFish.ts).
@@ -167,3 +198,5 @@ treatment if the new channel should be available in operator opts as well.
   in `packages/gofish-graphics/src/ast/shapes/`.
 - The companion factory for layout operators:
   [`docs/createOperator.md`](./createOperator.md).
+- Encodable: paper [arxiv:2009.00722](https://arxiv.org/abs/2009.00722),
+  source [github.com/kristw/encodable](https://github.com/kristw/encodable).

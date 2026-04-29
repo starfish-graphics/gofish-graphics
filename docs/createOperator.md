@@ -9,6 +9,14 @@ combinator inside `.mark(...)`.
 It lives at
 [`packages/gofish-graphics/src/ast/marks/createOperator.ts`](../packages/gofish-graphics/src/ast/marks/createOperator.ts).
 
+The design is inspired by Krist Wongsuphasawat's **Encodable** ("Encodable:
+Configurable Grammar for Visualization Components", IEEE VIS 2020 —
+[arxiv:2009.00722](https://arxiv.org/abs/2009.00722)). `createOperator`
+extends Encodable's per-component channel-grammar pattern to layout
+operators: the channel system carries over verbatim, with a `split` step
+added in front and a `combine` (low-level layout) step added behind. See
+"Prior art" at the bottom of this doc for the mapping.
+
 This doc explains what the factory does, why it has two call shapes, and how
 to add a new operator. It assumes you've read
 [`docs/createMark.md`](./createMark.md) — this is the same idea applied to
@@ -28,10 +36,10 @@ chart(data)
   .mark(rect({ h: "value" }));
 ```
 
-| form           | what varies     | what's shared                  | meaning                                               |
-| -------------- | --------------- | ------------------------------ | ----------------------------------------------------- |
-| **combinator** | n marks         | one datum                      | "arrange these n marks horizontally"                  |
-| **operator**   | n data slices   | one `mark`, one outer datum    | "for each group of data, build a mark; arrange those" |
+| form           | what varies   | what's shared               | meaning                                               |
+| -------------- | ------------- | --------------------------- | ----------------------------------------------------- |
+| **combinator** | n marks       | one datum                   | "arrange these n marks horizontally"                  |
+| **operator**   | n data slices | one `mark`, one outer datum | "for each group of data, build a mark; arrange those" |
 
 In combinator form, the user provides the array (of marks). In operator form,
 `split` produces the array (of data slices) from `by`. Either way, the
@@ -215,12 +223,37 @@ produces `Spread`, `Scatter`, etc. is `createNodeOperator`
 The "node" prefix reflects that it returns a function whose output is a
 single `GoFishNode`, not the v3 dual-mode shape.
 
-## 8. Pointers
+## 8. Prior art
+
+`createOperator` extends the per-component channel-grammar pattern from
+**Encodable** (Wongsuphasawat, IEEE VIS 2020 —
+[paper](https://arxiv.org/abs/2009.00722),
+[code](https://github.com/kristw/encodable)) to layout operators. The
+channel system maps onto Encodable's directly — see
+[`docs/createMark.md`](./createMark.md)'s "Prior art" section for the
+mark-level table. `createOperator` adds two pieces Encodable doesn't have:
+
+| step                       | what it does                                          | Encodable analogue                                                                           |
+| -------------------------- | ----------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `split`                    | partition the input data into an ordered Map          | none — Encodable encodes a single component, not a layout                                    |
+| `channels`                 | parse user opts into rendering parameters             | `Encoder` / `ChannelEncoder`                                                                 |
+| `layout`                   | combine partitioned children into one node            | none — Encodable's encoders feed a renderer outside the grammar layer                        |
+| `entry: true` channel flag | per-partition aggregation (e.g. mean x of each group) | extension; closest analogue is Encodable's per-channel scale resolution against grouped data |
+
+The two-call-shapes design (combinator and operator/traversal) — where the
+multiplicity comes from the marks array vs. the data partitions — is novel
+to `createOperator`; Encodable doesn't address layout multiplicity.
+
+## 9. Pointers
 
 - The factory: [`packages/gofish-graphics/src/ast/marks/createOperator.ts`](../packages/gofish-graphics/src/ast/marks/createOperator.ts).
 - Existing operators (each colocated with their low-level layout):
-  - `spread` and `stack` — `graphicalOperators/spread.tsx:430`.
-  - `scatter` — `graphicalOperators/scatter.tsx:336`.
-  - `table` — `graphicalOperators/table.tsx:228`.
-  - `group` — `graphicalOperators/frame.tsx:41`.
+  - `spread` and `stack` — `graphicalOperators/spread.tsx`.
+  - `scatter` — `graphicalOperators/scatter.tsx`.
+  - `table` — `graphicalOperators/table.tsx`.
+  - `group` — `graphicalOperators/group.ts` (sibling of `frame.tsx`,
+    extracted to keep the chartBuilder ↔ createOperator import graph
+    acyclic).
 - The companion mark factory: [`docs/createMark.md`](./createMark.md).
+- Encodable: paper [arxiv:2009.00722](https://arxiv.org/abs/2009.00722),
+  source [github.com/kristw/encodable](https://github.com/kristw/encodable).
