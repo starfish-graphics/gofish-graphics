@@ -144,8 +144,13 @@ export const Spread = createNodeOperator(
               stackSpace = ORDINAL(namedKeys);
             }
           } else {
-            // SPREAD semantics: keep SIZE composition or pass POSITION through.
-            if (stackSpaces.every(isSIZE)) {
+            // SPREAD semantics. Named children are categorical — ORDINAL
+            // takes precedence so axis labels can render. Otherwise keep
+            // SIZE composition (data-driven extents) or pass POSITION
+            // through.
+            if (namedKeys.length > 0) {
+              stackSpace = ORDINAL(namedKeys);
+            } else if (stackSpaces.every(isSIZE)) {
               const childDomains = stackSpaces.map(
                 (s) => (s as any).domain as Monotonic.Monotonic
               );
@@ -172,8 +177,6 @@ export const Spread = createNodeOperator(
                 )
                 .reduce((a, b) => a + b, 0);
               stackSpace = POSITION(Interval.interval(0, totalWidth));
-            } else if (namedKeys.length > 0) {
-              stackSpace = ORDINAL(namedKeys);
             }
           }
 
