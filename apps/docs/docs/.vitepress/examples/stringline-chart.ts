@@ -28,7 +28,7 @@ gf.frame({}, [
   ),
   gf.For(_.groupBy(caltrainProcessed, "Train"), (d) =>
     gf.connectY(
-      { strokeWidth: 1, mode: "center-to-center" },
+      { strokeWidth: 1, mode: "center" },
       gf.For(d, (d) => gf.ref(`${d.Train}-${d.Station}-${d.Time}`))
     )
   ),

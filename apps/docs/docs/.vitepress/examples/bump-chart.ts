@@ -11,7 +11,7 @@ gf.frame({}, [
   ),
   gf.For(_.groupBy(newCarColors, "Color"), (d) =>
     gf.connectY(
-      { strokeWidth: 2, mode: "center-to-center" },
+      { strokeWidth: 2, mode: "center" },
       gf.For(d, (d) => gf.ref(`${d.Color}-${d.Year}`))
     )
   ),

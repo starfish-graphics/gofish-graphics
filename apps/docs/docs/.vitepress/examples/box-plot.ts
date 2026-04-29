@@ -4,7 +4,7 @@ const boxAndWhisker = ({ median, min, max, q1, q3, fill }) => {
   return gf.frame({}, [
     gf.rect({ w: 8, h: 1, y: gf.v(min), fill: "gray" }).name(minName),
     gf.rect({ w: 8, h: 1, y: gf.v(max), fill: "gray" }).name(maxName),
-    gf.connectY({ mode: "center-to-center", strokeWidth: 1 }, [
+    gf.connectY({ mode: "center", strokeWidth: 1 }, [
       gf.ref(minName),
       gf.ref(maxName),
     ]),

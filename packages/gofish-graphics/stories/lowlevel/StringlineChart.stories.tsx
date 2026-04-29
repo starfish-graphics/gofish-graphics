@@ -55,7 +55,7 @@ export const Default: StoryObj<Args> = {
       ),
       For(groupBy(caltrainProcessed, "Train"), (d) =>
         connectY(
-          { strokeWidth: 1, mode: "center-to-center" },
+          { strokeWidth: 1, mode: "center" },
           For(d, (d) => ref(`${d.Train}-${d.Station}-${d.Time}`))
         )
       ),
