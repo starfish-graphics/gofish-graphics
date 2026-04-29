@@ -85,6 +85,13 @@ export function nameableMark<T>(base: Mark<T>): NameableMark<T> {
     };
     return nameableMark(wrapped);
   };
+  const render = async (
+    container: Parameters<GoFishNode["render"]>[0],
+    options: Parameters<GoFishNode["render"]>[1]
+  ) => {
+    const node = await resolveMarkResult(base(undefined as any));
+    return node.render(container, options);
+  };
   Object.defineProperty(base, "name", {
     value: withName,
     writable: true,
@@ -92,6 +99,11 @@ export function nameableMark<T>(base: Mark<T>): NameableMark<T> {
   });
   Object.defineProperty(base, "label", {
     value: withLabel,
+    writable: true,
+    configurable: true,
+  });
+  Object.defineProperty(base, "render", {
+    value: render,
     writable: true,
     configurable: true,
   });
