@@ -372,14 +372,18 @@ export function layer<T>(
   const opts = Array.isArray(marksOrOpts) ? {} : marksOrOpts;
   const marks = (Array.isArray(marksOrOpts) ? marksOrOpts : maybeMarks) ?? [];
   const base: Mark<T> = async (d, key, layerContext) => {
-    const resolved = await Promise.all(
-      marks.map((m) =>
-        resolveMarkResult(
-          typeof m === "function" ? m(d, key, layerContext) : m,
-          layerContext
-        )
-      )
-    );
+    // Share one layerContext across all children so that select(name) in
+    // one child can find a sibling's .name(name) registration. Inherit from
+    // the caller when present (nested-layer case), else create a fresh
+    // context (top-level .render() case). Resolve sequentially so a child
+    // using select(...) sees registrations from earlier siblings.
+    const sharedContext = layerContext ?? {};
+    const resolved: GoFishNode[] = [];
+    for (const m of marks) {
+      const result =
+        typeof m === "function" ? m(d, key, sharedContext) : m;
+      resolved.push(await resolveMarkResult(result, sharedContext));
+    }
     const node = await Layer(opts, resolved);
     (node as any).datum = d;
     return node;
