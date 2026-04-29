@@ -113,6 +113,10 @@ const meta = {
   sha: process.env.REVIEW_SHA ?? "unknown",
   /** The orphan branch that receives accepted snapshots. */
   snapshotBranch: `snapshots/${codeBranch}`,
+  /** Workflow run id, used by the commit endpoint to trigger rerun-failed-jobs
+   *  after Commit Accepted, so visual-test re-runs against the new baselines
+   *  and python-parity (blocked on visual-test) is allowed to run. */
+  runId: process.env.REVIEW_RUN_ID ?? "",
 };
 
 write(join(OUT_DIR, "data/meta.json"), JSON.stringify(meta, null, 2));
@@ -691,6 +695,8 @@ const html = `<!DOCTYPE html>
           screenshotContents,
           repo: meta.repo,
           branch: meta.snapshotBranch,
+          runId: meta.runId,
+          headSha: meta.sha,
         }),
       });
       const ct = res.headers.get('content-type') || '';
@@ -707,9 +713,11 @@ const html = `<!DOCTYPE html>
         setActionStatus('Error: ' + (data.error || 'Unknown error'), true);
       } else {
         hasUncommittedAccepts = false;
+        const warnings = (data.postCommitWarnings || []).join('; ');
         const msg = 'Committed ' + data.accepted + ' diff(s): ' + (data.commitSha || '').slice(0, 8) +
-          (data.errors && data.errors.length ? ' (' + data.errors.length + ' errors)' : '');
-        setActionStatus(msg, data.errors && data.errors.length > 0);
+          (data.errors && data.errors.length ? ' (' + data.errors.length + ' errors)' : '') +
+          (warnings ? ' — warnings: ' + warnings : '');
+        setActionStatus(msg, (data.errors && data.errors.length > 0) || Boolean(warnings));
         renderSidebar();
         updateCommitBtn();
       }

@@ -28,6 +28,11 @@ interface CommitBody {
   repo: string;
   /** The snapshot branch to commit to (e.g. "snapshots/my-feature") */
   branch: string;
+  /** PR head SHA — used to update the Visual Diff Review commit status. */
+  headSha?: string;
+  /** Workflow run id — if provided, rerun-failed-jobs is triggered post-commit
+   *  so visual-test re-runs against the new baselines and python-parity gets to run. */
+  runId?: string;
 }
 
 type TreeItem = {
@@ -111,6 +116,8 @@ async function handleCommit(
     screenshotContents = {},
     repo,
     branch,
+    headSha: prHeadSha,
+    runId,
   } = body;
   const [owner, repoName] = repo.split("/");
 
@@ -191,11 +198,40 @@ async function handleCommit(
       `get commit ${headSha}`
     );
     baseTreeSha = commitData.tree.sha;
-  } else if (refRes.status !== 404) {
+  } else if (refRes.status === 404) {
+    // Per-PR snapshot branch doesn't exist yet — initialize from snapshots/main
+    // so the new orphan inherits all baselines, with accepted entries layered on top.
+    // Without this, the new branch would contain ONLY the accepted entries, and the
+    // next CI run (which prefers the per-PR branch over snapshots/main) would report
+    // every other story as "new".
+    const mainRefRes = await fetch(`${apiBase}/git/ref/heads/snapshots/main`, {
+      headers: githubHeaders,
+    });
+    if (mainRefRes.ok) {
+      const mainRefData = (await mainRefRes.json()) as {
+        object: { sha: string };
+      };
+      const mainCommit = await githubJson<{ tree: { sha: string } }>(
+        await fetch(`${apiBase}/git/commits/${mainRefData.object.sha}`, {
+          headers: githubHeaders,
+        }),
+        `get commit ${mainRefData.object.sha}`
+      );
+      baseTreeSha = mainCommit.tree.sha;
+      // headSha stays null so the new commit is parentless and the branch ref is
+      // created via POST /git/refs below.
+    } else if (mainRefRes.status !== 404) {
+      const text = await mainRefRes.text();
+      throw new Error(
+        `GitHub get snapshots/main ref failed (${mainRefRes.status}): ${text}`
+      );
+    }
+    // If snapshots/main also doesn't exist (truly fresh repo), baseTreeSha stays
+    // null and we fall back to creating an empty-base orphan.
+  } else {
     const text = await refRes.text();
     throw new Error(`GitHub get ref failed (${refRes.status}): ${text}`);
   }
-  // If 404, headSha/baseTreeSha remain null — we'll create an orphan branch below.
 
   // Create tree with all changes (base_tree omitted for orphan branch creation).
   const newTree = await githubJson<{ sha: string }>(
@@ -252,10 +288,56 @@ async function handleCommit(
     }
   }
 
+  // Best-effort post-commit actions: flip the Visual Diff Review status to
+  // success (so the PR's checks reflect the action immediately) and rerun the
+  // failed workflow jobs (so visual-test re-runs against the new baselines
+  // and python-parity, blocked on visual-test, finally executes). Failures
+  // here are non-fatal — the snapshot commit already succeeded.
+  const postCommitWarnings: string[] = [];
+
+  if (prHeadSha) {
+    try {
+      const statusRes = await fetch(`${apiBase}/statuses/${prHeadSha}`, {
+        method: "POST",
+        headers: githubHeaders,
+        body: JSON.stringify({
+          state: "success",
+          target_url: `https://github.com/${repo}/tree/${branch}`,
+          description: `Accepted ${accepted} diff(s); re-running tests`,
+          context: "Visual Diff Review",
+        }),
+      });
+      if (!statusRes.ok) {
+        postCommitWarnings.push(
+          `status update failed (${statusRes.status}) — token may be missing 'statuses: write'`
+        );
+      }
+    } catch (e) {
+      postCommitWarnings.push(`status update threw: ${String(e)}`);
+    }
+  }
+
+  if (runId) {
+    try {
+      const rerunRes = await fetch(
+        `${apiBase}/actions/runs/${runId}/rerun-failed-jobs`,
+        { method: "POST", headers: githubHeaders }
+      );
+      if (!rerunRes.ok) {
+        postCommitWarnings.push(
+          `rerun failed (${rerunRes.status}) — token may be missing 'actions: write'`
+        );
+      }
+    } catch (e) {
+      postCommitWarnings.push(`rerun threw: ${String(e)}`);
+    }
+  }
+
   return json({
     ok: errors.length === 0,
     accepted,
     errors,
     commitSha: newCommit.sha,
+    postCommitWarnings,
   });
 }
