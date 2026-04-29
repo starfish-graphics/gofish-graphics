@@ -33,7 +33,7 @@ export const GlobalFrame: StoryObj<Args> = {
         fontSize: 24,
         fontFamily: "Andale Mono, monospace",
         fill: "black",
-        text: "Global frame",
+        text: "Global Frame",
       }).name("label"),
       spread({ dir: "y", alignment: "start", spacing: 10 },
         For(variables, (variable) =>

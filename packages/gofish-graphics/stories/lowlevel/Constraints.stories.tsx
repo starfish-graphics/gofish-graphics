@@ -57,7 +57,7 @@ const renderEquivalentStory = (
   spreadRenderer(spreadMount, args);
   constraintRenderer(constraintMount, args);
 
-  grid.appendChild(renderPanel("spread", spreadMount));
+  grid.appendChild(renderPanel("Spread", spreadMount));
   grid.appendChild(renderPanel("Constraints", constraintMount));
 
   return host;
