@@ -145,30 +145,41 @@ export const Spread = createNodeOperator(
               stackSpace = ORDINAL(namedKeys);
             }
           } else {
-            // SPREAD semantics. Named children are categorical — ORDINAL
-            // takes precedence so axis labels can render. Otherwise keep
-            // SIZE composition (data-driven extents) or pass POSITION
-            // through.
-            if (namedKeys.length > 0) {
+            // SPREAD semantics:
+            //  - All-SIZE *and* data-driven (some non-constant Monotonic)
+            //    → keep SIZE composition so parents can solve scale
+            //    factors via Monotonic.inverse. Names don't override
+            //    because the visual size is data-driven, which dominates
+            //    over categorical labeling.
+            //  - All-SIZE constant + named → ORDINAL. Each slot is the
+            //    same size; categorical axis labels are the right thing.
+            //  - Named (any other shape) → ORDINAL.
+            //  - All-SIZE constant + unnamed → SIZE composition.
+            //  - All-POSITION → POSITION(union).
+            const allSize = stackSpaces.every(isSIZE);
+            const childDomains = allSize
+              ? stackSpaces.map((s) => (s as any).domain as Monotonic.Monotonic)
+              : [];
+            const dataDriven =
+              allSize && childDomains.some((d) => !Monotonic.isConstant(d));
+            const composeSize = () =>
+              mode === "edge"
+                ? Monotonic.adds(
+                    Monotonic.add(...childDomains),
+                    effectiveSpacing * (children.length - 1)
+                  )
+                : Monotonic.unknown(
+                    (scaleFactor: number) =>
+                      childDomains[0].run(scaleFactor) / 2 +
+                      effectiveSpacing * (children.length - 1) +
+                      childDomains[childDomains.length - 1].run(scaleFactor) / 2
+                  );
+            if (dataDriven) {
+              stackSpace = SIZE(composeSize());
+            } else if (namedKeys.length > 0) {
               stackSpace = ORDINAL(namedKeys);
-            } else if (stackSpaces.every(isSIZE)) {
-              const childDomains = stackSpaces.map(
-                (s) => (s as any).domain as Monotonic.Monotonic
-              );
-              const composed =
-                mode === "edge"
-                  ? Monotonic.adds(
-                      Monotonic.add(...childDomains),
-                      effectiveSpacing * (children.length - 1)
-                    )
-                  : Monotonic.unknown(
-                      (scaleFactor: number) =>
-                        childDomains[0].run(scaleFactor) / 2 +
-                        effectiveSpacing * (children.length - 1) +
-                        childDomains[childDomains.length - 1].run(scaleFactor) /
-                          2
-                    );
-              stackSpace = SIZE(composed);
+            } else if (allSize) {
+              stackSpace = SIZE(composeSize());
             } else if (children.every((c) => isPOSITION(c[stackDir]))) {
               const totalWidth = children
                 .map((c) =>

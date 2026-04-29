@@ -85,23 +85,21 @@ export function resolveAlignmentSpace(
   alignment: Alignment
 ): { space: UnderlyingSpace; fromSize: boolean } {
   if (spaces.every((s) => isSIZE(s))) {
-    const sizeValues = spaces.map((s) =>
-      ((s as any).domain as { run: (x: number) => number }).run(1)
+    // Preserve SIZE composition (Monotonic.max of child domains) so the
+    // parent can keep solving scale factors via Monotonic.inverse and
+    // doesn't lose the slope/intercept split that POSITION/DIFFERENCE
+    // would collapse.
+    const childDomains = spaces.map(
+      (s) => (s as any).domain as Monotonic.Monotonic
     );
     if (
       alignment === "start" ||
       alignment === "end" ||
-      alignment === "baseline"
+      alignment === "baseline" ||
+      alignment === "middle"
     ) {
-      const intervals = sizeValues.map((v) => Interval.interval(0, v));
       return {
-        space: POSITION(Interval.unionAll(...intervals)),
-        fromSize: true,
-      };
-    }
-    if (alignment === "middle") {
-      return {
-        space: DIFFERENCE(Math.max(...sizeValues.map((v) => Math.abs(v)))),
+        space: SIZE(Monotonic.max(...childDomains)),
         fromSize: true,
       };
     }
