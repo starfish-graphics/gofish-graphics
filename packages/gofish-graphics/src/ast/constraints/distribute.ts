@@ -23,7 +23,7 @@ export const createDistributeConstraint = (
 ): DistributeConstraint => ({
   type: "distribute",
   dir: options.dir,
-  spacing: options.spacing ?? 0,
+  spacing: options.spacing ?? 8,
   mode: options.mode ?? "edge",
   order: options.order ?? "forward",
   children,
