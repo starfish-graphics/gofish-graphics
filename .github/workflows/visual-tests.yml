@@ -21,6 +21,7 @@ jobs:
     permissions:
       pull-requests: write
       contents: write # needed to push to snapshots/main on main push
+      statuses: write # needed to publish review-link commit status
 
     steps:
       - name: Checkout code
@@ -116,7 +117,11 @@ jobs:
         env:
           REVIEW_REPO: ${{ github.repository }}
           REVIEW_BRANCH: ${{ github.head_ref || github.ref_name }}
-          REVIEW_SHA: ${{ github.sha }}
+          # For pull_request events, github.sha is the *merge* commit, not the
+          # PR head. Statuses must be posted on the PR head SHA so they appear
+          # on the PR's checks list, so prefer pull_request.head.sha when set.
+          REVIEW_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          REVIEW_RUN_ID: ${{ github.run_id }}
 
       - name: Deploy review site to Cloudflare Pages
         if: failure() && github.event_name == 'pull_request'
@@ -134,17 +139,24 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           NO_COLOR: "1"
 
-      - name: Comment PR with review URL
+      # Publish a commit status whose Details link jumps directly to the review
+      # app (no intermediate GitHub page, unlike check runs). Mirrors the UX of
+      # services like Chromatic.
+      - name: Publish review-link commit status
         if: failure() && github.event_name == 'pull_request'
         uses: actions/github-script@v8
         with:
           script: |
             const url = '${{ steps.deploy-review.outputs.deployment-url }}';
-            await github.rest.issues.createComment({
+            if (!url) return;
+            await github.rest.repos.createCommitStatus({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: `## Visual Diff Review\n\nVisual tests failed. [**Open Review App**](${url})\n\nReview each diff, mark stories as accepted or rejected, then click **Commit Accepted** to push all accepted changes in a single commit.`
+              sha: context.payload.pull_request.head.sha,
+              state: 'pending',
+              target_url: url,
+              description: 'Click Details to review and accept diffs',
+              context: 'Visual Diff Review',
             });
 
   python-parity:
@@ -152,6 +164,7 @@ jobs:
     needs: visual-test
     permissions:
       pull-requests: write
+      statuses: write # needed to publish parity-review-link commit status
 
     steps:
       - name: Checkout code
@@ -262,24 +275,19 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           NO_COLOR: "1"
 
-      - name: Comment PR with parity review link
+      - name: Publish parity-review-link commit status
         if: failure() && github.event_name == 'pull_request'
         uses: actions/github-script@v8
         with:
           script: |
             const url = '${{ steps.deploy-parity.outputs.deployment-url }}';
-            const urlLine = url
-              ? '[**Open Parity Review**](' + url + ')'
-              : '_Cloudflare deploy failed — download the `parity-review-site` artifact instead._';
-            await github.rest.issues.createComment({
+            if (!url) return;
+            await github.rest.repos.createCommitStatus({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: [
-                '## Python Parity Review',
-                '',
-                'One or more Python parity checks failed. ' + urlLine,
-                '',
-                'This read-only site shows JS and Python source code side-by-side for each story pair, plus DOM diffs for parity failures.',
-              ].join('\n'),
+              sha: context.payload.pull_request.head.sha,
+              state: 'pending',
+              target_url: url,
+              description: 'Click Details to view JS/Python parity diffs',
+              context: 'Python Parity Review',
             });
