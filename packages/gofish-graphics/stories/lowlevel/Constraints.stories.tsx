@@ -289,8 +289,8 @@ export const SpreadX_Spacing_AlignEnd: StoryObj<Args> = {
 // ──────────────────────────────────────────────────────────
 
 /**
- * spread({ dir: "x", alignment: "start", spacing: 60, mode: "center-to-center" })
- *   ≡ align({ dir: "y", alignment: "start" }) + distribute({ dir: "x", spacing: 60, mode: "center-to-center" })
+ * spread({ dir: "x", alignment: "start", spacing: 60, mode: "center" })
+ *   ≡ align({ dir: "y", alignment: "start" }) + distribute({ dir: "x", spacing: 60, mode: "center" })
  */
 export const SpreadX_CenterToCenter: StoryObj<Args> = {
   args: { w: 400, h: 300 },
@@ -301,7 +301,7 @@ export const SpreadX_CenterToCenter: StoryObj<Args> = {
         spread({ dir: "x",
             alignment: "start",
             spacing: 60,
-            mode: "center-to-center",
+            mode: "center",
           },
           makeCenterToCenterRects()
         ).render(container, { w: storyArgs.w, h: storyArgs.h });
@@ -311,7 +311,7 @@ export const SpreadX_CenterToCenter: StoryObj<Args> = {
           .constrain(({ a, b, c }) => [
             Constraint.align({ dir: "y", alignment: "start" }, [a, b, c]),
             Constraint.distribute(
-              { dir: "x", spacing: 60, mode: "center-to-center" },
+              { dir: "x", spacing: 60, mode: "center" },
               [a, b, c]
             ),
           ])
