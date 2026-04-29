@@ -33,14 +33,14 @@ export const Default: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
     spreadY(
-      { dir: "ttb", spacing: 4, alignment: "middle" },
+      { reverse: true, spacing: 4, alignment: "middle" },
       For(groupBy(titanic, "class"), (items, cls) =>
         spreadX(
           { key: cls, h: _(items).sumBy("count") / 10, spacing: 2, alignment: "middle" },
           For(groupBy(items, "sex"), (sItems, sex) =>
             stackY(
               {
-                dir: "ttb",
+                reverse: true,
                 w: (_(sItems).sumBy("count") / _(items).sumBy("count")) * 100,
                 alignment: "middle",
                 sharedScale: true,

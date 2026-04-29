@@ -40,7 +40,7 @@ const classColor = {
 
 export const testNestedWaffle = () =>
   stackY(
-    { dir: "ttb", spacing: 8, alignment: "middle", sharedScale: true },
+    { reverse: true, spacing: 8, alignment: "middle", sharedScale: true },
     _(titanic)
       .groupBy("class")
       .map((cls) =>
@@ -51,7 +51,7 @@ export const testNestedWaffle = () =>
             .map((sex) =>
               enclose({}, [
                 stackY(
-                  { dir: "ttb", spacing: 0.5, alignment: "end" },
+                  { reverse: true, spacing: 0.5, alignment: "end" },
                   _(sex) // Was missing this lodash chain before .reverse()
                     .reverse()
                     .flatMap((d) => Array(d.count).fill(d))

@@ -29,7 +29,7 @@ export const Default: StoryObj<Args> = {
     frame({}, [
       spreadY(
         {
-          dir: "ttb",
+          reverse: true,
           spacing: 8,
           alignment: "start",
         },

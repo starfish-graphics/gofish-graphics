@@ -12,7 +12,7 @@ gf.stackX({ spacing: 0, alignment: "middle" }, [
     fill: gf.neutral,
   }),
   gf.stackY(
-    { dir: "ttb", spacing: 0, alignment: "middle" },
+    { reverse: true, spacing: 0, alignment: "middle" },
     _(titanic)
       .groupBy("class")
       .map((items, cls) =>
@@ -25,7 +25,7 @@ gf.stackX({ spacing: 0, alignment: "middle" }, [
           [
             gf.rect({ w: 40, fill: classColor[cls] }),
             gf.stackY(
-              { dir: "ttb", spacing: 0, alignment: "middle" },
+              { reverse: true, spacing: 0, alignment: "middle" },
               _(items)
                 .groupBy("sex")
                 .map((items, sex) =>
@@ -38,7 +38,7 @@ gf.stackX({ spacing: 0, alignment: "middle" }, [
                     gf.stackY(
                       {
                         w: 40,
-                        dir: "ttb",
+                        reverse: true,
                         spacing: 0,
                         alignment: "middle",
                       },

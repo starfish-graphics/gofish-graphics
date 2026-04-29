@@ -325,10 +325,10 @@ export const SpreadX_CenterToCenter: StoryObj<Args> = {
 // ──────────────────────────────────────────────────────────
 
 /**
- * spread({ dir: "y", alignment: "start", dir: "ttb" })
+ * spread({ dir: "y", alignment: "start", reverse: true })
  *   ≡ align({ dir: "x", alignment: "start" }) + distribute({ dir: "y", order: "reverse" })
  *
- * dir: "ttb" reverses the children array in spread; order: "reverse" does the same.
+ * reverse: true reverses the children array in spread; order: "reverse" does the same.
  */
 export const SpreadY_Reversed: StoryObj<Args> = {
   args: { w: 300, h: 300 },
@@ -336,7 +336,7 @@ export const SpreadY_Reversed: StoryObj<Args> = {
     renderEquivalentStory(
       args,
       (container, storyArgs) => {
-        spread({ dir: "y", alignment: "start", dir: "ttb" },
+        spread({ dir: "y", alignment: "start", reverse: true },
           makeYRects()
         ).render(container, {
           w: storyArgs.w,
