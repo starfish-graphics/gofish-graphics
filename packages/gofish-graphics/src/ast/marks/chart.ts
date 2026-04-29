@@ -380,8 +380,7 @@ export function layer<T>(
     const sharedContext = layerContext ?? {};
     const resolved: GoFishNode[] = [];
     for (const m of marks) {
-      const result =
-        typeof m === "function" ? m(d, key, sharedContext) : m;
+      const result = typeof m === "function" ? m(d, key, sharedContext) : m;
       resolved.push(await resolveMarkResult(result, sharedContext));
     }
     const node = await Layer(opts, resolved);
@@ -392,14 +391,27 @@ export function layer<T>(
 }
 
 function makePorterDuffCombinator(lowLevel: (opts: any, children: any) => any) {
-  return function <T>(
+  function fn<T>(marks: [Mark<any>, Mark<any>]): NameableMark<T>;
+  function fn<T>(
     opts: PdOptions,
     marks: [Mark<any>, Mark<any>]
-  ): Mark<T> & { name(layerName: string): Mark<T> } {
+  ): NameableMark<T>;
+  function fn<T>(
+    optsOrMarks: PdOptions | [Mark<any>, Mark<any>],
+    maybeMarks?: [Mark<any>, Mark<any>]
+  ): NameableMark<T> {
+    const opts = Array.isArray(optsOrMarks) ? {} : optsOrMarks;
+    const marks = (Array.isArray(optsOrMarks) ? optsOrMarks : maybeMarks) as [
+      Mark<any>,
+      Mark<any>,
+    ];
     const base: Mark<T> = async (d, key, layerContext) => {
       const [child0, child1] = await Promise.all(
         marks.map((m) =>
-          resolveMarkResult(m(d, key, layerContext), layerContext)
+          resolveMarkResult(
+            typeof m === "function" ? m(d, key, layerContext) : m,
+            layerContext
+          )
         )
       );
       const node = await lowLevel(opts, [child0, child1]);
@@ -407,7 +419,8 @@ function makePorterDuffCombinator(lowLevel: (opts: any, children: any) => any) {
       return node;
     };
     return nameableMark(base);
-  };
+  }
+  return fn;
 }
 
 export const atop = makePorterDuffCombinator(Atop);
