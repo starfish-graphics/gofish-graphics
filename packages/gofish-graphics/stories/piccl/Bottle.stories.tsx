@@ -32,7 +32,7 @@ export const Default: StoryObj<Args> = {
     const container = initializeContainer();
 
     Chart(data)
-      .flow(spread("category", { dir: "x", spacing: 20 }))
+      .flow(spread({ by: "category", dir: "x", spacing: 20 }))
       .mark(layer(
         [
           atop({blendMode: "color"}, [
