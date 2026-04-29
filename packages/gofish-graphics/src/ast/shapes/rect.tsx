@@ -128,18 +128,20 @@ export const Rect = ({
           if (isValue(d.min) && isValue(d.max)) {
             return POSITION(interval(getValue(d.min)!, getValue(d.max)!));
           }
+          if (!isValue(d.min) && !isValue(d.size)) {
+            // Nothing data-driven on this axis. Literal pixel sizes are
+            // handled at layout time by computeAesthetic, so contribute
+            // nothing to the underlying-space tree.
+            return UNDEFINED;
+          }
           if (isAesthetic(d.min) && isValue(d.size)) {
             return DIFFERENCE(getValue(d.size)!);
           }
-          if (!isValue(d.min) && d.size !== undefined) {
-            // No data position but has size (data-driven or literal pixels):
-            // the axis is SIZE, carrying the per-axis Monotonic.
+          if (!isValue(d.min) && isValue(d.size)) {
+            // No data position; data-driven size → SIZE with Monotonic.
             return SIZE(axisDomain);
           }
-          if (!isValue(d.min) && d.size === undefined) {
-            return UNDEFINED;
-          }
-          // has position, no size (or literal size). POSITION.
+          // has position (data-driven), maybe with literal/no size → POSITION.
           const min = isValue(d.min) ? getValue(d.min)! : 0;
           const size = isValue(d.size) ? getValue(d.size)! : 0;
           return POSITION(interval(min, min + size));

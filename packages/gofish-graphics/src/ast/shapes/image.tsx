@@ -247,25 +247,7 @@ export const Image = ({
         const xPos = dims[0].center ?? dims[0].min;
         const yPos = dims[1].center ?? dims[1].min;
 
-        const requestedWidth = isValue(dims[0].size)
-          ? getValue(dims[0].size)
-          : dims[0].size;
-        const requestedHeight = isValue(dims[1].size)
-          ? getValue(dims[1].size)
-          : dims[1].size;
-        const intrinsicDimensions = resolveIntrinsicDimensions(href);
-        const resolvedDimensions = resolveRenderedDimensions(
-          requestedWidth,
-          requestedHeight,
-          intrinsicDimensions
-        );
-
-        const sizeDomain = (axis: 0 | 1, fallback: number) =>
-          isValue(dims[axis].size)
-            ? Monotonic.linear(getValue(dims[axis].size)!, 0)
-            : Monotonic.linear(0, fallback);
-
-        const resolveAxis = (axis: 0 | 1, pos: any, rendered: number) => {
+        const resolveAxis = (axis: 0 | 1, pos: any) => {
           if (isValue(pos)) {
             const min = getValue(pos) ?? 0;
             if (isValue(dims[axis].size)) {
@@ -276,13 +258,15 @@ export const Image = ({
           if (isAesthetic(pos) && isValue(dims[axis].size)) {
             return DIFFERENCE(getValue(dims[axis].size)!);
           }
-          return SIZE(sizeDomain(axis, rendered));
+          if (!isValue(pos) && isValue(dims[axis].size)) {
+            return SIZE(Monotonic.linear(getValue(dims[axis].size)!, 0));
+          }
+          // No data position, no data size — image's intrinsic dimensions
+          // are resolved at layout time via resolveRenderedDimensions.
+          return UNDEFINED;
         };
 
-        return [
-          resolveAxis(0, xPos, resolvedDimensions.width),
-          resolveAxis(1, yPos, resolvedDimensions.height),
-        ];
+        return [resolveAxis(0, xPos), resolveAxis(1, yPos)];
       },
       layout: (shared, size, scaleFactors, children, posScales) => {
         // For data-bound (Value-wrapped) dims, map from data units to pixels via

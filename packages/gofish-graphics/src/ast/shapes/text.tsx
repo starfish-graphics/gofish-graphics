@@ -167,43 +167,26 @@ export const Text = ({
         const xPos = dims[0].center ?? dims[0].min;
         const yPos = dims[1].center ?? dims[1].min;
 
-        // Measure intrinsic text dimensions for SIZE-axis Monotonic.
-        const finalText = isValue(textContent)
-          ? getValue(textContent)
-          : textContent;
-        const layout = resolveTextLayout(
-          finalText == null ? "" : String(finalText),
-          fontSize,
-          fontFamily,
-          textAnchor,
-          dominantBaseline
-        );
-        const intrinsicW = layout.bbox.maxX - layout.bbox.minX;
-        const intrinsicH = layout.bbox.maxY - layout.bbox.minY;
-
-        const resolveAxis = (axis: 0 | 1, pos: any, intrinsic: number) => {
+        const resolveAxis = (axis: 0 | 1, pos: any) => {
           if (isValue(pos)) {
             const min = getValue(pos) ?? 0;
-            const base = POSITION(interval(min, min));
             if (isValue(dims[axis].size)) {
               return DIFFERENCE(getValue(dims[axis].size)!);
             }
-            return base;
+            return POSITION(interval(min, min));
           }
           if (isAesthetic(pos) && isValue(dims[axis].size)) {
             return DIFFERENCE(getValue(dims[axis].size)!);
           }
-          if (isValue(dims[axis].size)) {
+          if (!isValue(pos) && isValue(dims[axis].size)) {
             return SIZE(Monotonic.linear(getValue(dims[axis].size)!, 0));
           }
-          // No data position, no data size — use the measured text extent.
-          return SIZE(Monotonic.linear(0, intrinsic));
+          // No data position, no data size — text's intrinsic extent is
+          // handled at layout time, not via the underlying-space tree.
+          return UNDEFINED;
         };
 
-        return [
-          resolveAxis(0, xPos, intrinsicW),
-          resolveAxis(1, yPos, intrinsicH),
-        ];
+        return [resolveAxis(0, xPos), resolveAxis(1, yPos)];
       },
       layout: (shared, size, scaleFactors, children, posScales) => {
         const finalText = isValue(textContent)

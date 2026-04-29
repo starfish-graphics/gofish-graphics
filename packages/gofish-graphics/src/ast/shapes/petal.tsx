@@ -87,7 +87,8 @@ export const Petal = ({
             const min = getValue(d.min) ?? 0;
             return POSITION(interval(min, min));
           }
-          if (d.size !== undefined) {
+          if (isValue(d.size)) {
+            // data-driven size only — literals handled at layout time.
             return SIZE(sizeDomain(axis));
           }
           return UNDEFINED;
