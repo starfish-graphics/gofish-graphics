@@ -1,6 +1,8 @@
 # stack
 
-Like [`spread`](/api/operators/spread) but with zero spacing — items stack edge-to-edge. Used for stacked bar charts.
+Shorthand for [`spread`](/api/operators/spread)`({ glue: true })`. Children
+are glued together and their data-driven sizes sum into a continuous
+positional axis at this level. Used for stacked bar charts.
 
 ::: starfish
 
@@ -28,7 +30,10 @@ stack({ dir, ... }, [m1, m2, ...])
 
 ## Parameters
 
-Same as [`spread`](/api/operators/spread) without `spacing` (which is forced to 0).
+Same as [`spread`](/api/operators/spread) without `spacing` or `glue` —
+`stack` always glues, so neither is configurable. If you want gaps between
+children plus a continuous data axis, use `spread({ spacing: N })` —
+`spread`'s "data-driven SIZE composition" mode is the natural fit there.
 
 ## Example
 
