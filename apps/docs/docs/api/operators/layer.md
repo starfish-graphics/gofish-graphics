@@ -38,11 +38,11 @@ By default, children are drawn in the order they appear in the array — later c
 ```ts
 Layer([
   Chart(data)
-    .flow(scatter("x", { y: "y" }))
+    .flow(scatter({ by: "x", y: "y" }))
     .mark(line())
     .zOrder(0),
   Chart(data)
-    .flow(scatter("x", { y: "y" }))
+    .flow(scatter({ by: "x", y: "y" }))
     .mark(circle({ r: 5 }))
     .zOrder(1),
 ]);

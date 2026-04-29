@@ -64,11 +64,10 @@ export const testPolarRibbonOther = (size: { width: number; height: number }) =>
     coord({ transform: polar_DEPRECATED() }, [
       layer([
         stack(
-          { x: 100, y: Math.PI, direction: 1, spacing: Math.PI / 6, alignment: "middle", sharedScale: true },
+          { x: 100, y: Math.PI, dir: 1, spacing: Math.PI / 6, alignment: "middle", sharedScale: true },
           // TODO: I could probably make the width be uniform flexible basically
           Object.entries(_.groupBy(data, "category")).map(([category, items]) =>
-            stack(
-              { direction: 0, spacing: 0, alignment: "middle" },
+            stack({ dir: 0, spacing: 0, alignment: "middle" },
               items
                 .sort((a, b) => a.value - b.value)
                 .map((d) =>
@@ -89,7 +88,7 @@ export const testPolarRibbonOther = (size: { width: number; height: number }) =>
           connect(
             {
               direction: "y",
-              mode: "center-to-center",
+              mode: "center",
               fill: colorScale[group as keyof typeof colorScale],
               // fill: "black",
               // fill: "none",

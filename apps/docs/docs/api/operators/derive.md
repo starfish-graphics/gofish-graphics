@@ -8,7 +8,7 @@ Transforms data before it reaches the next operator or mark. The function receiv
 gf.Chart(seafood)
   .flow(
     gf.derive((d) => d.filter((row) => row.species === "Salmon")),
-    gf.spread("lake", { dir: "x" })
+    gf.spread({ by: "lake", dir: "x" })
   )
   .mark(gf.rect({ h: "count", fill: "steelblue" }))
   .render(root, { w: 400, h: 250, axes: true });
@@ -34,12 +34,12 @@ derive(fn);
 // Filter before spreading
 .flow(
   derive(d => d.filter(row => row.year === 2020)),
-  spread("category", { dir: "x" })
+  spread({ by: "category",  dir: "x" })
 )
 
 // Compute a per-group sum (after spread, d is scoped to one group)
 .flow(
-  spread("category", { dir: "x" }),
+  spread({ by: "category",  dir: "x" }),
   derive(d => [{ ...d[0], total: sumBy(d, "value") }])
 )
 

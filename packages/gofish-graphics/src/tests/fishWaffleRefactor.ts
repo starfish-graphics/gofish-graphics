@@ -24,15 +24,14 @@ const waffleY = (
   { y, numRows }: { y: string; numRows: number },
   mark: (d: any) => any
 ) =>
-  stack(
-    { direction: "y", spacing: 2, alignment: "start" },
+  stack({ dir: "y", spacing: 2, alignment: "start" },
     _(data)
       .reverse()
       .flatMap((d) => Array(d[y]).fill(d))
       .chunk(numRows)
       .reverse()
       .map((d) =>
-        stack({ direction: "x", spacing: 2, alignment: "start" }, d.map(mark))
+        stack({ dir: "x", spacing: 2, alignment: "start" }, d.map(mark))
       )
       .value()
   );
@@ -43,8 +42,7 @@ export const testFishWaffleRefactor = (size: {
 }) =>
   gofish(
     { width: size.width, height: size.height },
-    stack(
-      { direction: "x", spacing: 8, alignment: "end", sharedScale: true },
+    stack({ dir: "x", spacing: 8, alignment: "end", sharedScale: true },
       _(seafood)
         .groupBy("lake")
         .map((d) =>

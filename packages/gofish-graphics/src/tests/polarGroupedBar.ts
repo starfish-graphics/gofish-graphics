@@ -27,11 +27,9 @@ const data = [
 export const testPolarGroupedBar = () => {
   // Create the visualization structure first
   return frame({ coord: polar_DEPRECATED() }, [
-    stack(
-      { direction: 0, spacing: 20, alignment: "end", sharedScale: true },
+    stack({ dir: 0, spacing: 20, alignment: "end", sharedScale: true },
       Object.entries(_.groupBy(data, "category")).map(([category, items]) =>
-        stack(
-          { direction: 0, spacing: 2, alignment: "end" },
+        stack({ dir: 0, spacing: 2, alignment: "end" },
           items.map((d) =>
             rect({
               w: 30,

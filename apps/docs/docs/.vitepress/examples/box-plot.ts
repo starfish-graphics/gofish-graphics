@@ -1,10 +1,10 @@
 const boxAndWhisker = ({ median, min, max, q1, q3, fill }) => {
   const minName = `min-${Math.random().toString(36).substring(2, 9)}`;
   const maxName = `max-${Math.random().toString(36).substring(2, 9)}`;
-  return gf.Frame({}, [
+  return gf.frame({}, [
     gf.rect({ w: 8, h: 1, y: gf.v(min), fill: "gray" }).name(minName),
     gf.rect({ w: 8, h: 1, y: gf.v(max), fill: "gray" }).name(maxName),
-    gf.ConnectY({ mode: "center-to-center", strokeWidth: 1 }, [
+    gf.connectY({ mode: "center", strokeWidth: 1 }, [
       gf.ref(minName),
       gf.ref(maxName),
     ]),
@@ -13,7 +13,7 @@ const boxAndWhisker = ({ median, min, max, q1, q3, fill }) => {
   ]);
 };
 
-gf.StackX(
+gf.stackX(
   {
     spacing: 8,
     sharedScale: true,
@@ -24,7 +24,7 @@ gf.StackX(
       "Pay Grade"
     ),
     (d, key) =>
-      gf.StackX(
+      gf.stackX(
         {
           key,
           spacing: 8,
@@ -43,7 +43,7 @@ gf.StackX(
   )
 ).render(root, { w: 500, h: 600 });
 
-// gf.StackX(
+// gf.stackX(
 //   {
 //     spacing: 24,
 //     sharedScale: true,
@@ -54,7 +54,7 @@ gf.StackX(
 //       "Pay Grade"
 //     ),
 //     (d, key) =>
-//       gf.StackX(
+//       gf.stackX(
 //         {
 //           key,
 //           spacing: 16,

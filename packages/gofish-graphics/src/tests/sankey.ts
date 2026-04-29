@@ -50,12 +50,10 @@ export const testSankey = (size: { width: number; height: number }) =>
   gofish(
     { width: size.width, height: size.height },
     layer([
-      stack(
-        { direction: "y", spacing: 64, alignment: "middle", sharedScale: true },
+      stack({ dir: "y", spacing: 64, alignment: "middle", sharedScale: true },
         // TODO: I could probably make the width be uniform flexible basically
         Object.entries(_.groupBy(data, "category")).map(([category, items]) =>
-          stack(
-            { direction: "x", spacing: 8, alignment: "middle" },
+          stack({ dir: "x", spacing: 8, alignment: "middle" },
             items.map((d) =>
               rect({
                 name: `${d.category}-${d.group}`,

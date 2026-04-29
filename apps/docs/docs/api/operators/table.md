@@ -22,7 +22,7 @@ const data = days.flatMap((day) =>
 );
 
 gf.Chart(data, { color: gf.gradient(["#ffffcc", "#fd8d3c", "#bd0026"]) })
-  .flow(gf.table("hour", "day", { spacing: 4 }))
+  .flow(gf.table({ by: { x: "hour", y: "day" }, spacing: 4 }))
   .mark(gf.rect({ fill: "value" }))
   .render(root, { w: 500, h: 300, axes: true });
 ```
@@ -32,30 +32,28 @@ gf.Chart(data, { color: gf.gradient(["#ffffcc", "#fd8d3c", "#bd0026"]) })
 ## Signature
 
 ```ts
-table(xField, yField, { spacing?, xSpacing?, ySpacing? })
+table({ by: { x, y }, spacing?, numCols? })
 ```
 
 ## Parameters
 
-| Option     | Type     | Description                                        |
-| ---------- | -------- | -------------------------------------------------- |
-| `xField`   | `string` | Field whose unique values become columns           |
-| `yField`   | `string` | Field whose unique values become rows              |
-| `spacing`  | `number` | Gap between cells in both directions (default `2`) |
-| `xSpacing` | `number` | Gap between columns (overrides `spacing`)          |
-| `ySpacing` | `number` | Gap between rows (overrides `spacing`)             |
+| Option    | Type                         | Description                                                        |
+| --------- | ---------------------------- | ------------------------------------------------------------------ |
+| `by`      | `{ x: string; y: string }`   | Two fields whose unique values become columns and rows             |
+| `spacing` | `number \| [number, number]` | Gap between cells (single number, or `[xSpacing, ySpacing]` tuple) |
+| `numCols` | `number`                     | Override the inferred column count                                 |
 
 ## Examples
 
 ```ts
 // Heatmap: hour on x, day on y, colored by value
 Chart(data, { color: gradient(["#ffffcc", "#fd8d3c", "#bd0026"]) })
-  .flow(table("hour", "day", { spacing: 4 }))
+  .flow(table({ by: { x: "hour", y: "day" }, spacing: 4 }))
   .mark(rect({ fill: "value" }))
   .render(container, { w: 600, h: 400, axes: true });
 
-// Tighter grid with asymmetric spacing
-.flow(table("col", "row", { xSpacing: 2, ySpacing: 8 }))
+// Asymmetric spacing
+.flow(table({ by: { x: "col", y: "row" }, spacing: [2, 8] }))
 ```
 
 ## Notes

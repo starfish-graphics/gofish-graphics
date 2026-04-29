@@ -21,14 +21,14 @@ Renders the chart into a DOM element.
 
 ```ts
 chart(data)
-  .flow(spread("category", { dir: "x" }))
+  .flow(spread({ by: "category", dir: "x" }))
   .mark(rect({ h: "value" }))
   .render(container, { w: 500, h: 300, axes: true });
 ```
 
 ```ts
 chart(data)
-  .flow(spread("category", { dir: "x" }))
+  .flow(spread({ by: "category", dir: "x" }))
   .mark(rect({ h: "value" }))
   .render(container, { w: 500, h: 300, axes: { x: true, y: false } });
 ```

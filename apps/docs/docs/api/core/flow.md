@@ -22,7 +22,7 @@ Returns a new `ChartBuilder` — `flow` is immutable.
 chart(data)
   .flow(
     derive((d) => d.filter((row) => row.year === 2020)),
-    spread("category", { dir: "x" })
+    spread({ by: "category", dir: "x" })
   )
   .mark(rect({ h: "value" }));
 ```

@@ -11,7 +11,7 @@ import { seafood } from "../data/catch";
 import _ from "lodash";
 import { stackX } from "../ast/graphicalOperators/stackX";
 import { stackY } from "../ast/graphicalOperators/stackY";
-import { For, groupBy, StackX, StackY } from "../lib";
+import { For, groupBy, stackX, stackY } from "../lib";
 const fishColors = {
   Bass: color.blue[5],
   Trout: color.red[5],
@@ -44,10 +44,10 @@ export const testFishWaffle = (opts) =>
   );
 
 export const testFishWaffleAPIv2 = () =>
-  StackX(
+  stackX(
     { spacing: 8, sharedScale: true },
     For(groupBy(seafood, "lake"), (d) =>
-      StackY(
+      stackY(
         { spacing: 2, alignment: "start" },
         For(
           _(d)
@@ -56,7 +56,7 @@ export const testFishWaffleAPIv2 = () =>
             .chunk(4)
             .reverse(),
           (d) =>
-            StackX(
+            stackX(
               { spacing: 2 },
               For(d, (d) => rect({ w: 8, h: 8, fill: value(d.species) }))
             )

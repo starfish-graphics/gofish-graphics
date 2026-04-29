@@ -23,12 +23,12 @@ const container = document.getElementById("app");
 Layer([
   Chart(seafood)
     .flow(
-      spread("lake", { dir: "x", spacing: 80 }),
-      spread("species", { dir: "y", spacing: -16 })
+      spread({ by: "lake", dir: "x", spacing: 80 }),
+      spread({ by: "species", dir: "y", spacing: -16 })
     )
     .mark(blank({ h: "count", fill: "species" }).name("points")),
   Chart(select("points"))
-    .flow(group("species"))
+    .flow(group({ by: "species" }))
     .mark(area({ opacity: 0.8, mixBlendMode: "normal" })),
 ]).render(container, { w: 500, h: 300, axes: true });
 ```

@@ -8,7 +8,7 @@ import type { HierarchyNode, HierarchyRectangularNode } from "d3-hierarchy";
 
 import { GoFishNode, Placeable } from "../_node";
 import { GoFishAST } from "../_ast";
-import { createOperator } from "../withGoFish";
+import { createNodeOperator } from "../withGoFish";
 import { FancyDims, Size, elaborateDims } from "../dims";
 import { getValue, isValue, MaybeValue } from "../data";
 import { computeAesthetic, computeSize } from "../../util";
@@ -60,7 +60,7 @@ function resolveWeightFromChild(
   return 1;
 }
 
-export const treemap = createOperator(
+export const treemap = createNodeOperator(
   (opts: TreemapProps, children: GoFishAST[]) => {
     const {
       name,

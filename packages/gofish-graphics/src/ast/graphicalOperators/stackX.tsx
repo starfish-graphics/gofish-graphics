@@ -1,14 +1,12 @@
 import { stack } from "./stack";
 
-export const stackX = (
-  ...args: any[]
-): ReturnType<typeof stack> => {
+export const stackX = (...args: any[]): ReturnType<typeof stack> => {
   if (args.length === 2) {
     const [props, children] = args;
     return stack(
       {
         ...props,
-        direction: "x",
+        dir: "x",
       },
       children
     );
@@ -16,13 +14,13 @@ export const stackX = (
     const [children] = args;
     return stack(
       {
-        direction: "x",
+        dir: "x",
       },
       children
     );
   } else {
     return stack({
-      direction: "x",
+      dir: "x",
     });
   }
 };

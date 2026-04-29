@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
 import { seafood } from "../../src/data/catch";
 import { Chart, spread, rect, derive } from "../../src/lib";
-import { repeat } from "../../src/ast/marks/chart";
+import { repeat } from "../../src/lib";
 import _ from "lodash";
 
 const meta: Meta = {
@@ -27,7 +27,7 @@ export const Default: StoryObj<Args> = {
 
     Chart(seafood)
       .flow(
-        spread("lake", { spacing: 8, dir: "x" }),
+        spread({ by: "lake",  spacing: 8, dir: "x" }),
         derive((d) => d.flatMap((d) => repeat(d, "count"))),
         derive((d) => _.chunk(d, 5)),
         spread({ spacing: 2, dir: "y" }),

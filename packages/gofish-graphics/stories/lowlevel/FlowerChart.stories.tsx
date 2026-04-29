@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
 import { seafood, catchLocations } from "../../src/data/catch";
-import { Frame, rect, For, petal, StackX, polar, v } from "../../src/lib";
+import { frame, rect, For, petal, stackX, polar, v } from "../../src/lib";
 import { color, color6 } from "../../src/color";
 import { mix } from "spectral.js";
 import _ from "lodash";
@@ -38,21 +38,21 @@ export const Default: StoryObj<Args> = {
   args: { w: 400, h: 400 },
   render: (args: Args) => {
     const container = initializeContainer();
-    Frame(
+    frame(
       For(scatterData, (sample) =>
-        Frame({ x: sample.x }, [
+        frame({ x: sample.x }, [
           rect({
             w: 2,
             h: sample.y,
             fill: color.green[5],
           }),
-          Frame(
+          frame(
             {
               y: sample.y,
               coord: polar(),
             },
             [
-              StackX(
+              stackX(
                 {
                   h: _(sample.collection).sumBy("count") / 7,
                   spacing: 0,

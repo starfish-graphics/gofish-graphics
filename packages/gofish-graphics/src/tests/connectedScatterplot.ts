@@ -14,7 +14,7 @@ import { connect } from "../ast/graphicalOperators/connect";
 import { streamgraphColorPalette, streamgraphData } from "../data/streamgraphData";
 import { frame } from "../ast/graphicalOperators/frame";
 import { drivingShifts } from "../data/drivingShifts";
-import { ConnectX, ellipse, For, Frame } from "../lib";
+import { connectX, ellipse, For, frame } from "../lib";
 
 // const data = [
 //   { x: 0, y: 28, c: 0 },
@@ -44,7 +44,7 @@ const data = streamgraphData;
 const colorPalette = streamgraphColorPalette;
 
 export const testConnectedScatterplot = () =>
-  Frame({}, [
+  frame({}, [
     For(drivingShifts, (d) =>
       ellipse({
         x: value(d.miles),
@@ -56,12 +56,12 @@ export const testConnectedScatterplot = () =>
         strokeWidth: 2,
       }).name(`${d.year}`)
     ),
-    ConnectX(
+    connectX(
       {
         interpolation: "linear",
         stroke: "black",
         strokeWidth: 2,
-        mode: "center-to-center",
+        mode: "center",
       },
       For(drivingShifts, (d) => ref(`${d.year}`))
     ),

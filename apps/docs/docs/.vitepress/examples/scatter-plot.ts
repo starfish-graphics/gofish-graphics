@@ -8,7 +8,7 @@ const catchLocationsArray = [
 ];
 
 gf.Chart(catchLocationsArray)
-  .flow(gf.scatter("lake", { x: "x", y: "y" }))
+  .flow(gf.scatter({ by: "lake", x: "x", y: "y" }))
   .mark(gf.circle({ r: 5 }))
   .render(root, {
     w: 500,

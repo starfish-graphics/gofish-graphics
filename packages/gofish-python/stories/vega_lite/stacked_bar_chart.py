@@ -54,9 +54,9 @@ def default(data=None, w=600, h=300):
         chart(data, {"color": _COLOR})
         .flow(
             derive(_add_month),
-            spread("month", dir="x"),
+            spread(by="month", dir="x"),
             derive(_sort_weather),
-            stack("weather", dir="y"),
+            stack(by="weather", dir="y"),
             derive(_count_rows),
         )
         .mark(rect(h="count", fill="weather"))

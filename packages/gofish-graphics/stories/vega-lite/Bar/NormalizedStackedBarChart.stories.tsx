@@ -31,14 +31,14 @@ export const Default: StoryObj<Args> = {
         derive((d) =>
           d.map((row) => ({ ...row, sex: row.sex === 1 ? "Male" : "Female" }))
         ),
-        spread("age", { dir: "x" }),
+        spread({ by: "age",  dir: "x" }),
         derive((d) =>
           d.map((row) => ({
             ...row,
             proportion: row.people / sumBy(d, "people"),
           }))
         ),
-        stack("sex", { dir: "y" })
+        stack({ by: "sex",  dir: "y" })
       )
       .mark(rect({ h: "proportion", fill: "sex" }))
       .render(container, { w: args.w, h: args.h, axes: true });

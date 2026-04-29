@@ -9,6 +9,6 @@ TITLE = "Forward Syntax V3/Bar/Basic"
 def default(w=400, h=400):
     return (
         chart(seafood)
-        .flow(spread("lake", dir="x"))
+        .flow(spread(by="lake", dir="x"))
         .mark(rect(h="count"))
     )

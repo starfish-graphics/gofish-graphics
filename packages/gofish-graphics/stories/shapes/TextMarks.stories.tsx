@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
-import { coord, ellipse, For, polar, Stack, Spread, text } from "../../src/lib";
+import { coord, ellipse, For, polar, stack, spread, text } from "../../src/lib";
 
 const meta: Meta = {
   title: "Shapes/Text Marks",
@@ -32,8 +32,7 @@ export const TextStack: StoryObj<Args> = {
     const container = initializeContainer();
 
     container.innerHTML = "";
-    Spread(
-      { direction: "y", spacing: 18, alignment: "start" },
+    spread({ dir: "y", spacing: 18, alignment: "start" },
       For(labels, (label) =>
         text({
           text: label.text,
@@ -59,8 +58,7 @@ export const TextStackMiddleAlignment: StoryObj<Args> = {
     const container = initializeContainer();
 
     container.innerHTML = "";
-    Spread(
-      { direction: "y", spacing: 18, alignment: "middle" },
+    spread({ dir: "y", spacing: 18, alignment: "middle" },
       For(labels, (label) =>
         text({
           text: label.text,
@@ -86,8 +84,7 @@ export const TextStackHorizontal: StoryObj<Args> = {
     const container = initializeContainer();
 
     container.innerHTML = "";
-    Spread(
-      { direction: "x", spacing: 18, alignment: "start" },
+    spread({ dir: "x", spacing: 18, alignment: "start" },
       For(labels, (label) =>
         text({
           text: label.text,
@@ -113,7 +110,7 @@ export const TextStackWithEllipse: StoryObj<Args> = {
     const container = initializeContainer();
 
     container.innerHTML = "";
-    Spread({ direction: "y", spacing: 60, alignment: "middle" }, [
+    spread({ dir: "y", spacing: 60, alignment: "middle" }, [
       ellipse({
         w: 10,
         h: 10,

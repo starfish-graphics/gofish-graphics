@@ -5,7 +5,7 @@ import { GoFishNode } from "../_node";
 import type { Placeable } from "../_node";
 import { Size } from "../dims";
 import { UnderlyingSpace } from "../underlyingSpace";
-import { createOperator } from "../withGoFish";
+import { createNodeOperator } from "../withGoFish";
 import { unionChildSpaces } from "./alignment";
 
 type BlendMode = "color" | "multiply" | "screen" | "overlay" | "luminosity";
@@ -107,7 +107,7 @@ const renderComposite = (
 };
 
 const createCompositeRelation = (type: string, operator: CompositeOperator) =>
-  createOperator(
+  createNodeOperator(
     (
       {
         blendMode = "color",
@@ -218,7 +218,7 @@ export const xor = createCompositeRelation("xor", "xor");
 export const out = createCompositeRelation("out", "out");
 export const atop = createCompositeRelation("atop", "atop");
 
-export const mask = createOperator(
+export const mask = createNodeOperator(
   (_: Record<string, never>, children: GoFishAST[]) => {
     requireTwoChildren(children);
 

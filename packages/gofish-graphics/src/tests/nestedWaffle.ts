@@ -17,7 +17,7 @@ import { mix } from "spectral.js";
 import { seafood } from "../data/catch";
 import { ellipse } from "../ast/shapes/ellipse";
 import { enclose } from "../ast/graphicalOperators/enclose";
-import { StackX, StackY } from "../lib";
+import { stackX, stackY } from "../lib";
 
 const data = [
   { origin: "Europe", cylinders: "4", count: 66 },
@@ -39,19 +39,19 @@ const classColor = {
 };
 
 export const testNestedWaffle = () =>
-  StackY(
-    { dir: "ttb", spacing: 8, alignment: "middle", sharedScale: true },
+  stackY(
+    { reverse: true, spacing: 8, alignment: "middle", sharedScale: true },
     _(titanic)
       .groupBy("class")
       .map((cls) =>
-        StackX(
+        stackX(
           { spacing: 4 },
           _(cls)
             .groupBy("sex")
             .map((sex) =>
               enclose({}, [
-                StackY(
-                  { dir: "ttb", spacing: 0.5, alignment: "end" },
+                stackY(
+                  { reverse: true, spacing: 0.5, alignment: "end" },
                   _(sex) // Was missing this lodash chain before .reverse()
                     .reverse()
                     .flatMap((d) => Array(d.count).fill(d))
@@ -62,8 +62,7 @@ export const testNestedWaffle = () =>
                     )
                     .reverse()
                     .map((d) =>
-                      stack(
-                        { direction: "x", spacing: 0.5, alignment: "end" },
+                      stack({ dir: "x", spacing: 0.5, alignment: "end" },
                         d.map((d) =>
                           ellipse({
                             w: 4,

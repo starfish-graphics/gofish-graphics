@@ -28,7 +28,7 @@ def default(data=None, w=300, h=100):
         chart(data)
         .flow(
             log("weather before scatter"),
-            scatter("date", x="precipitation", y="stripY"),
+            scatter(by="date", x="precipitation", y="stripY"),
         )
         .mark(rect(w=1, h=10, fill="rgba(31, 119, 180, 0.4)", stroke="#1f77b4", strokeWidth=1))
     )

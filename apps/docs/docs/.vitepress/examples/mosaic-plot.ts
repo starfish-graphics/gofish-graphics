@@ -12,11 +12,13 @@ const data = [
 
 gf.Chart(data)
   .flow(
-    gf.spread("origin", { dir: "x" }),
+    gf.spread({ by: "origin", dir: "x" }),
     gf.derive((d) => gf.normalize(d, "count")),
-    gf.stack("cylinders", { dir: "y" })
+    gf.stack({ by: "cylinders", dir: "y" })
   )
-  .mark(gf.rect({ h: "count", fill: "origin", stroke: "white", strokeWidth: 2 }))
+  .mark(
+    gf.rect({ h: "count", fill: "origin", stroke: "white", strokeWidth: 2 })
+  )
   .render(root, {
     w: 500,
     h: 300,

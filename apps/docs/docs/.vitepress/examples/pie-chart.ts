@@ -1,5 +1,5 @@
 gf.Chart(seafood, { coord: gf.clock() })
-  .flow(gf.stack("species", { dir: "x" }))
+  .flow(gf.stack({ by: "species", dir: "x" }))
   .mark(gf.rect({ w: "count", fill: "species" }))
   .render(root, {
     w: 400,

@@ -25,11 +25,9 @@ export const testPolarRadialGroupedBar = (size: { width: number; height: number 
   return gofish(
     { width: size.width, height: size.height, transform: { x: 50, y: 200 } },
     coord({ transform: polar_DEPRECATED() }, [
-      stack(
-        { direction: 1, spacing: Math.PI / 4, alignment: "end", sharedScale: true, mode: "center-to-center" },
+      stack({ dir: 1, spacing: Math.PI / 4, alignment: "end", sharedScale: true, mode: "center" },
         Object.entries(_.groupBy(data, "category")).map(([category, items]) =>
-          stack(
-            { direction: 1, spacing: Math.PI / 8, alignment: "end", mode: "center-to-center" },
+          stack({ dir: 1, spacing: Math.PI / 8, alignment: "end", mode: "center" },
             items.map((d) =>
               rect({
                 h: 5,

@@ -11,12 +11,12 @@ What it would look like once Layer is supported:
     def default(w=400, h=400):
         bars = (
             chart(seafood)
-            .flow(spread("lake", dir="x"))
+            .flow(spread(by="lake", dir="x"))
             .mark(rect(h="count").name("bars"))
         )
         # The label layer uses a custom mark function with low-level Spread/ref/text.
         # Full implementation requires v1 primitive access from Python wrapper.
-        labels = chart(select("bars")).flow(group("lake")).mark(...)
+        labels = chart(select("bars")).flow(group(by="lake")).mark(...)
         return Layer([bars, labels])
 """
 

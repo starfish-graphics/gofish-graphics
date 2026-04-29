@@ -43,7 +43,7 @@ export const testLineChart = () =>
           {
             interpolation: "linear",
             // opacity: 0.7,
-            mode: "center-to-center",
+            mode: "center",
             strokeWidth: 1,
           },
           items.map((d) => ref(`${c}-${d.x}`))

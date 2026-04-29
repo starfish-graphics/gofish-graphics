@@ -16,13 +16,13 @@ import { connectX } from "../ast/graphicalOperators/connectX";
 import { streamgraphData, streamgraphColorPalette } from "../data/streamgraphData";
 import { stackX } from "../ast/graphicalOperators/stackX";
 import { frame } from "../ast/graphicalOperators/frame";
-import { ConnectX, For, Frame, StackX } from "../lib";
+import { connectX, For, frame, stackX } from "../lib";
 const data = streamgraphData;
 const colorPalette = streamgraphColorPalette;
 
 export const testSingletonAreaChart = () =>
-  Frame([
-    StackX(
+  frame([
+    stackX(
       { spacing: 0, sharedScale: true },
       For(
         data.filter((d) => d.c === 1),
@@ -35,7 +35,7 @@ export const testSingletonAreaChart = () =>
           })
       )
     ),
-    ConnectX(
+    connectX(
       {
         interpolation: "linear",
         // opacity: 0.7,

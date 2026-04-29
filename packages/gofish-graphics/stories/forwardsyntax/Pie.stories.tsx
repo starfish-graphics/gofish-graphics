@@ -26,7 +26,7 @@ export const Basic: StoryObj<Args> = {
     const container = initializeContainer();
 
     Chart(seafood, { coord: clock() })
-      .flow(stack("species", { dir: "x" }))
+      .flow(stack({ by: "species",  dir: "x" }))
       .mark(rect({ w: "count", fill: "species" }))
       .render(container, {
         w: args.w,
@@ -44,7 +44,7 @@ export const Donut: StoryObj<Args> = {
     const container = initializeContainer();
 
     Chart(seafood, { coord: clock() })
-      .flow(stack("species", { dir: "x", y: 50, h: 50 }))
+      .flow(stack({ by: "species",  dir: "x", y: 50, h: 50 }))
       .mark(rect({ w: "count", fill: "species" }))
       .render(container, {
         w: args.w,
@@ -63,8 +63,8 @@ export const Rose: StoryObj<Args> = {
 
     Chart(nightingale, { coord: clock() })
       .flow(
-        stack("Month", { dir: "x" }),
-        stack("Type", { dir: "y" }),
+        stack({ by: "Month",  dir: "x" }),
+        stack({ by: "Type",  dir: "y" }),
         /* TODO: push this into the h encoding of rect */
         derive((d) => d.map((d) => ({ ...d, Death: Math.sqrt(d.Death) })))
       )

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
-import { For, Stack, Spread, ellipse, Layer, text, ref, Arrow } from "../../src/lib";
+import { For, stack, spread, ellipse, layer, text, ref, arrow } from "../../src/lib";
 
 const meta: Meta = {
   title: "Bluefish/Planets",
@@ -29,8 +29,7 @@ export const PlanetsOnly: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    Spread(
-      { direction: "x", spacing: 50, alignment: "middle" },
+    spread({ dir: "x", spacing: 50, alignment: "middle" },
       For(planets, (planet) =>
         ellipse({
           w: planet.radius * 2,
@@ -54,9 +53,8 @@ export const PlanetsWithLabelAbove: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    Layer([
-      Spread(
-        { direction: "x", spacing: 50, alignment: "middle" },
+    layer([
+      spread({ dir: "x", spacing: 50, alignment: "middle" },
         For(planets, (planet) =>
           ellipse({
             w: planet.radius * 2,
@@ -67,7 +65,7 @@ export const PlanetsWithLabelAbove: StoryObj<Args> = {
           }).name(planet.name)
         )
       ),
-      Spread({ direction: "y", spacing: 60, alignment: "middle" }, [
+      spread({ dir: "y", spacing: 60, alignment: "middle" }, [
         ref("Mercury"),
         text({ text: "Mercury" }),
       ]),
@@ -85,9 +83,8 @@ export const PlanetsWithLabelBelow: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    Layer([
-      Spread(
-        { direction: "x", spacing: 50, alignment: "middle" },
+    layer([
+      spread({ dir: "x", spacing: 50, alignment: "middle" },
         For(planets, (planet) =>
           ellipse({
             w: planet.radius * 2,
@@ -98,7 +95,7 @@ export const PlanetsWithLabelBelow: StoryObj<Args> = {
           }).name(planet.name)
         )
       ),
-      Spread({ direction: "y", spacing: 60, alignment: "middle" }, [
+      spread({ dir: "y", spacing: 60, alignment: "middle" }, [
         text({ text: "Mercury" }),
         ref("Mercury"),
       ]),
@@ -116,9 +113,8 @@ export const PlanetsWithLabelAboveNoSpacing: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    Layer([
-      Spread(
-        { direction: "x", spacing: 50, alignment: "middle" },
+    layer([
+      spread({ dir: "x", spacing: 50, alignment: "middle" },
         For(planets, (planet) =>
           ellipse({
             w: planet.radius * 2,
@@ -129,7 +125,7 @@ export const PlanetsWithLabelAboveNoSpacing: StoryObj<Args> = {
           }).name(planet.name)
         )
       ),
-      Spread({ direction: "y", spacing: 0, alignment: "middle" }, [
+      spread({ dir: "y", spacing: 0, alignment: "middle" }, [
         ref("Mercury"),
         text({ text: "Mercury", debugBoundingBox: true }),
       ]),
@@ -147,9 +143,8 @@ export const PlanetsWithLabelBelowNoSpacing: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    Layer([
-      Spread(
-        { direction: "x", spacing: 50, alignment: "middle" },
+    layer([
+      spread({ dir: "x", spacing: 50, alignment: "middle" },
         For(planets, (planet) =>
           ellipse({
             w: planet.radius * 2,
@@ -160,7 +155,7 @@ export const PlanetsWithLabelBelowNoSpacing: StoryObj<Args> = {
           }).name(planet.name)
         )
       ),
-      Spread({ direction: "y", spacing: 0, alignment: "middle" }, [
+      spread({ dir: "y", spacing: 0, alignment: "middle" }, [
         text({ text: "Mercury", debugBoundingBox: true }),
         ref("Mercury"),
       ]),
@@ -178,9 +173,8 @@ export const PlanetsWithArrow: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    Layer([
-      Spread(
-        { direction: "x", spacing: 50, alignment: "middle" },
+    layer([
+      spread({ dir: "x", spacing: 50, alignment: "middle" },
         For(planets, (planet) =>
           ellipse({
             w: planet.radius * 2,
@@ -191,11 +185,11 @@ export const PlanetsWithArrow: StoryObj<Args> = {
           }).name(planet.name)
         )
       ),
-      Spread({ direction: "y", spacing: 60, alignment: "middle" }, [
+      spread({ dir: "y", spacing: 60, alignment: "middle" }, [
         text({ text: "Mercury" }).name("label"),
         ref("Mercury"),
       ]),
-      Arrow({}, [ref("label"), ref("Mercury")]),
+      arrow({}, [ref("label"), ref("Mercury")]),
     ]).render(container, {
       w: args.w,
       h: args.h,

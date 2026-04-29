@@ -8,7 +8,7 @@ export const connectX = (
     stroke,
     strokeWidth,
     opacity,
-    mode = "edge-to-edge",
+    mode = "edge",
     mixBlendMode,
   }: {
     fill?: MaybeValue<string>;
@@ -16,10 +16,22 @@ export const connectX = (
     stroke?: string;
     strokeWidth?: number;
     opacity?: number;
-    mode?: "edge-to-edge" | "center-to-center";
+    mode?: "edge" | "center";
     mixBlendMode?: "multiply" | "normal";
   },
   children: GoFishAST[]
 ) => {
-  return connect({ direction: "x", fill, interpolation, stroke, strokeWidth, opacity, mode, mixBlendMode }, children);
+  return connect(
+    {
+      direction: "x",
+      fill,
+      interpolation,
+      stroke,
+      strokeWidth,
+      opacity,
+      mode,
+      mixBlendMode,
+    },
+    children
+  );
 };

@@ -18,7 +18,7 @@ Sets the visual mark used to render each data group.
 
 ```ts
 chart(data)
-  .flow(spread("category", { dir: "x" }))
+  .flow(spread({ by: "category", dir: "x" }))
   .mark(rect({ h: "value" }));
 ```
 

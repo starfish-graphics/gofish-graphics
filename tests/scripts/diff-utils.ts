@@ -11,7 +11,37 @@ import {
   cpSync,
 } from "fs";
 import { join, dirname } from "path";
-import { diffLines, diffChars } from "diff";
+import { diffLines } from "diff";
+import DMP from "diff-match-patch";
+
+/**
+ * Character-level diff backed by Google's diff-match-patch with a per-pair
+ * timeout. DMP's `diff_main` is O(N) average via prefix/suffix/half-match
+ * preprocessing; when inputs are pathological (long, scattered changes —
+ * SVG paths, base64 image data, big transform attrs — common in DOM
+ * snapshots), it bisects until the timeout fires and falls back to a
+ * coarser prefix+removed+added+suffix shape. Bounding the worst case
+ * here keeps the CI diff-report generation under a few seconds even
+ * across hundreds of regressed stories.
+ *
+ * The previous implementation used the `diff` library's `diffChars` (Myers'
+ * O(N·D) algorithm), which hung the visual-tests CI for many minutes on
+ * stories with long-line DOM output.
+ */
+type CharChange = { value: string; added?: boolean; removed?: boolean };
+const dmp = new DMP.diff_match_patch();
+dmp.Diff_Timeout = 0.5; // seconds; degrades to coarser output past this
+function fastCharDiff(a: string, b: string): CharChange[] {
+  return dmp
+    .diff_main(a, b)
+    .map(([op, value]) =>
+      op === DMP.DIFF_INSERT
+        ? { value, added: true }
+        : op === DMP.DIFF_DELETE
+          ? { value, removed: true }
+          : { value }
+    );
+}
 
 export const ROOT = join(import.meta.dirname, "../..");
 export const BASELINE_DOM = join(ROOT, "__snapshots__/dom");
@@ -255,9 +285,14 @@ export function formatDomDiff(before: string, after: string): string {
       i + 1 < lines.length &&
       lines[i + 1].type === "added"
     ) {
-      // Paired change: show intra-line char diff
+      // Paired change: show intra-line char diff via `fastCharDiff` (O(N)
+      // common-prefix + common-suffix; the diverging middle is reported as
+      // one removed + one added block). The `diff` library's `diffChars` is
+      // O(N*D) — fine for short lines but degenerates to ~O(N²) on the long
+      // SVG paths / transform attrs typical of DOM snapshots, hanging the
+      // CI report for many minutes.
       const next = lines[i + 1];
-      const charChanges = diffChars(line.text, next.text);
+      const charChanges = fastCharDiff(line.text, next.text);
 
       const removedHtml = charChanges
         .filter((c) => !c.added)

@@ -37,7 +37,8 @@ By combining operators and marks, you can create complex and automatic chart lay
 - [spread](/api/operators/spread) Lays out groups along an axis.
 - [stack](/api/operators/stack) Stacks items edge-to-edge.
 - [table](/api/operators/table) Groups data by two fields and lays out groups in a 2D grid.
-- [scatter](/api/operators/scatter) Positions groups by mean x/y.
+- [scatter](/api/operators/scatter) Positions children by mean (or per-item) x/y.
+- [group](/api/operators/group) Wraps each partition in a frame.
 - [treemap](/api/operators/treemap) Tiling layout by weight (area).
 - [layer](/api/operators/layer) Overlays children without offset.
 - [derive](/api/operators/derive) Transforms data in the pipeline.
@@ -74,7 +75,7 @@ Creates a categorical color scale. Pass it to `chart(data, { color })` or `.rend
 ```ts
 // Named scheme
 chart(data, { color: palette("tableau10") })
-  .flow(spread("category", { dir: "x" }))
+  .flow(spread({ by: "category", dir: "x" }))
   .mark(rect({ h: "value", fill: "category" }))
   .render(container, { w: 500, h: 300 });
 
@@ -101,7 +102,7 @@ Creates a continuous color scale. Colors are interpolated across the numeric ran
 ```ts
 // Named scheme
 chart(data, { color: gradient("viridis") })
-  .flow(spread("category", { dir: "x" }))
+  .flow(spread({ by: "category", dir: "x" }))
   .mark(rect({ h: "value", fill: "temperature" }))
   .render(container, { w: 500, h: 300 });
 

@@ -15,7 +15,7 @@ import {
 } from "../color";
 import { titanic } from "../data/titanic";
 import { mix } from "spectral.js";
-import { For, rect, StackX, StackY } from "../lib";
+import { For, rect, stackX, stackY } from "../lib";
 
 const data = [
   { origin: "Europe", cylinders: "4", count: 66 },
@@ -54,31 +54,29 @@ const classColor = {
 };
 
 export const testIcicle = () =>
-  stack({ direction: "x", alignment: "middle" }, [
+  stack({ dir: "x", alignment: "middle" }, [
     rect({
       w: 40,
       h: _(titanic).sumBy("count") / 10,
       fill: neutral,
     }),
-    StackY(
+    stackY(
         { alignment: "middle" },
       _(titanic)
         .groupBy("class")
         .map((items, cls) =>
-          stack(
-            {
-              direction: "x",
+          stack({ dir: "x",
               h: _(items).sumBy("count") / 10,
               alignment: "start",
             },
             [
               rect({ w: 40, fill: classColor[cls as keyof typeof classColor] }),
-              StackY(
+              stackY(
                   { alignment: "middle" },
                 _(items)
                   .groupBy("sex")
                   .map((items, sex) =>
-                    stack({ direction: "x", alignment: "middle" }, [
+                    stack({ dir: "x", alignment: "middle" }, [
                       rect({
                         w: 0,
                         h: _(items).sumBy("count") / 10,
@@ -89,7 +87,7 @@ export const testIcicle = () =>
                         // ),
                         fill: sex === "Female" ? color6[4] : color6[5],
                       }),
-                      StackY(
+                      stackY(
                         {
                           w: 40,
                           alignment: "middle",
@@ -132,29 +130,29 @@ export const testIcicle = () =>
   ]);
 
 export const testIcicleAPIv2 = () =>
-  StackX({ alignment: "middle" }, [
+  stackX({ alignment: "middle" }, [
     rect({
       w: 40,
       h: _(titanic).sumBy("count") / 10,
       fill: gray,
     }),
-    StackY(
+    stackY(
             { alignment: "middle" },
       For(groupBy(titanic, "class"), (items, cls) =>
-        StackX(
+        stackX(
           { h: _(items).sumBy("count") / 10, alignment: "start" },
           [
             rect({ w: 40, fill: classColor[cls as keyof typeof classColor] }),
-            StackY(
+            stackY(
                     { alignment: "middle" },
               For(groupBy(items, "sex"), (items, sex) =>
-                StackX({ alignment: "middle" }, [
+                stackX({ alignment: "middle" }, [
                   rect({
                     w: 40,
                     h: _(items).sumBy("count") / 10,
                     fill: sex === "Female" ? color6_old[2] : color6_old[3],
                   }),
-                  StackY(
+                  stackY(
                     {
                       w: 40,
 

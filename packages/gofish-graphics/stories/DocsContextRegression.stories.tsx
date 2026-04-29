@@ -17,8 +17,8 @@ type Args = { w: number; h: number };
 const DOCS_GROUPED_BAR_CODE = `
 Chart(seafood)
   .flow(
-    spread("lake", { dir: "x" }),
-    stack("species", { dir: "x", label: false })
+    spread({ by: "lake",  dir: "x" }),
+    stack({ by: "species",  dir: "x", label: false })
   )
   .mark(rect({ h: "count", fill: "species" }))
   .render(root, {
@@ -77,8 +77,8 @@ const runDirectStorybookVersion = (container: HTMLElement, w: number, h: number)
 
   Chart(seafood)
     .flow(
-      spread("lake", { dir: "x" }),
-      stack("species", { dir: "x" })
+      spread({ by: "lake",  dir: "x" }),
+      stack({ by: "species",  dir: "x" })
     )
     .mark(rect({ h: "count", fill: "species" }))
     .render(root, {

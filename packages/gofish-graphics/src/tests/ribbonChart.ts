@@ -101,13 +101,11 @@ export const testRibbonChart = (size: { width: number; height: number }) =>
   gofish(
     { width: size.width, height: size.height },
     layer([
-      stack(
-        { direction: 0, spacing: 64, alignment: "end", sharedScale: true },
+      stack({ dir: 0, spacing: 64, alignment: "end", sharedScale: true },
         _(data)
           .groupBy("category")
           .map((items, category) =>
-            stack(
-              { direction: 1, spacing: 0, alignment: "middle" },
+            stack({ dir: 1, spacing: 0, alignment: "middle" },
               items.toReversed().map((d) =>
                 rect({
                   name: `${d.category}-${d.group}`,

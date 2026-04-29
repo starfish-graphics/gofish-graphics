@@ -14,7 +14,7 @@ const locations = Object.entries(lakeLocations).map(([lake, { x, y }]) => ({
 gf.Layer([
   gf
     .Chart(locations)
-    .flow(gf.scatter("lake", { x: "x", y: "y" }))
+    .flow(gf.scatter({ by: "lake", x: "x", y: "y" }))
     .mark(gf.blank().name("points")),
   gf
     .Chart(gf.select("points"))
@@ -44,7 +44,7 @@ line({ stroke?, strokeWidth = 1, opacity?, interpolation = "linear" })
 ```ts
 // First chart: bar chart with named layer
 chart(data)
-  .flow(spread("x", { dir: "x" }))
+  .flow(spread({ by: "x", dir: "x" }))
   .mark(rect({ h: "y" }).name("bars"))
   .render(container, { w: 500, h: 300 });
 

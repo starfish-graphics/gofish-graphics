@@ -296,7 +296,7 @@ export async function reifyChildrenSequentially(
 - Allows opts to be optional
 - Supports arrays where individual elements can be promises
 */
-export function createOperator<T extends Record<string, any>, R>(
+export function createNodeOperator<T extends Record<string, any>, R>(
   func: (opts: T, children: GoFishAST[]) => R
 ): {
   (opts?: T, children?: GoFishChildrenInput): PromiseWithRender<R>;
@@ -317,7 +317,7 @@ export function createOperator<T extends Record<string, any>, R>(
         children = undefined;
       } else {
         throw new Error(
-          `createOperator: Expected 0, 1, or 2 arguments, got ${args.length}`
+          `createNodeOperator: Expected 0, 1, or 2 arguments, got ${args.length}`
         );
       }
       // Flatten nested structures and await all promises
@@ -357,7 +357,7 @@ export function createOperator<T extends Record<string, any>, R>(
  * - Supports arrays where individual elements can be promises or thunks
  * - Processes thunks sequentially to ensure proper execution order
  */
-export function createOperatorSequential<T extends Record<string, any>, R>(
+export function createNodeOperatorSequential<T extends Record<string, any>, R>(
   func: (opts: T, children: GoFishAST[]) => R
 ): {
   (opts?: T, children?: GoFishChildrenInputWithThunks): PromiseWithRender<R>;
@@ -378,7 +378,7 @@ export function createOperatorSequential<T extends Record<string, any>, R>(
         children = undefined;
       } else {
         throw new Error(
-          `createOperatorSequential: Expected 0, 1, or 2 arguments, got ${args.length}`
+          `createNodeOperatorSequential: Expected 0, 1, or 2 arguments, got ${args.length}`
         );
       }
       // First phase: flatten nested structures and await promises, preserving thunks, marks, and ChartBuilder instances
@@ -400,10 +400,22 @@ export function createOperatorSequential<T extends Record<string, any>, R>(
   };
 }
 
-/** A mark that can be named for layer selection via .name("layerName") and labeled via .label(accessor, options?). */
+/**
+ * A mark with chainable .name and .label, plus a top-level .render() for
+ * combinator-form callsites whose children carry their own data — typically
+ * `For(...)` closures over pre-computed values, refs to other layers, or
+ * already-resolved nodes. Calling `.render()` invokes the mark with
+ * `undefined` data, so marks that read field accessors (e.g. `rect({h: "v"})`)
+ * won't get any data — for those, wrap in a Chart instead:
+ *   `chart(data).mark(spread({dir: "x"}, [...])).render(container, opts)`.
+ */
 export type NameableMark<T> = Mark<T> & {
-  name(layerName: string): Mark<T>;
-  label(accessor: LabelAccessor, options?: LabelOptions): Mark<T>;
+  name(layerName: string): NameableMark<T>;
+  label(accessor: LabelAccessor, options?: LabelOptions): NameableMark<T>;
+  render(
+    container: Parameters<GoFishNode["render"]>[0],
+    options: Parameters<GoFishNode["render"]>[1]
+  ): Promise<ReturnType<GoFishNode["render"]>>;
 };
 
 /**
@@ -535,6 +547,13 @@ export function createMark<
         return node;
       };
     };
+    const renderMethod = async (
+      container: Parameters<GoFishNode["render"]>[0],
+      options: Parameters<GoFishNode["render"]>[1]
+    ) => {
+      const node = (await baseMark(undefined as any)) as GoFishNode;
+      return node.render(container, options);
+    };
     Object.defineProperty(baseMark, "name", {
       value: nameMethodWithFields,
       writable: true,
@@ -542,6 +561,11 @@ export function createMark<
     });
     Object.defineProperty(baseMark, "label", {
       value: labelMethod,
+      writable: true,
+      configurable: true,
+    });
+    Object.defineProperty(baseMark, "render", {
+      value: renderMethod,
       writable: true,
       configurable: true,
     });

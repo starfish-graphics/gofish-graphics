@@ -27,7 +27,7 @@ export const Default: StoryObj<Args> = {
     const cars = (context.loaded.cars as any[]).filter(d => d.Horsepower !== null && d.Miles_per_Gallon !== null);
 
     Chart(cars)
-      .flow(log("cars before scatter"), scatter("Name", { x: "Horsepower", y: "Miles_per_Gallon", debug: true }))
+      .flow(log("cars before scatter"), scatter({ by: "Name",  x: "Horsepower", y: "Miles_per_Gallon", debug: true }))
       .mark(circle({ r: 4, fill: "rgba(31, 119, 180, 0.4)", // semi‑transparent blue
         stroke: "#1f77b4",
         strokeWidth: 1,}))

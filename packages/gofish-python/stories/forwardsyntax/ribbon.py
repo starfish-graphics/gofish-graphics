@@ -13,13 +13,13 @@ def basic(w=400, h=400):
     bars = (
         chart(seafood)
         .flow(
-            spread("lake", dir="x", spacing=64),
+            spread(by="lake", dir="x", spacing=64),
             derive(lambda d: sorted(d, key=lambda r: r["count"])),
-            stack("species", dir="y"),
+            stack(by="species", dir="y"),
         )
         .mark(rect(h="count", fill="species").name("bars"))
     )
-    overlay = chart(select("bars")).flow(group("species")).mark(area(opacity=0.8))
+    overlay = chart(select("bars")).flow(group(by="species")).mark(area(opacity=0.8))
     return Layer([bars, overlay])
 
 
@@ -28,11 +28,11 @@ def polar(w=400, h=400):
     bars = (
         chart(seafood)
         .flow(
-            spread("lake", dir="x", spacing=(2 * math.pi) / 6, mode="center", y=50, label=False),
+            spread(by="lake", dir="x", spacing=(2 * math.pi) / 6, mode="center", y=50, label=False),
             derive(lambda d: sorted(d, key=lambda r: r["count"])),
-            stack("species", dir="y", label=False),
+            stack(by="species", dir="y", label=False),
         )
         .mark(rect(w=0.1, h="count", fill="species").name("bars"))
     )
-    overlay = chart(select("bars")).flow(group("species")).mark(area(opacity=0.8))
+    overlay = chart(select("bars")).flow(group(by="species")).mark(area(opacity=0.8))
     return Layer({"coord": clock()}, [bars, overlay])
