@@ -2,6 +2,7 @@ import _ from "lodash";
 import { gofish } from "../ast/gofish";
 import { value } from "../ast/data";
 import { stack } from "../ast/graphicalOperators/stack";
+import { spread } from "../ast/graphicalOperators/spread";
 import { rect } from "../ast/shapes/rect";
 import { color } from "../color";
 import { layer } from "../ast/graphicalOperators/layer";
@@ -101,11 +102,11 @@ export const testRibbonChart = (size: { width: number; height: number }) =>
   gofish(
     { width: size.width, height: size.height },
     layer([
-      stack({ dir: 0, spacing: 64, alignment: "end", sharedScale: true },
+      spread({ dir: 0, spacing: 64, alignment: "end", sharedScale: true },
         _(data)
           .groupBy("category")
           .map((items, category) =>
-            stack({ dir: 1, spacing: 0, alignment: "middle" },
+            stack({ dir: 1, alignment: "middle" },
               items.toReversed().map((d) =>
                 rect({
                   name: `${d.category}-${d.group}`,

@@ -1,7 +1,7 @@
 import _ from "lodash";
 import { gofish } from "../ast/gofish";
 import { value } from "../ast/data";
-import { stack } from "../ast/graphicalOperators/stack";
+import { spread } from "../ast/graphicalOperators/spread";
 import { rect } from "../ast/shapes/rect";
 import { color, /* color6 */ color6_20250323 as color6 } from "../color";
 import { polar_DEPRECATED } from "../ast/coordinateTransforms/polar_DEPRECATED";
@@ -25,9 +25,9 @@ export const testPolarRadialGroupedBar = (size: { width: number; height: number 
   return gofish(
     { width: size.width, height: size.height, transform: { x: 50, y: 200 } },
     coord({ transform: polar_DEPRECATED() }, [
-      stack({ dir: 1, spacing: Math.PI / 4, alignment: "end", sharedScale: true, mode: "center" },
+      spread({ dir: 1, spacing: Math.PI / 4, alignment: "end", sharedScale: true, mode: "center" },
         Object.entries(_.groupBy(data, "category")).map(([category, items]) =>
-          stack({ dir: 1, spacing: Math.PI / 8, alignment: "end", mode: "center" },
+          spread({ dir: 1, spacing: Math.PI / 8, alignment: "end", mode: "center" },
             items.map((d) =>
               rect({
                 h: 5,

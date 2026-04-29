@@ -445,9 +445,9 @@ export const spread = createOperator<any, SpreadOptions>(Spread, {
 });
 
 /** Stack glues children together, summing sizes into a POSITION at the spread
- * level. `glue` is implicit; `spacing` is accepted for backward compat but
- * ignored (glue mode always touches). */
-export type StackOptions<T = any> = Omit<SpreadOptions<T>, "glue">;
+ * level. Neither `spacing` nor `glue` is configurable — stacked children always
+ * touch (use `spread({ spacing: N })` instead if you want gaps). */
+export type StackOptions<T = any> = Omit<SpreadOptions<T>, "spacing" | "glue">;
 
 export function stack(
   opts: StackOptions,

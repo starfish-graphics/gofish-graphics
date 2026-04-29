@@ -67,7 +67,7 @@ export const testPolarRibbonOther = (size: { width: number; height: number }) =>
           { x: 100, y: Math.PI, dir: 1, spacing: Math.PI / 6, alignment: "middle", sharedScale: true },
           // TODO: I could probably make the width be uniform flexible basically
           Object.entries(_.groupBy(data, "category")).map(([category, items]) =>
-            stack({ dir: 0, spacing: 0, alignment: "middle" },
+            stack({ dir: 0, alignment: "middle" },
               items
                 .sort((a, b) => a.value - b.value)
                 .map((d) =>
