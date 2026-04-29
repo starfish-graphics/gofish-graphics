@@ -345,4 +345,14 @@ export const scatter = createOperator<any, ScatterOptions>(Scatter, {
     yMin: { type: "pos", entry: true },
     yMax: { type: "pos", entry: true },
   },
+  axisFields: ({ x, y, xMin, xMax, yMin, yMax }) => {
+    const fields: { x?: string; y?: string } = {};
+    if (typeof x === "string") fields.x = x;
+    else if (typeof xMin === "string") fields.x = xMin;
+    else if (typeof xMax === "string") fields.x = xMax;
+    if (typeof y === "string") fields.y = y;
+    else if (typeof yMin === "string") fields.y = yMin;
+    else if (typeof yMax === "string") fields.y = yMax;
+    return fields;
+  },
 });

@@ -204,6 +204,12 @@ export type LayoutFn<Options> = (
 export type OperatorConfig<Datum, Options> = {
   split: (opts: Options, d: Datum[]) => SplitResult<Datum>;
   channels?: ChannelAnnotations<Options>;
+  /**
+   * Optional hook returning the axis-field encoding ChartBuilder uses to
+   * auto-infer axis titles. e.g. `spread({by: "lake", dir: "x"})` should report
+   * `{x: "lake"}` so an x-axis title `lake` is inferred.
+   */
+  axisFields?: (opts: Options) => { x?: string; y?: string } | undefined;
 };
 
 export type DualModeOperator<Datum, Options> = {
@@ -378,6 +384,13 @@ export function createOperator<Datum, Options extends Record<string, any>>(
         return (await layout(lowOpts, nodes)) as unknown as GoFishNode;
       }) as Mark<Datum[]>;
     };
+    // Tag the operator with axis fields so ChartBuilder can auto-infer
+    // axis titles. Applies to operator-form only (combinator form returns a
+    // mark that's already typed via createMark's axis-field tagging).
+    const fields = cfg.axisFields?.(opts);
+    if (fields && (fields.x !== undefined || fields.y !== undefined)) {
+      (operator as any).__axisFields = fields;
+    }
     return operator;
   }
   return dual as DualModeOperator<Datum, Options>;

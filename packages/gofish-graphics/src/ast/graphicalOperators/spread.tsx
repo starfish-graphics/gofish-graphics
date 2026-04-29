@@ -433,6 +433,8 @@ export const spread = createOperator<any, SpreadOptions>(Spread, {
   split: ({ by }, d) =>
     by ? Map.groupBy(d, (r: any) => r[by]) : new Map(d.map((r, i) => [i, r])),
   channels: { w: "size", h: "size" },
+  axisFields: ({ by, dir }) =>
+    by ? (dir === "x" ? { x: by } : { y: by }) : undefined,
 });
 
 /** Stack has no `spacing` option — children always touch (spacing: 0). */

@@ -40,18 +40,19 @@ jobs:
           elif git ls-remote --exit-code origin "snapshots/main" 2>/dev/null; then
             FOUND="snapshots/main"
           fi
+          mkdir -p __snapshots__/dom __snapshots__/screenshots
           if [ -n "$FOUND" ]; then
             git fetch origin "$FOUND"
             FETCH_SHA=$(git rev-parse FETCH_HEAD)
             git worktree add --detach /tmp/snap-baselines "$FETCH_SHA"
             cd /tmp/snap-baselines && git lfs pull && cd -
-            mkdir -p __snapshots__
-            [ -d /tmp/snap-baselines/dom ] && cp -r /tmp/snap-baselines/dom __snapshots__/dom
-            [ -d /tmp/snap-baselines/screenshots ] && cp -r /tmp/snap-baselines/screenshots __snapshots__/screenshots
+            # Copy SRC contents (SRC/.) into existing DEST so a pre-existing
+            # __snapshots__/dom doesn't end up nested as __snapshots__/dom/dom.
+            [ -d /tmp/snap-baselines/dom ] && cp -r /tmp/snap-baselines/dom/. __snapshots__/dom/
+            [ -d /tmp/snap-baselines/screenshots ] && cp -r /tmp/snap-baselines/screenshots/. __snapshots__/screenshots/
             git worktree remove --force /tmp/snap-baselines
           else
             echo "No snapshot branch found; starting with empty baselines."
-            mkdir -p __snapshots__/dom __snapshots__/screenshots
           fi
 
       - name: Setup pnpm
@@ -170,18 +171,19 @@ jobs:
           elif git ls-remote --exit-code origin "snapshots/main" 2>/dev/null; then
             FOUND="snapshots/main"
           fi
+          mkdir -p __snapshots__/dom __snapshots__/screenshots
           if [ -n "$FOUND" ]; then
             git fetch origin "$FOUND"
             FETCH_SHA=$(git rev-parse FETCH_HEAD)
             git worktree add --detach /tmp/snap-baselines "$FETCH_SHA"
             cd /tmp/snap-baselines && git lfs pull && cd -
-            mkdir -p __snapshots__
-            [ -d /tmp/snap-baselines/dom ] && cp -r /tmp/snap-baselines/dom __snapshots__/dom
-            [ -d /tmp/snap-baselines/screenshots ] && cp -r /tmp/snap-baselines/screenshots __snapshots__/screenshots
+            # Copy SRC contents (SRC/.) into existing DEST so a pre-existing
+            # __snapshots__/dom doesn't end up nested as __snapshots__/dom/dom.
+            [ -d /tmp/snap-baselines/dom ] && cp -r /tmp/snap-baselines/dom/. __snapshots__/dom/
+            [ -d /tmp/snap-baselines/screenshots ] && cp -r /tmp/snap-baselines/screenshots/. __snapshots__/screenshots/
             git worktree remove --force /tmp/snap-baselines
           else
             echo "No snapshot branch found; starting with empty baselines."
-            mkdir -p __snapshots__/dom __snapshots__/screenshots
           fi
 
       - name: Setup pnpm

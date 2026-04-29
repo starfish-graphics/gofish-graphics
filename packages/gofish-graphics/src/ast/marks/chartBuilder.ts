@@ -227,10 +227,28 @@ export class ChartBuilder<TInput, TOutput = TInput> {
     container: Parameters<GoFishNode["render"]>[0],
     options: Parameters<GoFishNode["render"]>[1]
   ): Promise<ReturnType<GoFishNode["render"]>> {
+    // Auto-infer axis titles from field encodings on the mark and operators.
+    // Mark fields take priority (they encode measured values, e.g. h: "count");
+    // operator fields fill remaining gaps (grouping/layout, e.g. spread by "lake").
+    const axisFields: { x?: string; y?: string } = {};
+    const markMeta = (this.finalMark as any)?.__axisFields as
+      | { x?: string; y?: string }
+      | undefined;
+    if (markMeta?.x) axisFields.x ??= markMeta.x;
+    if (markMeta?.y) axisFields.y ??= markMeta.y;
+    for (const op of this.operators) {
+      const meta = (op as any).__axisFields as
+        | { x?: string; y?: string }
+        | undefined;
+      if (meta?.x) axisFields.x ??= meta.x;
+      if (meta?.y) axisFields.y ??= meta.y;
+    }
+
     const node = await this.resolve();
     return node.render(container, {
       ...options,
       colorConfig: this.options?.color,
+      axisFields,
     });
   }
 }
