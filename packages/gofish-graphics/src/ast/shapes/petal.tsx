@@ -30,7 +30,8 @@ import {
 } from "../dims";
 import { aesthetic, continuous, Domain } from "../domain";
 import * as Monotonic from "../../util/monotonic";
-import { ORDINAL, POSITION, UNDEFINED } from "../underlyingSpace";
+import { POSITION, SIZE, UNDEFINED, UnderlyingSpace } from "../underlyingSpace";
+import { interval } from "../../util/interval";
 import { createMark } from "../withGoFish";
 /* Implementation inspired by https://web.archive.org/web/20220808041640/http://bl.ocks.org/herrstucki/6199768 */
 /* TODO: what should default embedding behavior be when all values are aesthetic? */
@@ -75,40 +76,26 @@ export const Petal = ({
         _children: Size<UnderlyingSpace>[],
         _childNodes: GoFishAST[]
       ) => {
-        let underlyingSpaceX = ORDINAL([]);
-        if (isValue(dims[0].min)) {
-          // position. treat it like a position space w/ a single element
-          underlyingSpaceX = POSITION;
-        } else {
-          // undefined
-          underlyingSpaceX = UNDEFINED;
-        }
+        const sizeDomain = (axis: 0 | 1): Monotonic.Monotonic =>
+          isValue(dims[axis].size)
+            ? Monotonic.linear(getValue(dims[axis].size!), 0)
+            : Monotonic.linear(0, dims[axis].size ?? 0);
 
-        let underlyingSpaceY = ORDINAL([]);
-        if (isValue(dims[1].min)) {
-          // position. treat it like a position space w/ a single element
-          underlyingSpaceY = POSITION;
-        } else {
-          // undefined
-          underlyingSpaceY = UNDEFINED;
-        }
-
-        // const w = computeIntrinsicSize(dims[0].size);
-        // const h = computeIntrinsicSize(dims[1].size);
-
-        return [underlyingSpaceX, underlyingSpaceY];
-      },
-      inferSizeDomains: (shared, children) => {
-        return {
-          w: isValue(dims[0].size)
-            ? Monotonic.linear(getValue(dims[0].size!), 0)
-            : Monotonic.linear(0, dims[0].size ?? 0),
-          h: isValue(dims[1].size)
-            ? Monotonic.linear(getValue(dims[1].size!), 0)
-            : Monotonic.linear(0, dims[1].size ?? 0),
+        const resolveAxis = (axis: 0 | 1): UnderlyingSpace => {
+          const d = dims[axis];
+          if (isValue(d.min)) {
+            const min = getValue(d.min) ?? 0;
+            return POSITION(interval(min, min));
+          }
+          if (d.size !== undefined) {
+            return SIZE(sizeDomain(axis));
+          }
+          return UNDEFINED;
         };
+
+        return [resolveAxis(0), resolveAxis(1)];
       },
-      layout: (shared, size, scaleFactors, children, measurement) => {
+      layout: (shared, size, scaleFactors, children) => {
         const w = isValue(dims[0].size)
           ? getValue(dims[0].size!) * scaleFactors[0]!
           : (dims[0].size ?? size[0]);

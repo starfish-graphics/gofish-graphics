@@ -167,36 +167,7 @@ export const Text = ({
         const xPos = dims[0].center ?? dims[0].min;
         const yPos = dims[1].center ?? dims[1].min;
 
-        // Keep undefined if no value, not ordinal
-        let underlyingSpaceX = UNDEFINED;
-        if (isValue(xPos)) {
-          const min = getValue(xPos) ?? 0;
-          const domain = interval(min, min);
-          underlyingSpaceX = POSITION(domain);
-        }
-
-        let underlyingSpaceY = UNDEFINED;
-        if (isValue(yPos)) {
-          const min = getValue(yPos) ?? 0;
-          const domain = interval(min, min);
-          underlyingSpaceY = POSITION(domain);
-        }
-
-        if (isAesthetic(xPos) && isValue(dims[0].size)) {
-          underlyingSpaceX = DIFFERENCE(getValue(dims[0].size)!);
-        } else if (!isValue(xPos) && isValue(dims[0].size)) {
-          underlyingSpaceX = SIZE(getValue(dims[0].size)!);
-        }
-
-        if (isAesthetic(yPos) && isValue(dims[1].size)) {
-          underlyingSpaceY = DIFFERENCE(getValue(dims[1].size)!);
-        } else if (!isValue(yPos) && isValue(dims[1].size)) {
-          underlyingSpaceY = SIZE(getValue(dims[1].size)!);
-        }
-
-        return [underlyingSpaceX, underlyingSpaceY];
-      },
-      inferSizeDomains: () => {
+        // Measure intrinsic text dimensions for SIZE-axis Monotonic.
         const finalText = isValue(textContent)
           ? getValue(textContent)
           : textContent;
@@ -207,22 +178,34 @@ export const Text = ({
           textAnchor,
           dominantBaseline
         );
-        const width = layout.bbox.maxX - layout.bbox.minX;
-        const height = layout.bbox.maxY - layout.bbox.minY;
+        const intrinsicW = layout.bbox.maxX - layout.bbox.minX;
+        const intrinsicH = layout.bbox.maxY - layout.bbox.minY;
 
-        return {
-          w: Monotonic.linear(width, 0),
-          h: Monotonic.linear(height, 0),
+        const resolveAxis = (axis: 0 | 1, pos: any, intrinsic: number) => {
+          if (isValue(pos)) {
+            const min = getValue(pos) ?? 0;
+            const base = POSITION(interval(min, min));
+            if (isValue(dims[axis].size)) {
+              return DIFFERENCE(getValue(dims[axis].size)!);
+            }
+            return base;
+          }
+          if (isAesthetic(pos) && isValue(dims[axis].size)) {
+            return DIFFERENCE(getValue(dims[axis].size)!);
+          }
+          if (isValue(dims[axis].size)) {
+            return SIZE(Monotonic.linear(getValue(dims[axis].size)!, 0));
+          }
+          // No data position, no data size — use the measured text extent.
+          return SIZE(Monotonic.linear(0, intrinsic));
         };
+
+        return [
+          resolveAxis(0, xPos, intrinsicW),
+          resolveAxis(1, yPos, intrinsicH),
+        ];
       },
-      layout: (
-        shared,
-        size,
-        scaleFactors,
-        children,
-        measurement,
-        posScales
-      ) => {
+      layout: (shared, size, scaleFactors, children, posScales) => {
         const finalText = isValue(textContent)
           ? getValue(textContent)
           : textContent;

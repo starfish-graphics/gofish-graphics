@@ -1,4 +1,3 @@
-import * as Monotonic from "../../util/monotonic";
 import { Show } from "solid-js";
 import { path, pathToSVGPath, transformPath } from "../../path";
 import { GoFishAST } from "../_ast";
@@ -186,28 +185,7 @@ export const coord = createNodeOperator(
 
           return [xSpace, ySpace];
         },
-        inferSizeDomains: (shared, children) => {
-          // TODO: only works for polar2 right now
-          // size = [2 * Math.PI, Math.min(size[0], size[1]) / 2 - 30];
-          const childMeasures = children.map((child) =>
-            child.inferSizeDomains()
-          );
-          const childMeasuresWidth = childMeasures.map((cm) => cm[0]);
-          const childMeasuresHeight = childMeasures.map((cm) => cm[1]);
-
-          return {
-            w: Monotonic.max(...childMeasuresWidth),
-            h: Monotonic.max(...childMeasuresHeight),
-          };
-        },
-        layout: (
-          shared,
-          size,
-          scaleFactors,
-          children,
-          measurement,
-          posScales
-        ) => {
+        layout: (shared, size, scaleFactors, children, posScales) => {
           /* TODO: need correct scale factors */
           // TODO: only works for polar2 right now
           size = [2 * Math.PI, Math.min(size[0], size[1]) / 2 - 30];

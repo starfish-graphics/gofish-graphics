@@ -247,39 +247,6 @@ export const Image = ({
         const xPos = dims[0].center ?? dims[0].min;
         const yPos = dims[1].center ?? dims[1].min;
 
-        let underlyingSpaceX = UNDEFINED;
-        if (!isValue(xPos)) {
-          underlyingSpaceX = ORDINAL([]);
-        } else {
-          const min = getValue(xPos) ?? 0;
-          const domain = interval(min, min);
-          underlyingSpaceX = POSITION(domain);
-        }
-
-        let underlyingSpaceY = UNDEFINED;
-        if (!isValue(yPos)) {
-          underlyingSpaceY = ORDINAL([]);
-        } else {
-          const min = getValue(yPos) ?? 0;
-          const domain = interval(min, min);
-          underlyingSpaceY = POSITION(domain);
-        }
-
-        if (isAesthetic(xPos) && isValue(dims[0].size)) {
-          underlyingSpaceX = DIFFERENCE(getValue(dims[0].size)!);
-        } else if (!isValue(xPos) && isValue(dims[0].size)) {
-          underlyingSpaceX = SIZE(getValue(dims[0].size)!);
-        }
-
-        if (isAesthetic(yPos) && isValue(dims[1].size)) {
-          underlyingSpaceY = DIFFERENCE(getValue(dims[1].size)!);
-        } else if (!isValue(yPos) && isValue(dims[1].size)) {
-          underlyingSpaceY = SIZE(getValue(dims[1].size)!);
-        }
-
-        return [underlyingSpaceX, underlyingSpaceY];
-      },
-      inferSizeDomains: () => {
         const requestedWidth = isValue(dims[0].size)
           ? getValue(dims[0].size)
           : dims[0].size;
@@ -293,19 +260,31 @@ export const Image = ({
           intrinsicDimensions
         );
 
-        return {
-          w: Monotonic.linear(resolvedDimensions.width, 0),
-          h: Monotonic.linear(resolvedDimensions.height, 0),
+        const sizeDomain = (axis: 0 | 1, fallback: number) =>
+          isValue(dims[axis].size)
+            ? Monotonic.linear(getValue(dims[axis].size)!, 0)
+            : Monotonic.linear(0, fallback);
+
+        const resolveAxis = (axis: 0 | 1, pos: any, rendered: number) => {
+          if (isValue(pos)) {
+            const min = getValue(pos) ?? 0;
+            if (isValue(dims[axis].size)) {
+              return DIFFERENCE(getValue(dims[axis].size)!);
+            }
+            return POSITION(interval(min, min));
+          }
+          if (isAesthetic(pos) && isValue(dims[axis].size)) {
+            return DIFFERENCE(getValue(dims[axis].size)!);
+          }
+          return SIZE(sizeDomain(axis, rendered));
         };
+
+        return [
+          resolveAxis(0, xPos, resolvedDimensions.width),
+          resolveAxis(1, yPos, resolvedDimensions.height),
+        ];
       },
-      layout: (
-        shared,
-        size,
-        scaleFactors,
-        children,
-        measurement,
-        posScales
-      ) => {
+      layout: (shared, size, scaleFactors, children, posScales) => {
         // For data-bound (Value-wrapped) dims, map from data units to pixels via
         // posScale when available — this keeps image sizing consistent with
         // rect's data-driven sizing. For literal-number dims, treat as pixels.
