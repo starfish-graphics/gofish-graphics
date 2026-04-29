@@ -20,6 +20,7 @@ import {
   POSITION,
   SIZE,
   UNDEFINED,
+  isDIFFERENCE,
   isPOSITION,
   isSIZE,
 } from "../underlyingSpace";
@@ -215,7 +216,9 @@ export const Spread = createNodeOperator(
 
           // Compute scale factors at this level by dispatching on
           // underlying-space kind: SIZE inverts the composed Monotonic;
-          // POSITION derives a linear factor from its domain extent.
+          // POSITION derives a linear factor from its domain extent;
+          // DIFFERENCE divides by its known pixel width (analogous to
+          // POSITION but with no anchored origin).
           const myUSpace = node._underlyingSpace!;
           const computeScaleFactor = (dir: Direction): number | undefined => {
             const space = myUSpace[dir];
@@ -229,6 +232,9 @@ export const Spread = createNodeOperator(
             if (isPOSITION(space) && space.domain) {
               const w = Interval.width(space.domain);
               return w !== 0 ? size[dir] / w : 0;
+            }
+            if (isDIFFERENCE(space)) {
+              return space.width !== 0 ? size[dir] / space.width : 0;
             }
             return undefined;
           };
