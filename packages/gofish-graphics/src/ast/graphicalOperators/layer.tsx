@@ -99,10 +99,9 @@ export const layer = createNodeOperatorSequential(
           for (let i = 0; i < children.length; i++) {
             const child = children[i];
             const childPlaceable = child.layout(size, scaleFactors, posScales);
-            const childName =
-              "_name" in node.children[i]
-                ? (node.children[i] as GoFishNode)._name
-                : undefined;
+            const c = node.children[i] as any;
+            // GoFishNode names on `_name`; GoFishRef on `name`.
+            const childName: string | undefined = c?._name ?? c?.name;
             if (!childName || !constrainedNames.has(childName)) {
               childPlaceable.place("x", 0, "baseline");
               childPlaceable.place("y", 0, "baseline");
@@ -118,9 +117,10 @@ export const layer = createNodeOperatorSequential(
               (typeof childPlaceables)[number]
             >();
             for (let i = 0; i < node.children.length; i++) {
-              const childNode = node.children[i];
-              if ("_name" in childNode && (childNode as GoFishNode)._name) {
-                const childName = (childNode as GoFishNode)._name!;
+              const childNode = node.children[i] as any;
+              const childName: string | undefined =
+                childNode?._name ?? childNode?.name;
+              if (childName) {
                 nameToPlaceable.set(childName, childPlaceables[i]);
               }
             }
@@ -136,11 +136,9 @@ export const layer = createNodeOperatorSequential(
             // final constrained sibling positions. Constrained children are
             // intentionally left untouched to preserve "placed once" semantics.
             for (let i = 0; i < children.length; i++) {
-              const childNode = node.children[i];
-              const childName =
-                "_name" in childNode
-                  ? (childNode as GoFishNode)._name
-                  : undefined;
+              const childNode = node.children[i] as any;
+              const childName: string | undefined =
+                childNode?._name ?? childNode?.name;
               if (childName && constrainedNames.has(childName)) continue;
               childPlaceables[i] = children[i].layout(
                 size,

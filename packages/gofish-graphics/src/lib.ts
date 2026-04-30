@@ -73,6 +73,7 @@ export {
 } from "./ast/graphicalOperators/position";
 export { arrow, arrow as Arrow } from "./ast/graphicalOperators/arrow";
 export { Table, table } from "./ast/graphicalOperators/table";
+export { cut, cut as Cut } from "./ast/graphicalOperators/cut";
 export {
   over as Over,
   inside as In,

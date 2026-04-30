@@ -81,6 +81,11 @@ export class GoFishRef {
     this.directNode = node;
   }
 
+  public setName(name: string): this {
+    this.name = name;
+    return this;
+  }
+
   public resolveNames(): void {
     const scopeContext = this.getRenderSession().scopeContext;
     if (this.directNode) {
