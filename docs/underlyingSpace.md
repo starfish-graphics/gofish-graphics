@@ -220,26 +220,42 @@ once you know the kind, you know which arithmetic applies.
 
 ## Axis inference
 
-Once the tree is resolved, axis inference splits into two independent
-questions:
+Conceptually, axis inference splits into two independent questions:
 
 1. **What guide could this space support?** Answered by the kind. POSITION
    permits a quantitative axis. ORDINAL permits labels at laid-out keys.
    DIFFERENCE permits a magnitude guide but not an axis with a meaningful
    zero. SIZE wants a legend or measurement guide; a position axis would
    be premature. UNDEFINED contributes nothing.
-2. **Should that guide be drawn here?** Independent of the kind. A user
-   or operator can tag nodes in the tree with whether an axis should
-   render. The root of a stacked bar may have a POSITION y-space that
-   permits a quantitative axis; a nested stack inside a more complex
-   diagram may have the same kind without deserving its own visible axis.
-   Conversely, a facet operator might explicitly request labels for the
-   ORDINAL spaces it creates.
+2. **Should that guide be drawn here?** Independent of the kind. The root
+   of a stacked bar may have a POSITION y-space that permits a
+   quantitative axis; a nested stack inside a more complex diagram might
+   have the same kind without deserving its own visible axis. Conversely,
+   a facet operator might explicitly request labels for the ORDINAL
+   spaces it creates.
 
-Keeping the axis tag separate from the space kind is what lets guide
-selection happen as its own pass over the same tree. Without this
-representation, systems tend to conflate the two decisions in scale
-configuration, mark defaults, or chart-specific special cases.
+**The current implementation only does (1), and only at the root.**
+[`gofish.tsx`'s `render()`](../packages/gofish-graphics/src/ast/gofish.tsx)
+takes a chart-level `axes: boolean | { x?, y? }` option and renders an
+axis when both the option is on and the _root_ underlying space is
+POSITION (quantitative ticks), DIFFERENCE (a magnitude guide, currently
+limited), or ORDINAL (labels at laid-out positions). The space kind
+determines the axis style; the boolean option controls per-axis
+visibility globally.
+
+What's _not_ implemented: per-node axis annotations on the underlying-
+space tree. There's no way for an inner operator to mark "this nested
+POSITION space deserves its own visible axis" or for an outer operator
+to suppress an axis its child would otherwise produce. Today that's not
+a problem because GoFish charts have a single overall coordinate space
+at the root and axes are decided once at the chart level.
+
+When this matters — for nested coordinate spaces, faceting with
+per-facet axes, or charts that want different guide kinds on different
+parts of the same axis — the natural extension is to tag nodes in the
+tree with `{ axis?: "auto" | "show" | "hide", title?: ... }` and have
+guide selection walk the tree as its own pass. Future work; tracked
+informally as "axis-tag follow-up" until a chart actually needs it.
 
 ## Discrete non-position channels
 
