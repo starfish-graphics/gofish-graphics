@@ -297,9 +297,7 @@ The design also borrows from compiler architecture, especially typed
 intermediate representations and the value of an explicit elaboration
 pass that turns a convenient surface specification into a more precise
 representation that later passes can consume without re-inferring the
-same facts. The connection to bidirectional typing (Dunfield & Krishnaswami 2021) is intentionally loose: GoFish similarly benefits from separating
-local facts from contextual constraints, but it is not a type checker
-and does not follow the bidirectional discipline directly.
+same facts.
 
 For a longer treatment, see the "Underlying Space Tree" section of
 GoFish's thesis chapter (parts/theory/underlying-space.typ in the
