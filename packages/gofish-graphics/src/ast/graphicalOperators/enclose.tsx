@@ -4,7 +4,6 @@ import { Size } from "../dims";
 import { GoFishAST } from "../_ast";
 import { black, gray, tailwindColors } from "../../color";
 import { Domain } from "../domain";
-import * as Monotonic from "../../util/monotonic";
 import { UNDEFINED, UnderlyingSpace } from "../underlyingSpace";
 import { createNodeOperator } from "../withGoFish";
 
@@ -26,25 +25,6 @@ export const enclose = createNodeOperator(
           _childNodes: GoFishAST[]
         ) => {
           return [UNDEFINED, UNDEFINED];
-        },
-        inferSizeDomains: (shared, children) => {
-          const childMeasures = children.map((child) =>
-            child.inferSizeDomains()
-          );
-
-          const childMeasuresWidth = childMeasures.map((cm) => cm[0]);
-          const childMeasuresHeight = childMeasures.map((cm) => cm[1]);
-
-          return {
-            w: Monotonic.adds(
-              Monotonic.max(...childMeasuresWidth),
-              padding * 2
-            ),
-            h: Monotonic.adds(
-              Monotonic.max(...childMeasuresHeight),
-              padding * 2
-            ),
-          };
         },
         layout: (shared, size, scaleFactors, children) => {
           const childPlaceables = [];

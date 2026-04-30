@@ -1,6 +1,7 @@
 // import { ContinuousDomain } from "./domain";
 import { interval, Interval } from "../util/interval";
 import { CoordinateTransform } from "./coordinateTransforms/coord";
+import * as Monotonic from "../util/monotonic";
 
 export type UnderlyingSpaceKind =
   | "position"
@@ -28,7 +29,7 @@ export type DIFFERENCE_TYPE = {
 
 export type SIZE_TYPE = {
   kind: "size";
-  value: number;
+  domain: Monotonic.Monotonic;
   spacing?: number;
   ordinalGroupId?: string;
   source?: string;
@@ -56,7 +57,10 @@ export type UnderlyingSpace =
   | ORDINAL_TYPE
   | UNDEFINED_TYPE;
 
-export const POSITION = (domain: Interval, coordinateTransform?: CoordinateTransform): UnderlyingSpace => ({
+export const POSITION = (
+  domain: Interval,
+  coordinateTransform?: CoordinateTransform
+): UnderlyingSpace => ({
   kind: "position",
   domain,
   coordinateTransform,
@@ -73,9 +77,9 @@ export const isDIFFERENCE = (
   space: UnderlyingSpace
 ): space is DIFFERENCE_TYPE => space.kind === "difference";
 
-export const SIZE = (value: number): UnderlyingSpace => ({
+export const SIZE = (domain: Monotonic.Monotonic): UnderlyingSpace => ({
   kind: "size",
-  value,
+  domain,
 });
 export const isSIZE = (space: UnderlyingSpace): space is SIZE_TYPE =>
   space.kind === "size";

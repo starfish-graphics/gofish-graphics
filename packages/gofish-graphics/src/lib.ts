@@ -54,7 +54,6 @@ export { Scatter, scatter } from "./ast/graphicalOperators/scatter";
 export { spreadX, spreadX as SpreadX } from "./ast/graphicalOperators/spreadX";
 export { spreadY, spreadY as SpreadY } from "./ast/graphicalOperators/spreadY";
 export { layer as Layer } from "./ast/graphicalOperators/layer";
-export { wrap, wrap as Wrap } from "./ast/graphicalOperators/wrap";
 export { connect, connect as Connect } from "./ast/graphicalOperators/connect";
 export { treemap, treemap as Treemap } from "./ast/graphicalOperators/treemap";
 export {

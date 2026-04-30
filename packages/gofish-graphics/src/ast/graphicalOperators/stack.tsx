@@ -19,7 +19,7 @@ export const stack = (
   return Spread(
     {
       ...props,
-      spacing: 0,
+      glue: true,
       mode: "edge",
     },
     children

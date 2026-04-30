@@ -100,134 +100,56 @@ export const Rect = ({
         _children: Size<UnderlyingSpace>[],
         _childNodes: GoFishAST[]
       ) => {
-        /* cases
-        a: aesthetic
-        v: value
-        u: undefined
-
-        
-        min size
-        --------
-        a a: ordinal
-        a v: interval
-        a u: ordinal
-        v a: position([min, min])
-        v v: position([min, min+size])
-        v u: position([min, min])
-        u a: ordinal
-        u v: position([0, size])
-        u u: ordinal
-
-
-        grouped cases
-        -------------
-        a a: ordinal
-        a u: ordinal
-        u a: ordinal
-        u u: ordinal
-
-        a v: interval
-
-        v a: position([min, min])
-        v v: position([min, min+size])
-        v u: position([min, min])
-        u v: position([0, size])
-        */
-
-        let underlyingSpaceX = UNDEFINED;
-        if (isValue(dims[0].min) && isValue(dims[0].max)) {
-          // both min and max are values -> POSITION([min, max])
-          underlyingSpaceX = POSITION(
-            interval(getValue(dims[0].min)!, getValue(dims[0].max)!)
-          );
-        } else if (!isValue(dims[0].min) && !isValue(dims[0].size)) {
-          // nothing is data-driven
-          // keep undefined if no values
-        } else if (isAesthetic(dims[0].min) && isValue(dims[0].size)) {
-          // aesthetic position + data-driven size -> DIFFERENCE
-          underlyingSpaceX = DIFFERENCE(getValue(dims[0].size)!);
-        } else if (!isValue(dims[0].min) && isValue(dims[0].size)) {
-          // no position, but has data-driven size -> SIZE
-          underlyingSpaceX = SIZE(getValue(dims[0].size)!);
-        } else {
-          // has position (and possibly size) -> POSITION
-          const min = isValue(dims[0].min) ? getValue(dims[0].min) : 0;
-          const size = isValue(dims[0].size) ? getValue(dims[0].size) : 0;
-          const domain = interval(min, min + size);
-          underlyingSpaceX = POSITION(domain);
-        }
-
-        let underlyingSpaceY = UNDEFINED;
-        if (isValue(dims[1].min) && isValue(dims[1].max)) {
-          // both min and max are values -> POSITION([min, max])
-          underlyingSpaceY = POSITION(
-            interval(getValue(dims[1].min)!, getValue(dims[1].max)!)
-          );
-        } else if (!isValue(dims[1].min) && !isValue(dims[1].size)) {
-          // nothing is data-driven
-          // keep undefined if no values
-        } else if (isAesthetic(dims[1].min) && isValue(dims[1].size)) {
-          // aesthetic position + data-driven size -> DIFFERENCE
-          underlyingSpaceY = DIFFERENCE(getValue(dims[1].size)!);
-        } else if (!isValue(dims[1].min) && isValue(dims[1].size)) {
-          // no position, but has data-driven size -> SIZE
-          underlyingSpaceY = SIZE(getValue(dims[1].size)!);
-        } else {
-          // has position (and possibly size) -> POSITION.
-          // Only extend the domain by size when size is data-driven (a
-          // Value); a literal pixel size represents visual thickness, not
-          // data extent.
-          const min = isValue(dims[1].min) ? getValue(dims[1].min)! : 0;
-          const size = isValue(dims[1].size) ? getValue(dims[1].size)! : 0;
-          const domain = interval(min, min + size);
-          underlyingSpaceY = POSITION(domain);
-        }
-
-        // const w = computeIntrinsicSize(dims[0].size);
-        // const h = computeIntrinsicSize(dims[1].size);
-
-        return [underlyingSpaceX, underlyingSpaceY];
-      },
-      inferSizeDomains: (shared, children) => {
-        const wDomain = computeIntrinsicSize(dims[0].size);
-        const hDomain = computeIntrinsicSize(dims[1].size);
-
+        // Compute per-axis SIZE Monotonic (used when the axis ends up SIZE).
+        // These are the same Monotonics formerly produced by inferSizeDomains.
+        let wDomain = computeIntrinsicSize(dims[0].size);
+        let hDomain = computeIntrinsicSize(dims[1].size);
         if (aspectRatio !== undefined && aspectRatio > 0) {
           const wIsData = isValue(dims[0].size);
           const hIsData = isValue(dims[1].size);
-
           if (wIsData && !hIsData) {
-            // w is primary; derive h so parent allocates the right height
-            return {
-              w: wDomain,
-              h: Monotonic.linear(
-                (wDomain as Monotonic.Linear).slope / aspectRatio,
-                0
-              ),
-            };
+            hDomain = Monotonic.linear(
+              (wDomain as Monotonic.Linear).slope / aspectRatio,
+              0
+            );
           } else if (hIsData && !wIsData) {
-            // h is primary; derive w so parent allocates the right width
-            return {
-              w: Monotonic.linear(
-                (hDomain as Monotonic.Linear).slope * aspectRatio,
-                0
-              ),
-              h: hDomain,
-            };
+            wDomain = Monotonic.linear(
+              (hDomain as Monotonic.Linear).slope * aspectRatio,
+              0
+            );
           }
-          // Both data-driven (circle) or neither: correction happens in layout()
         }
 
-        return { w: wDomain, h: hDomain };
+        const resolveAxis = (
+          axis: 0 | 1,
+          axisDomain: Monotonic.Monotonic
+        ): UnderlyingSpace => {
+          const d = dims[axis];
+          if (isValue(d.min) && isValue(d.max)) {
+            return POSITION(interval(getValue(d.min)!, getValue(d.max)!));
+          }
+          if (!isValue(d.min) && !isValue(d.size)) {
+            // Nothing data-driven on this axis. Literal pixel sizes are
+            // handled at layout time by computeAesthetic, so contribute
+            // nothing to the underlying-space tree.
+            return UNDEFINED;
+          }
+          if (isAesthetic(d.min) && isValue(d.size)) {
+            return DIFFERENCE(getValue(d.size)!);
+          }
+          if (!isValue(d.min) && isValue(d.size)) {
+            // No data position; data-driven size → SIZE with Monotonic.
+            return SIZE(axisDomain);
+          }
+          // has position (data-driven), maybe with literal/no size → POSITION.
+          const min = isValue(d.min) ? getValue(d.min)! : 0;
+          const size = isValue(d.size) ? getValue(d.size)! : 0;
+          return POSITION(interval(min, min + size));
+        };
+
+        return [resolveAxis(0, wDomain), resolveAxis(1, hDomain)];
       },
-      layout: (
-        shared,
-        size,
-        scaleFactors,
-        children,
-        measurement,
-        posScales
-      ) => {
+      layout: (shared, size, scaleFactors, children, posScales) => {
         let x = computeAesthetic(dims[0].min, posScales?.[0]!, undefined);
         let y = computeAesthetic(dims[1].min, posScales?.[1]!, undefined);
 

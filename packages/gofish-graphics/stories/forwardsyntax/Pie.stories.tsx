@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
 import { seafood } from "../../src/data/catch";
 import { nightingale } from "../../src/data/nightingale";
-import { Chart, rect, stack, derive } from "../../src/lib";
+import { Chart, rect, stack, spread, derive } from "../../src/lib";
 import { clock } from "../../src/ast/coordinateTransforms/clock";
 
 const meta: Meta = {
@@ -63,8 +63,8 @@ export const Rose: StoryObj<Args> = {
 
     Chart(nightingale, { coord: clock() })
       .flow(
-        stack({ by: "Month",  dir: "x" }),
-        stack({ by: "Type",  dir: "y" }),
+        spread({ by: "Month", dir: "x", spacing: 0 }),
+        stack({ by: "Type", dir: "y" }),
         /* TODO: push this into the h encoding of rect */
         derive((d) => d.map((d) => ({ ...d, Death: Math.sqrt(d.Death) })))
       )

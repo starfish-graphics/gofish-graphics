@@ -68,7 +68,7 @@ export const testPolarRibbonTransposed = (size: { width: number; height: number 
           { y: 100, dir: 0, spacing: 0, alignment: "start", sharedScale: true },
           // TODO: I could probably make the width be uniform flexible basically
           Object.entries(_.groupBy(data, "category")).map(([category, items]) =>
-            stack({ dir: 1, spacing: 0, alignment: "middle" },
+            stack({ dir: 1, alignment: "middle" },
               items.toReversed().map((d) =>
                 rect({
                   name: `${d.category}-${d.group}`,

@@ -8,10 +8,12 @@
  * - Exit 1 on any failures
  */
 
-import { readFileSync, existsSync } from "fs";
+import { readFileSync, existsSync, writeFileSync } from "fs";
 import { join } from "path";
 import { BASELINE_DOM, PYTHON_DIR, ROOT, listHtmlFiles } from "./diff-utils.js";
 import { getSnapshotBranchName, pullSnapshots } from "./snapshot-branch.js";
+
+const SUMMARY_PATH = join(import.meta.dirname, "../tmp/parity-summary.json");
 
 // Pull baselines from the snapshot branch if not already present locally.
 pullSnapshots(getSnapshotBranchName(), join(ROOT, "__snapshots__"));
@@ -32,8 +34,8 @@ if (pyFiles.length === 0) {
   process.exit(0);
 }
 
-let failures = 0;
-let warnings = 0;
+let parityMismatches = 0;
+let missingBaselines = 0;
 let passed = 0;
 
 for (const file of pyFiles) {
@@ -42,7 +44,7 @@ for (const file of pyFiles) {
 
   if (!existsSync(baselinePath)) {
     console.error(`  FAIL: No JS baseline for ${file} (not yet accepted)`);
-    failures++;
+    missingBaselines++;
     continue;
   }
 
@@ -51,15 +53,22 @@ for (const file of pyFiles) {
 
   if (pythonContent !== baselineContent) {
     console.error(`  FAIL: Parity mismatch for ${file}`);
-    failures++;
+    parityMismatches++;
   } else {
     console.log(`  PASS: ${file}`);
     passed++;
   }
 }
 
+const failures = parityMismatches + missingBaselines;
+
 console.log(
-  `\nResults: ${passed} passed, ${failures} failed, ${warnings} warned (no baseline)`
+  `\nResults: ${passed} passed, ${parityMismatches} parity mismatches, ${missingBaselines} missing baselines`
+);
+
+writeFileSync(
+  SUMMARY_PATH,
+  JSON.stringify({ parityMismatches, missingBaselines }, null, 2)
 );
 
 if (failures > 0) {

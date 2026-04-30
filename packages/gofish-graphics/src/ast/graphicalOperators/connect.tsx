@@ -7,7 +7,6 @@ import { pairs } from "../../util";
 import { linear } from "../coordinateTransforms/linear";
 import { getValue, isValue, MaybeValue } from "../data";
 import { Domain } from "../domain";
-import * as Monotonic from "../../util/monotonic";
 import { UNDEFINED, UnderlyingSpace } from "../underlyingSpace";
 import { createNodeOperator } from "../withGoFish";
 
@@ -47,12 +46,6 @@ export const connect = createNodeOperator(
           _childNodes: GoFishAST[]
         ) => {
           return [UNDEFINED, UNDEFINED];
-        },
-        inferSizeDomains: (shared, children) => {
-          return {
-            w: Monotonic.linear(0, 0),
-            h: Monotonic.linear(0, 0),
-          };
         },
         layout: (shared, size, scaleFactors, children) => {
           const defaultColor = children[0]?.color ?? "black";

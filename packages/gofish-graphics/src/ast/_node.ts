@@ -76,13 +76,6 @@ export type Placeable = {
   place: (axis: FancyDirection, value: number, anchor?: Anchor) => void;
 };
 
-export type InferSizeDomains = (
-  shared: Size<boolean>,
-  // scaleFactors: Size<number | undefined>,
-  // size: Size,
-  children: GoFishNode[]
-) => FancySize<ScaleFactorFunction>;
-
 export type Layout = (
   shared: Size<boolean>,
   size: Size,
@@ -94,7 +87,6 @@ export type Layout = (
       posScales: Size<((pos: number) => number) | undefined>
     ) => Placeable;
   }[],
-  sizeDomains: Size<ScaleFactorFunction>,
   posScales: Size<((pos: number) => number) | undefined>,
   node: GoFishNode
 ) => { intrinsicDims: FancyDims; transform: FancyTransform; renderData?: any };
@@ -117,7 +109,8 @@ export type Render = (
 
 export type ResolveUnderlyingSpace = (
   childSpaces: Size<UnderlyingSpace>[],
-  childNodes: (GoFishNode | GoFishRef)[]
+  childNodes: (GoFishNode | GoFishRef)[],
+  shared: Size<boolean>
 ) => FancySize<UnderlyingSpace>;
 
 export class GoFishNode {
@@ -131,8 +124,7 @@ export class GoFishNode {
   public datum?: any;
   // private inferDomains: (childDomains: Size<Domain>[]) => FancySize<Domain | undefined>;
   private _resolveUnderlyingSpace: ResolveUnderlyingSpace;
-  private _underlyingSpace?: Size<UnderlyingSpace> = undefined;
-  private _inferSizeDomains: InferSizeDomains;
+  public _underlyingSpace?: Size<UnderlyingSpace> = undefined;
   private _layout: Layout;
   private _render: Render;
   public children: GoFishAST[];
@@ -140,7 +132,6 @@ export class GoFishNode {
   public transform?: Transform;
   public shared: Size<boolean>;
   // public posDomains: Size<Domain | undefined> = [undefined, undefined];
-  private sizeDomains: Size<ScaleFactorFunction>;
   public renderData?: any;
   public coordinateTransform?: CoordinateTransform;
   public color?: MaybeValue<string>;
@@ -157,7 +148,6 @@ export class GoFishNode {
       args,
       // inferDomains,
       resolveUnderlyingSpace,
-      inferSizeDomains,
       layout,
       render,
       shared = [false, false],
@@ -168,9 +158,7 @@ export class GoFishNode {
       type: string;
       args?: any;
       // inferDomains: (childDomains: Size<Domain>[]) => FancySize<Domain | undefined>;
-      /* TODO: I'm not sure whether scale inference and sizeThatFits should be separate or the same pass*/
       resolveUnderlyingSpace: ResolveUnderlyingSpace;
-      inferSizeDomains: InferSizeDomains;
       layout: Layout;
       render: Render;
       shared?: Size<boolean>;
@@ -182,7 +170,6 @@ export class GoFishNode {
     this.uid = `node-${GoFishNode.uidCounter++}`;
     // this.inferDomains = inferDomains;
     this._resolveUnderlyingSpace = resolveUnderlyingSpace;
-    this._inferSizeDomains = inferSizeDomains;
     this._layout = layout;
     this._render = render;
     this.children = children;
@@ -303,19 +290,11 @@ export class GoFishNode {
     this._underlyingSpace = elaborateSize(
       this._resolveUnderlyingSpace(
         this.children.map((child) => child.resolveUnderlyingSpace()),
-        this.children
+        this.children,
+        this.shared
       )
     );
     return this._underlyingSpace;
-  }
-
-  public inferSizeDomains(): Size<ScaleFactorFunction> {
-    const sizeDomains = elaborateSize(
-      this._inferSizeDomains(this.shared, this.children)
-    );
-
-    this.sizeDomains = sizeDomains;
-    return sizeDomains;
   }
 
   public layout(
@@ -328,7 +307,6 @@ export class GoFishNode {
       size,
       scaleFactors,
       this.children,
-      this.sizeDomains,
       posScales,
       this
     );

@@ -3,6 +3,7 @@ import {
   DIFFERENCE,
   ORDINAL,
   POSITION,
+  SIZE,
   UNDEFINED,
   isDIFFERENCE,
   isORDINAL,
@@ -12,6 +13,7 @@ import {
 } from "../underlyingSpace";
 import type { Size } from "../dims";
 import * as Interval from "../../util/interval";
+import * as Monotonic from "../../util/monotonic";
 
 export type Alignment = "start" | "middle" | "end" | "baseline";
 
@@ -46,6 +48,14 @@ export function unionChildSpaces(
     return ORDINAL(Array.from(keys));
   }
 
+  // Preserve SIZE composition for overlay operators (layer, porterDuff):
+  // when every child is SIZE on this axis, emit SIZE(Monotonic.max(...))
+  // so the parent can keep solving scale factors via Monotonic.inverse.
+  const axisSpaces = children.map((c) => c[axis]);
+  if (axisSpaces.length > 0 && axisSpaces.every(isSIZE)) {
+    return SIZE(Monotonic.max(...axisSpaces.map((s) => s.domain)));
+  }
+
   const intervals: ReturnType<typeof Interval.interval>[] = [];
   let hasPosition = false;
   for (const child of children) {
@@ -56,7 +66,7 @@ export function unionChildSpaces(
     } else if (isDIFFERENCE(space)) {
       intervals.push(Interval.interval(0, space.width));
     } else if (isSIZE(space)) {
-      intervals.push(Interval.interval(0, space.value));
+      intervals.push(Interval.interval(0, space.domain.run(1)));
     }
   }
   if (intervals.length === 0) return UNDEFINED;
@@ -75,7 +85,9 @@ export function resolveAlignmentSpace(
   alignment: Alignment
 ): { space: UnderlyingSpace; fromSize: boolean } {
   if (spaces.every((s) => isSIZE(s))) {
-    const sizeValues = spaces.map((s) => (s as any).value as number);
+    const sizeValues = spaces.map((s) =>
+      ((s as any).domain as { run: (x: number) => number }).run(1)
+    );
     if (
       alignment === "start" ||
       alignment === "end" ||

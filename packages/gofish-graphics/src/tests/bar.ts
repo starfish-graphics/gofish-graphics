@@ -6,7 +6,7 @@ import { d as $d } from "../components/data"; */
 import { value } from "../ast/data";
 import { gofish } from "../ast/gofish";
 import { rect } from "../ast/shapes/rect";
-import { stack } from "../ast/graphicalOperators/stack";
+import { spread } from "../ast/graphicalOperators/spread";
 import { color, color6 } from "../color";
 const data = [
   { a: "A", b: 28 },
@@ -23,7 +23,7 @@ const data = [
 export const testBar = (size: { width: number; height: number }) =>
   gofish(
     { width: size.width, height: size.height },
-    stack({ dir: 0, spacing: 4, alignment: "end", sharedScale: true },
+    spread({ dir: 0, spacing: 4, alignment: "end", sharedScale: true },
       data.map((d) => rect({ w: 30, h: value(d.b, "value"), fill: color6[0] }))
     )
   );

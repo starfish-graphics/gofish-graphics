@@ -10,12 +10,14 @@ import {
   type RenderSession,
 } from "./_node";
 import { computePosScale } from "./domain";
+import type { Size } from "./dims";
 import { tickIncrement, ticks, nice } from "d3-array";
 import { isConstant } from "../util/monotonic";
 import {
   isDIFFERENCE,
   isORDINAL,
   isPOSITION,
+  isSIZE,
   type UnderlyingSpace,
 } from "./underlyingSpace";
 import { continuous } from "./domain";
@@ -144,7 +146,6 @@ export async function layout(
     session: RenderSession;
   }
 ): Promise<{
-  sizeDomains: [any, any];
   underlyingSpaceX: UnderlyingSpace;
   underlyingSpaceY: UnderlyingSpace;
   posScales: [
@@ -178,7 +179,6 @@ export async function layout(
   child.resolveNames();
   child.resolveKeys();
   child.resolveLabels();
-  const sizeDomains = child.inferSizeDomains();
   const [underlyingSpaceX, underlyingSpaceY] = child.resolveUnderlyingSpace();
 
   // Apply nice rounding to POSITION space domains
@@ -248,7 +248,19 @@ export async function layout(
     console.log("width and height constraints:", w, h);
   }
 
-  child.layout([w, h], [undefined, undefined], posScales);
+  // Root scale factors come from SIZE underlying spaces by inverting the
+  // composed Monotonic against the canvas. POSITION-rooted axes use
+  // posScales (computed above) instead.
+  const rootScaleFactors: Size<number | undefined> = [
+    isSIZE(niceUnderlyingSpaceX)
+      ? (niceUnderlyingSpaceX.domain.inverse(w) ?? undefined)
+      : undefined,
+    isSIZE(niceUnderlyingSpaceY)
+      ? (niceUnderlyingSpaceY.domain.inverse(h) ?? undefined)
+      : undefined,
+  ];
+
+  child.layout([w, h], rootScaleFactors, posScales);
   child.place("x", x ?? transform?.x ?? 0, "baseline");
   child.place("y", y ?? transform?.y ?? 0, "baseline");
 
@@ -267,7 +279,6 @@ export async function layout(
   ];
 
   return {
-    sizeDomains,
     underlyingSpaceX: niceUnderlyingSpaceX,
     underlyingSpaceY: niceUnderlyingSpaceY,
     posScales,
@@ -305,7 +316,6 @@ export const gofish = (
   child: GoFishNode | Promise<GoFishNode>
 ) => {
   type LayoutData = {
-    sizeDomains: [any, any];
     underlyingSpaceX: UnderlyingSpace;
     underlyingSpaceY: UnderlyingSpace;
     posScales: [
@@ -369,7 +379,6 @@ export const gofish = (
               axisFields,
               scaleContext: data.scaleContext,
               keyContext: data.keyContext,
-              sizeDomains: data.sizeDomains,
               underlyingSpaceX: data.underlyingSpaceX,
               underlyingSpaceY: data.underlyingSpaceY,
               posScales: data.posScales,
@@ -455,7 +464,6 @@ export const render = (
     axisFields,
     scaleContext: scaleContextParam,
     keyContext: keyContextParam,
-    sizeDomains,
     underlyingSpaceX,
     underlyingSpaceY,
     posScales,
@@ -469,7 +477,6 @@ export const render = (
     axisFields?: { x?: string; y?: string };
     scaleContext: ScaleContext | null;
     keyContext: KeyContext | null;
-    sizeDomains?: [any, any];
     underlyingSpaceX: UnderlyingSpace;
     underlyingSpaceY: UnderlyingSpace;
     posScales: [

@@ -10,7 +10,7 @@
  * On failure, runs diff-report to generate tmp/diff-report.html.
  */
 
-import { readFileSync, readdirSync, existsSync } from "fs";
+import { readFileSync, readdirSync, existsSync, writeFileSync } from "fs";
 import { join, relative } from "path";
 import { execSync } from "child_process";
 import { getSnapshotBranchName, pullSnapshots } from "./snapshot-branch.js";
@@ -19,6 +19,7 @@ const ROOT = join(import.meta.dirname, "../..");
 const BASELINE_DIR = join(ROOT, "__snapshots__/dom");
 const JS_DIR = join(import.meta.dirname, "../tmp/js");
 const PYTHON_DIR = join(import.meta.dirname, "../tmp/python");
+const SUMMARY_PATH = join(import.meta.dirname, "../tmp/diff-summary.json");
 
 const jsOnly = process.argv.includes("--js-only");
 
@@ -159,6 +160,18 @@ function main() {
   }
 
   const allFailures = [...regressions, ...parityFailures];
+
+  // Always emit a structured summary so downstream tooling (CI status
+  // descriptions, the review site) can render counts without re-parsing
+  // logs.
+  writeFileSync(
+    SUMMARY_PATH,
+    JSON.stringify(
+      { regressions: rCount, newStories: mCount, parityFailures: pCount },
+      null,
+      2
+    )
+  );
 
   if (allFailures.length === 0) {
     console.log("  All checks passed!");

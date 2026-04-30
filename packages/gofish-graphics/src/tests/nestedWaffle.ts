@@ -1,7 +1,7 @@
 import _ from "lodash";
 import { gofish } from "../ast/gofish";
 import { value } from "../ast/data";
-import { stack } from "../ast/graphicalOperators/stack";
+import { spread } from "../ast/graphicalOperators/spread";
 import { rect } from "../ast/shapes/rect";
 import {
   black,
@@ -62,7 +62,7 @@ export const testNestedWaffle = () =>
                     )
                     .reverse()
                     .map((d) =>
-                      stack({ dir: "x", spacing: 0.5, alignment: "end" },
+                      spread({ dir: "x", spacing: 0.5, alignment: "end" },
                         d.map((d) =>
                           ellipse({
                             w: 4,

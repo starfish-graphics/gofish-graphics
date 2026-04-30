@@ -35,25 +35,7 @@ export const position = createNodeOperator(
               : UNDEFINED,
           ];
         },
-        inferSizeDomains: (shared, children) => {
-          // Delegate to the single child's size requirements
-          if (children.length !== 1) {
-            throw new Error("Position operator expects exactly one child");
-          }
-          const childMeasure = children[0].inferSizeDomains();
-          return {
-            w: childMeasure[0],
-            h: childMeasure[1],
-          };
-        },
-        layout: (
-          shared,
-          size,
-          scaleFactors,
-          children,
-          measurement,
-          posScales
-        ) => {
+        layout: (shared, size, scaleFactors, children, posScales) => {
           if (children.length !== 1) {
             throw new Error("Position operator expects exactly one child");
           }

@@ -6,7 +6,7 @@ import { d as $d } from "../components/data"; */
 import { value } from "../ast/data";
 import { gofish } from "../ast/gofish";
 import { rect } from "../ast/shapes/rect";
-import { stack } from "../ast/graphicalOperators/stack";
+import { spread } from "../ast/graphicalOperators/spread";
 import { color, color6 } from "../color";
 import { seafood } from "../data/catch";
 import _ from "lodash";
@@ -24,14 +24,14 @@ const waffleY = (
   { y, numRows }: { y: string; numRows: number },
   mark: (d: any) => any
 ) =>
-  stack({ dir: "y", spacing: 2, alignment: "start" },
+  spread({ dir: "y", spacing: 2, alignment: "start" },
     _(data)
       .reverse()
       .flatMap((d) => Array(d[y]).fill(d))
       .chunk(numRows)
       .reverse()
       .map((d) =>
-        stack({ dir: "x", spacing: 2, alignment: "start" }, d.map(mark))
+        spread({ dir: "x", spacing: 2, alignment: "start" }, d.map(mark))
       )
       .value()
   );
@@ -42,7 +42,7 @@ export const testFishWaffleRefactor = (size: {
 }) =>
   gofish(
     { width: size.width, height: size.height },
-    stack({ dir: "x", spacing: 8, alignment: "end", sharedScale: true },
+    spread({ dir: "x", spacing: 8, alignment: "end", sharedScale: true },
       _(seafood)
         .groupBy("lake")
         .map((d) =>

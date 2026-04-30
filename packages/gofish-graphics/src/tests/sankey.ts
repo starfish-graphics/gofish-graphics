@@ -1,7 +1,7 @@
 import _ from "lodash";
 import { gofish } from "../ast/gofish";
 import { value } from "../ast/data";
-import { stack } from "../ast/graphicalOperators/stack";
+import { spread } from "../ast/graphicalOperators/spread";
 import { rect } from "../ast/shapes/rect";
 import { color, color6 } from "../color";
 import { layer } from "../ast/graphicalOperators/layer";
@@ -50,10 +50,10 @@ export const testSankey = (size: { width: number; height: number }) =>
   gofish(
     { width: size.width, height: size.height },
     layer([
-      stack({ dir: "y", spacing: 64, alignment: "middle", sharedScale: true },
+      spread({ dir: "y", spacing: 64, alignment: "middle", sharedScale: true },
         // TODO: I could probably make the width be uniform flexible basically
         Object.entries(_.groupBy(data, "category")).map(([category, items]) =>
-          stack({ dir: "x", spacing: 8, alignment: "middle" },
+          spread({ dir: "x", spacing: 8, alignment: "middle" },
             items.map((d) =>
               rect({
                 name: `${d.category}-${d.group}`,

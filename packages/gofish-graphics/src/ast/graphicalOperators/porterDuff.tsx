@@ -1,5 +1,4 @@
 import type { JSX } from "solid-js";
-import * as Monotonic from "../../util/monotonic";
 import { GoFishAST } from "../_ast";
 import { GoFishNode } from "../_node";
 import type { Placeable } from "../_node";
@@ -131,27 +130,7 @@ const createCompositeRelation = (type: string, operator: CompositeOperator) =>
             children: Size<UnderlyingSpace>[],
             _childNodes: GoFishAST[]
           ) => [unionChildSpaces(children, 0), unionChildSpaces(children, 1)],
-          inferSizeDomains: (_shared, layoutChildren) => {
-            requireTwoChildren(layoutChildren);
-            const childMeasures = layoutChildren.map((child) =>
-              child.inferSizeDomains()
-            );
-            if (isAtop) {
-              return { w: childMeasures[0][0], h: childMeasures[0][1] };
-            }
-            return {
-              w: Monotonic.max(...childMeasures.map((measure) => measure[0])),
-              h: Monotonic.max(...childMeasures.map((measure) => measure[1])),
-            };
-          },
-          layout: (
-            _shared,
-            size,
-            scaleFactors,
-            layoutChildren,
-            _measurement,
-            posScales
-          ) => {
+          layout: (_shared, size, scaleFactors, layoutChildren, posScales) => {
             requireTwoChildren(layoutChildren);
 
             const childPlaceables = layoutChildren.map((child) =>
@@ -230,24 +209,7 @@ export const mask = createNodeOperator(
           children: Size<UnderlyingSpace>[],
           _childNodes: GoFishAST[]
         ) => [unionChildSpaces(children, 0), unionChildSpaces(children, 1)],
-        inferSizeDomains: (_shared, layoutChildren) => {
-          requireTwoChildren(layoutChildren);
-          const childMeasures = layoutChildren.map((child) =>
-            child.inferSizeDomains()
-          );
-          return {
-            w: Monotonic.max(...childMeasures.map((measure) => measure[0])),
-            h: Monotonic.max(...childMeasures.map((measure) => measure[1])),
-          };
-        },
-        layout: (
-          _shared,
-          size,
-          scaleFactors,
-          layoutChildren,
-          _measurement,
-          posScales
-        ) => {
+        layout: (_shared, size, scaleFactors, layoutChildren, posScales) => {
           requireTwoChildren(layoutChildren);
 
           const childPlaceables = layoutChildren.map((child) =>

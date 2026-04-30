@@ -4,7 +4,6 @@ import { Dimensions, elaborateDims, FancyDims, Size } from "../dims";
 import { createNodeOperator } from "../withGoFish";
 import { GoFishAST } from "../_ast";
 import { Collection } from "lodash";
-import * as Monotonic from "../../util/monotonic";
 import { POSITION, UNDEFINED, UnderlyingSpace } from "../underlyingSpace";
 import * as Interval from "../../util/interval";
 import { Alignment, alignChildren, resolveAlignmentSpace } from "./alignment";
@@ -170,23 +169,7 @@ export const Scatter = createNodeOperator(
 
           return [xSpace, ySpace];
         },
-        inferSizeDomains: (_shared, childNodes) => {
-          const childDomains = childNodes.map((child) =>
-            child.inferSizeDomains()
-          );
-          return {
-            w: Monotonic.max(...childDomains.map((domain) => domain[0])),
-            h: Monotonic.max(...childDomains.map((domain) => domain[1])),
-          };
-        },
-        layout: (
-          _shared,
-          size,
-          scaleFactors,
-          childNodes,
-          _measurement,
-          posScales
-        ) => {
+        layout: (_shared, size, scaleFactors, childNodes, posScales) => {
           const childPlaceables = childNodes.map((child) =>
             child.layout(size, scaleFactors, posScales)
           );

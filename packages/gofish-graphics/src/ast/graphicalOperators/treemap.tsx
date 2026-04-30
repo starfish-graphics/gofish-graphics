@@ -12,7 +12,6 @@ import { createNodeOperator } from "../withGoFish";
 import { FancyDims, Size, elaborateDims } from "../dims";
 import { getValue, isValue, MaybeValue } from "../data";
 import { computeAesthetic, computeSize } from "../../util";
-import * as Monotonic from "../../util/monotonic";
 import { POSITION, UnderlyingSpace } from "../underlyingSpace";
 import { interval } from "../../util/interval";
 
@@ -99,28 +98,7 @@ export const treemap = createNodeOperator(
           // Use a stable unit domain; this avoids implying ordinal semantics.
           return [POSITION(interval(0, 1)), POSITION(interval(0, 1))];
         },
-        inferSizeDomains: (_shared, childNodes) => {
-          const childMeasures = childNodes.map((c) => c.inferSizeDomains());
-          const childW = childMeasures.map((m) => m[0]);
-          const childH = childMeasures.map((m) => m[1]);
-          return {
-            0: isValue(dims[0].size)
-              ? Monotonic.linear(getValue(dims[0].size)!, 0)
-              : Monotonic.max(...childW),
-            1: isValue(dims[1].size)
-              ? Monotonic.linear(getValue(dims[1].size)!, 0)
-              : Monotonic.max(...childH),
-          };
-        },
-        layout: (
-          _shared,
-          size,
-          scaleFactors,
-          childAsts,
-          _measurement,
-          posScales,
-          node
-        ) => {
+        layout: (_shared, size, scaleFactors, childAsts, posScales, node) => {
           const xPos = computeAesthetic(
             dims[0].min,
             posScales?.[0]!,

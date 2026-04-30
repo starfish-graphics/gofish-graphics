@@ -267,8 +267,8 @@ export const RoseGradient: StoryObj<Args> = {
 
     Chart(roseData, { color: gradient("blues"), coord: clock() })
       .flow(
-        stack({ by: "sector",  dir: "x" }),
-        stack({ by: "ring",  dir: "y" }),
+        spread({ by: "sector", dir: "x", spacing: 0 }),
+        stack({ by: "ring", dir: "y" }),
       )
       .mark(rect({ w: (Math.PI * 2) / NUM_SECTORS, emX: true, h: "value", fill: "ring" }))
       .render(container, { w: args.w, h: args.h, axes: true });
