@@ -264,7 +264,7 @@ channels — color, symbol, texture, stroke pattern, marker shape — don't
 create an underlying spatial structure and aren't represented here. They
 still need shared resolution (categories should map consistently across
 a graphic; users should be able to override defaults; operators should
-be able to introduce or delimit scopes), but the right model is closer
+be able to introduce or delimit scopes), but the right model may be closer
 to a theming API than to axis inference: a discrete color or symbol
 channel resolves by looking up a category in an inherited theme scope,
 with local operators or marks able to override the palette.
