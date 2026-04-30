@@ -220,7 +220,13 @@ export const mask = createNodeOperator(
             child.place("y", 0, "baseline");
           });
 
-          const { minX, maxX, minY, maxY } = maxChildBounds(childPlaceables);
+          // Mask reports the first child's bounds — visually only the mask
+          // shape (first child) defines the opaque region, so reporting the
+          // union with the destination would over-state the visible bbox.
+          const minX = childPlaceables[0].dims[0].min ?? 0;
+          const maxX = childPlaceables[0].dims[0].max ?? 0;
+          const minY = childPlaceables[0].dims[1].min ?? 0;
+          const maxY = childPlaceables[0].dims[1].max ?? 0;
           return {
             intrinsicDims: [
               {

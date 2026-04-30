@@ -36,10 +36,14 @@ export function collectConstraintRefs(
 ): Record<string, ConstraintRef> {
   const refs: Record<string, ConstraintRef> = {};
   for (const child of children) {
-    if ("_name" in child && (child as GoFishNode)._name) {
-      const name = (child as GoFishNode)._name!;
-      refs[name] = { name };
-    }
+    // GoFishNode stores its name on `_name`; GoFishRef on `name`.
+    const name =
+      "_name" in child
+        ? (child as GoFishNode)._name
+        : "name" in child
+          ? (child as { name?: string }).name
+          : undefined;
+    if (name) refs[name] = { name };
   }
   return refs;
 }
