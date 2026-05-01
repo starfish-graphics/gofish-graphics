@@ -73,13 +73,10 @@ export const PythonTutor: StoryObj<Args> = {
                 start: true,
               },
               [
-                ref([globalFrameName, "variables", i, "value"]),
-                ref([
-                  heapName,
-                  ...addrPos.get(slot.value.value)!,
-                  "elmTuples",
-                  0,
-                ]),
+                ref(globalFrameName).variables[i].value,
+                ref(heapName)
+                  .path(...addrPos.get(slot.value.value)!)
+                  .elmTuples[0],
               ]
             ),
           ]
@@ -99,19 +96,8 @@ export const PythonTutor: StoryObj<Args> = {
                   start: true,
                 },
                 [
-                  ref([
-                    heapName,
-                    ...addrPos.get(a)!,
-                    "elmTuples",
-                    j,
-                    "val",
-                  ]),
-                  ref([
-                    heapName,
-                    ...addrPos.get(v.value)!,
-                    "elmTuples",
-                    0,
-                  ]),
+                  ref(heapName).path(...addrPos.get(a)!).elmTuples[j].val,
+                  ref(heapName).path(...addrPos.get(v.value)!).elmTuples[0],
                 ]
               ),
             ]
