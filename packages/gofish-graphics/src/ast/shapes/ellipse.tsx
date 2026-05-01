@@ -29,7 +29,14 @@ import {
   Transform,
 } from "../dims";
 import { aesthetic, continuous } from "../domain";
-import { ORDINAL, POSITION, UNDEFINED } from "../underlyingSpace";
+import { interval } from "../../util/interval";
+import {
+  ORDINAL,
+  POSITION,
+  SIZE,
+  UNDEFINED,
+  UnderlyingSpace,
+} from "../underlyingSpace";
 import { createMark } from "../withGoFish";
 /* TODO: what should default embedding behavior be when all values are aesthetic? */
 export const Ellipse = ({
@@ -38,6 +45,7 @@ export const Ellipse = ({
   stroke = fill,
   strokeWidth = 0,
   aspectRatio,
+  label,
   ...fancyDims
 }: {
   name?: string;
@@ -46,6 +54,7 @@ export const Ellipse = ({
   strokeWidth?: number;
   /** w/h ratio to enforce. When both dims are data-driven, the constraining axis is used. */
   aspectRatio?: number;
+  label?: boolean;
 } & FancyDims<MaybeValue<number>>) => {
   const dims = elaborateDims(fancyDims).map(inferEmbedded);
   return new GoFishNode(
@@ -57,90 +66,48 @@ export const Ellipse = ({
         _children: Size<UnderlyingSpace>[],
         _childNodes: GoFishAST[]
       ) => {
-        let underlyingSpaceX = ORDINAL([]);
-        if (isValue(dims[0].min)) {
-          // position. treat it like a position space w/ a single element
-          underlyingSpaceX = POSITION;
-        } else {
-          // undefined
-          underlyingSpaceX = UNDEFINED;
-        }
-
-        let underlyingSpaceY = ORDINAL([]);
-        if (isValue(dims[1].min)) {
-          // position. treat it like a position space w/ a single element
-          underlyingSpaceY = POSITION;
-        } else {
-          // undefined
-          underlyingSpaceY = UNDEFINED;
-        }
-
-        // const w = computeIntrinsicSize(dims[0].size);
-        // const h = computeIntrinsicSize(dims[1].size);
-
-        return [underlyingSpaceX, underlyingSpaceY];
-      },
-      // inferDomains: () => {
-      //   return [
-      //     isValue(dims[0].size)
-      //       ? continuous({
-      //           value: [0, getValue(dims[0].size)],
-      //           dataType: getDataType(dims[0].size),
-      //         })
-      //       : dims[0].size
-      //       ? aesthetic(dims[0].size)
-      //       : undefined,
-      //     isValue(dims[1].size)
-      //       ? continuous({
-      //           value: [0, getValue(dims[1].size)],
-      //           dataType: getDataType(dims[1].size),
-      //         })
-      //       : dims[1].size
-      //       ? aesthetic(dims[1].size)
-      //       : undefined,
-      //   ];
-      // },
-      inferSizeDomains: (shared, children) => {
-        const wDomain = isValue(dims[0].size)
+        let wDomain = isValue(dims[0].size)
           ? Monotonic.linear(getValue(dims[0].size!), 0)
           : Monotonic.linear(0, dims[0].size ?? 0);
-        const hDomain = isValue(dims[1].size)
+        let hDomain = isValue(dims[1].size)
           ? Monotonic.linear(getValue(dims[1].size!), 0)
           : Monotonic.linear(0, dims[1].size ?? 0);
-
         if (aspectRatio !== undefined && aspectRatio > 0) {
           const wIsData = isValue(dims[0].size);
           const hIsData = isValue(dims[1].size);
-
           if (wIsData && !hIsData) {
-            return {
-              w: wDomain,
-              h: Monotonic.linear(
-                (wDomain as Monotonic.Linear).slope / aspectRatio,
-                0
-              ),
-            };
+            hDomain = Monotonic.linear(
+              (wDomain as Monotonic.Linear).slope / aspectRatio,
+              0
+            );
           } else if (hIsData && !wIsData) {
-            return {
-              w: Monotonic.linear(
-                (hDomain as Monotonic.Linear).slope * aspectRatio,
-                0
-              ),
-              h: hDomain,
-            };
+            wDomain = Monotonic.linear(
+              (hDomain as Monotonic.Linear).slope * aspectRatio,
+              0
+            );
           }
         }
 
-        return { w: wDomain, h: hDomain };
+        const resolveAxis = (
+          axis: 0 | 1,
+          axisDomain: Monotonic.Monotonic
+        ): UnderlyingSpace => {
+          const d = dims[axis];
+          if (isValue(d.min)) {
+            // position; treat it like a position space w/ a single element
+            const min = getValue(d.min) ?? 0;
+            return POSITION(interval(min, min));
+          }
+          if (isValue(d.size)) {
+            // data-driven size only — literals are handled at layout time.
+            return SIZE(axisDomain);
+          }
+          return UNDEFINED;
+        };
+
+        return [resolveAxis(0, wDomain), resolveAxis(1, hDomain)];
       },
-      layout: (
-        shared,
-        size,
-        scaleFactors,
-        children,
-        measurement,
-        posScales
-      ) => {
+      layout: (shared, size, scaleFactors, children, posScales) => {
         let w = isValue(dims[0].size)
           ? getValue(dims[0].size!) * scaleFactors[0]!
           : (dims[0].size ?? size[0]);
@@ -235,17 +202,29 @@ export const Ellipse = ({
         ];
 
         const scaleContext = node.getRenderSession().scaleContext;
+        const unit = scaleContext?.unit;
+        const unitColorScale = unit && "color" in unit ? unit.color : undefined;
+        const originalFill = fill;
         fill = isValue(fill)
-          ? scaleContext?.unit?.color
-            ? scaleContext.unit.color.get(getValue(fill))
+          ? unitColorScale
+            ? (unitColorScale.get(getValue(fill)) ?? getValue(fill))
             : getValue(fill)
           : fill;
 
         stroke = isValue(stroke)
-          ? scaleContext?.unit?.color
-            ? scaleContext.unit.color.get(getValue(stroke))
+          ? unitColorScale
+            ? (unitColorScale.get(getValue(stroke)) ?? getValue(stroke))
             : getValue(stroke)
           : stroke;
+
+        const resolvedFill = fill as string | undefined;
+        const resolvedStroke =
+          (stroke as string | undefined) ?? resolvedFill ?? "black";
+
+        const labelText =
+          label && originalFill && isValue(originalFill)
+            ? String(getValue(originalFill) ?? "")
+            : undefined;
 
         // Both dimensions are aesthetic - render as transformed point
         if (!isXEmbedded && !isYEmbedded) {
@@ -258,15 +237,30 @@ export const Ellipse = ({
           const height = displayDims[1].size ?? 0;
 
           return (
-            <ellipse
-              cx={transformedX}
-              cy={transformedY}
-              rx={width / 2}
-              ry={height / 2}
-              fill={fill}
-              stroke={stroke ?? fill ?? "black"}
-              stroke-width={strokeWidth ?? 0}
-            />
+            <>
+              <ellipse
+                cx={transformedX}
+                cy={transformedY}
+                rx={width / 2}
+                ry={height / 2}
+                fill={resolvedFill}
+                stroke={resolvedStroke}
+                stroke-width={strokeWidth ?? 0}
+              />
+              {labelText && (
+                <text
+                  transform="scale(1, -1)"
+                  x={transformedX}
+                  y={-transformedY}
+                  fill="white"
+                  font-size="12px"
+                  text-anchor="middle"
+                  dominant-baseline="central"
+                >
+                  {labelText}
+                </text>
+              )}
+            </>
           );
         }
 
@@ -296,15 +290,30 @@ export const Ellipse = ({
               ? thickness / 2
               : ((displayDims[1].max ?? 0) - (displayDims[1].min ?? 0)) / 2;
             return (
-              <ellipse
-                cx={cx}
-                cy={cy}
-                rx={rx}
-                ry={ry}
-                fill={fill}
-                stroke={stroke ?? fill ?? "black"}
-                stroke-width={strokeWidth ?? 0}
-              />
+              <>
+                <ellipse
+                  cx={cx}
+                  cy={cy}
+                  rx={rx}
+                  ry={ry}
+                  fill={resolvedFill}
+                  stroke={resolvedStroke}
+                  stroke-width={strokeWidth ?? 0}
+                />
+                {labelText && (
+                  <text
+                    transform="scale(1, -1)"
+                    x={cx}
+                    y={-cy}
+                    fill="white"
+                    font-size="12px"
+                    text-anchor="middle"
+                    dominant-baseline="central"
+                  >
+                    {labelText}
+                  </text>
+                )}
+              </>
             );
           }
 
@@ -327,13 +336,33 @@ export const Ellipse = ({
           const transformed = transformPath(linePath, space);
 
           // 0.5 removes weird white space at least for some charts
+          const mid: [number, number] = [
+            ((displayDims[0].min ?? 0) + (displayDims[0].max ?? 0)) / 2,
+            ((displayDims[1].min ?? 0) + (displayDims[1].max ?? 0)) / 2,
+          ];
+          const [labelX, labelY] = space.transform(mid);
           return (
-            <path
-              d={pathToSVGPath(transformed)}
-              stroke={fill}
-              stroke-width={thickness + 0.5}
-              fill="none"
-            />
+            <>
+              <path
+                d={pathToSVGPath(transformed)}
+                stroke={resolvedStroke}
+                stroke-width={thickness + 0.5}
+                fill="none"
+              />
+              {labelText && (
+                <text
+                  transform="scale(1, -1)"
+                  x={labelX}
+                  y={-labelY}
+                  fill="white"
+                  font-size="12px"
+                  text-anchor="middle"
+                  dominant-baseline="central"
+                >
+                  {labelText}
+                </text>
+              )}
+            </>
           );
         }
 
@@ -345,16 +374,33 @@ export const Ellipse = ({
           const y = displayDims[1].min ?? 0;
           const width = (displayDims[0].max ?? 0) - x;
           const height = (displayDims[1].max ?? 0) - y;
+          const cx = x + width / 2;
+          const cy = y + height / 2;
           return (
-            <ellipse
-              cx={x + width / 2}
-              cy={y + height / 2}
-              rx={width / 2}
-              ry={height / 2}
-              fill={fill}
-              stroke={stroke ?? fill ?? "black"}
-              stroke-width={strokeWidth ?? 0}
-            />
+            <>
+              <ellipse
+                cx={cx}
+                cy={cy}
+                rx={width / 2}
+                ry={height / 2}
+                fill={resolvedFill}
+                stroke={resolvedStroke}
+                stroke-width={strokeWidth ?? 0}
+              />
+              {labelText && (
+                <text
+                  transform="scale(1, -1)"
+                  x={cx}
+                  y={-cy}
+                  fill="white"
+                  font-size="12px"
+                  text-anchor="middle"
+                  dominant-baseline="central"
+                >
+                  {labelText}
+                </text>
+              )}
+            </>
           );
         }
 
@@ -370,13 +416,34 @@ export const Ellipse = ({
 
         const transformed = transformPath(corners, space);
 
+        const mid: [number, number] = [
+          ((displayDims[0].min ?? 0) + (displayDims[0].max ?? 0)) / 2,
+          ((displayDims[1].min ?? 0) + (displayDims[1].max ?? 0)) / 2,
+        ];
+        const [labelX, labelY] = space.transform(mid);
+
         return (
-          <path
-            d={pathToSVGPath(transformed)}
-            fill={fill}
-            stroke={stroke ?? fill ?? "black"}
-            stroke-width={strokeWidth ?? 0}
-          />
+          <>
+            <path
+              d={pathToSVGPath(transformed)}
+              fill={resolvedFill}
+              stroke={resolvedStroke}
+              stroke-width={strokeWidth ?? 0}
+            />
+            {labelText && (
+              <text
+                transform="scale(1, -1)"
+                x={labelX}
+                y={-labelY}
+                fill="white"
+                font-size="12px"
+                text-anchor="middle"
+                dominant-baseline="central"
+              >
+                {labelText}
+              </text>
+            )}
+          </>
         );
       },
     },

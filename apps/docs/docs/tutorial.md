@@ -287,7 +287,7 @@ each lake in the dataset:
 
 ```ts
 gf.Chart(seafood)
-  .flow(gf.spread("lake", { dir: "x" }))
+  .flow(gf.spread({ by: "lake", dir: "x" }))
   .mark(gf.rect({ w: 32, h: 300, fill: gf.color.green[5] }))
   .render(root, { w: 500, h: 300 });
 ```
@@ -312,7 +312,7 @@ quantity.
 
 ```ts
 gf.Chart(seafood)
-  .flow(gf.spread("lake", { dir: "x" }))
+  .flow(gf.spread({ by: "lake", dir: "x" }))
   .mark(gf.rect({ w: 32, h: "count", fill: gf.color.green[5] }))
   .render(root, { w: 500, h: 300 });
 ```
@@ -329,7 +329,7 @@ width of each rectangle.
 
 ```ts
 gf.Chart(seafood)
-  .flow(gf.spread("lake", { dir: "x" }))
+  .flow(gf.spread({ by: "lake", dir: "x" }))
   .mark(gf.rect({ h: "count", fill: gf.color.green[5] }))
   .render(root, { w: 500, h: 300 });
 ```
@@ -345,7 +345,7 @@ your spec as long as you put `axes: true` in the `render` method like so:
 
 ```ts
 gf.Chart(seafood)
-  .flow(gf.spread("lake", { dir: "x" }))
+  .flow(gf.spread({ by: "lake", dir: "x" }))
   .mark(gf.rect({ h: "count", fill: gf.color.green[5] }))
   .render(root, { w: 500, h: 300, axes: true });
 ```
@@ -384,8 +384,8 @@ like a normal bar chart, except instead of a line of rectangles, it's a line of 
 ```ts
 gf.Chart(seafood)
   .flow(
-    gf.spread("lake", { dir: "x" }), //
-    gf.stack("species", { dir: "y", label: false })
+    gf.spread({ by: "lake", dir: "x" }), //
+    gf.stack({ by: "species", dir: "y", label: false })
   )
   .mark(gf.rect({ h: "count", fill: gf.color.green[5] }))
   .render(root, { w: 500, h: 300, axes: true });
@@ -404,8 +404,8 @@ color encoding so that each rectangle's color corresponds to the species of fish
 ```ts
 gf.Chart(seafood)
   .flow(
-    gf.spread("lake", { dir: "x" }), //
-    gf.stack("species", { dir: "y", label: false })
+    gf.spread({ by: "lake", dir: "x" }), //
+    gf.stack({ by: "species", dir: "y", label: false })
   )
   .mark(gf.rect({ h: "count", fill: "species" }))
   .render(root, { w: 500, h: 300, axes: true });
@@ -434,9 +434,9 @@ their counts:
 ```ts
 gf.Chart(seafood)
   .flow(
-    gf.spread("lake", { dir: "x" }),
+    gf.spread({ by: "lake", dir: "x" }),
     gf.derive((d) => _.orderBy(d, "count")),
-    gf.stack("species", { dir: "y", label: false })
+    gf.stack({ by: "species", dir: "y", label: false })
   )
   .mark(gf.rect({ h: "count", fill: "species" }))
   .render(root, { w: 500, h: 300, axes: true });
@@ -459,14 +459,14 @@ gf.Layer([
   gf
     .Chart(seafood)
     .flow(
-      gf.spread("lake", { dir: "x" }),
+      gf.spread({ by: "lake", dir: "x" }),
       gf.derive((d) => _.orderBy(d, "count", "desc")),
-      gf.stack("species", { dir: "y", label: false })
+      gf.stack({ by: "species", dir: "y", label: false })
     )
     .mark(gf.rect({ h: "count", fill: "species" }).name("bars")),
   gf
     .Chart(gf.select("bars"))
-    .flow(gf.group("species"))
+    .flow(gf.group({ by: "species" }))
     .mark(gf.area({ opacity: 0.8 })),
 ]).render(root, {
   w: 500,
@@ -482,12 +482,12 @@ but first let's understand what's going on.
 
 To add some ribbons, we first created a `Layer` so we can add the ribbons as a second layer. Then
 we name the marks in the first layer using `.name("bars")` and `select` those marks in the second
-layer. We group them by species using `gf.group("species")`, and finally draw an `area` mark for each group.
+layer. We group them by species using `gf.group({ by: "species" })`, and finally draw an `area` mark for each group.
 
 <!-- First, we've added a `layer` operator that lets us layer on multiple elements in the same space.
 We create the bars with the first `chart` and use `.name("bars")` on the mark to give them a name so we can refer
 to them later. Then we use `gf.select("bars")` in a second chart to reference those bars. Finally,
-we use `gf.group("species")` to group by species and `gf.area()` to connect the bars horizontally. -->
+we use `gf.group({ by: "species" })` to group by species and `gf.area()` to connect the bars horizontally. -->
 
 To make this look more like a traditional ribbon chart, all we have to do is change the spacing of
 the `spread` operator.
@@ -499,14 +499,14 @@ gf.Layer([
   gf
     .Chart(seafood)
     .flow(
-      gf.spread("lake", { dir: "x", spacing: 64 }),
+      gf.spread({ by: "lake", dir: "x", spacing: 64 }),
       gf.derive((d) => _.orderBy(d, "count", "desc")),
-      gf.stack("species", { dir: "y", label: false })
+      gf.stack({ by: "species", dir: "y", label: false })
     )
     .mark(gf.rect({ h: "count", fill: "species" }).name("bars")),
   gf
     .Chart(gf.select("bars"))
-    .flow(gf.group("species"))
+    .flow(gf.group({ by: "species" }))
     .mark(gf.area({ opacity: 0.8 })),
 ]).render(root, {
   w: 500,
@@ -558,7 +558,8 @@ gf.Layer({ coord: gf.clock() }, [
   gf
     .Chart(seafood)
     .flow(
-      gf.spread("lake", {
+      gf.spread({
+        by: "lake",
         dir: "x",
         spacing: (2 * Math.PI) / 6,
         mode: "center",
@@ -566,12 +567,12 @@ gf.Layer({ coord: gf.clock() }, [
         label: false,
       }),
       gf.derive((d) => _.orderBy(d, "count")),
-      gf.stack("species", { dir: "y", label: false })
+      gf.stack({ by: "species", dir: "y", label: false })
     )
     .mark(gf.rect({ h: "count", fill: "species" }).name("bars")),
   gf
     .Chart(gf.select("bars"))
-    .flow(gf.group("species"))
+    .flow(gf.group({ by: "species" }))
     .mark(gf.area({ opacity: 0.8 })),
 ]).render(root, {
   w: 500,

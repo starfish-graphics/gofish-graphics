@@ -31,7 +31,7 @@ def default(data=None, w=300, h=300):
         chart(data)
         .flow(
             log("cars before scatter"),
-            scatter("name", x="horsepower", y="cylinders"),
+            scatter(by="name", x="horsepower", y="cylinders"),
         )
         .mark(rect(w=1, h=10, fill="rgba(31, 119, 180, 0.4)", stroke="#1f77b4", strokeWidth=1))
     )

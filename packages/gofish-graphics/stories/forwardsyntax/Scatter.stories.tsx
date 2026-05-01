@@ -2,8 +2,8 @@ import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
 import { catchLocationsArray, seafood, catchLocations } from "../../src/data/catch";
 import { drivingShifts } from "../../src/data/drivingShifts";
-import { Chart, Layer, select, line, rect, stack } from "../../src/lib";
-import { circle, scatter } from "../../src/ast/marks/chart";
+import { Chart, layer, select, line, rect, stack } from "../../src/lib";
+import { circle, scatter } from "../../src/lib";
 import { clock } from "../../src/ast/coordinateTransforms/clock";
 import _ from "lodash";
 
@@ -28,7 +28,7 @@ export const Basic: StoryObj<Args> = {
     const container = initializeContainer();
 
     Chart(catchLocationsArray)
-      .flow(scatter("lake", { x: "x", y: "y" }))
+      .flow(scatter({ by: "lake",  x: "x", y: "y" }))
       .mark(circle({ r: 5 }))
       .render(container, {
         w: args.w,
@@ -45,9 +45,9 @@ export const Connected: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    Layer([
+    layer([
       Chart(drivingShifts)
-        .flow(scatter("year", { x: "miles", y: "gas" }))
+        .flow(scatter({ by: "year",  x: "miles", y: "gas" }))
         .mark(circle({ r: 4, fill: "white", stroke: "black", strokeWidth: 2 }).name("points")),
       Chart(select("points"))
         .mark(line({ stroke: "black", strokeWidth: 2 }))
@@ -81,10 +81,10 @@ export const WithPieGlyphs: StoryObj<Args> = {
       .value();
 
     Chart(scatterData)
-      .flow(scatter("lake", { x: "x", y: "y" }))
+      .flow(scatter({ by: "lake",  x: "x", y: "y" }))
       .mark((data) =>
         Chart(data[0].collection, { coord: clock() })
-          .flow(stack("species", { dir: "x", /* h: "count" */ h: 20 }))
+          .flow(stack({ by: "species",  dir: "x", /* h: "count" */ h: 20 }))
           .mark(rect({ w: "count", fill: "species" }))
       )
       .render(container, {

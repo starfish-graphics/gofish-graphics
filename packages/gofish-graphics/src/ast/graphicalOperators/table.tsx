@@ -2,30 +2,33 @@ import { For } from "solid-js";
 import { GoFishNode, Placeable } from "../_node";
 import { Size } from "../dims";
 import { GoFishAST } from "../_ast";
-import { createOperator } from "../withGoFish";
-import * as Monotonic from "../../util/monotonic";
+import { createNodeOperator } from "../withGoFish";
 import { ORDINAL, UNDEFINED } from "../underlyingSpace";
 import { UnderlyingSpace } from "../underlyingSpace";
+import { createOperator } from "../marks/createOperator";
 
-export const table = createOperator(
+export const Table = createNodeOperator(
   (
     {
       name,
       key,
-      numCols,
+      numCols: numColsOpt,
       spacing = 0,
       colKeys,
       rowKeys,
     }: {
       name?: string;
       key?: string;
-      numCols: number;
+      numCols?: number;
       spacing?: number | [number, number];
       colKeys?: string[];
       rowKeys?: string[];
     },
     children: GoFishAST[]
   ) => {
+    // Prefer explicit numCols; fall back to colKeys.length; finally to a
+    // single-row layout if neither is available.
+    const numCols = numColsOpt ?? colKeys?.length ?? children.length;
     const xSpacing = Array.isArray(spacing) ? spacing[0] : spacing;
     const ySpacing = Array.isArray(spacing) ? spacing[1] : spacing;
 
@@ -77,47 +80,7 @@ export const table = createOperator(
 
           return [xSpace, ySpace];
         },
-        inferSizeDomains: (_shared, children) => {
-          const numRows = Math.ceil(children.length / numCols);
-          const childSizeDomains = children.map((child) =>
-            child.inferSizeDomains()
-          );
-
-          // First row x domains (children 0..numCols-1)
-          const firstRowXDomains = childSizeDomains
-            .slice(0, Math.min(numCols, childSizeDomains.length))
-            .map((d) => d[0]);
-
-          // First col y domains (children 0, numCols, 2*numCols, ...)
-          const firstColYDomains = Array.from(
-            { length: numRows },
-            (_, r) => r * numCols
-          )
-            .filter((idx) => idx < childSizeDomains.length)
-            .map((idx) => childSizeDomains[idx][1]);
-
-          const effectiveCols = Math.min(numCols, children.length);
-
-          return [
-            Monotonic.adds(
-              Monotonic.add(...firstRowXDomains),
-              xSpacing * (effectiveCols - 1)
-            ),
-            Monotonic.adds(
-              Monotonic.add(...firstColYDomains),
-              ySpacing * (numRows - 1)
-            ),
-          ];
-        },
-        layout: (
-          _shared,
-          size,
-          scaleFactors,
-          children,
-          _measurement,
-          posScales,
-          node
-        ) => {
+        layout: (_shared, size, scaleFactors, children, posScales, node) => {
           const numRows = Math.ceil(children.length / numCols);
           const cellW = (size[0] - xSpacing * (numCols - 1)) / numCols;
           const cellH = (size[1] - ySpacing * (numRows - 1)) / numRows;
@@ -213,3 +176,31 @@ export const table = createOperator(
     );
   }
 );
+
+export type TableOptions = {
+  by?: { x: string; y: string };
+  spacing?: number | [number, number];
+  numCols?: number;
+};
+
+export const table = createOperator<any, TableOptions>(Table, {
+  split: ({ by }, d) => {
+    if (!by?.x || !by?.y)
+      throw new Error(
+        "table operator form requires opts.by = { x: fieldName, y: fieldName }"
+      );
+    const colKeys = [...new Map(d.map((r) => [String(r[by.x]), true])).keys()];
+    const rowKeys = [...new Map(d.map((r) => [String(r[by.y]), true])).keys()];
+    const entries = new Map<string | number, any[]>();
+    for (const rowKey of rowKeys)
+      for (const colKey of colKeys)
+        entries.set(
+          `${colKey}-${rowKey}`,
+          d.filter(
+            (r) => String(r[by.x]) === colKey && String(r[by.y]) === rowKey
+          )
+        );
+    return { entries, keys: { colKeys, rowKeys } };
+  },
+  axisFields: ({ by }) => (by ? { x: by.x, y: by.y } : undefined),
+});

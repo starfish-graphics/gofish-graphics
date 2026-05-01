@@ -42,7 +42,7 @@ const scores = [
 ];
 
 gf.Chart(scores, { color: gf.gradient(["#f7fbff", "#08519c"]) })
-  .flow(gf.spread("label", { dir: "x" }))
+  .flow(gf.spread({ by: "label", dir: "x" }))
   .mark(gf.rect({ h: "value", fill: "value" }))
   .render(root, { w: 400, h: 250, axes: true });
 ```
@@ -68,7 +68,7 @@ const scores = [
 ];
 
 gf.Chart(scores, { color: gf.gradient(["#f7fbff", "#42c663", "#6b0808"]) })
-  .flow(gf.spread("label", { dir: "x" }))
+  .flow(gf.spread({ by: "label", dir: "x" }))
   .mark(gf.rect({ h: "value", fill: "value" }))
   .render(root, { w: 400, h: 250, axes: true });
 ```
@@ -111,7 +111,7 @@ Literal hex strings in `fill` (e.g. from `derive`) pass through directly — if 
 ```ts
 // Stacked bar chart with categorical colors
 Chart(seafood, { color: palette("tableau10") })
-  .flow(spread("lake", { dir: "x" }), stack("species", { dir: "y" }))
+  .flow(spread({ by: "lake", dir: "x" }), stack({ by: "species", dir: "y" }))
   .mark(rect({ h: "count", fill: "species" }));
 
 // Heatmap with continuous gradient
@@ -121,6 +121,6 @@ Chart(data, { color: gradient(["#f7fbff", "#08519c"]) })
 
 // Explicit key-to-color mapping
 Chart(data, { color: palette({ Male: "#ca8861", Female: "#675193" }) })
-  .flow(spread("age", { dir: "y" }), stack("sex", { dir: "x" }))
+  .flow(spread({ by: "age", dir: "y" }), stack({ by: "sex", dir: "x" }))
   .mark(rect({ w: "proportion", fill: "sex" }));
 ```

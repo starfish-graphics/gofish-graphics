@@ -311,7 +311,7 @@ export async function reifyChildrenSequentially(
 - Allows opts to be optional
 - Supports arrays where individual elements can be promises
 */
-export function createOperator<T extends Record<string, any>, R>(
+export function createNodeOperator<T extends Record<string, any>, R>(
   func: (opts: T, children: GoFishAST[]) => R
 ): {
   (opts?: T, children?: GoFishChildrenInput): PromiseWithRender<Awaited<R>>;
@@ -332,7 +332,7 @@ export function createOperator<T extends Record<string, any>, R>(
         children = undefined;
       } else {
         throw new Error(
-          `createOperator: Expected 0, 1, or 2 arguments, got ${args.length}`
+          `createNodeOperator: Expected 0, 1, or 2 arguments, got ${args.length}`
         );
       }
       // Flatten nested structures and await all promises
@@ -372,7 +372,7 @@ export function createOperator<T extends Record<string, any>, R>(
  * - Supports arrays where individual elements can be promises or thunks
  * - Processes thunks sequentially to ensure proper execution order
  */
-export function createOperatorSequential<T extends Record<string, any>, R>(
+export function createNodeOperatorSequential<T extends Record<string, any>, R>(
   func: (opts: T, children: GoFishAST[]) => R
 ): {
   (
@@ -396,7 +396,7 @@ export function createOperatorSequential<T extends Record<string, any>, R>(
         children = undefined;
       } else {
         throw new Error(
-          `createOperatorSequential: Expected 0, 1, or 2 arguments, got ${args.length}`
+          `createNodeOperatorSequential: Expected 0, 1, or 2 arguments, got ${args.length}`
         );
       }
       // First phase: flatten nested structures and await promises, preserving thunks, marks, and ChartBuilder instances
@@ -445,10 +445,22 @@ export const createComponent =
     return result as PromiseWithRender<T>;
   };
 
-/** A mark that can be named for layer selection via .name("layerName") and labeled via .label(accessor, options?). */
+/**
+ * A mark with chainable .name and .label, plus a top-level .render() for
+ * combinator-form callsites whose children carry their own data — typically
+ * `For(...)` closures over pre-computed values, refs to other layers, or
+ * already-resolved nodes. Calling `.render()` invokes the mark with
+ * `undefined` data, so marks that read field accessors (e.g. `rect({h: "v"})`)
+ * won't get any data — for those, wrap in a Chart instead:
+ *   `chart(data).mark(spread({dir: "x"}, [...])).render(container, opts)`.
+ */
 export type NameableMark<T> = Mark<T> & {
-  name(layerName: string | Token): Mark<T>;
-  label(accessor: LabelAccessor, options?: LabelOptions): Mark<T>;
+  name(layerName: string | Token): NameableMark<T>;
+  label(accessor: LabelAccessor, options?: LabelOptions): NameableMark<T>;
+  render(
+    container: Parameters<GoFishNode["render"]>[0],
+    options: Parameters<GoFishNode["render"]>[1]
+  ): Promise<ReturnType<GoFishNode["render"]>>;
 };
 
 /**
@@ -527,6 +539,17 @@ export function createMark<
       return node;
     };
 
+    // Infer axis field names from string-valued size/pos channels
+    const axisFields: { x?: string; y?: string } = {};
+    const o = markOpts as any;
+    if (typeof o.w === "string") axisFields.x = o.w;
+    else if (typeof o.x === "string") axisFields.x = o.x;
+    if (typeof o.h === "string") axisFields.y = o.h;
+    else if (typeof o.y === "string") axisFields.y = o.y;
+    if (axisFields.x || axisFields.y) {
+      (baseMark as any).__axisFields = axisFields;
+    }
+
     const nameMethod = (
       layerName: string | Token
     ): Mark<T | T[] | { item: T | T[]; key: number | string }> => {
@@ -550,6 +573,13 @@ export function createMark<
         return node;
       };
     };
+    const nameMethodWithFields = (layerName: string) => {
+      const fn = nameMethod(layerName);
+      if ((baseMark as any).__axisFields) {
+        (fn as any).__axisFields = (baseMark as any).__axisFields;
+      }
+      return fn;
+    };
     const labelMethod = (
       accessor: LabelAccessor,
       options?: LabelOptions
@@ -564,13 +594,25 @@ export function createMark<
         return node;
       };
     };
+    const renderMethod = async (
+      container: Parameters<GoFishNode["render"]>[0],
+      options: Parameters<GoFishNode["render"]>[1]
+    ) => {
+      const node = (await baseMark(undefined as any)) as GoFishNode;
+      return node.render(container, options);
+    };
     Object.defineProperty(baseMark, "name", {
-      value: nameMethod,
+      value: nameMethodWithFields,
       writable: true,
       configurable: true,
     });
     Object.defineProperty(baseMark, "label", {
       value: labelMethod,
+      writable: true,
+      configurable: true,
+    });
+    Object.defineProperty(baseMark, "render", {
+      value: renderMethod,
       writable: true,
       configurable: true,
     });

@@ -74,12 +74,12 @@ Stacks a set of children end-to-end along an axis, with optional spacing.
 Constraint.distribute({ dir, spacing, mode, order }, [ref1, ref2, ...])
 ```
 
-| Option    | Type                                   | Default          | Description                                                  |
-| --------- | -------------------------------------- | ---------------- | ------------------------------------------------------------ |
-| `dir`     | `"x" \| "y"`                           | —                | Axis to distribute along                                     |
-| `spacing` | `number`                               | `0`              | Gap between each element                                     |
-| `mode`    | `"edge-to-edge" \| "center-to-center"` | `"edge-to-edge"` | Whether spacing is measured edge-to-edge or center-to-center |
-| `order`   | `"forward" \| "reverse"`               | `"forward"`      | Order to place elements                                      |
+| Option    | Type                     | Default     | Description                                                  |
+| --------- | ------------------------ | ----------- | ------------------------------------------------------------ |
+| `dir`     | `"x" \| "y"`             | —           | Axis to distribute along                                     |
+| `spacing` | `number`                 | `8`         | Gap between each element                                     |
+| `mode`    | `"edge" \| "center"`     | `"edge"`    | Whether spacing is measured edge-to-edge or center-to-center |
+| `order`   | `"forward" \| "reverse"` | `"forward"` | Order to place elements                                      |
 
 The first already-placed child acts as an anchor. Unplaced children after it are distributed forward (increasing position); unplaced children before it are distributed backward so they stack flush against the anchor's leading edge.
 
@@ -104,12 +104,12 @@ gf.Layer([
 
 Constraints are a lower-level primitive that `Spread` is built on. These pairs are equivalent:
 
-| Spread                                                                     | Constraint equivalent                                             |
-| -------------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| `Spread({ direction: "y", alignment: "start" }, items)`                    | `align({ x: "start" })` + `distribute({ dir: "y" })`              |
-| `Spread({ direction: "x", alignment: "end", spacing: 10 }, items)`         | `align({ y: "end" })` + `distribute({ dir: "x", spacing: 10 })`   |
-| `Spread({ direction: "x", spacing: 60, mode: "center-to-center" }, items)` | `distribute({ dir: "x", spacing: 60, mode: "center-to-center" })` |
-| `Spread({ direction: "y", dir: "ttb" }, items)`                            | `distribute({ dir: "y", order: "reverse" })`                      |
+| Spread                                                       | Constraint equivalent                                   |
+| ------------------------------------------------------------ | ------------------------------------------------------- |
+| `Spread({ dir: "y", alignment: "start" }, items)`            | `align({ x: "start" })` + `distribute({ dir: "y" })`    |
+| `Spread({ dir: "x", alignment: "end", spacing: 10 }, items)` | `align({ y: "end" })` + `distribute({ dir: "x", spacing: 10 })` |
+| `Spread({ dir: "x", spacing: 60, mode: "center" }, items)`   | `distribute({ dir: "x", spacing: 60, mode: "center" })` |
+| `Spread({ dir: "y", reverse: true }, items)`                 | `distribute({ dir: "y", order: "reverse" })`            |
 
 ## Partial placement
 

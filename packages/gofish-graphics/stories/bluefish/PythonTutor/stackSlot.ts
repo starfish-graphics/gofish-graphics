@@ -19,7 +19,7 @@ export const stackSlot = createComponent(
   ({ variable, value }: StackSlotProps) => {
     const boxTag = createName("box");
     const valueTag = createName("value");
-    return Spread({ direction: "x", alignment: "middle", spacing: 5 }, [
+    return Spread({ dir: "x", alignment: "middle", spacing: 5 }, [
       text({
         fontSize: 24,
         fontFamily,

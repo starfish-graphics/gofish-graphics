@@ -14,7 +14,7 @@ const container = document.getElementById("app");
 
 const scatterData = Object.entries(groupBy(seafood, "lake")).map(
   ([lake, lakeData]) => ({
-    lake: lake as typeof seafood[0]["lake"],
+    lake: lake as (typeof seafood)[0]["lake"],
     x: lakeLocations[lake as keyof typeof lakeLocations].x,
     y: lakeLocations[lake as keyof typeof lakeLocations].y,
     collection: lakeData.map((item) => ({
@@ -25,10 +25,10 @@ const scatterData = Object.entries(groupBy(seafood, "lake")).map(
 );
 
 Chart(scatterData)
-  .flow(scatter("lake", { x: "x", y: "y" }))
+  .flow(scatter({ by: "lake", x: "x", y: "y" }))
   .mark((data) =>
     Chart(data[0].collection, { coord: clock() })
-      .flow(stack("species", { dir: "x", h: 20 }))
+      .flow(stack({ by: "species", dir: "x", h: 20 }))
       .mark(rect({ w: "count", fill: "species" }))
   )
   .render(container, {

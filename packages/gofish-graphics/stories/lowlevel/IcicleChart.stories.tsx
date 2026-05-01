@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
 import { titanic } from "../../src/data/titanic";
-import { StackX, StackY, rect } from "../../src/lib";
+import { stackX, stackY, rect } from "../../src/lib";
 import { color6, gray, neutral } from "../../src/color";
 import _ from "lodash";
 
@@ -32,14 +32,14 @@ export const Simplified: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    StackX({ alignment: "middle" }, [
+    stackX({ alignment: "middle" }, [
       rect({
         w: 40,
         h: _(titanic).sumBy("count") / 10,
         fill: neutral,
       }),
-      StackY(
-        { dir: "ttb", alignment: "middle" },
+      stackY(
+        { reverse: true, alignment: "middle" },
         _(titanic)
           .groupBy("class")
           .map((items, cls) =>
@@ -65,39 +65,39 @@ export const Default: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    StackX({ alignment: "middle" }, [
+    stackX({ alignment: "middle" }, [
       rect({
         w: 40,
         h: _(titanic).sumBy("count") / 10,
         fill: neutral,
       }),
-      StackY(
-        { dir: "ttb", alignment: "middle" },
+      stackY(
+        { reverse: true, alignment: "middle" },
         _(titanic)
           .groupBy("class")
           .map((items, cls) =>
-            StackX(
+            stackX(
               {
                 h: _(items).sumBy("count") / 10,
                 alignment: "start",
               },
               [
                 rect({ w: 40, fill: classColor[cls] }),
-                StackY(
-                  { dir: "ttb", alignment: "middle" },
+                stackY(
+                  { reverse: true, alignment: "middle" },
                   _(items)
                     .groupBy("sex")
                     .map((items, sex) =>
-                      StackX({ alignment: "middle" }, [
+                      stackX({ alignment: "middle" }, [
                         rect({
                           w: 0,
                           h: _(items).sumBy("count") / 10,
                           fill: sex === "Female" ? color6[4] : color6[5],
                         }),
-                        StackY(
+                        stackY(
                           {
                             w: 40,
-                            dir: "ttb",
+                            reverse: true,
                             alignment: "middle",
                           },
                           _(items)

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
-import { image, Spread, Stack, text } from "../../src/lib";
+import { image, spread, stack, text } from "../../src/lib";
 import bottleJpg from "../assets/bottle.jpg";
 import bottlePhotoPng from "../assets/maja7777-glass-bottle-free-2451180_1280.png";
 import flowerPng from "../assets/schwarzenarzisse-isolated-2437759_1280.png";
@@ -25,8 +25,7 @@ const inlineBadgeSvg = `data:image/svg+xml;utf8,${encodeURIComponent(
 )}`;
 
 const labeledImage = (label: string, imageNode: any) =>
-  Stack(
-    { direction: "y", spacing: 8, alignment: "start" },
+  stack({ dir: "y", spacing: 8, alignment: "start" },
     [
       text({ text: label, fontSize: 14, fill: "#1f2937" }),
       imageNode,
@@ -39,7 +38,7 @@ export const SizeResolution: StoryObj<Args> = {
     const container = initializeContainer();
 
     container.innerHTML = "";
-    Spread({ direction: "x", spacing: 36, alignment: "start" }, [
+    spread({ dir: "x", spacing: 36, alignment: "start" }, [
       labeledImage("data URI (intrinsic 96x64)", image({ href: inlineBadgeSvg })),
       labeledImage("asset 1 (w+h 110x110)", image({ href: bottleJpg, w: 110, h: 110 })),
       labeledImage("asset 2 (w+h 160x100)", image({ href: bottlePhotoPng, w: 160, h: 100 })),

@@ -3,10 +3,10 @@ import { Size, elaborateDims, FancyDims } from "../dims";
 import { getMeasure, getValue, isValue, MaybeValue } from "../data";
 import { POSITION, UNDEFINED, UnderlyingSpace } from "../underlyingSpace";
 import { interval } from "../../util/interval";
-import { createOperator } from "../withGoFish";
+import { createNodeOperator } from "../withGoFish";
 import { GoFishAST } from "../_ast";
 
-export const position = createOperator(
+export const position = createNodeOperator(
   (
     childrenOrOptions:
       | { key?: string; x?: MaybeValue<number>; y?: MaybeValue<number> }
@@ -35,25 +35,7 @@ export const position = createOperator(
               : UNDEFINED,
           ];
         },
-        inferSizeDomains: (shared, children) => {
-          // Delegate to the single child's size requirements
-          if (children.length !== 1) {
-            throw new Error("Position operator expects exactly one child");
-          }
-          const childMeasure = children[0].inferSizeDomains();
-          return {
-            w: childMeasure[0],
-            h: childMeasure[1],
-          };
-        },
-        layout: (
-          shared,
-          size,
-          scaleFactors,
-          children,
-          measurement,
-          posScales
-        ) => {
+        layout: (shared, size, scaleFactors, children, posScales) => {
           if (children.length !== 1) {
             throw new Error("Position operator expects exactly one child");
           }

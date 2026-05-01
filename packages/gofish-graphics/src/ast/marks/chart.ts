@@ -1,32 +1,18 @@
-import { groupBy, ValueIteratee } from "lodash";
-import {
-  Frame,
-  Spread,
-  Stack,
-  Scatter,
-  Table,
-  sumBy,
-  v,
-  meanBy,
-  Connect,
-  ref,
-} from "../../lib";
+import { sumBy, v, Connect, ref } from "../../lib";
 import { GoFishNode } from "../_node";
-import { For } from "../iterators/for";
-import { CoordinateTransform } from "../coordinateTransforms/coord";
 import { type ColorConfig } from "../colorSchemes";
 
 export type { ColorConfig };
-import { inferSize, inferPos } from "../channels";
-import { Rect } from "../shapes/rect";
+import { inferSize } from "../channels";
 import { rect as generatedRect } from "../shapes/rect";
 import { Ellipse } from "../shapes/ellipse";
 import { Mark, Operator } from "../types";
-import type {
-  LabelAccessor,
-  LabelOptions,
-  LabelSpec,
-} from "../labels/labelPlacement";
+import type { LabelAccessor, LabelOptions } from "../labels/labelPlacement";
+import {
+  resolveMarkResult,
+  nameableMark,
+  LayerContext,
+} from "./createOperator";
 import { layer as Layer } from "../graphicalOperators/layer";
 import {
   over as Over,
@@ -40,123 +26,12 @@ import type { ConstraintRef, ConstraintSpec } from "../constraints";
 
 export type { Mark, Operator };
 export { generatedRect as rect };
+export type { LayerContext };
 
-/** Resolves whatever a Mark returns into a GoFishNode. */
-async function resolveMarkResult(
-  raw: ReturnType<Mark<any>>,
-  layerContext?: LayerContext
-): Promise<GoFishNode> {
-  if (raw instanceof ChartBuilder)
-    return raw.withLayerContext(layerContext ?? {}).resolve();
-  if (typeof raw === "function")
-    return resolveMarkResult(
-      (raw as () => ReturnType<Mark<any>>)(),
-      layerContext
-    );
-  return raw as unknown as GoFishNode;
-}
-
-/** Attach .name(layerName) and .label(accessor, options?) to a mark so it registers/labels each produced node when used in a chart. */
-function nameableMark<T>(base: Mark<T>): Mark<T> & {
-  name(layerName: string): Mark<T>;
-  label(accessor: LabelAccessor, options?: LabelOptions): Mark<T>;
-} {
-  const withName = (layerName: string): Mark<T> => {
-    return async (d: T, key?: string | number, layerContext?: LayerContext) => {
-      const node = await resolveMarkResult(
-        base(d, key, layerContext),
-        layerContext
-      );
-      // Set the node name for ref() lookup in low-level context
-      node.name(layerName);
-      if (layerContext && layerName) {
-        if (!layerContext[layerName]) {
-          layerContext[layerName] = { data: [], nodes: [] };
-        }
-        layerContext[layerName].nodes.push(node);
-        layerContext[layerName].data.push((node as any).datum);
-      }
-      return node;
-    };
-  };
-  const withLabel = (
-    accessor: LabelAccessor,
-    options?: LabelOptions
-  ): Mark<T> => {
-    return async (d: T, key?: string | number, layerContext?: LayerContext) => {
-      const node = await resolveMarkResult(
-        base(d, key, layerContext),
-        layerContext
-      );
-      node.label(accessor, options);
-      return node;
-    };
-  };
-  Object.defineProperty(base, "name", {
-    value: withName,
-    writable: true,
-    configurable: true,
-  });
-  Object.defineProperty(base, "label", {
-    value: withLabel,
-    writable: true,
-    configurable: true,
-  });
-  return base as Mark<T> & {
-    name(layerName: string): Mark<T>;
-    label(accessor: LabelAccessor, options?: LabelOptions): Mark<T>;
-  };
-}
-
-const connectXMode = {
-  edge: "edge-to-edge",
-  center: "center-to-center",
-} as const;
-
-export type LayerContext = {
-  [name: string]: {
-    data: any[];
-    nodes: GoFishNode[];
-  };
-};
-
-// LayerSelector is a lazy selector that defers layer lookup until actually needed
-export class LayerSelector<T = any> {
-  constructor(public readonly layerName: string) {}
-
-  // Resolve the selector to actual data - throws if layer not found
-  resolve(layerContext: LayerContext): Array<T & { __ref: GoFishNode }> {
-    const layer = layerContext[this.layerName];
-
-    if (!layer) {
-      throw new Error(
-        `Layer "${this.layerName}" not found. Make sure to call .name("${this.layerName}") on the mark first.`
-      );
-    }
-
-    // Try to resolve nodes from keyContext (which points to laid-out nodes)
-    // If keyContext is not available, fall back to stored nodes
-    let resolvedNodes: GoFishNode[] = layer.nodes;
-
-    // Return node-attached data enriched with refs to nodes.
-    // Option 3: flatten arrays and duplicate __ref per underlying datum.
-    const result = resolvedNodes.flatMap((node: GoFishNode) => {
-      const datum: any = (node as any).datum;
-
-      // Always convert datum to an array of node-attached objects for consistency.
-      if (!Array.isArray(datum) && typeof datum !== "object") {
-        throw new Error("datum must be an array or object");
-      }
-      const arr = Array.isArray(datum) ? datum : [datum];
-
-      return arr.map((item: any) => ({
-        ...(item as object),
-        __ref: node,
-      })) as Array<T & { __ref: GoFishNode }>;
-    });
-    return result;
-  }
-}
+import { ChartBuilder, LayerSelector, chart } from "./chartBuilder";
+import type { ChartOptions } from "./chartBuilder";
+export { ChartBuilder, LayerSelector, chart };
+export type { ChartOptions };
 
 /* Data Transformation Operators */
 export function derive<T, U>(fn: (d: T) => U | Promise<U>): Operator<T, U> {
@@ -211,606 +86,13 @@ export function log<T>(label?: string): Operator<T, T> {
 
 /* END Data Transformation Operators */
 
-export type ChartOptions = {
-  w?: number;
-  h?: number;
-  coord?: CoordinateTransform;
-  color?: ColorConfig;
-};
-
-export class ChartBuilder<TInput, TOutput = TInput> {
-  private readonly data: TInput;
-  private readonly options?: ChartOptions;
-  private readonly operators: Operator<any, any>[] = [];
-  private readonly finalMark?: Mark<TOutput>;
-  private readonly layerContext: LayerContext;
-  private readonly nodeZOrder?: number;
-
-  constructor(
-    data: TInput,
-    options?: ChartOptions,
-    operators: Operator<any, any>[] = [],
-    finalMark?: Mark<TOutput>,
-    layerContext: LayerContext = {},
-    nodeZOrder?: number
-  ) {
-    this.data = data;
-    this.options = options;
-    this.operators = operators;
-    this.finalMark = finalMark;
-    this.layerContext = layerContext;
-    this.nodeZOrder = nodeZOrder;
-  }
-
-  // flow accumulates operators and returns a new builder for chaining
-  flow<T1>(op1: Operator<TInput, T1>): ChartBuilder<TInput, T1>;
-  flow<T1, T2>(
-    op1: Operator<TInput, T1>,
-    op2: Operator<T1, T2>
-  ): ChartBuilder<TInput, T2>;
-  flow<T1, T2, T3>(
-    op1: Operator<TInput, T1>,
-    op2: Operator<T1, T2>,
-    op3: Operator<T2, T3>
-  ): ChartBuilder<TInput, T3>;
-  flow<T1, T2, T3, T4>(
-    op1: Operator<TInput, T1>,
-    op2: Operator<T1, T2>,
-    op3: Operator<T2, T3>,
-    op4: Operator<T3, T4>
-  ): ChartBuilder<TInput, T4>;
-  flow<T1, T2, T3, T4, T5>(
-    op1: Operator<TInput, T1>,
-    op2: Operator<T1, T2>,
-    op3: Operator<T2, T3>,
-    op4: Operator<T3, T4>,
-    op5: Operator<T4, T5>
-  ): ChartBuilder<TInput, T5>;
-  flow<T1, T2, T3, T4, T5, T6>(
-    op1: Operator<TInput, T1>,
-    op2: Operator<T1, T2>,
-    op3: Operator<T2, T3>,
-    op4: Operator<T3, T4>,
-    op5: Operator<T4, T5>,
-    op6: Operator<T5, T6>
-  ): ChartBuilder<TInput, T6>;
-  flow<T1, T2, T3, T4, T5, T6, T7>(
-    op1: Operator<TInput, T1>,
-    op2: Operator<T1, T2>,
-    op3: Operator<T2, T3>,
-    op4: Operator<T3, T4>,
-    op5: Operator<T4, T5>,
-    op6: Operator<T5, T6>,
-    op7: Operator<T6, T7>
-  ): ChartBuilder<TInput, T7>;
-  flow(...ops: Operator<any, any>[]): ChartBuilder<TInput, any> {
-    return new ChartBuilder(
-      this.data,
-      this.options,
-      [...this.operators, ...ops],
-      this.finalMark,
-      this.layerContext,
-      this.nodeZOrder
-    );
-  }
-
-  // facet is an alias for .flow(spread(...))
-  facet(
-    fieldOrOptions: Parameters<typeof spread>[0],
-    options?: Parameters<typeof spread>[1]
-  ): ChartBuilder<TInput, any> {
-    return this.flow(spread(fieldOrOptions as any, options));
-  }
-
-  // stack is an alias for .flow(stack(...))
-  // Note: 'stack' below refers to the module-level stack function, not this method
-  stack(
-    field: Parameters<typeof stack>[0],
-    options: Parameters<typeof stack>[1]
-  ): ChartBuilder<TInput, any> {
-    return this.flow(stack(field as any, options));
-  }
-
-  // mark stores the mark and returns a new builder for chaining
-  mark(mark: Mark<TOutput>): ChartBuilder<TInput, TOutput> {
-    return new ChartBuilder(
-      this.data,
-      this.options,
-      this.operators,
-      mark,
-      this.layerContext,
-      this.nodeZOrder
-    );
-  }
-
-  // resolve creates the node; named marks register their nodes into layerContext when invoked
-  async resolve(): Promise<GoFishNode> {
-    if (!this.finalMark) {
-      throw new Error("Cannot resolve: no mark specified. Call .mark() first.");
-    }
-
-    // Apply all operators to the mark
-    let composedMark = this.finalMark as Mark<any>;
-    for (const op of this.operators.toReversed()) {
-      composedMark = await op(composedMark);
-    }
-
-    // Resolve LayerSelector just before calling mark
-    let data = this.data;
-    if (data instanceof LayerSelector) {
-      data = data.resolve(this.layerContext) as any;
-    }
-
-    // Create the node; pass layerContext so named marks can register each produced node
-    const node = await Frame(this.options ?? {}, [
-      (
-        await resolveMarkResult(
-          composedMark(data as any, undefined, this.layerContext),
-          this.layerContext
-        )
-      ).setShared([true, true]),
-    ]);
-
-    // Embed colorConfig on the node so it survives .resolve() inside Layer
-    if (this.options?.color) {
-      node.colorConfig = this.options.color;
-    }
-
-    if (this.nodeZOrder !== undefined) {
-      node.zOrder(this.nodeZOrder);
-    }
-
-    return node;
-  }
-
-  withLayerContext(layerContext: LayerContext): ChartBuilder<TInput, TOutput> {
-    return new ChartBuilder(
-      this.data,
-      this.options,
-      this.operators,
-      this.finalMark,
-      layerContext,
-      this.nodeZOrder
-    );
-  }
-
-  zOrder(value: number): ChartBuilder<TInput, TOutput> {
-    return new ChartBuilder(
-      this.data,
-      this.options,
-      this.operators,
-      this.finalMark,
-      this.layerContext,
-      value
-    );
-  }
-
-  // render calls resolve and then renders
-  async render(
-    container: Parameters<GoFishNode["render"]>[0],
-    options: Parameters<GoFishNode["render"]>[1]
-  ): Promise<ReturnType<GoFishNode["render"]>> {
-    const node = await this.resolve();
-    return node.render(container, {
-      ...options,
-      colorConfig: this.options?.color,
-    });
-  }
-}
-
-export function chart<T>(data: T, options?: ChartOptions): ChartBuilder<T, T> {
-  return new ChartBuilder<T, T>(data, options, [], undefined, {});
-}
-
-type SpreadOptions<T> = {
-  dir: "x" | "y";
-  x?: number;
-  y?: number;
-  t?: number;
-  r?: number;
-  w?: number | keyof T;
-  h?: number | keyof T;
-  mode?: "edge" | "center";
-  spacing?: number;
-  sharedScale?: boolean;
-  alignment?: "start" | "middle" | "end" | "baseline";
-  reverse?: boolean;
-  debug?: boolean;
-  label?: boolean;
-};
-
-/** Mark combinator form: spread(opts, marks[]) → NameableMark */
-export function spread<T>(
-  options: SpreadOptions<T>,
-  marks: Mark<any>[]
-): Mark<T> & { name(layerName: string): Mark<T> };
-/** Operator form: spread(field, opts) → Operator */
-export function spread<T>(
-  field: keyof T,
-  options: SpreadOptions<T>
-): Operator<T[], T[]>;
-/** Operator form: spread(opts) → Operator */
-export function spread<T>(options: SpreadOptions<T>): Operator<T[], T[]>;
-export function spread<T>(
-  fieldOrOptions: keyof T | SpreadOptions<T>,
-  optionsOrMarks?: SpreadOptions<T> | Mark<any>[]
-): Operator<T[], T[]> | (Mark<T> & { name(layerName: string): Mark<T> }) {
-  // Mark combinator form: spread(opts, marks[])
-  if (
-    typeof fieldOrOptions === "object" &&
-    Array.isArray(optionsOrMarks) &&
-    optionsOrMarks.length > 0 &&
-    typeof optionsOrMarks[0] === "function"
-  ) {
-    const opts = fieldOrOptions as SpreadOptions<T>;
-    const marks = optionsOrMarks as Mark<any>[];
-    const base: Mark<T> = async (
-      d: T,
-      key?: string | number,
-      layerContext?: LayerContext
-    ) => {
-      const resolvedChildren = await Promise.all(
-        marks.map((mark) =>
-          resolveMarkResult(mark(d, key, layerContext), layerContext)
-        )
-      );
-      const node = await Spread(
-        {
-          direction: opts.dir.startsWith("x") ? 0 : 1,
-          spacing: opts.spacing ?? 0,
-          alignment: opts.alignment ?? "baseline",
-          sharedScale: opts.sharedScale,
-        },
-        resolvedChildren
-      );
-      // Stamp datum so a label on this spread renders at group level
-      // (rather than propagating down to individual child marks).
-      (node as any).datum = d;
-      return node;
-    };
-    return nameableMark(base);
-  }
-
-  // Operator form
-  const field: keyof T | undefined =
-    typeof fieldOrOptions === "object" ? undefined : fieldOrOptions;
-  const opts = (
-    typeof fieldOrOptions === "object"
-      ? fieldOrOptions
-      : (optionsOrMarks as SpreadOptions<T>)
-  )!;
-
-  const finalOptions = {
-    ...opts,
-    label: opts?.label ?? false,
-    alignment: opts?.alignment ?? "baseline",
-  };
-
-  return async (mark: Mark<T[]>) => {
-    return async (
-      d: T[],
-      key?: string | number,
-      layerContext?: LayerContext
-    ) => {
-      // Group by the field if provided, otherwise iterate over raw data
-      const grouped = field
-        ? typeof field === "string"
-          ? Map.groupBy(d, (row) => (row as any)[field])
-          : Map.groupBy(d, field as any)
-        : d;
-
-      const spatialDir = (finalOptions.dir ?? "x").startsWith("x") ? "x" : "y";
-
-      return Spread(
-        {
-          direction: spatialDir === "x" ? 0 : 1,
-          x: finalOptions?.x ?? finalOptions?.t,
-          y: finalOptions?.y ?? finalOptions?.r,
-          mode: finalOptions?.mode
-            ? connectXMode[finalOptions?.mode]
-            : undefined,
-          spacing: finalOptions?.spacing ?? 8,
-          sharedScale: finalOptions?.sharedScale,
-          alignment: finalOptions?.alignment,
-          reverse: finalOptions?.reverse,
-          w: finalOptions?.w
-            ? inferSize(finalOptions?.w as string | number, d)
-            : undefined,
-          h: finalOptions?.h
-            ? inferSize(finalOptions?.h as string | number, d)
-            : undefined,
-        },
-        For(grouped as any, async (groupData: T[], k) => {
-          const currentKey = key != undefined ? `${key}-${k}` : k;
-          const node = await resolveMarkResult(
-            mark(groupData, currentKey, layerContext),
-            layerContext
-          );
-          // Always set keys for ordinal axis mapping, regardless of label setting
-          return node.setKey(currentKey?.toString() ?? "");
-        })
-      );
-    };
-  };
-}
-
-/** Mark combinator form: stack(opts, marks[]) → NameableMark */
-export function stack<T>(
-  options: SpreadOptions<T>,
-  marks: Mark<any>[]
-): Mark<T> & { name(layerName: string): Mark<T> };
-/** Operator form: stack(field, opts) → Operator */
-export function stack<T>(
-  field: keyof T,
-  options: SpreadOptions<T>
-): Operator<T[], T[]>;
-/** Operator form: stack(opts) → Operator */
-export function stack<T>(
-  fieldOrOptions: keyof T | SpreadOptions<T>,
-  optionsOrMarks?: SpreadOptions<T> | Mark<any>[]
-): Operator<T[], T[]> | (Mark<T> & { name(layerName: string): Mark<T> }) {
-  // Mark combinator form: stack(opts, marks[])
-  if (
-    typeof fieldOrOptions === "object" &&
-    Array.isArray(optionsOrMarks) &&
-    optionsOrMarks.length > 0 &&
-    typeof optionsOrMarks[0] === "function"
-  ) {
-    return spread(
-      { ...(fieldOrOptions as SpreadOptions<T>), spacing: 0 },
-      optionsOrMarks as Mark<any>[]
-    );
-  }
-  if (typeof fieldOrOptions === "object") {
-    return spread({ ...fieldOrOptions, spacing: 0 });
-  }
-  return spread(fieldOrOptions, {
-    ...(optionsOrMarks as SpreadOptions<T>),
-    spacing: 0,
-  });
-}
-
-type TableOptions = {
-  spacing?: number;
-  xSpacing?: number;
-  ySpacing?: number;
-};
-
-export function table<T>(
-  xField: keyof T,
-  yField: keyof T,
-  options?: TableOptions
-): Operator<T[], T[]> {
-  return async (mark: Mark<T[]>) => {
-    return async (
-      d: T[],
-      key?: string | number,
-      layerContext?: LayerContext
-    ) => {
-      // Unique column keys (xField values) preserving insertion order
-      const colKeys = [
-        ...new Map(d.map((row) => [String(row[xField]), true])).keys(),
-      ];
-      // Unique row keys (yField values) preserving insertion order
-      const rowKeys = [
-        ...new Map(d.map((row) => [String(row[yField]), true])).keys(),
-      ];
-      const numCols = colKeys.length;
-
-      const xSpacing = options?.xSpacing ?? options?.spacing ?? 2;
-      const ySpacing = options?.ySpacing ?? options?.spacing ?? 2;
-
-      // Build cells in row-major order (outer=row, inner=col)
-      const cells: { data: T[]; colKey: string; rowKey: string }[] = [];
-      for (const rowKey of rowKeys) {
-        for (const colKey of colKeys) {
-          const cellData = d.filter(
-            (row) =>
-              String(row[xField]) === colKey && String(row[yField]) === rowKey
-          );
-          cells.push({ data: cellData, colKey, rowKey });
-        }
-      }
-
-      return Table(
-        { numCols, colKeys, rowKeys, spacing: [xSpacing, ySpacing] },
-        For(cells, async ({ data: cellData, colKey, rowKey }) => {
-          const cellKey =
-            key != undefined
-              ? `${key}-${colKey}-${rowKey}`
-              : `${colKey}-${rowKey}`;
-          const node = await resolveMarkResult(
-            mark(cellData, cellKey, layerContext),
-            layerContext
-          );
-          return node.setKey(cellKey);
-        })
-      );
-    };
-  };
-}
-
-type ScatterRange<T> = { start: keyof T & string; end: keyof T & string };
-
-export function scatter<T>(
-  fieldOrOptions:
-    | keyof T
-    | {
-        x?: number | (keyof T & string) | ScatterRange<T>;
-        y?: number | (keyof T & string) | ScatterRange<T>;
-        alignment?: "start" | "middle" | "end" | "baseline";
-        debug?: boolean;
-      },
-  options?: {
-    x?: number | (keyof T & string) | ScatterRange<T>;
-    y?: number | (keyof T & string) | ScatterRange<T>;
-    alignment?: "start" | "middle" | "end" | "baseline";
-    debug?: boolean;
-  }
-): Operator<T[], T[]> {
-  const field: keyof T | undefined =
-    typeof fieldOrOptions === "object" ? undefined : fieldOrOptions;
-  const opts = (typeof fieldOrOptions === "object" ? fieldOrOptions : options)!;
-  const xRange =
-    typeof opts.x === "object" && "start" in opts.x
-      ? (opts.x as ScatterRange<T>)
-      : undefined;
-  const yRange =
-    typeof opts.y === "object" && "start" in opts.y
-      ? (opts.y as ScatterRange<T>)
-      : undefined;
-  if (opts.x === undefined && opts.y === undefined) {
-    throw new Error("scatter() requires at least one of x or y");
-  }
-
-  return async (mark: Mark<T[]>) => {
-    return async (
-      d: T[],
-      key?: string | number,
-      layerContext?: LayerContext
-    ) => {
-      if (field !== undefined) {
-        // Group by field, position each group at its mean x/y
-        const groups = groupBy(d, field as ValueIteratee<T>);
-        if (opts?.debug) console.log("scatter groups", groups);
-        const entries = Object.entries(groups);
-        const resolved = await Promise.all(
-          entries.map(async ([groupKey, items]) => {
-            const x =
-              xRange === undefined && opts.x !== undefined
-                ? inferPos(opts.x as string | number, items)
-                : undefined;
-            const y =
-              yRange === undefined && opts.y !== undefined
-                ? inferPos(opts.y as string | number, items)
-                : undefined;
-            if (opts?.debug) console.log(`Group ${groupKey}: x=${x}, y=${y}`);
-            const currentKey =
-              key != undefined ? `${key}-${groupKey}` : groupKey;
-            return {
-              x,
-              y,
-              child: (await resolveMarkResult(
-                mark(items, currentKey, layerContext),
-                layerContext
-              )) as any,
-            };
-          })
-        );
-        return Scatter(
-          {
-            x:
-              xRange === undefined && opts.x !== undefined
-                ? resolved.map((entry) => entry.x!)
-                : undefined,
-            y:
-              yRange === undefined && opts.y !== undefined
-                ? resolved.map((entry) => entry.y!)
-                : undefined,
-            alignment: opts.alignment,
-          },
-          resolved.map((entry) => entry.child)
-        );
-      } else {
-        // No grouping — position each item at its own x/y
-        if (opts?.debug) console.log("scatter items", d);
-        const resolved = await Promise.all(
-          d.map(async (item, i) => {
-            const x =
-              xRange === undefined && opts.x !== undefined
-                ? inferPos(opts.x as string | number, [item])
-                : undefined;
-            const y =
-              yRange === undefined && opts.y !== undefined
-                ? inferPos(opts.y as string | number, [item])
-                : undefined;
-            if (opts?.debug) console.log(`Item ${i}: x=${x}, y=${y}`);
-            const currentKey = key != undefined ? `${key}-${i}` : i;
-            return {
-              x,
-              y,
-              xMin:
-                xRange !== undefined
-                  ? inferPos(xRange.start, [item])
-                  : undefined,
-              xMax:
-                xRange !== undefined ? inferPos(xRange.end, [item]) : undefined,
-              yMin:
-                yRange !== undefined
-                  ? inferPos(yRange.start, [item])
-                  : undefined,
-              yMax:
-                yRange !== undefined ? inferPos(yRange.end, [item]) : undefined,
-              child: (await resolveMarkResult(
-                mark([item], currentKey as any, layerContext),
-                layerContext
-              )) as any,
-            };
-          })
-        );
-        return Scatter(
-          {
-            x:
-              xRange === undefined && opts.x !== undefined
-                ? resolved.map((entry) => entry.x!)
-                : undefined,
-            y:
-              yRange === undefined && opts.y !== undefined
-                ? resolved.map((entry) => entry.y!)
-                : undefined,
-            xMin:
-              xRange !== undefined
-                ? resolved.map((entry) => entry.xMin!)
-                : undefined,
-            xMax:
-              xRange !== undefined
-                ? resolved.map((entry) => entry.xMax!)
-                : undefined,
-            yMin:
-              yRange !== undefined
-                ? resolved.map((entry) => entry.yMin!)
-                : undefined,
-            yMax:
-              yRange !== undefined
-                ? resolved.map((entry) => entry.yMax!)
-                : undefined,
-            alignment: opts.alignment,
-          },
-          resolved.map((entry) => entry.child)
-        );
-      }
-    };
-  };
-}
-
-export function group<T>(field: keyof T): Operator<T[], T[]> {
-  return async (mark: Mark<T[]>) => {
-    return async (
-      d: T[],
-      key?: string | number,
-      layerContext?: LayerContext
-    ) => {
-      // Group by the field
-      const groups = groupBy(d, field as ValueIteratee<T>);
-
-      return Frame(
-        {},
-        For(groups, (items, groupKey) => {
-          // Apply mark to each group
-          const currentKey = key != undefined ? `${key}-${groupKey}` : groupKey;
-          return mark(items, currentKey, layerContext) as any;
-        })
-      );
-    };
-  };
-}
-
 export function circle<T extends Record<string, any>>({
   r,
   fill,
   stroke,
   strokeWidth,
   debug,
+  label,
 }: {
   r?: number;
   fill?: string | keyof T;
@@ -844,6 +126,7 @@ export function circle<T extends Record<string, any>>({
       fill: resolvedFill,
       stroke: resolvedStroke,
       strokeWidth,
+      label,
     }).name(key?.toString() ?? "");
     (node as any).datum = d;
     return node;
@@ -880,7 +163,7 @@ export function line<T extends Record<string, any>>(options?: {
     return Connect(
       {
         direction: 0, // x direction
-        mode: "center-to-center",
+        mode: "center",
         stroke: options?.stroke,
         strokeWidth: options?.strokeWidth ?? 1,
         opacity: options?.opacity,
@@ -916,7 +199,7 @@ export function area<T extends Record<string, any>>(options?: {
     return Connect(
       {
         direction: options?.dir ?? "x",
-        mode: "edge-to-edge",
+        mode: "edge",
         mixBlendMode: options?.mixBlendMode ?? "normal",
         stroke: options?.stroke,
         strokeWidth: options?.strokeWidth ?? 0,
@@ -972,13 +255,25 @@ export function blank<T extends Record<string, any>>({
 type BlendMode = "color" | "multiply" | "screen" | "overlay";
 type PdOptions = { blendMode?: BlendMode };
 
-/** A mark with .name, .label, and .constrain chainable methods. */
+/**
+ * A mark with chainable .name, .label, .constrain, and a top-level .render()
+ * for combinator-form callsites whose children carry their own data
+ * (e.g. `layer([Chart(...).flow(...).mark(...), ...]).render(container, opts)`).
+ *
+ * Mark children that read field accessors will be called with `undefined` data
+ * if you call `.render()` directly — for those, wrap in a Chart instead:
+ *   `chart(data).mark(layer([rect({h: "v"}), ...])).render(container, opts)`.
+ */
 export type ConstrainableMark<T> = Mark<T> & {
   name(layerName: string): ConstrainableMark<T>;
   label(accessor: LabelAccessor, options?: LabelOptions): ConstrainableMark<T>;
   constrain(
     fn: (refs: Record<string, ConstraintRef>) => ConstraintSpec[]
   ): ConstrainableMark<T>;
+  render(
+    container: Parameters<GoFishNode["render"]>[0],
+    options: Parameters<GoFishNode["render"]>[1]
+  ): Promise<ReturnType<GoFishNode["render"]>>;
 };
 
 function makeConstrainableMark<T>(base: Mark<T>): ConstrainableMark<T> {
@@ -1027,6 +322,13 @@ function makeConstrainableMark<T>(base: Mark<T>): ConstrainableMark<T> {
     };
     return makeConstrainableMark(constrained);
   };
+  const render = async (
+    container: Parameters<GoFishNode["render"]>[0],
+    options: Parameters<GoFishNode["render"]>[1]
+  ) => {
+    const node = await resolveMarkResult(base(undefined as any));
+    return node.render(container, options);
+  };
   Object.defineProperty(base, "name", {
     value: withName,
     writable: true,
@@ -1042,13 +344,21 @@ function makeConstrainableMark<T>(base: Mark<T>): ConstrainableMark<T> {
     writable: true,
     configurable: true,
   });
+  Object.defineProperty(base, "render", {
+    value: render,
+    writable: true,
+    configurable: true,
+  });
   return base as ConstrainableMark<T>;
 }
 
 /**
- * Mark-combinator form of layer. Resolves each child mark against the per-datum
- * data (so field accessors like `h: "amount"` bind), then wraps all children in
- * a Layer node. Supports `.name()`, `.label()`, and `.constrain()`.
+ * Mark-combinator form of layer. Resolves each child against the per-datum
+ * data and wraps the resulting nodes in a Layer. Children may be:
+ *   - Mark functions (called with the parent's data),
+ *   - ChartBuilders (resolved via their own bound data),
+ *   - already-resolved GoFishNodes (e.g. ref(...)).
+ * Supports `.name()`, `.label()`, `.constrain()`, and a top-level `.render()`.
  */
 export function layer<T>(marks: Mark<any>[]): ConstrainableMark<T>;
 export function layer<T>(
@@ -1062,9 +372,17 @@ export function layer<T>(
   const opts = Array.isArray(marksOrOpts) ? {} : marksOrOpts;
   const marks = (Array.isArray(marksOrOpts) ? marksOrOpts : maybeMarks) ?? [];
   const base: Mark<T> = async (d, key, layerContext) => {
-    const resolved = await Promise.all(
-      marks.map((m) => resolveMarkResult(m(d, key, layerContext), layerContext))
-    );
+    // Share one layerContext across all children so that select(name) in
+    // one child can find a sibling's .name(name) registration. Inherit from
+    // the caller when present (nested-layer case), else create a fresh
+    // context (top-level .render() case). Resolve sequentially so a child
+    // using select(...) sees registrations from earlier siblings.
+    const sharedContext = layerContext ?? {};
+    const resolved: GoFishNode[] = [];
+    for (const m of marks) {
+      const result = typeof m === "function" ? m(d, key, sharedContext) : m;
+      resolved.push(await resolveMarkResult(result, sharedContext));
+    }
     const node = await Layer(opts, resolved);
     (node as any).datum = d;
     return node;
@@ -1073,14 +391,27 @@ export function layer<T>(
 }
 
 function makePorterDuffCombinator(lowLevel: (opts: any, children: any) => any) {
-  return function <T>(
+  function fn<T>(marks: [Mark<any>, Mark<any>]): NameableMark<T>;
+  function fn<T>(
     opts: PdOptions,
     marks: [Mark<any>, Mark<any>]
-  ): Mark<T> & { name(layerName: string): Mark<T> } {
+  ): NameableMark<T>;
+  function fn<T>(
+    optsOrMarks: PdOptions | [Mark<any>, Mark<any>],
+    maybeMarks?: [Mark<any>, Mark<any>]
+  ): NameableMark<T> {
+    const opts = Array.isArray(optsOrMarks) ? {} : optsOrMarks;
+    const marks = (Array.isArray(optsOrMarks) ? optsOrMarks : maybeMarks) as [
+      Mark<any>,
+      Mark<any>,
+    ];
     const base: Mark<T> = async (d, key, layerContext) => {
       const [child0, child1] = await Promise.all(
         marks.map((m) =>
-          resolveMarkResult(m(d, key, layerContext), layerContext)
+          resolveMarkResult(
+            typeof m === "function" ? m(d, key, layerContext) : m,
+            layerContext
+          )
         )
       );
       const node = await lowLevel(opts, [child0, child1]);
@@ -1088,7 +419,8 @@ function makePorterDuffCombinator(lowLevel: (opts: any, children: any) => any) {
       return node;
     };
     return nameableMark(base);
-  };
+  }
+  return fn;
 }
 
 export const atop = makePorterDuffCombinator(Atop);

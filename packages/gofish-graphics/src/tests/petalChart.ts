@@ -24,8 +24,7 @@ export const testPetalChart = (size: { width: number; height: number }) =>
   gofish(
     { width: size.width, height: size.height, transform: { x: 100, y: 150 } },
     coord({ transform: polar_DEPRECATED() }, [
-      stack(
-        { direction: 1, spacing: 0, alignment: "start" },
+      stack({ dir: 1, alignment: "start" },
         data.map((d, i) =>
           petal({
             w: 80,

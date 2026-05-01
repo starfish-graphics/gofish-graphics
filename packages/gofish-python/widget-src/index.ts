@@ -14,6 +14,7 @@ import {
   stack,
   scatter,
   group,
+  table,
   derive,
   log,
   select,
@@ -77,7 +78,7 @@ interface LayerSpec {
 }
 
 interface OperatorSpec {
-  type: "derive" | "spread" | "stack" | "group" | "scatter" | "log";
+  type: "derive" | "spread" | "stack" | "group" | "scatter" | "table" | "log";
   lambdaId?: string;
   [key: string]: any;
 }
@@ -375,33 +376,27 @@ const OPERATOR_MAP: Record<
     opts: Record<string, any>,
     _model: WidgetModel,
     _experimental: ExperimentalAPI
-  ) => {
-    const { field, ...rest } = opts;
-    return field ? spread(field, rest) : spread(rest);
-  },
+  ) => spread(opts as any),
   stack: (
     opts: Record<string, any>,
     _model: WidgetModel,
     _experimental: ExperimentalAPI
-  ) => {
-    const { field, dir, ...rest } = opts;
-    return stack(field, { dir, ...rest });
-  },
+  ) => stack(opts as any),
   group: (
     opts: Record<string, any>,
     _model: WidgetModel,
     _experimental: ExperimentalAPI
-  ) => {
-    return group(opts.field);
-  },
+  ) => group(opts as any),
   scatter: (
     opts: Record<string, any>,
     _model: WidgetModel,
     _experimental: ExperimentalAPI
-  ) => {
-    const { field, x, y, ...rest } = opts;
-    return scatter(field, { x, y, ...rest });
-  },
+  ) => scatter(opts as any),
+  table: (
+    opts: Record<string, any>,
+    _model: WidgetModel,
+    _experimental: ExperimentalAPI
+  ) => table(opts as any),
   log: (
     opts: Record<string, any>,
     _model: WidgetModel,

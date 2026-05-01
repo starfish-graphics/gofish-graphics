@@ -1,13 +1,13 @@
 import { GoFishNode, Placeable } from "../_node";
 import { getValue, isValue, MaybeValue } from "../data";
 import { Dimensions, elaborateDims, FancyDims, Size } from "../dims";
-import { createOperator } from "../withGoFish";
+import { createNodeOperator } from "../withGoFish";
 import { GoFishAST } from "../_ast";
 import { Collection } from "lodash";
-import * as Monotonic from "../../util/monotonic";
 import { POSITION, UNDEFINED, UnderlyingSpace } from "../underlyingSpace";
 import * as Interval from "../../util/interval";
 import { Alignment, alignChildren, resolveAlignmentSpace } from "./alignment";
+import { createOperator } from "../marks/createOperator";
 
 const unwrapLodashArray = function <T>(value: T[] | Collection<T>): T[] {
   if (typeof value === "object" && value !== null && "value" in value) {
@@ -16,7 +16,7 @@ const unwrapLodashArray = function <T>(value: T[] | Collection<T>): T[] {
   return value as T[];
 };
 
-type ScatterProps = {
+export type ScatterProps = {
   name?: string;
   key?: string;
   x?: MaybeValue<number>[];
@@ -75,7 +75,7 @@ function resolvePositionSpace(
   );
 }
 
-export const scatter = createOperator(
+export const Scatter = createNodeOperator(
   (options: ScatterProps, children: GoFishAST[] | Collection<GoFishAST>) => {
     const {
       name,
@@ -169,23 +169,7 @@ export const scatter = createOperator(
 
           return [xSpace, ySpace];
         },
-        inferSizeDomains: (_shared, childNodes) => {
-          const childDomains = childNodes.map((child) =>
-            child.inferSizeDomains()
-          );
-          return {
-            w: Monotonic.max(...childDomains.map((domain) => domain[0])),
-            h: Monotonic.max(...childDomains.map((domain) => domain[1])),
-          };
-        },
-        layout: (
-          _shared,
-          size,
-          scaleFactors,
-          childNodes,
-          _measurement,
-          posScales
-        ) => {
+        layout: (_shared, size, scaleFactors, childNodes, posScales) => {
           const childPlaceables = childNodes.map((child) =>
             child.layout(size, scaleFactors, posScales)
           );
@@ -309,3 +293,49 @@ export const scatter = createOperator(
     );
   }
 );
+
+/**
+ * Scatter options. Each position field (`x`/`y`/`xMin`/etc.) accepts either:
+ *   - a field-name accessor string (operator form; inferred per entry)
+ *   - a pre-built positions array (combinator form; used as-is)
+ *   - a scalar (applied to all children)
+ * Per-entry channel inference handles the polymorphism.
+ *
+ * `by` is a groupBy field — omit for per-item scatter.
+ */
+export type ScatterOptions = {
+  by?: string;
+  x?: string | number | MaybeValue<number>[];
+  y?: string | number | MaybeValue<number>[];
+  xMin?: string | MaybeValue<number>[];
+  xMax?: string | MaybeValue<number>[];
+  yMin?: string | MaybeValue<number>[];
+  yMax?: string | MaybeValue<number>[];
+  alignment?: "start" | "middle" | "end" | "baseline";
+  debug?: boolean;
+};
+
+export const scatter = createOperator<any, ScatterOptions>(Scatter, {
+  // When no `by` is given, pass each item through as-is. Items may already be
+  // arrays or scalars; downstream marks/channels handle either form.
+  split: ({ by }, d) =>
+    by ? Map.groupBy(d, (r: any) => r[by]) : new Map(d.map((r, i) => [i, r])),
+  channels: {
+    x: { type: "pos", entry: true },
+    y: { type: "pos", entry: true },
+    xMin: { type: "pos", entry: true },
+    xMax: { type: "pos", entry: true },
+    yMin: { type: "pos", entry: true },
+    yMax: { type: "pos", entry: true },
+  },
+  axisFields: ({ x, y, xMin, xMax, yMin, yMax }) => {
+    const fields: { x?: string; y?: string } = {};
+    if (typeof x === "string") fields.x = x;
+    else if (typeof xMin === "string") fields.x = xMin;
+    else if (typeof xMax === "string") fields.x = xMax;
+    if (typeof y === "string") fields.y = y;
+    else if (typeof yMin === "string") fields.y = yMin;
+    else if (typeof yMax === "string") fields.y = yMax;
+    return fields;
+  },
+});

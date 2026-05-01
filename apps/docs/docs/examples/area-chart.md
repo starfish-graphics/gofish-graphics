@@ -31,7 +31,7 @@ const lakeTotals = Object.entries(groupBy(seafood, "lake")).map(
 
 Layer([
   Chart(lakeTotals)
-    .flow(spread("lake", { dir: "x", spacing: 64 }))
+    .flow(spread({ by: "lake", dir: "x", spacing: 64 }))
     .mark(blank({ h: "count" }).name("points")),
   Chart(select("points")).mark(area({ opacity: 0.8 })),
 ]).render(container, {

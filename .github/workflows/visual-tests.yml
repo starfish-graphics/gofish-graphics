@@ -21,10 +21,11 @@ jobs:
     permissions:
       pull-requests: write
       contents: write # needed to push to snapshots/main on main push
+      statuses: write # needed to publish review-link commit status
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -40,33 +41,34 @@ jobs:
           elif git ls-remote --exit-code origin "snapshots/main" 2>/dev/null; then
             FOUND="snapshots/main"
           fi
+          mkdir -p __snapshots__/dom __snapshots__/screenshots
           if [ -n "$FOUND" ]; then
             git fetch origin "$FOUND"
             FETCH_SHA=$(git rev-parse FETCH_HEAD)
             git worktree add --detach /tmp/snap-baselines "$FETCH_SHA"
             cd /tmp/snap-baselines && git lfs pull && cd -
-            mkdir -p __snapshots__
-            [ -d /tmp/snap-baselines/dom ] && cp -r /tmp/snap-baselines/dom __snapshots__/dom
-            [ -d /tmp/snap-baselines/screenshots ] && cp -r /tmp/snap-baselines/screenshots __snapshots__/screenshots
+            # Copy SRC contents (SRC/.) into existing DEST so a pre-existing
+            # __snapshots__/dom doesn't end up nested as __snapshots__/dom/dom.
+            [ -d /tmp/snap-baselines/dom ] && cp -r /tmp/snap-baselines/dom/. __snapshots__/dom/
+            [ -d /tmp/snap-baselines/screenshots ] && cp -r /tmp/snap-baselines/screenshots/. __snapshots__/screenshots/
             git worktree remove --force /tmp/snap-baselines
           else
             echo "No snapshot branch found; starting with empty baselines."
-            mkdir -p __snapshots__/dom __snapshots__/screenshots
           fi
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v3
+        uses: pnpm/action-setup@v4
         with:
           version: 9
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: pnpm
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 
@@ -104,7 +106,7 @@ jobs:
 
       - name: Upload diff report
         if: failure() && github.event_name == 'pull_request'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: visual-diff-report
           path: tests/tmp/diff-report.html
@@ -115,7 +117,11 @@ jobs:
         env:
           REVIEW_REPO: ${{ github.repository }}
           REVIEW_BRANCH: ${{ github.head_ref || github.ref_name }}
-          REVIEW_SHA: ${{ github.sha }}
+          # For pull_request events, github.sha is the *merge* commit, not the
+          # PR head. Statuses must be posted on the PR head SHA so they appear
+          # on the PR's checks list, so prefer pull_request.head.sha when set.
+          REVIEW_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          REVIEW_RUN_ID: ${{ github.run_id }}
 
       - name: Deploy review site to Cloudflare Pages
         if: failure() && github.event_name == 'pull_request'
@@ -133,17 +139,52 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           NO_COLOR: "1"
 
-      - name: Comment PR with review URL
+      # Publish a commit status whose Details link jumps directly to the review
+      # app (no intermediate GitHub page, unlike check runs). Mirrors the UX of
+      # services like Chromatic.
+      - name: Publish review-link commit status
         if: failure() && github.event_name == 'pull_request'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
+            const fs = require('fs');
             const url = '${{ steps.deploy-review.outputs.deployment-url }}';
-            await github.rest.issues.createComment({
+            if (!url) return;
+
+            // Build a description from the diff summary, omitting zero-count
+            // categories. Falls back to a generic message if the summary is
+            // missing.
+            const summaryPath = 'tests/tmp/diff-summary.json';
+            let description = 'Click Details to review and accept diffs';
+            try {
+              const summary = JSON.parse(fs.readFileSync(summaryPath, 'utf8'));
+              const parts = [];
+              const plural = (n, singular, pluralForm) =>
+                `${n} ${n === 1 ? singular : pluralForm}`;
+              if (summary.regressions > 0) {
+                parts.push(plural(summary.regressions, 'regression', 'regressions'));
+              }
+              if (summary.newStories > 0) {
+                parts.push(plural(summary.newStories, 'new story', 'new stories'));
+              }
+              if (parts.length > 0) {
+                description = parts.join(', ') + ' — click Details to review';
+              }
+            } catch (e) {
+              // keep fallback description
+            }
+
+            // GitHub's max description length is 140 chars.
+            if (description.length > 140) description = description.slice(0, 140);
+
+            await github.rest.repos.createCommitStatus({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: `## Visual Diff Review\n\nVisual tests failed. [**Open Review App**](${url})\n\nReview each diff, mark stories as accepted or rejected, then click **Commit Accepted** to push all accepted changes in a single commit.`
+              sha: context.payload.pull_request.head.sha,
+              state: 'pending',
+              target_url: url,
+              description,
+              context: 'Visual Diff Review',
             });
 
   python-parity:
@@ -151,10 +192,11 @@ jobs:
     needs: visual-test
     permissions:
       pull-requests: write
+      statuses: write # needed to publish parity-review-link commit status
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -170,33 +212,34 @@ jobs:
           elif git ls-remote --exit-code origin "snapshots/main" 2>/dev/null; then
             FOUND="snapshots/main"
           fi
+          mkdir -p __snapshots__/dom __snapshots__/screenshots
           if [ -n "$FOUND" ]; then
             git fetch origin "$FOUND"
             FETCH_SHA=$(git rev-parse FETCH_HEAD)
             git worktree add --detach /tmp/snap-baselines "$FETCH_SHA"
             cd /tmp/snap-baselines && git lfs pull && cd -
-            mkdir -p __snapshots__
-            [ -d /tmp/snap-baselines/dom ] && cp -r /tmp/snap-baselines/dom __snapshots__/dom
-            [ -d /tmp/snap-baselines/screenshots ] && cp -r /tmp/snap-baselines/screenshots __snapshots__/screenshots
+            # Copy SRC contents (SRC/.) into existing DEST so a pre-existing
+            # __snapshots__/dom doesn't end up nested as __snapshots__/dom/dom.
+            [ -d /tmp/snap-baselines/dom ] && cp -r /tmp/snap-baselines/dom/. __snapshots__/dom/
+            [ -d /tmp/snap-baselines/screenshots ] && cp -r /tmp/snap-baselines/screenshots/. __snapshots__/screenshots/
             git worktree remove --force /tmp/snap-baselines
           else
             echo "No snapshot branch found; starting with empty baselines."
-            mkdir -p __snapshots__/dom __snapshots__/screenshots
           fi
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v3
+        uses: pnpm/action-setup@v4
         with:
           version: 9
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: pnpm
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 
@@ -239,7 +282,7 @@ jobs:
 
       - name: Upload parity report artifact
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: parity-review-site
           path: tests/tmp/parity-review-site/
@@ -260,24 +303,43 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           NO_COLOR: "1"
 
-      - name: Comment PR with parity review link
+      - name: Publish parity-review-link commit status
         if: failure() && github.event_name == 'pull_request'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
+            const fs = require('fs');
             const url = '${{ steps.deploy-parity.outputs.deployment-url }}';
-            const urlLine = url
-              ? '[**Open Parity Review**](' + url + ')'
-              : '_Cloudflare deploy failed — download the `parity-review-site` artifact instead._';
-            await github.rest.issues.createComment({
+            if (!url) return;
+
+            const summaryPath = 'tests/tmp/parity-summary.json';
+            let description = 'Click Details to view JS/Python parity diffs';
+            try {
+              const summary = JSON.parse(fs.readFileSync(summaryPath, 'utf8'));
+              const parts = [];
+              const plural = (n, singular, pluralForm) =>
+                `${n} ${n === 1 ? singular : pluralForm}`;
+              if (summary.parityMismatches > 0) {
+                parts.push(plural(summary.parityMismatches, 'parity mismatch', 'parity mismatches'));
+              }
+              if (summary.missingBaselines > 0) {
+                parts.push(plural(summary.missingBaselines, 'missing baseline', 'missing baselines'));
+              }
+              if (parts.length > 0) {
+                description = parts.join(', ') + ' — click Details to review';
+              }
+            } catch (e) {
+              // keep fallback description
+            }
+
+            if (description.length > 140) description = description.slice(0, 140);
+
+            await github.rest.repos.createCommitStatus({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: [
-                '## Python Parity Review',
-                '',
-                'One or more Python parity checks failed. ' + urlLine,
-                '',
-                'This read-only site shows JS and Python source code side-by-side for each story pair, plus DOM diffs for parity failures.',
-              ].join('\n'),
+              sha: context.payload.pull_request.head.sha,
+              state: 'pending',
+              target_url: url,
+              description,
+              context: 'Python Parity Review',
             });

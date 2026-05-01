@@ -21,8 +21,8 @@ def default(data=None, w=500, h=400):
     return (
         chart(data, {"color": palette("tableau10")})
         .flow(
-            spread("variety", dir="y"),
-            stack("site", dir="x"),
+            spread(by="variety", dir="y"),
+            stack(by="site", dir="x"),
         )
         .mark(rect(w="yield", fill="site"))
     )

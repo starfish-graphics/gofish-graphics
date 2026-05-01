@@ -26,7 +26,7 @@ export const globalFrame = createComponent(({ stack }: GlobalFrameProps) => {
       text: "Global Frame",
     }).name("label"),
     Spread(
-      { direction: "y", alignment: "end", spacing: 10, reverse: true },
+      { dir: "y", alignment: "end", spacing: 10, reverse: true },
       stack.map((slot) =>
         stackSlot({
           variable: slot.variable,

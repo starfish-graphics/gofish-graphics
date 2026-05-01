@@ -13,18 +13,22 @@ import {
 import _, { Collection, size } from "lodash";
 import { computeAesthetic, computeSize, findTargetMonotonic } from "../../util";
 import { GoFishAST } from "../_ast";
-import { createOperator } from "../withGoFish";
+import { createNodeOperator } from "../withGoFish";
 import * as Monotonic from "../../util/monotonic";
 import {
   ORDINAL,
   POSITION,
+  SIZE,
   UNDEFINED,
+  isDIFFERENCE,
   isPOSITION,
   isSIZE,
 } from "../underlyingSpace";
 import { UnderlyingSpace } from "../underlyingSpace";
 import * as Interval from "../../util/interval";
 import { Alignment, alignChildren, resolveAlignmentSpace } from "./alignment";
+import { createOperator } from "../marks/createOperator";
+import { Mark, Operator } from "../types";
 
 // Utility function to unwrap lodash wrapped arrays
 const unwrapLodashArray = function <T>(value: T[] | Collection<T>): T[] {
@@ -34,40 +38,44 @@ const unwrapLodashArray = function <T>(value: T[] | Collection<T>): T[] {
   return value as T[];
 };
 
-export const spread = createOperator(
+export const Spread = createNodeOperator(
   (
     {
       name,
       key,
-      direction,
-      spacing = 0,
+      dir,
+      spacing = 8,
       alignment = "baseline",
       sharedScale = false,
-      mode = "edge-to-edge",
+      mode = "edge",
       reverse = false,
-      dir = "btt",
+      glue = false,
       ...fancyDims
     }: {
       name?: string;
       key?: string;
-      direction: FancyDirection;
+      dir: FancyDirection;
       spacing?: number;
       alignment?: Alignment;
       sharedScale?: boolean;
-      mode?: "edge-to-edge" | "center-to-center";
+      mode?: "edge" | "center";
       reverse?: boolean;
-      dir?: "ttb" | "btt";
+      // When true, treat as a stack: glue children together, summing their
+      // sizes into a POSITION at this level. `spacing` is ignored.
+      glue?: boolean;
     } & FancyDims<MaybeValue<number>>,
     children: GoFishAST[] | Collection<GoFishAST>
   ) => {
     // Unwrap lodash wrapped children if needed
     children = unwrapLodashArray(children);
 
-    const stackDir = elaborateDirection(direction);
+    const stackDir = elaborateDirection(dir);
     const alignDir = (1 - stackDir) as Direction;
     // track whether align axis came from SIZE so we still perform baseline alignment even with posScales
     let alignFromSize = false;
     const dims = elaborateDims(fancyDims);
+    // Glue mode ignores spacing.
+    const effectiveSpacing = glue ? 0 : spacing;
 
     return new GoFishNode(
       {
@@ -75,14 +83,14 @@ export const spread = createOperator(
         args: {
           key,
           name,
-          direction,
+          dir,
           spacing,
           alignment,
           sharedScale,
           mode,
           reverse,
+          glue,
           dims,
-          dir,
         },
         key,
         name,
@@ -91,53 +99,96 @@ export const spread = createOperator(
           children: Size<UnderlyingSpace>[],
           childNodes: GoFishAST[]
         ) => {
-          /* ALIGNMENT RULES */
+          /* ALIGNMENT */
           const alignSpaces = children.map((child) => child[alignDir]);
           const alignResult = resolveAlignmentSpace(alignSpaces, alignment);
           const alignSpace = alignResult.space;
           alignFromSize = alignResult.fromSize;
 
-          /* SPACING RULES */
-          let stackSpace = UNDEFINED;
+          /* STACK DIR */
           const stackSpaces = children.map((child) => child[stackDir]);
+          const namedKeys = childNodes
+            .filter((node): node is GoFishNode => node instanceof GoFishNode)
+            .map((node) => node.key)
+            .filter((key): key is string => key !== undefined);
 
-          // if children are all UNDEFINED or POSITION and spacing is 0, return POSITION
-          if (
-            children.every(
-              (child) =>
-                // child[stackDir].kind === "undefined" ||
-                child[stackDir].kind === "position"
-            ) &&
-            spacing === 0
-          ) {
-            // position's domain should be [0, sum(widths of child intervals)] using the interval library
-            const totalWidth = children
-              .map((child) => {
-                const domain = isPOSITION(child[stackDir])
-                  ? child[stackDir].domain
-                  : undefined;
-                return domain ? Interval.width(domain) : 0;
-              })
-              .reduce((a, b) => a + b, 0);
-            stackSpace = POSITION(Interval.interval(0, totalWidth));
+          // Explicit size on the spread overrides children-derived sizing.
+          if (isValue(dims[stackDir].size)) {
+            return {
+              [stackDir]: SIZE(
+                Monotonic.linear(getValue(dims[stackDir].size!), 0)
+              ),
+              [alignDir]: alignSpace,
+            };
           }
-          // if children are all SIZE and spacing is 0, return POSITION (sum of sizes)
-          else if (stackSpaces.every((s) => isSIZE(s)) && spacing === 0) {
-            const sizeValues = stackSpaces.map(
-              (s) => (s as any).value as number
-            );
-            const totalSize = sizeValues.reduce((a, b) => a + b, 0);
-            stackSpace = POSITION(Interval.interval(0, totalSize));
-          }
-          // if children are named (data-driven) and free (no inherent position), return ORDINAL
-          else {
-            const topLevelKeys = childNodes
-              .filter((node): node is GoFishNode => node instanceof GoFishNode)
-              .map((node) => node.key)
-              .filter((key): key is string => key !== undefined);
 
-            if (topLevelKeys.length > 0) {
-              stackSpace = ORDINAL(topLevelKeys);
+          let stackSpace: UnderlyingSpace = UNDEFINED;
+
+          if (glue) {
+            // STACK semantics: collapse children into a single POSITION at
+            // this level. Use children's intrinsic extent at scale=1.
+            if (children.every((c) => isPOSITION(c[stackDir]))) {
+              const totalWidth = children
+                .map((c) =>
+                  isPOSITION(c[stackDir])
+                    ? Interval.width(c[stackDir].domain)
+                    : 0
+                )
+                .reduce((a, b) => a + b, 0);
+              stackSpace = POSITION(Interval.interval(0, totalWidth));
+            } else if (stackSpaces.every(isSIZE)) {
+              const totalSize = stackSpaces
+                .map((s) => (s as any).domain.run(1) as number)
+                .reduce((a, b) => a + b, 0);
+              stackSpace = POSITION(Interval.interval(0, totalSize));
+            } else if (namedKeys.length > 0) {
+              stackSpace = ORDINAL(namedKeys);
+            }
+          } else {
+            // SPREAD semantics:
+            //  - All-SIZE *and* data-driven (some non-constant Monotonic)
+            //    → keep SIZE composition so parents can solve scale
+            //    factors via Monotonic.inverse. Names don't override
+            //    because the visual size is data-driven, which dominates
+            //    over categorical labeling.
+            //  - All-SIZE constant + named → ORDINAL. Each slot is the
+            //    same size; categorical axis labels are the right thing.
+            //  - Named (any other shape) → ORDINAL.
+            //  - All-SIZE constant + unnamed → SIZE composition.
+            //  - All-POSITION → POSITION(union).
+            const allSize = stackSpaces.every(isSIZE);
+            const childDomains = allSize
+              ? stackSpaces.map((s) => (s as any).domain as Monotonic.Monotonic)
+              : [];
+            const dataDriven =
+              allSize && childDomains.some((d) => !Monotonic.isConstant(d));
+            const composeSize = () =>
+              mode === "edge"
+                ? Monotonic.adds(
+                    Monotonic.add(...childDomains),
+                    effectiveSpacing * (children.length - 1)
+                  )
+                : Monotonic.unknown(
+                    (scaleFactor: number) =>
+                      childDomains[0].run(scaleFactor) / 2 +
+                      effectiveSpacing * (children.length - 1) +
+                      childDomains[childDomains.length - 1].run(scaleFactor) / 2
+                  );
+            if (dataDriven) {
+              stackSpace = SIZE(composeSize());
+            } else if (namedKeys.length > 0) {
+              stackSpace = ORDINAL(namedKeys);
+            } else if (allSize) {
+              stackSpace = SIZE(composeSize());
+            } else if (children.every((c) => isPOSITION(c[stackDir]))) {
+              const totalWidth = children
+                .map((c) =>
+                  isPOSITION(c[stackDir])
+                    ? Interval.width(c[stackDir].domain)
+                    : 0
+                )
+                .reduce((a, b) => a + b, 0);
+              stackSpace = POSITION(Interval.interval(0, totalWidth));
             }
           }
 
@@ -146,51 +197,8 @@ export const spread = createOperator(
             [alignDir]: alignSpace,
           };
         },
-        inferSizeDomains: (shared, children) => {
-          const childSizeDomains = children.map((child) =>
-            child.inferSizeDomains()
-          );
-          const childSizeDomainsStackDir = childSizeDomains.map(
-            (childSizeDomain) => childSizeDomain[stackDir]
-          );
-          const childSizeDomainsAlignDir = childSizeDomains.map(
-            (childSizeDomain) => childSizeDomain[alignDir]
-          );
-
-          return {
-            [stackDir]:
-              mode === "edge-to-edge"
-                ? isValue(dims[stackDir].size)
-                  ? Monotonic.linear(getValue(dims[stackDir].size!), 0)
-                  : Monotonic.adds(
-                      Monotonic.add(...childSizeDomainsStackDir),
-                      spacing * (children.length - 1)
-                    )
-                : // TODO: optimize this case...
-                  Monotonic.unknown(
-                    (scaleFactor: number) =>
-                      childSizeDomainsStackDir[0].run(scaleFactor) / 2 +
-                      spacing * (children.length - 1) +
-                      childSizeDomainsStackDir[
-                        childSizeDomainsStackDir.length - 1
-                      ].run(scaleFactor) /
-                        2
-                  ),
-            [alignDir]: isValue(dims[alignDir].size)
-              ? Monotonic.linear(getValue(dims[alignDir].size!), 0)
-              : Monotonic.max(...childSizeDomainsAlignDir),
-          };
-        },
-        layout: (
-          shared,
-          size,
-          scaleFactors,
-          children,
-          measurement,
-          posScales,
-          node
-        ) => {
-          if (dir === "ttb" || reverse) {
+        layout: (shared, size, scaleFactors, children, posScales, node) => {
+          if (reverse) {
             children = children.reverse();
           }
           const stackPos = computeAesthetic(
@@ -217,23 +225,40 @@ export const spread = createOperator(
             ),
           };
 
+          // Compute scale factors at this level by dispatching on
+          // underlying-space kind: SIZE inverts the composed Monotonic;
+          // POSITION derives a linear factor from its domain extent;
+          // DIFFERENCE divides by its known pixel width (analogous to
+          // POSITION but with no anchored origin).
+          const myUSpace = node._underlyingSpace!;
+          const computeScaleFactor = (dir: Direction): number | undefined => {
+            const space = myUSpace[dir];
+            if (isSIZE(space)) {
+              return (
+                space.domain.inverse(size[dir], {
+                  upperBoundGuess: size[dir],
+                }) ?? 0
+              );
+            }
+            if (isPOSITION(space) && space.domain) {
+              const w = Interval.width(space.domain);
+              return w !== 0 ? size[dir] / w : 0;
+            }
+            if (isDIFFERENCE(space)) {
+              return space.width !== 0 ? size[dir] / space.width : 0;
+            }
+            return undefined;
+          };
+
           if (shared[stackDir]) {
-            const stackScaleFactor =
-              measurement[stackDir].inverse(size[stackDir], {
-                upperBoundGuess: size[stackDir],
-              }) ?? 0;
-            scaleFactors[stackDir] = stackScaleFactor;
+            const sf = computeScaleFactor(stackDir);
+            if (sf !== undefined) scaleFactors[stackDir] = sf;
           }
-
           if (shared[alignDir]) {
-            const alignScaleFactor =
-              measurement[alignDir].inverse(size[alignDir], {
-                upperBoundGuess: size[alignDir],
-              }) ?? 0;
-            scaleFactors[alignDir] = alignScaleFactor;
+            const sf = computeScaleFactor(alignDir);
+            if (sf !== undefined) scaleFactors[alignDir] = sf;
           }
 
-          // console.log(size, scaleFactors, posScales);
           const scaleContext = node.getRenderSession().scaleContext;
           scaleContext.x = {
             domain: [0, size[0] / scaleFactors[0]],
@@ -245,7 +270,7 @@ export const spread = createOperator(
           };
 
           // Calculate available space for children in stacking direction after subtracting spacing
-          const totalSpacing = spacing * (children.length - 1);
+          const totalSpacing = effectiveSpacing * (children.length - 1);
           const availableStackSpace = size[stackDir] - totalSpacing;
           const childStackSize = availableStackSpace / children.length;
 
@@ -307,19 +332,19 @@ export const spread = createOperator(
             const firstFixedMin = firstFixed.dims[stackDir].min as number;
             const firstFixedMax = firstFixed.dims[stackDir].max as number;
             const firstFixedCenter = (firstFixedMin + firstFixedMax) / 2;
-            if (mode === "edge-to-edge") {
+            if (mode === "edge") {
               pos =
                 firstFixedMin -
-                firstFixedIdx * spacing -
+                firstFixedIdx * effectiveSpacing -
                 childPlaceables
                   .slice(0, firstFixedIdx)
                   .reduce((acc, c) => acc + c.dims[stackDir].size!, 0);
             } else {
-              pos = firstFixedCenter - firstFixedIdx * spacing;
+              pos = firstFixedCenter - firstFixedIdx * effectiveSpacing;
             }
           }
 
-          if (mode === "edge-to-edge") {
+          if (mode === "edge") {
             for (const child of childPlaceables) {
               if (isFixed(stackDir)(child)) {
                 const childMin = child.dims[stackDir].min as number;
@@ -330,14 +355,14 @@ export const spread = createOperator(
                     { expected: pos, actual: childMin }
                   );
                 }
-                pos = childMax + spacing;
+                pos = childMax + effectiveSpacing;
               } else {
                 child.place(stackDir, pos, "min");
                 const sz = child.dims[stackDir].size ?? 0;
-                pos += sz + spacing;
+                pos += sz + effectiveSpacing;
               }
             }
-          } else if (mode === "center-to-center") {
+          } else if (mode === "center") {
             for (const child of childPlaceables) {
               if (isFixed(stackDir)(child)) {
                 const childMin = child.dims[stackDir].min as number;
@@ -349,10 +374,10 @@ export const spread = createOperator(
                     { expected: pos, actual: childCenter }
                   );
                 }
-                pos = childCenter + spacing;
+                pos = childCenter + effectiveSpacing;
               } else {
                 child.place(stackDir, pos, "center");
-                pos += spacing;
+                pos += effectiveSpacing;
               }
             }
           }
@@ -413,3 +438,46 @@ export const spread = createOperator(
     );
   }
 );
+
+export type SpreadOptions<T = any> = {
+  by?: keyof T & string;
+  dir: "x" | "y";
+  spacing?: number;
+  alignment?: "start" | "middle" | "end" | "baseline";
+  sharedScale?: boolean;
+  mode?: "edge" | "center";
+  reverse?: boolean;
+  glue?: boolean;
+  w?: number | (keyof T & string);
+  h?: number | (keyof T & string);
+  debug?: boolean;
+};
+
+export const spread = createOperator<any, SpreadOptions>(Spread, {
+  // When no `by` is given, pass each item through as-is. Items may already be
+  // arrays (e.g. after `_.chunk(...)`) or scalars; the downstream mark
+  // normalizes either form internally.
+  split: ({ by }, d) =>
+    by ? Map.groupBy(d, (r: any) => r[by]) : new Map(d.map((r, i) => [i, r])),
+  channels: { w: "size", h: "size" },
+  axisFields: ({ by, dir }) =>
+    by ? (dir === "x" ? { x: by } : { y: by }) : undefined,
+});
+
+/** Stack glues children together, summing sizes into a POSITION at the spread
+ * level. Neither `spacing` nor `glue` is configurable — stacked children always
+ * touch (use `spread({ spacing: N })` instead if you want gaps). */
+export type StackOptions<T = any> = Omit<SpreadOptions<T>, "spacing" | "glue">;
+
+export function stack(
+  opts: StackOptions,
+  marks: Mark<any>[]
+): ReturnType<typeof spread>;
+export function stack(opts: StackOptions): Operator<any[], any[]>;
+export function stack(
+  opts: StackOptions,
+  marks?: Mark<any>[]
+): ReturnType<typeof spread> | Operator<any[], any[]> {
+  const stackOpts: SpreadOptions = { ...opts, glue: true };
+  return marks !== undefined ? spread(stackOpts, marks) : spread(stackOpts);
+}

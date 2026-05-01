@@ -31,7 +31,7 @@ export const testPolarBar = (size: { width: number; height: number }) =>
         {
           x: 10,
           y: -Math.PI / 2,
-          direction: 0,
+          dir: 0,
           spacing: 4,
           alignment: "start",
           sharedScale: true,

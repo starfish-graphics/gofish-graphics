@@ -49,7 +49,7 @@ Chart(data, { coord: clock() });
 - `scatter(field, options)` — positions items by x/y coordinates
 
 ```ts
-.flow(spread("category", { dir: "x" }))
+.flow(spread({ by: "category",  dir: "x" }))
 ```
 
 The `dir` option specifies the direction: `"x"` for horizontal, `"y"` for vertical.
@@ -108,7 +108,10 @@ const data = [
 ];
 
 gf.Chart(data)
-  .flow(gf.spread("category", { dir: "x" }), gf.stack("group", { dir: "y" }))
+  .flow(
+    gf.spread({ by: "category", dir: "x" }),
+    gf.stack({ by: "group", dir: "y" })
+  )
   .mark(gf.rect({ h: "value", fill: "group" }))
   .render(root, { w: 400, h: 300, axes: true });
 ```
@@ -127,7 +130,7 @@ A simple bar chart with one bar per category:
 
 ```js
 gf.Chart(seafood)
-  .flow(gf.spread("lake", { dir: "x" }))
+  .flow(gf.spread({ by: "lake", dir: "x" }))
   .mark(gf.rect({ h: "count" }))
   .render(root, { w: 400, h: 300, axes: true });
 ```
@@ -143,8 +146,8 @@ To group bars side-by-side instead of stacking, use `spread` for both levels (sa
 ```js
 gf.Chart(seafood)
   .flow(
-    gf.spread("lake", { dir: "x" }),
-    gf.spread("species", { dir: "x", spacing: 0 })
+    gf.spread({ by: "lake", dir: "x" }),
+    gf.spread({ by: "species", dir: "x", spacing: 0 })
   )
   .mark(gf.rect({ h: "count", fill: "species" }))
   .render(root, { w: 400, h: 300, axes: true });
@@ -160,7 +163,10 @@ To stack bars, use `spread` then `stack` (perpendicular directions):
 
 ```js
 gf.Chart(seafood)
-  .flow(gf.spread("lake", { dir: "x" }), gf.stack("species", { dir: "y" }))
+  .flow(
+    gf.spread({ by: "lake", dir: "x" }),
+    gf.stack({ by: "species", dir: "y" })
+  )
   .mark(gf.rect({ h: "count", fill: "species" }))
   .render(root, { w: 400, h: 300, axes: true });
 ```

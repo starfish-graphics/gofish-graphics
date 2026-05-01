@@ -34,7 +34,7 @@ export const testScatterPetal = (size: { width: number; height: number }) =>
           },
           [
             stack(
-              { w: Math.random() * 10 + 5, direction: 1, spacing: 0, alignment: "start" },
+              { w: Math.random() * 10 + 5, dir: 1, spacing: 0, alignment: "start" },
               data.map((d, i) =>
                 petal({
                   h: /* value(d.b, "value") */ d.value / 6.05,

@@ -33,12 +33,12 @@ class TestOperators:
     def test_spread_operator_missing_dir(self):
         """Test spread operator requires dir."""
         with pytest.raises(ValueError, match="requires 'dir' option"):
-            spread("field")
+            spread(by="field")
 
     def test_stack_operator_missing_dir(self):
         """Test stack operator requires dir."""
         with pytest.raises(ValueError, match="requires 'dir' option"):
-            stack("field")
+            stack(by="field")
 
     def test_derive_operator(self):
         """Test derive operator."""
@@ -193,23 +193,23 @@ class TestConvenienceMethods:
     def test_facet_adds_spread_operator(self):
         """Test .facet() adds a spread operator."""
         data = [{"cat": "a", "v": 1}]
-        c = chart(data).facet("cat", dir="x")
+        c = chart(data).facet(by="cat", dir="x")
         ir = c.mark(rect(h="v")).to_ir()
         ops = ir["operators"]
         assert len(ops) == 1
         assert ops[0]["type"] == "spread"
-        assert ops[0]["field"] == "cat"
+        assert ops[0]["by"] == "cat"
         assert ops[0]["dir"] == "x"
 
     def test_stack_shortcut_adds_stack_operator(self):
         """Test .stack() convenience method adds a stack operator."""
         data = [{"grp": "a", "v": 1}]
-        c = chart(data).stack("grp", dir="y")
+        c = chart(data).stack(by="grp", dir="y")
         ir = c.mark(rect(h="v")).to_ir()
         ops = ir["operators"]
         assert len(ops) == 1
         assert ops[0]["type"] == "stack"
-        assert ops[0]["field"] == "grp"
+        assert ops[0]["by"] == "grp"
         assert ops[0]["dir"] == "y"
 
     def test_facet_and_stack_chained(self):
@@ -217,8 +217,8 @@ class TestConvenienceMethods:
         data = [{"cat": "a", "grp": "x", "v": 1}]
         c = (
             chart(data)
-            .facet("cat", dir="x")
-            .stack("grp", dir="y")
+            .facet(by="cat", dir="x")
+            .stack(by="grp", dir="y")
             .mark(rect(h="v"))
         )
         ir = c.to_ir()
@@ -333,7 +333,7 @@ class TestLayerBuilder:
     def test_layer_to_ir_child_specs(self):
         """Test child chart specs are correctly embedded in layer IR."""
         data = [{"x": 1}]
-        c1 = chart(data).flow(spread("x", dir="x")).mark(rect(h="x").name("bars"))
+        c1 = chart(data).flow(spread(by="x", dir="x")).mark(rect(h="x").name("bars"))
         c2 = chart(select("bars")).mark(line())
         ir = Layer([c1, c2]).to_ir()
 
@@ -382,7 +382,7 @@ class TestChartBuilder:
     def test_to_ir_requires_mark(self):
         """Test to_ir() requires a mark."""
         data = [{"x": 1, "y": 2}]
-        c = chart(data).flow(spread("x", dir="x"))
+        c = chart(data).flow(spread(by="x", dir="x"))
         with pytest.raises(ValueError, match="must have a mark"):
             c.to_ir()
 
@@ -401,8 +401,8 @@ class TestChartBuilder:
         data = [{"cat": "a", "grp": "x", "value": 1}]
         c = (
             chart(data, {"color": palette("tableau10")})
-            .facet("cat", dir="x")
-            .stack("grp", dir="y")
+            .facet(by="cat", dir="x")
+            .stack(by="grp", dir="y")
             .mark(rect(h="value", fill="grp").name("bars"))
         )
         ir = c.to_ir()

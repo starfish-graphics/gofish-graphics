@@ -18,7 +18,7 @@ log(label?)
 
 ```ts
 .flow(
-  spread("category", { dir: "x" }),
+  spread({ by: "category",  dir: "x" }),
   log("after spread"),   // logs each group
   derive(d => d)
 )

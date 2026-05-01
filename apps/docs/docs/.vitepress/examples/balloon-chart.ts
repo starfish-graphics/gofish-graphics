@@ -21,7 +21,7 @@ const scatterData = _(seafood)
   .value();
 
 const Balloon = (options) =>
-  gf.Frame(
+  gf.frame(
     {
       x: options?.x - 15 * (options?.scale ?? 1),
       y: options?.y + 27 * (options?.scale ?? 1),
@@ -66,10 +66,10 @@ const Balloon = (options) =>
     ]
   );
 
-gf.Frame(
+gf.frame(
   { coord: gf.wavy(), x: 0, y: 0 },
   scatterData.map((data, i) =>
-    gf.Frame({ x: data.x }, [
+    gf.frame({ x: data.x }, [
       gf.rect({
         x: 0,
         y: 0,

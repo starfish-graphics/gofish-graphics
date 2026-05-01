@@ -19,16 +19,16 @@ import { connect } from "../ast/graphicalOperators/connect";
 import { ref } from "../ast/shapes/ref";
 import { frame } from "../ast/graphicalOperators/frame";
 import {
-  Frame,
-  StackY,
-  StackX,
+  frame,
+  stackY,
+  stackX,
   rect,
   groupBy,
   For,
-  ConnectX,
+  connectX,
   ref,
-  SpreadX,
-  SpreadY,
+  spreadX,
+  spreadY,
 } from "../lib";
 
 // const classColor = {
@@ -67,9 +67,9 @@ const internalSpacing = 2;
 
 export const testSankeyIcicle = () =>
   frame([
-    spread({ direction: "x", spacing: layerSpacing, alignment: "middle" }, [
-      StackY(
-        { dir: "ttb", alignment: "middle" },
+    spread({ dir: "x", spacing: layerSpacing, alignment: "middle" }, [
+      stackY(
+        { reverse: true, alignment: "middle" },
         _(titanic)
           .groupBy("class")
           .map((items, cls) =>
@@ -82,18 +82,17 @@ export const testSankeyIcicle = () =>
           )
           .value()
       ),
-      SpreadY(
-        { dir: "ttb", spacing: internalSpacing, alignment: "middle" },
+      spreadY(
+        { reverse: true, spacing: internalSpacing, alignment: "middle" },
         _(titanic)
           .groupBy("class")
           .map((items, cls) =>
-            spread(
-              { direction: "x", spacing: layerSpacing, alignment: "middle" },
+            spread({ dir: "x", spacing: layerSpacing, alignment: "middle" },
               [
-                StackY(
+                stackY(
                   {
                     name: `${cls}-tgt`,
-                    dir: "ttb",
+                    reverse: true,
                     alignment: "middle",
                   },
                   _(items)
@@ -108,27 +107,25 @@ export const testSankeyIcicle = () =>
                     )
                     .value()
                 ),
-                SpreadY(
+                spreadY(
                   {
                     h: _(items).sumBy("count") / 10,
-                    dir: "ttb",
+                    reverse: true,
                     spacing: internalSpacing * 2,
                     alignment: "middle",
                   },
                   _(items)
                     .groupBy("sex")
                     .map((items, sex) =>
-                      spread(
-                        {
-                          direction: "x",
+                      spread({ dir: "x",
                           spacing: layerSpacing,
                           alignment: "middle",
                         },
                         [
-                          StackY(
+                          stackY(
                             {
                               name: `${cls}-${sex}-tgt`,
-                              dir: "ttb",
+                              reverse: true,
                               alignment: "middle",
                             },
                             _(items)
@@ -156,10 +153,10 @@ export const testSankeyIcicle = () =>
                               )
                               .value()
                           ),
-                          SpreadY(
+                          spreadY(
                             {
                               w: 40,
-                              dir: "ttb",
+                              reverse: true,
                               spacing: internalSpacing * 4,
                               alignment: "middle",
                             },
@@ -284,9 +281,9 @@ export const testSankeyIcicle = () =>
   ]);
 
 export const testSankeyIcicleAPIv2 = () =>
-  Frame([
-    SpreadX({ spacing: layerSpacing, alignment: "middle" }, [
-      StackY(
+  frame([
+    spreadX({ spacing: layerSpacing, alignment: "middle" }, [
+      stackY(
         { alignment: "middle" },
         For(groupBy(titanic, "class"), (items, cls) =>
           rect({
@@ -296,11 +293,11 @@ export const testSankeyIcicleAPIv2 = () =>
           }).name(`${cls}-src`)
         )
       ),
-      SpreadY(
+      spreadY(
         { spacing: internalSpacing, alignment: "middle" },
         For(groupBy(titanic, "class"), (items, cls) =>
-          SpreadX({ spacing: layerSpacing, alignment: "middle" }, [
-            StackY(
+          spreadX({ spacing: layerSpacing, alignment: "middle" }, [
+            stackY(
               { alignment: "middle" },
               For(groupBy(items, "sex"), (items, sex) =>
                 rect({
@@ -310,15 +307,15 @@ export const testSankeyIcicleAPIv2 = () =>
                 }).name(`${cls}-${sex}-src`)
               )
             ).name(`${cls}-tgt`),
-            SpreadY(
+            spreadY(
               {
                 h: _(items).sumBy("count") / 10,
                 spacing: internalSpacing * 2,
                 alignment: "middle",
               },
               For(groupBy(items, "sex"), (items, sex) =>
-                SpreadX({ spacing: layerSpacing, alignment: "middle" }, [
-                  StackY(
+                spreadX({ spacing: layerSpacing, alignment: "middle" }, [
+                  stackY(
                     {
                       alignment: "middle",
                     },
@@ -331,7 +328,7 @@ export const testSankeyIcicleAPIv2 = () =>
                       })
                     )
                   ).name(`${cls}-${sex}-tgt`),
-                  SpreadY(
+                  spreadY(
                     {
                       w: 40,
                       spacing: internalSpacing * 4,
@@ -367,7 +364,7 @@ export const testSankeyIcicleAPIv2 = () =>
       ),
     ]),
     For(groupBy(titanic, "class"), (items, cls) => [
-      ConnectX(
+      connectX(
         {
           fill: classColor[cls as keyof typeof classColor],
           interpolation: "bezier",
@@ -376,7 +373,7 @@ export const testSankeyIcicleAPIv2 = () =>
         [ref(`${cls}-src`), ref(`${cls}-tgt`)]
       ),
       For(groupBy(items, "sex"), (sexItems, sex) => [
-        ConnectX(
+        connectX(
           {
             fill: sex === "Female" ? color6_old[2] : color6_old[3],
             interpolation: "bezier",
@@ -385,7 +382,7 @@ export const testSankeyIcicleAPIv2 = () =>
           [ref(`${cls}-${sex}-src`), ref(`${cls}-${sex}-tgt`)]
         ),
         For(groupBy(sexItems, "survived"), (survivedItems, survived) =>
-          ConnectX(
+          connectX(
             {
               fill:
                 sex === "Female"

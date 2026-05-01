@@ -5,18 +5,18 @@ const classColor = {
   Crew: gf.color6[3],
 };
 
-gf.StackX({ spacing: 0, alignment: "middle" }, [
+gf.stackX({ spacing: 0, alignment: "middle" }, [
   gf.rect({
     w: 40,
     h: _(titanic).sumBy("count") / 10,
     fill: gf.neutral,
   }),
-  gf.StackY(
-    { dir: "ttb", spacing: 0, alignment: "middle" },
+  gf.stackY(
+    { reverse: true, spacing: 0, alignment: "middle" },
     _(titanic)
       .groupBy("class")
       .map((items, cls) =>
-        gf.StackX(
+        gf.stackX(
           {
             h: _(items).sumBy("count") / 10,
             spacing: 0,
@@ -24,21 +24,21 @@ gf.StackX({ spacing: 0, alignment: "middle" }, [
           },
           [
             gf.rect({ w: 40, fill: classColor[cls] }),
-            gf.StackY(
-              { dir: "ttb", spacing: 0, alignment: "middle" },
+            gf.stackY(
+              { reverse: true, spacing: 0, alignment: "middle" },
               _(items)
                 .groupBy("sex")
                 .map((items, sex) =>
-                  gf.StackX({ spacing: 0, alignment: "middle" }, [
+                  gf.stackX({ spacing: 0, alignment: "middle" }, [
                     gf.rect({
                       w: 0,
                       h: _(items).sumBy("count") / 10,
                       fill: sex === "Female" ? gf.color6[4] : gf.color6[5],
                     }),
-                    gf.StackY(
+                    gf.stackY(
                       {
                         w: 40,
-                        dir: "ttb",
+                        reverse: true,
                         spacing: 0,
                         alignment: "middle",
                       },

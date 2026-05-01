@@ -33,7 +33,7 @@ export const testScatterPie = (size: { width: number; height: number }) =>
           },
           [
             stack(
-              { x: Math.random() * 5 + 2, w: Math.random() * 10 + 5, direction: 1, spacing: 0, alignment: "start" },
+              { x: Math.random() * 5 + 2, w: Math.random() * 10 + 5, dir: 1, spacing: 0, alignment: "start" },
               data.map((d, i) =>
                 rect({
                   h: /* value(d.b, "value") */ d.value / 6.05,

@@ -24,7 +24,10 @@ export const Default: StoryObj<Args> = {
     const container = initializeContainer();
 
     Chart(context.loaded.movies as any[])
-      .flow(derive(bin("IMDB Rating")), scatter({ x: { start: "start", end: "end" } }))
+      .flow(
+        derive(bin("IMDB Rating")),
+        scatter({ xMin: "start", xMax: "end" })
+      )
       .mark(rect({ h: "count" }))
       .render(container, { w: args.w, h: args.h, axes: true });
 

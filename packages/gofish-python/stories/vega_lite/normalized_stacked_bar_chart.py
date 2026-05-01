@@ -34,9 +34,9 @@ def default(data=None, w=500, h=300):
         chart(data, {"color": _COLOR})
         .flow(
             derive(_recode_sex),
-            spread("age", dir="x"),
+            spread(by="age", dir="x"),
             derive(_calc_proportion),
-            stack("sex", dir="y"),
+            stack(by="sex", dir="y"),
         )
         .mark(rect(h="proportion", fill="sex"))
     )

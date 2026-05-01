@@ -2,8 +2,8 @@ import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
 import { seafood } from "../../src/data/catch";
 import { streamgraphData } from "../../src/data/streamgraphData";
-import { Chart, spread, blank, stack, Layer, select } from "../../src/lib";
-import { area, group, log } from "../../src/ast/marks/chart";
+import { Chart, spread, blank, stack, layer, select } from "../../src/lib";
+import { area, group, log } from "../../src/lib";
 
 const meta: Meta = {
   title: "Forward Syntax V3/Area",
@@ -25,9 +25,9 @@ export const Basic: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    Layer([
+    layer([
       Chart(seafood)
-        .flow(spread("lake", { dir: "x", spacing: 64 }))
+        .flow(spread({ by: "lake",  dir: "x", spacing: 64 }))
         .mark(blank({ h: "count" }).name("points")),
       Chart(select("points")).flow(log("points")).mark(area({ opacity: 0.8 })
     ),
@@ -46,15 +46,15 @@ export const Stacked: StoryObj<Args> = {
   render: (args: Args) => {
     const container = initializeContainer();
 
-    Layer([
+    layer([
       Chart(seafood)
         .flow(
-          spread("lake", { dir: "x", spacing: 64 }),
-          stack("species", { dir: "y" })
+          spread({ by: "lake",  dir: "x", spacing: 64 }),
+          stack({ by: "species",  dir: "y" })
         )
         .mark(blank({ h: "count", fill: "species" }).name("bars")),
       Chart(select("bars"))
-        .flow(group("species"))
+        .flow(group({ by: "species" }))
         .mark(area({ opacity: 0.8 })),
     ]).render(container, {
       w: args.w,
@@ -70,12 +70,12 @@ export const Layered: StoryObj<Args> = {
   args: { w: 500, h: 300 },
   render: (args: Args) => {
     const container = initializeContainer();
-    Layer([
+    layer([
       Chart(streamgraphData)
-        .flow(group("c"), spread("x", { dir: "x", spacing: 50 }))
+        .flow(group({ by: "c" }), spread({ by: "x",  dir: "x", spacing: 50 }))
         .mark(blank({ h: "y", fill: "c" }).name("points")),
       Chart(select("points"))
-        .flow(group("c"))
+        .flow(group({ by: "c" }))
         .mark(area({ opacity: 0.7 })),
     ]).render(container, {
       w: 500,

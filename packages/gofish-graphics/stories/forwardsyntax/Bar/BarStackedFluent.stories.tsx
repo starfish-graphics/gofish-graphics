@@ -18,15 +18,14 @@ export default meta;
 
 type Args = { w: number; h: number };
 
-// Uses new .facet() and .stack() methods instead of .flow(spread(...), stack(...))
 export const Default: StoryObj<Args> = {
   args: { w: 400, h: 400 },
   render: (args: Args) => {
     const container = initializeContainer();
 
     Chart(seafood)
-      .facet("lake", { dir: "x" })
-      .stack("species", { dir: "y" })
+      .facet({ by: "lake", dir: "x" })
+      .stack({ by: "species", dir: "y" })
       .mark(rect({ h: "count", fill: "species" }))
       .render(container, { w: args.w, h: args.h, axes: true });
 

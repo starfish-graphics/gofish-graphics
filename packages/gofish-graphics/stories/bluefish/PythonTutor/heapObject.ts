@@ -17,7 +17,7 @@ export const heapObject = createComponent(
   ({ objectType, objectValues }: HeapObjectProps) => {
     const elmTuplesTag = createName("elmTuples");
     return Spread(
-      { direction: "y", alignment: "start", spacing: 10, reverse: true },
+      { dir: "y", alignment: "start", spacing: 10, reverse: true },
       [
         text({
           fontFamily,
@@ -26,7 +26,7 @@ export const heapObject = createComponent(
           text: objectType,
         }),
         Spread(
-          { direction: "x", spacing: 0 },
+          { dir: "x", spacing: 0 },
           objectValues.map((elementData, index) =>
             elmTuple({
               tupleIndex: String(index),

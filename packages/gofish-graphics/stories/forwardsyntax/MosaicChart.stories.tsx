@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
 import { Chart, spread, rect, stack, derive } from "../../src/lib";
-import { normalize } from "../../src/ast/marks/chart";
+import { normalize } from "../../src/lib";
 
 const meta: Meta = {
   title: "Forward Syntax V3/Mosaic Chart",
@@ -37,9 +37,9 @@ export const Default: StoryObj<Args> = {
 
     Chart(data)
       .flow(
-        spread("origin", { dir: "x" }),
+        spread({ by: "origin",  dir: "x" }),
         derive((d) => normalize(d, "count")),
-        stack("cylinders", { dir: "y" })
+        stack({ by: "cylinders",  dir: "y" })
       )
       .mark(
         rect({ h: "count", fill: "origin", stroke: "white", strokeWidth: 2 })

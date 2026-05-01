@@ -1,12 +1,17 @@
 # stack
 
-Like [`spread`](/api/operators/spread) but with zero spacing — items stack edge-to-edge. Used for stacked bar charts.
+Shorthand for [`spread`](/api/operators/spread)`({ glue: true })`. Children
+are glued together and their data-driven sizes sum into a continuous
+positional axis at this level. Used for stacked bar charts.
 
 ::: starfish
 
 ```js
 gf.Chart(seafood)
-  .flow(gf.spread("lake", { dir: "x" }), gf.stack("species", { dir: "y" }))
+  .flow(
+    gf.spread({ by: "lake", dir: "x" }),
+    gf.stack({ by: "species", dir: "y" })
+  )
   .mark(gf.rect({ h: "count", fill: "species" }))
   .render(root, { w: 400, h: 250, axes: true });
 ```
@@ -16,25 +21,26 @@ gf.Chart(seafood)
 ## Signature
 
 ```ts
-stack(field, { dir, alignment = "start", w?, h? })
+// Operator form:
+stack({ by?, dir, alignment?, ... })
+
+// Combinator form:
+stack({ dir, ... }, [m1, m2, ...])
 ```
 
 ## Parameters
 
-| Option      | Type                           | Description                       |
-| ----------- | ------------------------------ | --------------------------------- |
-| `field`     | `string`                       | Field to group by before stacking |
-| `dir`       | `"x" \| "y"`                   | **Required.** Stack direction     |
-| `alignment` | `"start" \| "middle" \| "end"` | Alignment within each slot        |
-| `w`         | `number \| string`             | Width or field                    |
-| `h`         | `number \| string`             | Height or field                   |
+Same as [`spread`](/api/operators/spread) without `spacing` or `glue` —
+`stack` always glues, so neither is configurable. If you want gaps between
+children plus a continuous data axis, use `spread({ spacing: N })` —
+`spread`'s "data-driven SIZE composition" mode is the natural fit there.
 
 ## Example
 
 ```ts
 // Stacked bar chart grouped by "site", stacked by "variety"
 .flow(
-  spread("variety", { dir: "x" }),
-  stack("site", { dir: "y" })
+  spread({ by: "variety", dir: "x" }),
+  stack({ by: "site", dir: "y" })
 )
 ```

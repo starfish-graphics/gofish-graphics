@@ -10,12 +10,14 @@ import {
   type RenderSession,
 } from "./_node";
 import { computePosScale } from "./domain";
+import type { Size } from "./dims";
 import { tickIncrement, ticks, nice } from "d3-array";
 import { isConstant } from "../util/monotonic";
 import {
   isDIFFERENCE,
   isORDINAL,
   isPOSITION,
+  isSIZE,
   type UnderlyingSpace,
 } from "./underlyingSpace";
 import { continuous } from "./domain";
@@ -29,21 +31,36 @@ export type ScaleContext = {
 };
 
 export type KeyContext = { [key: string]: GoFishNode };
-export type AxesOptions = boolean | { x: boolean; y: boolean };
+export type AxesOptions = boolean | { x?: AxisOptions; y?: AxisOptions };
+export type AxisOptions = boolean | { title?: string | false };
 
-function resolveAxesVisibility(axes: AxesOptions | undefined): {
+// string: custom title, false: no title, undefined: infer from encoding
+function resolveAxisTitle(
+  axisOpt: AxisOptions | undefined
+): string | false | undefined {
+  if (axisOpt === undefined || axisOpt === false) return false; // axis hidden, title irrelevant
+  if (axisOpt === true) return undefined; // axis shown, infer title from encoding
+  return axisOpt.title; // string: custom title, false: no title, undefined: infer title
+}
+
+function resolveAxes(axes: AxesOptions | undefined): {
   x: boolean;
   y: boolean;
+  xTitle: string | false | undefined;
+  yTitle: string | false | undefined;
 } {
   if (axes === true) {
-    return { x: true, y: true };
+    return { x: true, y: true, xTitle: undefined, yTitle: undefined };
   }
-  if (axes && typeof axes === "object") {
-    const x = axes.x === true;
-    const y = axes.y === true;
-    return { x, y };
+  if (!axes) {
+    return { x: false, y: false, xTitle: false, yTitle: false };
   }
-  return { x: false, y: false };
+  return {
+    x: !!axes.x,
+    y: !!axes.y,
+    xTitle: resolveAxisTitle(axes.x),
+    yTitle: resolveAxisTitle(axes.y),
+  };
 }
 
 type OrdinalScale = (key: string) => number | undefined;
@@ -129,7 +146,6 @@ export async function layout(
     session: RenderSession;
   }
 ): Promise<{
-  sizeDomains: [any, any];
   underlyingSpaceX: UnderlyingSpace;
   underlyingSpaceY: UnderlyingSpace;
   posScales: [
@@ -163,7 +179,6 @@ export async function layout(
   child.resolveNames();
   child.resolveKeys();
   child.resolveLabels();
-  const sizeDomains = child.inferSizeDomains();
   const [underlyingSpaceX, underlyingSpaceY] = child.resolveUnderlyingSpace();
 
   // Apply nice rounding to POSITION space domains
@@ -233,7 +248,19 @@ export async function layout(
     console.log("width and height constraints:", w, h);
   }
 
-  child.layout([w, h], [undefined, undefined], posScales);
+  // Root scale factors come from SIZE underlying spaces by inverting the
+  // composed Monotonic against the canvas. POSITION-rooted axes use
+  // posScales (computed above) instead.
+  const rootScaleFactors: Size<number | undefined> = [
+    isSIZE(niceUnderlyingSpaceX)
+      ? (niceUnderlyingSpaceX.domain.inverse(w) ?? undefined)
+      : undefined,
+    isSIZE(niceUnderlyingSpaceY)
+      ? (niceUnderlyingSpaceY.domain.inverse(h) ?? undefined)
+      : undefined,
+  ];
+
+  child.layout([w, h], rootScaleFactors, posScales);
   child.place("x", x ?? transform?.x ?? 0, "baseline");
   child.place("y", y ?? transform?.y ?? 0, "baseline");
 
@@ -252,7 +279,6 @@ export async function layout(
   ];
 
   return {
-    sizeDomains,
     underlyingSpaceX: niceUnderlyingSpaceX,
     underlyingSpaceY: niceUnderlyingSpaceY,
     posScales,
@@ -273,6 +299,7 @@ export const gofish = (
     debug = false,
     defs,
     axes = false,
+    axisFields,
     colorConfig,
   }: {
     w: number;
@@ -282,13 +309,13 @@ export const gofish = (
     transform?: { x?: number; y?: number };
     debug?: boolean;
     defs?: JSX.Element[];
-    axes?: boolean;
+    axes?: AxesOptions;
+    axisFields?: { x?: string; y?: string };
     colorConfig?: ColorConfig;
   },
   child: GoFishNode | Promise<GoFishNode>
 ) => {
   type LayoutData = {
-    sizeDomains: [any, any];
     underlyingSpaceX: UnderlyingSpace;
     underlyingSpaceY: UnderlyingSpace;
     posScales: [
@@ -350,9 +377,9 @@ export const gofish = (
               height: h,
               defs,
               axes,
+              axisFields,
               scaleContext: data.scaleContext,
               keyContext: data.keyContext,
-              sizeDomains: data.sizeDomains,
               underlyingSpaceX: data.underlyingSpaceX,
               underlyingSpaceY: data.underlyingSpaceY,
               posScales: data.posScales,
@@ -435,9 +462,9 @@ export const render = (
     transform,
     defs,
     axes,
+    axisFields,
     scaleContext: scaleContextParam,
     keyContext: keyContextParam,
-    sizeDomains,
     underlyingSpaceX,
     underlyingSpaceY,
     posScales,
@@ -448,9 +475,9 @@ export const render = (
     transform?: string;
     defs?: JSX.Element[];
     axes?: AxesOptions;
+    axisFields?: { x?: string; y?: string };
     scaleContext: ScaleContext | null;
     keyContext: KeyContext | null;
-    sizeDomains?: [any, any];
     underlyingSpaceX: UnderlyingSpace;
     underlyingSpaceY: UnderlyingSpace;
     posScales: [
@@ -463,10 +490,16 @@ export const render = (
 ): JSX.Element => {
   const scaleContext = scaleContextParam;
   const keyContext = keyContextParam;
-  const axisVisibility = resolveAxesVisibility(axes);
+  const { x: axisX, y: axisY, xTitle, yTitle } = resolveAxes(axes);
+  const axisVisibility = { x: axisX, y: axisY };
+  const resolvedXTitle =
+    xTitle === false ? undefined : (xTitle ?? axisFields?.x);
+  const resolvedYTitle =
+    yTitle === false ? undefined : (yTitle ?? axisFields?.y);
   const hasAnyVisibleAxis = axisVisibility.x || axisVisibility.y;
   const axisPaddingX = axisVisibility.y ? 100 : 0;
   const axisPaddingY = axisVisibility.x ? 100 : 0;
+  const leftMargin = resolvedYTitle ? PADDING * 7 : PADDING * 4;
 
   let yTicks: number[] = [];
   let xTicks: number[] = [];
@@ -496,7 +529,7 @@ export const render = (
 
   const result = (
     <svg
-      width={width + PADDING * 6 + axisPaddingX}
+      width={width + leftMargin + PADDING * 2 + axisPaddingX}
       height={height + PADDING * 6 + axisPaddingY}
       xmlns="http://www.w3.org/2000/svg"
     >
@@ -504,7 +537,7 @@ export const render = (
         <defs>{defs}</defs>
       </Show>
       <g
-        transform={`scale(1, -1) translate(${PADDING * 4}, ${-height - PADDING * 4})`}
+        transform={`scale(1, -1) translate(${leftMargin}, ${-height - PADDING * 4})`}
       >
         <Show when={transform} keyed fallback={child.INTERNAL_render()}>
           <g transform={transform ?? ""}>{child.INTERNAL_render()}</g>
@@ -1109,6 +1142,32 @@ export const render = (
                     })()}
                   </Show>
                 </g>
+                {/* x axis title */}
+                <Show when={axisVisibility.x && resolvedXTitle}>
+                  <text
+                    transform="scale(1, -1)"
+                    x={width / 2}
+                    y={PADDING * 3.5}
+                    text-anchor="middle"
+                    dominant-baseline="hanging"
+                    font-size="11px"
+                    fill="gray"
+                  >
+                    {resolvedXTitle}
+                  </text>
+                </Show>
+                {/* y axis title */}
+                <Show when={axisVisibility.y && resolvedYTitle}>
+                  <text
+                    transform={`translate(${-PADDING * 3.5}, ${height / 2}) scale(1, -1) rotate(-90)`}
+                    text-anchor="middle"
+                    dominant-baseline="middle"
+                    font-size="11px"
+                    fill="gray"
+                  >
+                    {resolvedYTitle}
+                  </text>
+                </Show>
                 {/* legend (discrete color for now) */}
                 <g>
                   <For

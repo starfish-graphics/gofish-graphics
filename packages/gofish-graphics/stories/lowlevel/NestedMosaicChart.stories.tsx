@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
 import { titanic } from "../../src/data/titanic";
-import { SpreadY, SpreadX, StackY, rect, For, v } from "../../src/lib";
+import { spreadY, spreadX, stackY, rect, For, v } from "../../src/lib";
 import { color6, gray } from "../../src/color";
 import { groupBy } from "lodash";
 import _ from "lodash";
@@ -32,15 +32,15 @@ export const Default: StoryObj<Args> = {
   args: { w: 500, h: 300 },
   render: (args: Args) => {
     const container = initializeContainer();
-    SpreadY(
-      { dir: "ttb", spacing: 4, alignment: "middle" },
+    spreadY(
+      { reverse: true, spacing: 4, alignment: "middle" },
       For(groupBy(titanic, "class"), (items, cls) =>
-        SpreadX(
+        spreadX(
           { key: cls, h: _(items).sumBy("count") / 10, spacing: 2, alignment: "middle" },
           For(groupBy(items, "sex"), (sItems, sex) =>
-            StackY(
+            stackY(
               {
-                dir: "ttb",
+                reverse: true,
                 w: (_(sItems).sumBy("count") / _(items).sumBy("count")) * 100,
                 alignment: "middle",
                 sharedScale: true,

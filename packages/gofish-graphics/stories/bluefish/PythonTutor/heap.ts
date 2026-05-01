@@ -10,10 +10,10 @@ export interface HeapProps {
 export const heap = createComponent(
   ({ heap: heapObjects, heapArrangement }: HeapProps) =>
     Spread(
-      { direction: "y", alignment: "start", spacing: 75, reverse: true },
+      { dir: "y", alignment: "start", spacing: 75, reverse: true },
       heapArrangement.map((row) =>
         Spread(
-          { direction: "x", alignment: "end", spacing: 75 },
+          { dir: "x", alignment: "end", spacing: 75 },
           row.map((address) =>
             address === null
               ? rect({ h: 60, w: 140, fill: "none", stroke: "none" })

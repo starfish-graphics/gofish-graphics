@@ -2,9 +2,8 @@ import { Show } from "solid-js";
 import { GoFishAST } from "../_ast";
 import { GoFishNode } from "../_node";
 import { Size } from "../dims";
-import * as Monotonic from "../../util/monotonic";
 import { UNDEFINED, UnderlyingSpace } from "../underlyingSpace";
-import { createOperator } from "../withGoFish";
+import { createNodeOperator } from "../withGoFish";
 import { type ArrowOptions, getBoxToBoxArrow } from "perfect-arrows";
 import { bbox, union } from "../../util/bbox";
 
@@ -43,7 +42,7 @@ const defaultArrowOpts: Required<
   start: false,
 };
 
-export const arrow = createOperator(
+export const arrow = createNodeOperator(
   (opts: ArrowOpts, children: GoFishAST[]) => {
     const props = { ...defaultArrowOpts, ...opts };
 
@@ -55,10 +54,6 @@ export const arrow = createOperator(
           _childSpaces: Size<UnderlyingSpace>[],
           _childNodes: GoFishAST[]
         ) => [UNDEFINED, UNDEFINED],
-        inferSizeDomains: () => ({
-          w: Monotonic.linear(0, 0),
-          h: Monotonic.linear(0, 0),
-        }),
         layout: (shared, size, scaleFactors, layoutChildren) => {
           if (layoutChildren.length < 2) {
             return {

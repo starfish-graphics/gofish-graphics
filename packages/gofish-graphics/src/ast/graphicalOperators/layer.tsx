@@ -2,12 +2,12 @@ import * as Monotonic from "../../util/monotonic";
 import { GoFishNode } from "../_node";
 import { isToken } from "../createName";
 import { Size, elaborateDims, FancyDims } from "../dims";
-import { UnderlyingSpace } from "../underlyingSpace";
+import { SIZE, UnderlyingSpace, isSIZE } from "../underlyingSpace";
 import * as Interval from "../../util/interval";
 import { computeSize } from "../../util";
 import { CoordinateTransform } from "../coordinateTransforms/coord";
 import { coord } from "../coordinateTransforms/coord";
-import { createOperatorSequential } from "../withGoFish";
+import { createNodeOperatorSequential } from "../withGoFish";
 import { GoFishAST } from "../_ast";
 import { applyConstraints } from "../constraints";
 import { unionChildSpaces } from "./alignment";
@@ -22,7 +22,7 @@ const childNameKey = (node: GoFishAST): string | undefined => {
   return isToken(n) ? n.__tag : n;
 };
 
-export const layer = createOperatorSequential(
+export const layer = createNodeOperatorSequential(
   async (
     childrenOrOptions:
       | ({
@@ -68,35 +68,24 @@ export const layer = createOperatorSequential(
         resolveUnderlyingSpace: (
           children: Size<UnderlyingSpace>[],
           _childNodes: GoFishAST[]
-        ) => [unionChildSpaces(children, 0), unionChildSpaces(children, 1)],
-        inferSizeDomains: (shared, children) => {
-          const childMeasures = children.map((child) =>
-            child.inferSizeDomains()
-          );
-
-          const childMeasuresWidth = childMeasures.map((cm) => cm[0]);
-          const childMeasuresHeight = childMeasures.map((cm) => cm[1]);
-
-          return {
-            w: Monotonic.smul(
-              options.transform?.scale?.x ?? 1,
-              Monotonic.max(...childMeasuresWidth)
-            ),
-            h: Monotonic.smul(
-              options.transform?.scale?.y ?? 1,
-              Monotonic.max(...childMeasuresHeight)
-            ),
-          };
-        },
-        layout: (
-          shared,
-          size,
-          scaleFactors,
-          children,
-          measurement,
-          posScales,
-          node
         ) => {
+          // Apply layer's own transform.scale to any SIZE spaces produced
+          // by unionChildSpaces (the SIZE-preserving overlay path).
+          const scaleX = options.transform?.scale?.x ?? 1;
+          const scaleY = options.transform?.scale?.y ?? 1;
+          const applyScale = (
+            space: UnderlyingSpace,
+            scale: number
+          ): UnderlyingSpace =>
+            isSIZE(space) && scale !== 1
+              ? SIZE(Monotonic.smul(scale, space.domain))
+              : space;
+          return [
+            applyScale(unionChildSpaces(children, 0), scaleX),
+            applyScale(unionChildSpaces(children, 1), scaleY),
+          ];
+        },
+        layout: (shared, size, scaleFactors, children, posScales, node) => {
           // Compute size using dims (w and h) before passing to children
           size = [
             computeSize(dims[0].size, scaleFactors?.[0]!, size[0]) ?? size[0],
