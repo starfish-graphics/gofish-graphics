@@ -589,6 +589,10 @@ export function createMark(
       node.name(key?.toString() ?? "");
       (node as any).datum = d;
       node.scope();
+      // Mark as a component for string-name search bounding. Distinct from
+      // _isScope so future operators that scope (for token reasons) don't
+      // silently break ref("name") lookups across them.
+      node._isComponent = true;
       return node;
     };
 

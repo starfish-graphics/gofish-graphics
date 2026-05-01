@@ -123,6 +123,14 @@ export class GoFishNode {
   public key?: string;
   public _name?: string | Token;
   public _isScope: boolean = false;
+  /**
+   * String-name search boundary. Set ONLY by createMark — manual `.scope()`
+   * (which flips `_isScope`) does not flip this. resolveLocalString in
+   * GoFishRef stops walking up at the nearest `_isComponent` ancestor and
+   * does not descend into nested ones, so `ref("name")` lookups don't leak
+   * across component boundaries even if a future operator silently scopes.
+   */
+  public _isComponent: boolean = false;
   public _scopeMap?: Map<string, GoFishNode>;
   public parent?: GoFishNode;
   public datum?: any;

@@ -174,25 +174,30 @@ export class GoFishRef {
   }
 
   private resolveLocalString(name: string): GoFishNode {
-    // Walk up .parent to find the nearest Layer (or any node with children
-    // that has a child matching `name`). We check any ancestor that isn't a
-    // Ref — the immediate layer is the usual scope for `.constrain({x})` and
-    // for `ref("x")` local lookups.
-    let ancestor: GoFishNode | undefined = this.parent;
-    while (ancestor) {
-      for (const child of ancestor.children) {
-        if (!("_name" in child)) continue;
-        const n = (child as GoFishNode)._name;
-        if (n === undefined) continue;
-        const tag = isToken(n) ? n.__tag : n;
-        if (tag === name) {
-          return child as GoFishNode;
-        }
-      }
-      ancestor = ancestor.parent;
+    // Walk up to the nearest enclosing component (createMark output, marked
+    // via `_isComponent`). If none, the search root is the topmost ancestor.
+    // Then DFS for a node whose `_name` matches, NOT descending into nested
+    // components — so strings don't leak across component boundaries.
+    //
+    // We use `_isComponent` rather than `_isScope` so future operators that
+    // scope for token-registration reasons don't silently break this lookup.
+    let scope: GoFishNode | undefined = this.parent;
+    while (scope && !scope._isComponent) {
+      scope = scope.parent;
     }
+    if (!scope) {
+      scope = this.parent;
+      while (scope?.parent) scope = scope.parent;
+    }
+    if (!scope) {
+      throw new Error(
+        `Can't find local name "${name}" — ref has no ancestors.`
+      );
+    }
+    const found = findInComponent(scope, name);
+    if (found) return found;
     throw new Error(
-      `Can't find local name "${name}" in any enclosing Layer's children.`
+      `Can't find local name "${name}" within enclosing component.`
     );
   }
 
@@ -336,6 +341,28 @@ export class GoFishRef {
     throw new Error("Render session not set");
   }
 }
+
+/**
+ * DFS for a descendant of `node` whose `_name` (or token `__tag`) matches
+ * `name`, without crossing `_isComponent` boundaries. The match is checked
+ * before the descent guard so a leaf component (e.g. a `rect` produced by
+ * createMark, which is itself a component) is still findable by name.
+ */
+const findInComponent = (
+  node: GoFishNode,
+  name: string
+): GoFishNode | undefined => {
+  for (const child of node.children) {
+    if (!(child instanceof GoFishNode)) continue;
+    const n = child._name;
+    const tag = n === undefined ? undefined : isToken(n) ? n.__tag : n;
+    if (tag === name) return child;
+    if (child._isComponent) continue;
+    const inner = findInComponent(child, name);
+    if (inner) return inner;
+  }
+  return undefined;
+};
 
 export const findPathToRoot = (node: GoFishAST): GoFishNode[] => {
   const path: GoFishNode[] = [];
