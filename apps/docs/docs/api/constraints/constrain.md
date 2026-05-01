@@ -104,12 +104,12 @@ gf.Layer([
 
 Constraints are a lower-level primitive that `Spread` is built on. These pairs are equivalent:
 
-| Spread                                                       | Constraint equivalent                                   |
-| ------------------------------------------------------------ | ------------------------------------------------------- |
-| `Spread({ dir: "y", alignment: "start" }, items)`            | `align({ x: "start" })` + `distribute({ dir: "y" })`    |
+| Spread                                                       | Constraint equivalent                                           |
+| ------------------------------------------------------------ | --------------------------------------------------------------- |
+| `Spread({ dir: "y", alignment: "start" }, items)`            | `align({ x: "start" })` + `distribute({ dir: "y" })`            |
 | `Spread({ dir: "x", alignment: "end", spacing: 10 }, items)` | `align({ y: "end" })` + `distribute({ dir: "x", spacing: 10 })` |
-| `Spread({ dir: "x", spacing: 60, mode: "center" }, items)`   | `distribute({ dir: "x", spacing: 60, mode: "center" })` |
-| `Spread({ dir: "y", reverse: true }, items)`                 | `distribute({ dir: "y", order: "reverse" })`            |
+| `Spread({ dir: "x", spacing: 60, mode: "center" }, items)`   | `distribute({ dir: "x", spacing: 60, mode: "center" })`         |
+| `Spread({ dir: "y", reverse: true }, items)`                 | `distribute({ dir: "y", order: "reverse" })`                    |
 
 ## Partial placement
 
