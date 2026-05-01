@@ -1,9 +1,4 @@
-import {
-  createComponent,
-  createName,
-  Spread,
-  text,
-} from "../../../src/lib";
+import { createMark, createName, Spread, text } from "../../../src/lib";
 import { elmTuple } from "./elmTuple";
 
 const fontFamily = "verdana, arial, helvetica, sans-serif";
@@ -13,7 +8,7 @@ export interface HeapObjectProps {
   objectValues: { type: string; value: string }[];
 }
 
-export const heapObject = createComponent(
+export const heapObject = createMark(
   ({ objectType, objectValues }: HeapObjectProps) => {
     const elmTuplesTag = createName("elmTuples");
     return Spread(

@@ -1,6 +1,6 @@
 import {
   Constraint,
-  createComponent,
+  createMark,
   createName,
   Layer,
   rect,
@@ -14,7 +14,7 @@ export interface ElmTupleProps {
   tupleData?: string;
 }
 
-export const elmTuple = createComponent(
+export const elmTuple = createMark(
   ({ tupleIndex, tupleData }: ElmTupleProps) => {
     const valTag = createName("val");
     return Layer([

@@ -1,4 +1,4 @@
-import { createComponent, rect, Spread } from "../../../src/lib";
+import { createMark, rect, Spread } from "../../../src/lib";
 import { heapObject } from "./heapObject";
 import { Address, formatValue, HeapObject } from "./types";
 
@@ -7,7 +7,7 @@ export interface HeapProps {
   heapArrangement: (Address | null)[][];
 }
 
-export const heap = createComponent(
+export const heap = createMark(
   ({ heap: heapObjects, heapArrangement }: HeapProps) =>
     Spread(
       { dir: "y", alignment: "start", spacing: 75, reverse: true },

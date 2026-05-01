@@ -1,6 +1,6 @@
 import {
   Constraint,
-  createComponent,
+  createMark,
   createName,
   Layer,
   rect,
@@ -14,7 +14,7 @@ export interface GlobalFrameProps {
   stack: Binding[];
 }
 
-export const globalFrame = createComponent(({ stack }: GlobalFrameProps) => {
+export const globalFrame = createMark(({ stack }: GlobalFrameProps) => {
   const variablesTag = createName("variables");
   return Layer([
     rect({ h: 300, w: 200, fill: "#e2ebf6" }).name("frame"),

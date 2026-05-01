@@ -1,6 +1,6 @@
 import {
   Constraint,
-  createComponent,
+  createMark,
   createName,
   Layer,
   rect,
@@ -15,7 +15,7 @@ export interface StackSlotProps {
   value?: string;
 }
 
-export const stackSlot = createComponent(
+export const stackSlot = createMark(
   ({ variable, value }: StackSlotProps) => {
     const boxTag = createName("box");
     const valueTag = createName("value");
