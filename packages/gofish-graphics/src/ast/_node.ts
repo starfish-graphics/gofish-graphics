@@ -35,7 +35,7 @@ import {
 } from "./underlyingSpace";
 import { toJSON } from "../util/interval";
 import type { KeyContext, ScaleContext } from "./gofish";
-import type { ScopeContext, TokenContext } from "./scopeContext";
+import type { TokenContext } from "./tokenContext";
 import { isToken, Token } from "./createName";
 import type { ConstraintSpec, ConstraintRef } from "./constraints";
 import { collectConstraintRefs } from "./constraints";
@@ -52,7 +52,6 @@ import {
 import { renderLabelJSX } from "./labels/renderLabel";
 
 export type RenderSession = {
-  scopeContext: ScopeContext;
   tokenContext: TokenContext;
   scaleContext: ScaleContext;
   keyContext: KeyContext;
