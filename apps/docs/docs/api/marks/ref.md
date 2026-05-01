@@ -10,8 +10,8 @@ See also [How to name and scope](/api/howto/naming-and-scoping) for when to use 
 ref(
   nodeOrSelection:
     | string                              // layer-local lookup
-    | Token                               // global lookup (from createName)
-    | (Token | string | number)[]         // path
+    | Token                               // global lookup; chainable as ref(token).foo[i].bar
+    | (Token | string | number)[]         // path (array form)
     | GoFishNode                          // direct node
     | { __ref: GoFishNode }
 );
@@ -46,14 +46,30 @@ Layer([
 
 ### Path — step through scopes + positional children
 
-A path array starts at a `Token` and descends one step per segment. Tag strings resolve against the current node's scope map (populated by `createName`-tagged children inside a scope root). Numbers pick the positional child at that index.
+A path starts at a `Token` and descends one step per segment. Tag strings resolve against the current node's scope map (populated by `createName`-tagged children inside a scope root). Numbers pick the positional child at that index.
+
+Two equivalent spellings:
 
 ```ts
+// Chained (proxy) — preferred for static paths
+ref(globalFrameName).variables[2].value;
+
+// Array — useful when segments are dynamic
 ref([globalFrameName, "variables", 2, "value"]);
-//   └─ Token ──────┘  └─ tag ──┘  └┘  └─ tag ─┘
-//   global lookup     scope-map   i-th  scope-map
-//                     on token    child on prev
 ```
+
+The chained form is a `Proxy` that wraps the underlying `GoFishRef`; `instanceof GoFishRef` still holds, so it can go anywhere a ref is expected.
+
+For variadic dynamic segments (e.g. spreading a `[row, col]` tuple into the path), use `.path(...)`:
+
+```ts
+const cell = addrPos.get(addr)!; // [row, col]
+ref(heapName).path(...cell).elmTuples[0];
+// equivalent to:
+ref([heapName, ...cell, "elmTuples", 0]);
+```
+
+**Reserved names.** Children registered with one of GoFishRef's own property names (`name`, `type`, `parent`, `dims`, `layout`, `place`, `color`, …), the escape-hatch method `path`, or JS-language names (`then`, `toString`, `constructor`, `__proto__`, …) are not reachable via dotted access. Use `ref(token).path("name")` or the array form for those.
 
 ### Direct node
 
