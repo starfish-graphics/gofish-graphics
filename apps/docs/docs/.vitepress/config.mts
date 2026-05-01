@@ -82,6 +82,10 @@ export default defineConfig({
             { text: "Create a glyph", link: "/api/howto/create-glyph" },
             { text: "Pick a layout operator", link: "/api/howto/operators" },
             { text: "Use selection", link: "/api/howto/selection" },
+            {
+              text: "Name and scope",
+              link: "/api/howto/naming-and-scoping",
+            },
           ],
         },
         {

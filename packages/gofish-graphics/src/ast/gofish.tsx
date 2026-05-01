@@ -330,7 +330,7 @@ export const gofish = (
 
   const runGofish = async (): Promise<LayoutData> => {
     const session: RenderSession = {
-      scopeContext: new Map(),
+      tokenContext: new Map(),
       scaleContext: { unit: { color: new Map(), colorConfig } },
       keyContext: {},
     };
@@ -355,7 +355,7 @@ export const gofish = (
     } finally {
       if (debug) {
         console.log("scaleContext", session.scaleContext);
-        console.log("scopeContext", session.scopeContext);
+        console.log("tokenContext", session.tokenContext);
       }
     }
   };

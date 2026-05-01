@@ -25,6 +25,7 @@ import { isValue } from "./data";
 import { Mark } from "./types";
 import type { ConstraintSpec, ConstraintRef } from "./constraints";
 import type { LabelAccessor, LabelOptions } from "./labels/labelPlacement";
+import type { Token } from "./createName";
 
 /**
  * Options for rendering a GoFish node
@@ -79,7 +80,7 @@ export interface PromiseWithRender<T> extends Promise<T> {
     container: HTMLElement,
     options: RenderOptions
   ): HTMLElement | Promise<HTMLElement>;
-  name(name: string): PromiseWithRender<T>;
+  name(name: string | Token): PromiseWithRender<T>;
   label(accessor: LabelAccessor, options?: LabelOptions): PromiseWithRender<T>;
   setKey(key: string): PromiseWithRender<T>;
   setShared(shared: [boolean, boolean]): PromiseWithRender<T>;
@@ -87,6 +88,7 @@ export interface PromiseWithRender<T> extends Promise<T> {
     fn: (refs: Record<string, ConstraintRef>) => ConstraintSpec[]
   ): PromiseWithRender<T>;
   zOrder(value: number): PromiseWithRender<T>;
+  scope(): PromiseWithRender<T>;
 }
 
 /**
@@ -126,11 +128,24 @@ export function addRenderMethod<T>(promise: Promise<T>): PromiseWithRender<T> {
   };
 
   // Add chainable methods that return new PromiseWithRender
-  (promise as any).name = function (name: string): PromiseWithRender<T> {
+  (promise as any).name = function (
+    name: string | Token
+  ): PromiseWithRender<T> {
     return addRenderMethod(
       promise.then((result) => {
         if (result instanceof GoFishNode) {
           return result.name(name) as T;
+        }
+        return result;
+      })
+    );
+  };
+
+  (promise as any).scope = function (): PromiseWithRender<T> {
+    return addRenderMethod(
+      promise.then((result) => {
+        if (result instanceof GoFishNode) {
+          return result.scope() as T;
         }
         return result;
       })
@@ -299,10 +314,10 @@ export async function reifyChildrenSequentially(
 export function createNodeOperator<T extends Record<string, any>, R>(
   func: (opts: T, children: GoFishAST[]) => R
 ): {
-  (opts?: T, children?: GoFishChildrenInput): PromiseWithRender<R>;
-  (children: GoFishChildrenInput): PromiseWithRender<R>;
+  (opts?: T, children?: GoFishChildrenInput): PromiseWithRender<Awaited<R>>;
+  (children: GoFishChildrenInput): PromiseWithRender<Awaited<R>>;
 } {
-  return function (...args: any[]): PromiseWithRender<R> {
+  return function (...args: any[]): PromiseWithRender<Awaited<R>> {
     const promise = (async () => {
       let opts: T;
       let children: GoFishChildrenInput | undefined;
@@ -344,7 +359,7 @@ export function createNodeOperator<T extends Record<string, any>, R>(
       ) as GoFishAST[];
       return func(opts, flatChildren);
     })();
-    return addRenderMethod(promise);
+    return addRenderMethod(promise) as PromiseWithRender<Awaited<R>>;
   };
 }
 
@@ -360,10 +375,13 @@ export function createNodeOperator<T extends Record<string, any>, R>(
 export function createNodeOperatorSequential<T extends Record<string, any>, R>(
   func: (opts: T, children: GoFishAST[]) => R
 ): {
-  (opts?: T, children?: GoFishChildrenInputWithThunks): PromiseWithRender<R>;
-  (children: GoFishChildrenInputWithThunks): PromiseWithRender<R>;
+  (
+    opts?: T,
+    children?: GoFishChildrenInputWithThunks
+  ): PromiseWithRender<Awaited<R>>;
+  (children: GoFishChildrenInputWithThunks): PromiseWithRender<Awaited<R>>;
 } {
-  return function (...args: any[]): PromiseWithRender<R> {
+  return function (...args: any[]): PromiseWithRender<Awaited<R>> {
     const promise = (async () => {
       let opts: T;
       let children: GoFishChildrenInputWithThunks | undefined;
@@ -396,7 +414,7 @@ export function createNodeOperatorSequential<T extends Record<string, any>, R>(
       );
       return func(opts, resolvedChildren);
     })();
-    return addRenderMethod(promise);
+    return addRenderMethod(promise) as PromiseWithRender<Awaited<R>>;
   };
 }
 
@@ -410,7 +428,7 @@ export function createNodeOperatorSequential<T extends Record<string, any>, R>(
  *   `chart(data).mark(spread({dir: "x"}, [...])).render(container, opts)`.
  */
 export type NameableMark<T> = Mark<T> & {
-  name(layerName: string): NameableMark<T>;
+  name(layerName: string | Token): NameableMark<T>;
   label(accessor: LabelAccessor, options?: LabelOptions): NameableMark<T>;
   render(
     container: Parameters<GoFishNode["render"]>[0],
@@ -419,58 +437,135 @@ export type NameableMark<T> = Mark<T> & {
 };
 
 /**
- * Creates a high-level mark function from a low-level shape function
- * and channel annotations.
- *
- * Channel annotations describe how each prop encodes data:
- * - "size": mark accepts `number | keyof T`, uses inferSize to convert
- * - "color": mark accepts `string | keyof T`, uses inferColor to convert
- * - unannotated props are passed through unchanged
- *
- * The returned mark supports .name("layerName") so that when used in a chart,
- * each produced node is registered for select("layerName").
+ * Attach .name / .label / .render chainable methods to a bare Mark, producing
+ * a NameableMark. Each chained call returns a new mark that, when invoked,
+ * applies the chained mutation (name/label) to the node produced by baseMark.
  */
+function attachNameableMethods<T>(baseMark: Mark<T>): NameableMark<T> {
+  const nameMethod = (layerName: string | Token): Mark<T> => {
+    return async (input, keyParam, layerContext) => {
+      const node = await baseMark(input, keyParam, layerContext);
+      (node as GoFishNode).name(layerName);
+      // layerContext is keyed by string name (v3 chart-layer selection);
+      // tokens are hygienic handles and do not participate in that registry.
+      if (layerContext && typeof layerName === "string" && layerName) {
+        if (!layerContext[layerName]) {
+          layerContext[layerName] = { data: [], nodes: [] };
+        }
+        layerContext[layerName].nodes.push(node as GoFishNode);
+        layerContext[layerName].data.push((node as any).datum);
+      }
+      return node;
+    };
+  };
+  const nameMethodWithFields = (layerName: string | Token): Mark<T> => {
+    const fn = nameMethod(layerName);
+    if ((baseMark as any).__axisFields) {
+      (fn as any).__axisFields = (baseMark as any).__axisFields;
+    }
+    return fn;
+  };
+  const labelMethod = (
+    accessor: LabelAccessor,
+    options?: LabelOptions
+  ): Mark<T> => {
+    return async (input, keyParam, layerContext) => {
+      const node = await baseMark(input, keyParam, layerContext);
+      (node as GoFishNode).label(accessor, options);
+      return node;
+    };
+  };
+  const renderMethod = async (
+    container: Parameters<GoFishNode["render"]>[0],
+    options: Parameters<GoFishNode["render"]>[1]
+  ) => {
+    const node = (await baseMark(undefined as any)) as GoFishNode;
+    return node.render(container, options);
+  };
+  Object.defineProperty(baseMark, "name", {
+    value: nameMethodWithFields,
+    writable: true,
+    configurable: true,
+  });
+  Object.defineProperty(baseMark, "label", {
+    value: labelMethod,
+    writable: true,
+    configurable: true,
+  });
+  Object.defineProperty(baseMark, "render", {
+    value: renderMethod,
+    writable: true,
+    configurable: true,
+  });
+  return baseMark as NameableMark<T>;
+}
+
+/**
+ * Creates a high-level mark from a low-level shape function plus optional
+ * channel annotations. Channel annotations describe how each prop encodes data:
+ * - "size":  accepts `number | keyof T`, uses inferSize
+ * - "pos":   accepts `number | keyof T`, uses inferPos
+ * - "color": accepts `string | keyof T`, uses inferColor
+ * - "raw":   accepts `V | keyof T`, uses inferRaw
+ * - unannotated props pass through unchanged
+ *
+ * Omitting `channels` is just the empty-annotations special case: all props
+ * pass through as-is, which is the right default for `(props) => Node`-style
+ * components composed from existing marks.
+ *
+ * The output node is always made a scope root, so any `.name(token)`
+ * registrations inside the shape function are hygienic — external paths like
+ * `ref([token, "x", ...])` resolve into this mark's scope rather than leaking
+ * to an outer ancestor.
+ *
+ * The returned mark supports `.name("layerName" | token)` so that when used
+ * in a chart, each produced node is registered for `select("layerName")`.
+ */
+export function createMark<P extends Record<string, any>>(
+  shapeFn: (props: P) => GoFishNode | PromiseLike<GoFishNode>
+): (props: P) => NameableMark<P>;
 export function createMark<
   ShapeProps extends Record<string, any>,
   C extends ChannelAnnotations<ShapeProps>,
 >(
-  shapeFn: (opts: ShapeProps) => GoFishNode,
+  shapeFn: (opts: ShapeProps) => GoFishNode | PromiseLike<GoFishNode>,
   channels: C
 ): <T extends Record<string, any>>(
   opts: DeriveMarkProps<ShapeProps, C, T>
-) => NameableMark<T | T[] | { item: T | T[]; key: number | string }> {
-  return <T extends Record<string, any>>(
-    markOpts: DeriveMarkProps<ShapeProps, C, T>
-  ): NameableMark<T | T[] | { item: T | T[]; key: number | string }> => {
-    const baseMark: Mark<
-      T | T[] | { item: T | T[]; key: number | string }
-    > = async (
-      input: T | T[] | { item: T | T[]; key: number | string },
+) => NameableMark<T | T[] | { item: T | T[]; key: number | string }>;
+export function createMark(
+  shapeFn: any,
+  channels: Record<string, any> = {}
+): any {
+  return (markOpts: Record<string, any>) => {
+    const baseMark: Mark<any> = async (
+      input,
       keyParam?: string | number,
-      layerContext?: LayerContext
+      _layerContext?: LayerContext
     ) => {
       // Unwrap input: handles T, T[], or { item, key } patterns
-      let d: T | T[], key: number | string | undefined;
+      let d: any, key: number | string | undefined;
       if (typeof input === "object" && input !== null && "item" in input) {
-        d = (input as { item: T | T[]; key: number | string }).item;
-        key = (input as { item: T | T[]; key: number | string }).key;
+        d = (input as any).item;
+        key = (input as any).key;
       } else {
-        d = input as T | T[];
+        d = input;
         key = keyParam;
       }
 
-      if ((markOpts as any).debug) {
+      if (markOpts.debug) {
         console.log("mark", key, d);
       }
 
       const data = Array.isArray(d) ? d : [d];
 
-      // Build shape props by encoding each channel
+      // Build shape props by encoding each channel. Unannotated props (which
+      // is everything when channels is omitted/empty) pass through.
       const shapeProps: Record<string, any> = {};
-      for (const propName of Object.keys(markOpts as any)) {
+      for (const propName of Object.keys(markOpts)) {
         if (propName === "debug") continue;
-        const channelType = channels[propName as keyof C];
-        const markValue = (markOpts as any)[propName];
+        const channelType = channels[propName];
+        const markValue = markOpts[propName];
 
         if (isValue(markValue)) {
           // Already a Value wrapper (e.g. v(...)) — pass through directly
@@ -488,90 +583,29 @@ export function createMark<
         }
       }
 
-      const node = shapeFn(shapeProps as ShapeProps);
+      const result = shapeFn(shapeProps);
+      const node: GoFishNode =
+        result instanceof GoFishNode ? result : await result;
       node.name(key?.toString() ?? "");
       (node as any).datum = d;
+      node.scope();
+      // Mark as a component for string-name search bounding. Distinct from
+      // _isScope so future operators that scope (for token reasons) don't
+      // silently break ref("name") lookups across them.
+      node._isComponent = true;
       return node;
     };
 
     // Infer axis field names from string-valued size/pos channels
     const axisFields: { x?: string; y?: string } = {};
-    const o = markOpts as any;
-    if (typeof o.w === "string") axisFields.x = o.w;
-    else if (typeof o.x === "string") axisFields.x = o.x;
-    if (typeof o.h === "string") axisFields.y = o.h;
-    else if (typeof o.y === "string") axisFields.y = o.y;
+    if (typeof markOpts.w === "string") axisFields.x = markOpts.w;
+    else if (typeof markOpts.x === "string") axisFields.x = markOpts.x;
+    if (typeof markOpts.h === "string") axisFields.y = markOpts.h;
+    else if (typeof markOpts.y === "string") axisFields.y = markOpts.y;
     if (axisFields.x || axisFields.y) {
       (baseMark as any).__axisFields = axisFields;
     }
 
-    const nameMethod = (
-      layerName: string
-    ): Mark<T | T[] | { item: T | T[]; key: number | string }> => {
-      return async (
-        input: T | T[] | { item: T | T[]; key: number | string },
-        keyParam?: string | number,
-        layerContext?: LayerContext
-      ) => {
-        const node = await baseMark(input, keyParam, layerContext);
-        // Set the node name for Ref() lookup in low-level context
-        (node as GoFishNode).name(layerName);
-        if (layerContext && layerName) {
-          if (!layerContext[layerName]) {
-            layerContext[layerName] = { data: [], nodes: [] };
-          }
-          layerContext[layerName].nodes.push(node);
-          layerContext[layerName].data.push((node as any).datum);
-        }
-        return node;
-      };
-    };
-    const nameMethodWithFields = (layerName: string) => {
-      const fn = nameMethod(layerName);
-      if ((baseMark as any).__axisFields) {
-        (fn as any).__axisFields = (baseMark as any).__axisFields;
-      }
-      return fn;
-    };
-    const labelMethod = (
-      accessor: LabelAccessor,
-      options?: LabelOptions
-    ): Mark<T | T[] | { item: T | T[]; key: number | string }> => {
-      return async (
-        input: T | T[] | { item: T | T[]; key: number | string },
-        keyParam?: string | number,
-        layerContext?: LayerContext
-      ) => {
-        const node = await baseMark(input, keyParam, layerContext);
-        (node as GoFishNode).label(accessor, options);
-        return node;
-      };
-    };
-    const renderMethod = async (
-      container: Parameters<GoFishNode["render"]>[0],
-      options: Parameters<GoFishNode["render"]>[1]
-    ) => {
-      const node = (await baseMark(undefined as any)) as GoFishNode;
-      return node.render(container, options);
-    };
-    Object.defineProperty(baseMark, "name", {
-      value: nameMethodWithFields,
-      writable: true,
-      configurable: true,
-    });
-    Object.defineProperty(baseMark, "label", {
-      value: labelMethod,
-      writable: true,
-      configurable: true,
-    });
-    Object.defineProperty(baseMark, "render", {
-      value: renderMethod,
-      writable: true,
-      configurable: true,
-    });
-
-    return baseMark as NameableMark<
-      T | T[] | { item: T | T[]; key: number | string }
-    >;
+    return attachNameableMethods(baseMark);
   };
 }

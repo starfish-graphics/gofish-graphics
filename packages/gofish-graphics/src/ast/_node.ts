@@ -35,7 +35,8 @@ import {
 } from "./underlyingSpace";
 import { toJSON } from "../util/interval";
 import type { KeyContext, ScaleContext } from "./gofish";
-import type { ScopeContext } from "./scopeContext";
+import type { TokenContext } from "./tokenContext";
+import { isToken, Token } from "./createName";
 import type { ConstraintSpec, ConstraintRef } from "./constraints";
 import { collectConstraintRefs } from "./constraints";
 import {
@@ -51,7 +52,7 @@ import {
 import { renderLabelJSX } from "./labels/renderLabel";
 
 export type RenderSession = {
-  scopeContext: ScopeContext;
+  tokenContext: TokenContext;
   scaleContext: ScaleContext;
   keyContext: KeyContext;
 };
@@ -119,7 +120,17 @@ export class GoFishNode {
   public type: string;
   public args?: any;
   public key?: string;
-  public _name?: string;
+  public _name?: string | Token;
+  public _isScope: boolean = false;
+  /**
+   * String-name search boundary. Set ONLY by createMark — manual `.scope()`
+   * (which flips `_isScope`) does not flip this. resolveLocalString in
+   * GoFishRef stops walking up at the nearest `_isComponent` ancestor and
+   * does not descend into nested ones, so `ref("name")` lookups don't leak
+   * across component boundaries even if a future operator silently scopes.
+   */
+  public _isComponent: boolean = false;
+  public _scopeMap?: Map<string, GoFishNode>;
   public parent?: GoFishNode;
   public datum?: any;
   // private inferDomains: (childDomains: Size<Domain>[]) => FancySize<Domain | undefined>;
@@ -266,9 +277,26 @@ export class GoFishNode {
   }
 
   public resolveNames(): void {
-    if (this._name !== undefined) {
-      this.getRenderSession().scopeContext.set(this._name, this);
+    if (this._isScope && !this._scopeMap) {
+      this._scopeMap = new Map();
     }
+    if (this._name !== undefined && isToken(this._name)) {
+      const token = this._name;
+      this.getRenderSession().tokenContext.set(token, this);
+      // Register the token's tag in the nearest enclosing scope root.
+      let ancestor: GoFishNode | undefined = this.parent;
+      while (ancestor) {
+        if (ancestor._isScope) {
+          if (!ancestor._scopeMap) ancestor._scopeMap = new Map();
+          ancestor._scopeMap.set(token.__tag, this);
+          break;
+        }
+        ancestor = ancestor.parent;
+      }
+    }
+    // String _name intentionally does not register anywhere global — it is
+    // only consulted by layer.tsx for constraint-callback destructuring and
+    // by ref(string) for a layer-local lookup.
     this.children.forEach((child) => {
       child.resolveNames();
     });
@@ -462,8 +490,13 @@ export class GoFishNode {
     );
   }
 
-  public name(name: string): this {
+  public name(name: string | Token): this {
     this._name = name;
+    return this;
+  }
+
+  public scope(): this {
+    this._isScope = true;
     return this;
   }
 
