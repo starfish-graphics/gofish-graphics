@@ -25,7 +25,7 @@ export const Default: StoryObj<Args> = {
     const container = initializeContainer();
 
     Chart(seafood)
-      .flow(spread({ by: "lake", dir: "x", spacing: 48 }))
+      .flow(spread({ by: "lake", dir: "x", spacing: 48, axis: true }))
       .mark((data) =>
         Chart(data)
           .flow(spread({ by: "species", dir: "x", axis: true }))
@@ -35,6 +35,7 @@ export const Default: StoryObj<Args> = {
         w: args.w,
         h: args.h,
         axes: true,
+        debug: true
       });
 
     return container;
@@ -47,7 +48,7 @@ export const FacetedScatterDriving: StoryObj<Args> = {
     const container = initializeContainer();
 
     Chart(drivingShifts)
-      .flow(spread({ by: "side", dir: "x", spacing: 50, }))
+      .flow(spread({ by: "side", dir: "x", spacing: 50, axis: true }))
       .mark((data) =>
         Chart(data)
           .flow(scatter({ x: "year", y: "miles", axis: true }))
@@ -69,7 +70,7 @@ export const FacetedScatterY: StoryObj<Args> = {
     const container = initializeContainer();
 
     Chart(drivingShifts)
-      .flow(spread({ by: "side", dir: "y", spacing: 50 }))
+      .flow(spread({ by: "side", dir: "y", spacing: 50, axis: true }))
       .mark((data) =>
         Chart(data)
           .flow(scatter({ x: "year", y: "gas", axis: true }))

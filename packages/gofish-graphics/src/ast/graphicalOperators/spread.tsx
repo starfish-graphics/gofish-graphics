@@ -324,6 +324,23 @@ export const Spread = createNodeOperator(
             alignFromSize
           );
 
+          // Change 3: cancel each inner chart's own axis-budget shift so bars
+          // land at posScale(0)=0 in outer content space rather than being
+          // pushed down by the inner's own AXIS_THICKNESS reservation.
+          // We must mutate transform.translate directly: place() is a no-op
+          // when alignChildren has already set the translation.
+          for (let i = 0; i < childPlaceables.length; i++) {
+            const child = children[i] as any;
+            if (!(child instanceof GoFishNode)) continue;
+            const baseline = child._contentBaseline[alignDir] as number;
+            if (baseline > 0) {
+              const translate = (child as GoFishNode).transform?.translate;
+              if (translate) {
+                translate[alignDir] = (translate[alignDir] ?? 0) - baseline;
+              }
+            }
+          }
+
           /* distribute */
           const firstFixedIdx = childPlaceables.findIndex(isFixed(stackDir));
           let pos: number;
@@ -442,6 +459,7 @@ export const Spread = createNodeOperator(
       node._axisOverride =
         typeof axis === "boolean" ? { x: axis, y: axis } : axis;
     }
+    node._layoutAlignDir = alignDir;
     return node;
   }
 );

@@ -52,15 +52,30 @@ export function createAxisNode({
   return null;
 }
 
-/** Compute the position of keyNode's center along `dim` relative to `stopBefore`. */
+/** Compute the position of keyNode's center along `dim` relative to `stopBefore`.
+ *
+ * In faceted charts multiple inner spreads share the same key names, so keyContext
+ * may point to a node from a *different* facet than stopBefore. When stopBefore is
+ * not an ancestor of keyNode we fall back to the nearest same-type ancestor so the
+ * returned position is still a meaningful local offset rather than an absolute root
+ * coordinate that lands off-screen.
+ */
 function posRelToAncestor(
   keyNode: GoFishNode,
   stopBefore: GoFishNode | undefined,
   dim: 0 | 1
 ): number {
   let pos = keyNode.intrinsicDims?.[dim]?.center ?? 0;
-  for (const n of findPathToRoot(keyNode)) {
-    if (n === stopBefore) break;
+  const path = findPathToRoot(keyNode);
+  // Prefer the exact stopBefore node; fall back to nearest ancestor of the same type.
+  const effectiveStop =
+    stopBefore && path.includes(stopBefore)
+      ? stopBefore
+      : stopBefore
+        ? path.find((n) => n.type === stopBefore.type)
+        : undefined;
+  for (const n of path) {
+    if (n === effectiveStop) break;
     pos += n.transform?.translate?.[dim] ?? 0;
   }
   return pos;
