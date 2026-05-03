@@ -4,19 +4,15 @@ import {
   Dimensions,
   elaborateDims,
   elaborateDirection,
-  elaboratePosition,
   elaborateSize,
   elaborateTransform,
   FancyDims,
   FancyDirection,
-  FancyPosition,
   FancySize,
   FancyTransform,
-  Position,
   Size,
   Transform,
 } from "./dims";
-import { ContinuousDomain } from "./domain";
 import { gofish } from "./gofish";
 import type { AxesOptions } from "./gofish";
 import { GoFishRef } from "./_ref";
@@ -25,7 +21,6 @@ import { CoordinateTransform } from "./coordinateTransforms/coord";
 import { getValue, isValue, MaybeValue } from "./data";
 import { color6 } from "../color";
 import * as Monotonic from "../util/monotonic";
-import { findTargetMonotonic } from "../util";
 import {
   isDIFFERENCE,
   isORDINAL,
@@ -33,8 +28,10 @@ import {
   isUNDEFINED,
   UnderlyingSpace,
 } from "./underlyingSpace";
-import { toJSON } from "../util/interval";
+import { toJSON, interval } from "../util/interval";
+import { nice } from "d3-array";
 import type { KeyContext, ScaleContext } from "./gofish";
+import { createAxisNode, AXIS_THICKNESS } from "./shapes/axis";
 import type { TokenContext } from "./tokenContext";
 import { isToken, Token } from "./createName";
 import type { ConstraintSpec, ConstraintRef } from "./constraints";
@@ -151,6 +148,12 @@ export class GoFishNode {
   public _label?: LabelSpec;
   private _zOrder = 0;
   private renderSession?: RenderSession;
+  // Axis rendering properties
+  public axis_x?: boolean;
+  public axis_y?: boolean;
+  public _axisOverride?: { x?: boolean; y?: boolean };
+  public _axisChildren?: Map<0 | 1, GoFishNode>;
+  public _contentBaseline: Size = [0, 0];
   constructor(
     {
       name,
@@ -325,21 +328,212 @@ export class GoFishNode {
     return this._underlyingSpace;
   }
 
+  /**
+   * Top-down walk that marks which nodes should render axes.
+   * `claimed` tracks dimensions already claimed by an ancestor.
+   */
+  public resolveAxes(claimed: Set<0 | 1> = new Set()): void {
+    if (this.type === "layer") {
+      this.children.forEach((c) => {
+        if (c instanceof GoFishNode) c.resolveAxes(claimed);
+      });
+      return;
+    }
+    const next = new Set(claimed);
+    const space = this._underlyingSpace;
+    for (const dim of [0, 1] as (0 | 1)[]) {
+      const override =
+        dim === 0 ? this._axisOverride?.x : this._axisOverride?.y;
+      if (override !== undefined) {
+        if (dim === 0) this.axis_x = override;
+        else this.axis_y = override;
+        next.add(dim); // claim regardless — false blocks children too
+      } else if (
+        !claimed.has(dim) &&
+        space &&
+        !isUNDEFINED(space[dim]) &&
+        (isPOSITION(space[dim]) ||
+          isDIFFERENCE(space[dim]) ||
+          isORDINAL(space[dim]))
+      ) {
+        if (dim === 0) this.axis_x = true;
+        else this.axis_y = true;
+        next.add(dim);
+      }
+    }
+    this.children.forEach((c) => {
+      if (c instanceof GoFishNode) c.resolveAxes(next);
+    });
+  }
+
+  /**
+   * Walk tree after resolveAxes; apply d3.nice() to every POSITION domain
+   * so layout and ticks use rounded bounds. Applied to all nodes (not just
+   * axis-bearing ones) so that passthrough nodes like layer inherit the same
+   * niced domain that gofish.tsx uses for posScale computation.
+   */
+  public resolveNiceDomains(): void {
+    if (this._underlyingSpace) {
+      for (const dim of [0, 1] as (0 | 1)[]) {
+        const space = this._underlyingSpace[dim];
+        if (isPOSITION(space) && space.domain) {
+          const [niceMin, niceMax] = nice(
+            space.domain.min!,
+            space.domain.max!,
+            10
+          );
+          (space as any).domain = interval(niceMin, niceMax);
+        }
+      }
+    }
+    this.children.forEach((c) => {
+      if (c instanceof GoFishNode) c.resolveNiceDomains();
+    });
+  }
+
   public layout(
     size: Size,
     scaleFactors: Size<number | undefined>,
     posScales: Size<((pos: number) => number) | undefined>
   ): Placeable {
+    const axisBudgetX = this.axis_y === true ? AXIS_THICKNESS : 0;
+    const axisBudgetY = this.axis_x === true ? AXIS_THICKNESS : 0;
+
+    let contentSize: Size = size;
+    let contentPosScales = posScales;
+    let contentScaleFactors = scaleFactors;
+
+    if (axisBudgetX > 0 || axisBudgetY > 0) {
+      contentSize = [size[0] - axisBudgetX, size[1] - axisBudgetY];
+      // Rescale posScales for the content area, leaving a small top/right margin
+      // so the maximum tick never sits exactly at the content boundary.
+      // Without this, niceMax always maps to contentH, landing at SVG y=PADDING
+      // regardless of axis thickness — the top label always clips.
+      const TICK_EDGE_PAD = 8;
+      contentPosScales = [
+        posScales[0] && axisBudgetX > 0
+          ? (v: number) =>
+              posScales[0]!(v) * ((contentSize[0] - TICK_EDGE_PAD) / size[0])
+          : posScales[0],
+        posScales[1] && axisBudgetY > 0
+          ? (v: number) =>
+              posScales[1]!(v) * ((contentSize[1] - TICK_EDGE_PAD) / size[1])
+          : posScales[1],
+      ];
+      contentScaleFactors = [
+        scaleFactors[0] !== undefined && axisBudgetX > 0
+          ? scaleFactors[0] * (contentSize[0] / size[0])
+          : scaleFactors[0],
+        scaleFactors[1] !== undefined && axisBudgetY > 0
+          ? scaleFactors[1] * (contentSize[1] / size[1])
+          : scaleFactors[1],
+      ];
+      this._contentBaseline = [axisBudgetX, axisBudgetY];
+    }
+
     const { intrinsicDims, transform, renderData } = this._layout(
       this.shared,
-      size,
-      scaleFactors,
+      contentSize,
+      contentScaleFactors,
       this.children,
-      posScales,
+      contentPosScales,
       this
     );
 
-    this.intrinsicDims = elaborateDims(intrinsicDims);
+    if (axisBudgetX > 0 || axisBudgetY > 0) {
+      // Shift content children's transforms so they occupy the content area
+      for (const child of this.children) {
+        if (child instanceof GoFishNode && child.transform) {
+          if (axisBudgetX > 0) {
+            child.transform.translate![0] =
+              (child.transform.translate![0] ?? 0) + axisBudgetX;
+          }
+          if (axisBudgetY > 0) {
+            child.transform.translate![1] =
+              (child.transform.translate![1] ?? 0) + axisBudgetY;
+          }
+        }
+      }
+
+      // Expand intrinsicDims to include axis budget
+      const dims = elaborateDims(intrinsicDims);
+      this.intrinsicDims = [
+        {
+          min: 0,
+          max: (dims[0].max ?? 0) + axisBudgetX,
+          size: (dims[0].size ?? 0) + axisBudgetX,
+          center: ((dims[0].max ?? 0) + axisBudgetX) / 2,
+        },
+        {
+          min: 0,
+          max: (dims[1].max ?? 0) + axisBudgetY,
+          size: (dims[1].size ?? 0) + axisBudgetY,
+          center: ((dims[1].max ?? 0) + axisBudgetY) / 2,
+        },
+      ];
+
+      // Create and place axis children
+      this._axisChildren = new Map();
+      const space = this._underlyingSpace!;
+      const session = this.getRenderSession();
+
+      if (this.axis_y === true) {
+        const sf = this.getRenderSession().scaleContext.y;
+        const diffScaleY =
+          isDIFFERENCE(space[1]) && sf && "scaleFactor" in sf
+            ? (v: number) => v * (sf as any).scaleFactor
+            : undefined;
+        const yPosScale = contentPosScales[1] ?? diffScaleY;
+        const yAxisNode = createAxisNode({
+          dim: 1,
+          space: space[1],
+          contentSize: contentSize[1],
+          posScale: yPosScale,
+        });
+        if (yAxisNode) {
+          yAxisNode.parent = this;
+          yAxisNode.setRenderSession(session);
+          yAxisNode.layout(
+            [axisBudgetX, contentSize[1]],
+            contentScaleFactors,
+            contentPosScales
+          );
+          yAxisNode.place(0, 0, "min");
+          yAxisNode.place(1, axisBudgetY, "min");
+          this._axisChildren.set(1, yAxisNode);
+        }
+      }
+
+      if (this.axis_x === true) {
+        const sf = this.getRenderSession().scaleContext.x;
+        const diffScaleX =
+          isDIFFERENCE(space[0]) && sf && "scaleFactor" in sf
+            ? (v: number) => v * (sf as any).scaleFactor
+            : undefined;
+        const xPosScale = contentPosScales[0] ?? diffScaleX;
+        const xAxisNode = createAxisNode({
+          dim: 0,
+          space: space[0],
+          contentSize: contentSize[0],
+          posScale: xPosScale,
+        });
+        if (xAxisNode) {
+          xAxisNode.parent = this;
+          xAxisNode.setRenderSession(session);
+          xAxisNode.layout(
+            [contentSize[0], axisBudgetY],
+            contentScaleFactors,
+            contentPosScales
+          );
+          xAxisNode.place(0, axisBudgetX, "min");
+          xAxisNode.place(1, 0, "min");
+          this._axisChildren.set(0, xAxisNode);
+        }
+      }
+    } else {
+      this.intrinsicDims = elaborateDims(intrinsicDims);
+    }
+
     this.transform = elaborateTransform(transform);
     this.renderData = renderData;
     return this;
@@ -403,6 +597,9 @@ export class GoFishNode {
       baseline: 0,
     };
 
+    if (!this.transform!.translate) {
+      this.transform!.translate = [undefined, undefined];
+    }
     this.transform!.translate![dir] = value - anchorToPoint[anchor];
   }
 
@@ -413,19 +610,31 @@ export class GoFishNode {
   public INTERNAL_render(
     coordinateTransform?: CoordinateTransform
   ): JSX.Element {
+    const contentChildrenJSX = this.children.map((child) =>
+      child.INTERNAL_render(
+        this.type !== "box" ? coordinateTransform : undefined
+      )
+    );
+
+    // Include axis children alongside content children
+    const axisChildrenJSX: JSX.Element[] =
+      this._axisChildren && this._axisChildren.size > 0
+        ? [...this._axisChildren.values()].map((n) => n.INTERNAL_render())
+        : [];
+
+    const allChildrenJSX =
+      axisChildrenJSX.length > 0
+        ? ([...contentChildrenJSX, ...axisChildrenJSX] as JSX.Element[])
+        : contentChildrenJSX;
+
     const shapeJSX = this._render(
       {
         intrinsicDims: this.intrinsicDims,
         transform: this.transform,
         renderData: this.renderData,
-        /* TODO: do we want to add this as an object property? */
         coordinateTransform: coordinateTransform,
       },
-      this.children.map((child) =>
-        child.INTERNAL_render(
-          this.type !== "box" ? coordinateTransform : undefined
-        )
-      ),
+      allChildrenJSX,
       this
     );
     if (this._label && this.intrinsicDims) {
@@ -470,6 +679,7 @@ export class GoFishNode {
       axes = false,
       axisFields,
       colorConfig,
+      padding,
     }: {
       w: number;
       h: number;
@@ -481,11 +691,24 @@ export class GoFishNode {
       axes?: AxesOptions;
       axisFields?: { x?: string; y?: string };
       colorConfig?: ColorConfig;
+      padding?: number;
     }
   ) {
     return gofish(
       container,
-      { w, h, x, y, transform, debug, defs, axes, axisFields, colorConfig },
+      {
+        w,
+        h,
+        x,
+        y,
+        transform,
+        debug,
+        defs,
+        axes,
+        axisFields,
+        colorConfig,
+        padding,
+      },
       this
     );
   }
