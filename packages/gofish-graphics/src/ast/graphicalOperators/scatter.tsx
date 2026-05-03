@@ -33,6 +33,7 @@ export type ScatterProps = {
   yMin?: MaybeValue<number>[];
   yMax?: MaybeValue<number>[];
   alignment?: Alignment;
+  axis?: boolean | { x?: boolean; y?: boolean };
 } & FancyDims<MaybeValue<number>>;
 
 function getCurrentAnchor(
@@ -93,6 +94,7 @@ export const Scatter = createNodeOperator(
       yMin,
       yMax,
       alignment = "baseline",
+      axis,
       ...fancyDims
     } = options;
     children = unwrapLodashArray(children);
@@ -124,7 +126,7 @@ export const Scatter = createNodeOperator(
     let xFromSize = false;
     let yFromSize = false;
 
-    return new GoFishNode(
+    const node = new GoFishNode(
       {
         type: "scatter",
         key,
@@ -321,6 +323,11 @@ export const Scatter = createNodeOperator(
       },
       children
     );
+    if (axis !== undefined) {
+      node._axisOverride =
+        typeof axis === "boolean" ? { x: axis, y: axis } : axis;
+    }
+    return node;
   }
 );
 
@@ -343,6 +350,7 @@ export type ScatterOptions = {
   yMax?: string | MaybeValue<number>[];
   alignment?: "start" | "middle" | "end" | "baseline";
   debug?: boolean;
+  axis?: boolean | { x?: boolean; y?: boolean };
 };
 
 export const scatter = createOperator<any, ScatterOptions>(Scatter, {

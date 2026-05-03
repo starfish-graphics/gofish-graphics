@@ -47,10 +47,10 @@ export const FacetedScatterDriving: StoryObj<Args> = {
     const container = initializeContainer();
 
     Chart(drivingShifts)
-      .flow(spread({ by: "side", dir: "x", spacing: 50 }))
+      .flow(spread({ by: "side", dir: "x", spacing: 50, }))
       .mark((data) =>
         Chart(data)
-          .flow(scatter({ x: "year", y: "miles" }))
+          .flow(scatter({ x: "year", y: "miles", axis: true }))
           .mark(circle({ r: 3, fill: "#4682b4" }))
       )
       .render(container, {
@@ -72,7 +72,7 @@ export const FacetedScatterY: StoryObj<Args> = {
       .flow(spread({ by: "side", dir: "y", spacing: 50 }))
       .mark((data) =>
         Chart(data)
-          .flow(scatter({ x: "year", y: "gas" }))
+          .flow(scatter({ x: "year", y: "gas", axis: true }))
           .mark(circle({ r: 3, fill: "#e07b39" }))
       )
       .render(container, {
