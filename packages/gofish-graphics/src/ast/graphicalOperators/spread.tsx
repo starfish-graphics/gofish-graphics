@@ -1,17 +1,15 @@
-import { For } from "solid-js";
 import { GoFishNode, Placeable } from "../_node";
-import { getMeasure, getValue, isValue, MaybeValue, Value } from "../data";
+import { getValue, isValue, MaybeValue } from "../data";
 import {
   Direction,
   elaborateDims,
   elaborateDirection,
   FancyDims,
   FancyDirection,
-  FancySize,
   Size,
 } from "../dims";
-import _, { Collection, size } from "lodash";
-import { computeAesthetic, computeSize, findTargetMonotonic } from "../../util";
+import { Collection } from "lodash";
+import { computeAesthetic, computeSize } from "../../util";
 import { GoFishAST } from "../_ast";
 import { createNodeOperator } from "../withGoFish";
 import * as Monotonic from "../../util/monotonic";
@@ -50,6 +48,7 @@ export const Spread = createNodeOperator(
       mode = "edge",
       reverse = false,
       glue = false,
+      axis,
       ...fancyDims
     }: {
       name?: string;
@@ -63,6 +62,9 @@ export const Spread = createNodeOperator(
       // When true, treat as a stack: glue children together, summing their
       // sizes into a POSITION at this level. `spacing` is ignored.
       glue?: boolean;
+      /** Override axis rendering for this node. true/false applies to both
+       * dims; object form controls x/y independently. */
+      axis?: boolean | { x?: boolean; y?: boolean };
     } & FancyDims<MaybeValue<number>>,
     children: GoFishAST[] | Collection<GoFishAST>
   ) => {
@@ -77,7 +79,7 @@ export const Spread = createNodeOperator(
     // Glue mode ignores spacing.
     const effectiveSpacing = glue ? 0 : spacing;
 
-    return new GoFishNode(
+    const node = new GoFishNode(
       {
         type: "spread",
         args: {
@@ -322,6 +324,24 @@ export const Spread = createNodeOperator(
             alignFromSize
           );
 
+          // Change 3: cancel each inner chart's own axis-budget shift in the
+          // align direction so bars land at posScale(0)=0 in outer content
+          // space. The outer's expanded alignDir budget (Change 1) provides
+          // the matching room so inner axis label rows stack flush against the
+          // outer's label row. We must mutate transform.translate directly:
+          // place() is a no-op when alignChildren has already set the value.
+          for (let i = 0; i < childPlaceables.length; i++) {
+            const child = children[i] as any;
+            if (!(child instanceof GoFishNode)) continue;
+            const baseline = child._contentBaseline[alignDir] as number;
+            if (baseline > 0) {
+              const translate = (child as GoFishNode).transform?.translate;
+              if (translate) {
+                translate[alignDir] = (translate[alignDir] ?? 0) - baseline;
+              }
+            }
+          }
+
           /* distribute */
           const firstFixedIdx = childPlaceables.findIndex(isFixed(stackDir));
           let pos: number;
@@ -424,7 +444,7 @@ export const Spread = createNodeOperator(
             },
           };
         },
-        render: ({ intrinsicDims, transform }, children) => {
+        render: ({ transform }, children) => {
           return (
             <g
               transform={`translate(${transform?.translate?.[0] ?? 0}, ${transform?.translate?.[1] ?? 0})`}
@@ -436,6 +456,12 @@ export const Spread = createNodeOperator(
       },
       children
     );
+    if (axis !== undefined) {
+      node._axisOverride =
+        typeof axis === "boolean" ? { x: axis, y: axis } : axis;
+    }
+    node._layoutAlignDir = alignDir;
+    return node;
   }
 );
 
@@ -451,6 +477,7 @@ export type SpreadOptions<T = any> = {
   w?: number | (keyof T & string);
   h?: number | (keyof T & string);
   debug?: boolean;
+  axis?: boolean | { x?: boolean; y?: boolean };
 };
 
 export const spread = createOperator<any, SpreadOptions>(Spread, {

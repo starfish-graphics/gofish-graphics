@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { initializeContainer } from "../helper";
 import { seafood } from "../../src/data/catch";
-import { Chart, spread, rect } from "../../src/lib";
+import { Chart, spread, rect, scatter, circle } from "../../src/lib";
+import { drivingShifts } from "../../src/data/drivingShifts";
 
 const meta: Meta = {
   title: "Forward Syntax V3/Faceted Chart",
@@ -24,11 +25,56 @@ export const Default: StoryObj<Args> = {
     const container = initializeContainer();
 
     Chart(seafood)
-      .flow(spread({ by: "lake", dir: "x", spacing: 48 }))
+      .flow(spread({ by: "lake", dir: "x", spacing: 48, axis: true }))
       .mark((data) =>
         Chart(data)
-          .flow(spread({ by: "species", dir: "x" }))
+          .flow(spread({ by: "species", dir: "x", axis: true }))
           .mark(rect({ h: "count", w: 20 }))
+      )
+      .render(container, {
+        w: args.w,
+        h: args.h,
+        axes: true,
+        debug: true
+      });
+
+    return container;
+  },
+};
+
+export const FacetedScatterDriving: StoryObj<Args> = {
+  args: { w: 800, h: 400 },
+  render: (args: Args) => {
+    const container = initializeContainer();
+
+    Chart(drivingShifts)
+      .flow(spread({ by: "side", dir: "x", spacing: 50, axis: true }))
+      .mark((data) =>
+        Chart(data)
+          .flow(scatter({ x: "year", y: "miles", axis: true }))
+          .mark(circle({ r: 3, fill: "#4682b4" }))
+      )
+      .render(container, {
+        w: args.w,
+        h: args.h,
+        axes: true,
+      });
+
+    return container;
+  },
+};
+
+export const FacetedScatterY: StoryObj<Args> = {
+  args: { w: 400, h: 800 },
+  render: (args: Args) => {
+    const container = initializeContainer();
+
+    Chart(drivingShifts)
+      .flow(spread({ by: "side", dir: "y", spacing: 50, axis: true }))
+      .mark((data) =>
+        Chart(data)
+          .flow(scatter({ x: "year", y: "gas", axis: true }))
+          .mark(circle({ r: 3, fill: "#e07b39" }))
       )
       .render(container, {
         w: args.w,
