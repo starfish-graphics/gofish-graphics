@@ -459,24 +459,46 @@ export class GoFishNode {
       // regardless of axis thickness — the top label always clips.
       const TICK_EDGE_PAD = 8;
 
-      // Change 2: only rescale posScales/scaleFactors when this node owns that
-      // direction. An inner node with axis_x=true but axis_y=false must NOT
-      // rescale posScales[1] — the outer already provides correct y-values.
-      const outerManagesY = this.axis_y !== true && posScales[1] !== undefined;
-      const outerManagesX = this.axis_x !== true && posScales[0] !== undefined;
+      // Apply TICK_EDGE_PAD only when this node is the first to scale a given
+      // posScale. A fresh root posScale maps domain_max to exactly size[dim];
+      // a posScale already rescaled by an ancestor maps it to < size[dim].
+      const usp = this._underlyingSpace;
+      const tickPadX =
+        this.axis_x === true &&
+        posScales[0] &&
+        usp &&
+        isPOSITION(usp[0]) &&
+        usp[0].domain &&
+        Math.abs(posScales[0](usp[0].domain.max!) - size[0]) < 1
+          ? TICK_EDGE_PAD
+          : 0;
+      const tickPadY =
+        this.axis_y === true &&
+        posScales[1] &&
+        usp &&
+        isPOSITION(usp[1]) &&
+        usp[1].domain &&
+        Math.abs(posScales[1](usp[1].domain.max!) - size[1]) < 1
+          ? TICK_EDGE_PAD
+          : 0;
+
+      // Change 2: pass the incoming posScale through unchanged when it was
+      // already rescaled by an ancestor (tickPad === 0 → not the root scale).
+      // When tickPad > 0 this node is the first to scale, so it compresses.
+      // This prevents double-compression: inner y-axes align with the outer
+      // because both use the same root-derived scale, just proportionally
+      // mapped to their respective content sizes without stacking extra margins.
+      const outerManagesY = posScales[1] !== undefined && tickPadY === 0;
+      const outerManagesX = posScales[0] !== undefined && tickPadX === 0;
 
       contentPosScales = [
         posScales[0] && axisBudgetX > 0 && !outerManagesX
           ? (v: number) =>
-              posScales[0]!(v) *
-              ((contentSize[0] - (this.axis_x === true ? TICK_EDGE_PAD : 0)) /
-                size[0])
+              posScales[0]!(v) * ((contentSize[0] - tickPadX) / size[0])
           : posScales[0],
         posScales[1] && axisBudgetY > 0 && !outerManagesY
           ? (v: number) =>
-              posScales[1]!(v) *
-              ((contentSize[1] - (this.axis_y === true ? TICK_EDGE_PAD : 0)) /
-                size[1])
+              posScales[1]!(v) * ((contentSize[1] - tickPadY) / size[1])
           : posScales[1],
       ];
       contentScaleFactors = [
