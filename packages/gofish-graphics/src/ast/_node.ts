@@ -418,8 +418,13 @@ export class GoFishNode {
       }
       return dim === 0 ? n.axis_x === true : n.axis_y === true;
     };
+    // innerBaselineY: for horizontal spreads (dir:"x", alignDir=1) only.
+    // The inner x-axis label row stacks in y below the outer x-axis labels,
+    // so 2×AT is needed. For vertical spreads (dir:"y") the inner x-axis sits
+    // inside each facet and already falls adjacent to the outer x-axis with
+    // just 1×AT — expanding here would push frames up, creating a dead gap.
     const innerBaselineY =
-      axisBudgetY > 0
+      axisBudgetY > 0 && this._layoutAlignDir === 1
         ? this.children.reduce(
             (max, c) =>
               c instanceof GoFishNode && findAxisFlag(c, 0)
@@ -428,12 +433,7 @@ export class GoFishNode {
             0
           )
         : 0;
-    // innerBaselineX is only meaningful for vertical spreads (alignDir=0):
-    // Change 3 shifts inner frames in x by -baseline, and the outer's expanded
-    // axisBudgetX gives back exactly that room so inner y-axes don't overlap.
-    // For horizontal spreads (alignDir=1), Change 3 doesn't touch x, so the
-    // expanded budget creates a dead gap instead. Nodes with no _layoutAlignDir
-    // (non-spread operators) default to the safe behaviour of no expansion.
+    // innerBaselineX: for vertical spreads (dir:"y", alignDir=0) only.
     const innerBaselineX =
       axisBudgetX > 0 && this._layoutAlignDir === 0
         ? this.children.reduce(

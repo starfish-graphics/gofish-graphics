@@ -324,11 +324,12 @@ export const Spread = createNodeOperator(
             alignFromSize
           );
 
-          // Change 3: cancel each inner chart's own axis-budget shift so bars
-          // land at posScale(0)=0 in outer content space rather than being
-          // pushed down by the inner's own AXIS_THICKNESS reservation.
-          // We must mutate transform.translate directly: place() is a no-op
-          // when alignChildren has already set the translation.
+          // Change 3: cancel each inner chart's own axis-budget shift in the
+          // align direction so bars land at posScale(0)=0 in outer content
+          // space. The outer's expanded alignDir budget (Change 1) provides
+          // the matching room so inner axis label rows stack flush against the
+          // outer's label row. We must mutate transform.translate directly:
+          // place() is a no-op when alignChildren has already set the value.
           for (let i = 0; i < childPlaceables.length; i++) {
             const child = children[i] as any;
             if (!(child instanceof GoFishNode)) continue;
